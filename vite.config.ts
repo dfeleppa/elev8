@@ -13,8 +13,9 @@ export default defineConfig({
   },
   server: {
     port: 5174,
-    host: true,
+    host: '0.0.0.0', // Allow access from any IP address
     cors: true,
+    strictPort: false, // Try next port if 5174 is busy
     headers: {
       // Very permissive CSP for development to avoid Chrome blocking issues
       'Content-Security-Policy': process.env.NODE_ENV === 'development' 

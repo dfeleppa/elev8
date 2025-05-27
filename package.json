@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:remote": "vite --host 0.0.0.0",
+    "dev:network": "vite --host 0.0.0.0 --port 5174",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:remote": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
