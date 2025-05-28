@@ -13,7 +13,7 @@ export default defineConfig({
   },
   server: {
     port: 5174,
-    host: '0.0.0.0', // Allow access from any IP address
+    host: '0.0.0.0', // Bind to all interfaces
     cors: true,
     strictPort: false, // Try next port if 5174 is busy
     headers: {
