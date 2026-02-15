@@ -1,36 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Elev8 Control Center
 
-## Getting Started
+A personal operating system that blends a dashboard, task manager, and ritual tracker. The single-page experience is purpose-built for fast daily calibration—review focus signals, scan priority tasks, and protect recovery habits without hopping between tools.
 
-First, run the development server:
+### Feature Highlights
+- **Mission Stack:** Track priority work with live progress bars, tags, priority cues, and status pills.
+- **Flow Map:** Timeline cards outline the protected deep-work windows, recovery blocks, and syncs.
+- **Ritual Pulse:** Visualize systems health across calibration, movement, and recovery practices.
+- **Habits Grid:** Seven-day habit rows with quick completion counts to reinforce streaks.
+- **Signals + Blockers:** Lightweight journal cards to capture momentum spikes or friction.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Tech Decisions
+- Next.js App Router with TypeScript for structured data modeling.
+- Tailwind CSS v4 utility pipeline plus custom glassmorphism helpers in `globals.css` for the neon-glow aesthetic.
+- Custom font stack (Space Grotesk + JetBrains Mono) via `next/font` to keep typography intentional.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Local Development
+1. Install dependencies: `npm install`
+2. Start dev server: `npm run dev`
+3. Type-check and lint: `npm run lint`
+4. Production build: `npm run build`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Project Structure
+- `src/app/page.tsx` hosts the entire dashboard layout with typed data models.
+- `src/app/layout.tsx` wires up fonts and metadata.
+- `src/app/globals.css` defines the gradient background, glass panels, and motion helpers.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Feel free to adjust the mock data in `page.tsx` to connect live sources or expand the UI with additional sections.

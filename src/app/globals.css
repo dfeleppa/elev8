@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #010615;
+  --foreground: #f8fafc;
+  --glow-primary: #0ea5e9;
+  --glow-secondary: #22d3ee;
+  --glow-tertiary: #f97316;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-brand-sans);
+  --font-mono: var(--font-brand-mono);
 }
 
 body {
-  background: var(--background);
+  min-height: 100vh;
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.25), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(34, 211, 238, 0.2), transparent 45%),
+    linear-gradient(135deg, #020617 0%, #020c1b 60%, #041229 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-brand-sans), "Space Grotesk", system-ui;
+  font-feature-settings: "liga" 1, "kern" 1;
+  line-height: 1.5;
+}
+
+::selection {
+  background: rgba(14, 165, 233, 0.35);
+  color: var(--foreground);
+}
+
+.gradient-haze {
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.55), transparent 60%);
+  filter: blur(60px);
+  opacity: 0.55;
+}
+
+.glass-panel {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.5));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow:
+    0 10px 35px rgba(2, 6, 23, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.card-fade-in {
+  animation: fadeInUp 0.9s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.orbital-glow {
+  animation: orbit 18s ease-in-out infinite;
+}
+
+@keyframes orbit {
+  0% {
+    transform: translate(-20px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(20px, -30px) scale(1.1);
+  }
+  100% {
+    transform: translate(-20px, 0px) scale(1);
+  }
 }
