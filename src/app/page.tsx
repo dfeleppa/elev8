@@ -1,3 +1,5 @@
+import SidebarShell from "../components/SidebarShell";
+
 type TaskStatus = "in-progress" | "blocked" | "done";
 type TaskPriority = "high" | "medium" | "low";
 
@@ -169,7 +171,7 @@ export default function Home() {
       <div className="gradient-haze pointer-events-none absolute right-0 top-32 h-80 w-80 rounded-full opacity-40" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.08),_transparent_55%)]" />
 
-      <main className="relative z-10 mx-auto grid max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[1.6fr_1fr] lg:py-16">
+      <SidebarShell mainClassName="mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[1.6fr_1fr] lg:py-16">
         <section className="space-y-8">
           <header className="glass-panel card-fade-in rounded-[28px] border border-white/5 px-7 py-8 shadow-2xl" style={{ animationDelay: "0s" }}>
             <p className="text-sm uppercase tracking-[0.5em] text-slate-400">
@@ -385,7 +387,7 @@ export default function Home() {
             </div>
           </section>
         </aside>
-      </main>
+      </SidebarShell>
     </div>
   );
 }

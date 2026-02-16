@@ -20,6 +20,29 @@ A personal operating system that blends a dashboard, task manager, and ritual tr
 3. Type-check and lint: `npm run lint`
 4. Production build: `npm run build`
 
+### YouTube Analytics (Supabase + OAuth)
+This project includes a YouTube analytics pipeline that stores last-30-days metrics in Supabase.
+
+**Required environment variables**
+- `NEXT_PUBLIC_APP_URL` (absolute URL, e.g. `https://daneff.com`)
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `YOUTUBE_CLIENT_ID`
+- `YOUTUBE_CLIENT_SECRET`
+- `YOUTUBE_OAUTH_REDIRECT_URI` (optional override)
+- `CRON_SECRET` (optional; use to protect the cron route locally or in non-Vercel environments)
+
+**Supabase schema**
+- Run the SQL in `supabase.sql` to create `youtube_oauth_tokens` and `youtube_metrics`.
+
+**OAuth flow**
+- Visit `/api/oauth/youtube/start` once to connect your channel.
+- The callback stores the refresh token in Supabase and redirects to `/content`.
+
+**Cron refresh**
+- `/api/cron/youtube` pulls last-30-days metrics and upserts them into Supabase.
+- Vercel Cron will call the route if configured in `vercel.json`.
+
 ### Project Structure
 - `src/app/page.tsx` hosts the entire dashboard layout with typed data models.
 - `src/app/layout.tsx` wires up fonts and metadata.
