@@ -1,4 +1,8 @@
+import { redirect } from "next/navigation";
+
 import SidebarShell from "../components/SidebarShell";
+import { hasRole, requireUserContext } from "../lib/member";
+import { supabaseAdmin } from "../lib/supabase-admin";
 
 type TaskStatus = "in-progress" | "blocked" | "done";
 type TaskPriority = "high" | "medium" | "low";
@@ -155,7 +159,49 @@ const priorityTone: Record<TaskPriority, string> = {
   low: "text-slate-300",
 };
 
-export default function Home() {
+type MemberMrrRow = {
+  mrr: number | null;
+};
+
+async function getMemberMetrics() {
+  const { data, error, count } = await supabaseAdmin
+    .from("organization_members")
+    .select("mrr", { count: "exact" });
+
+  if (error) {
+    return { count: 0, totalMrr: 0, averageMrr: 0 };
+  }
+
+  const totalMrr = (data as MemberMrrRow[] | null)?.reduce((total, row) => {
+    return total + (row.mrr ?? 0);
+  }, 0) ?? 0;
+  const safeCount = count ?? 0;
+  const averageMrr = safeCount > 0 ? totalMrr / safeCount : 0;
+
+  return { count: safeCount, totalMrr, averageMrr };
+}
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: "USD",
+  }).format(value);
+}
+
+function formatCount(value: number) {
+  return new Intl.NumberFormat("en").format(value);
+}
+
+export default async function Home() {
+  const { error, role } = await requireUserContext();
+  if (error || !hasRole("owner", role)) {
+    if (role === "admin" || role === "coach") {
+      redirect("/organization");
+    }
+    redirect("/health");
+  }
+
+  const memberMetrics = await getMemberMetrics();
   const today = new Date();
   const formattedDate = new Intl.DateTimeFormat("en", {
     weekday: "long",
@@ -200,6 +246,30 @@ export default function Home() {
               </div>
             </div>
           </header>
+
+          <div className="grid gap-5 md:grid-cols-3">
+            <div className="glass-panel card-fade-in rounded-3xl border border-white/5 p-6" style={{ animationDelay: "0.05s" }}>
+              <p className="text-sm uppercase tracking-wide text-slate-400">Members</p>
+              <p className="mt-3 text-3xl font-semibold text-slate-50">
+                {formatCount(memberMetrics.count)}
+              </p>
+              <p className="mt-1 text-sm text-slate-400">Active roster</p>
+            </div>
+            <div className="glass-panel card-fade-in rounded-3xl border border-white/5 p-6" style={{ animationDelay: "0.1s" }}>
+              <p className="text-sm uppercase tracking-wide text-slate-400">Total MRR</p>
+              <p className="mt-3 text-3xl font-semibold text-slate-50">
+                {formatMoney(memberMetrics.totalMrr)}
+              </p>
+              <p className="mt-1 text-sm text-slate-400">Monthly run rate</p>
+            </div>
+            <div className="glass-panel card-fade-in rounded-3xl border border-white/5 p-6" style={{ animationDelay: "0.15s" }}>
+              <p className="text-sm uppercase tracking-wide text-slate-400">Average MRR</p>
+              <p className="mt-3 text-3xl font-semibold text-slate-50">
+                {formatMoney(memberMetrics.averageMrr)}
+              </p>
+              <p className="mt-1 text-sm text-slate-400">Per member</p>
+            </div>
+          </div>
 
           <div className="grid gap-5 md:grid-cols-3">
             {focusSignals.map((signal, idx) => (

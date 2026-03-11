@@ -6,12 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "import:workouts": "node scripts/import-workout-results.mjs",
+    "import:workouts:dry": "node scripts/import-workout-results.mjs --dry-run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
     "googleapis": "^144.0.0",
     "next": "16.1.6",
+    "next-auth": "^4.24.7",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
@@ -21,8 +24,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint": "^4.1.1",
+    "eslint-config-next": "^0.2.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

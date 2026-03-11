@@ -1,11 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #010615;
-  --foreground: #f8fafc;
-  --glow-primary: #0ea5e9;
-  --glow-secondary: #22d3ee;
-  --glow-tertiary: #f97316;
+  --background: #f6f3ef;
+  --foreground: #1f2937;
+  --glow-primary: #ff8f9a;
+  --glow-secondary: #ffcf87;
+  --glow-tertiary: #b7e1ff;
+  --font-brand-sans: Arial, Helvetica, sans-serif;
+  --font-brand-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
 }
 
 @theme inline {
@@ -19,32 +22,69 @@ body {
   min-height: 100vh;
   background-color: var(--background);
   background-image:
-    radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.25), transparent 55%),
-    radial-gradient(circle at 80% 0%, rgba(34, 211, 238, 0.2), transparent 45%),
-    linear-gradient(135deg, #020617 0%, #020c1b 60%, #041229 100%);
+    radial-gradient(circle at 12% 18%, rgba(255, 143, 154, 0.18), transparent 55%),
+    radial-gradient(circle at 86% 12%, rgba(255, 207, 135, 0.2), transparent 45%),
+    radial-gradient(circle at 68% 72%, rgba(183, 225, 255, 0.2), transparent 55%),
+    linear-gradient(135deg, #fbf8f4 0%, #f6f2ee 60%, #f2ede7 100%);
   color: var(--foreground);
-  font-family: var(--font-brand-sans), "Space Grotesk", system-ui;
+  font-family: var(--font-brand-sans);
   font-feature-settings: "liga" 1, "kern" 1;
   line-height: 1.5;
 }
 
 ::selection {
-  background: rgba(14, 165, 233, 0.35);
-  color: var(--foreground);
+  background: rgba(255, 143, 154, 0.35);
+  color: #111827;
 }
 
 .gradient-haze {
-  background: radial-gradient(circle, rgba(14, 165, 233, 0.55), transparent 60%);
+  background: radial-gradient(circle, rgba(255, 143, 154, 0.4), transparent 60%);
   filter: blur(60px);
   opacity: 0.55;
 }
 
 .glass-panel {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.5));
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(231, 220, 210, 0.8);
   box-shadow:
-    0 10px 35px rgba(2, 6, 23, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 14px 38px rgba(60, 45, 30, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.theme-soft .text-slate-50 {
+  color: #111827;
+}
+
+.theme-soft .text-slate-100 {
+  color: #1f2937;
+}
+
+.theme-soft .text-slate-200 {
+  color: #374151;
+}
+
+.theme-soft .text-slate-300 {
+  color: #6b7280;
+}
+
+.theme-soft .text-slate-400 {
+  color: #6b7280;
+}
+
+.theme-soft .text-slate-500 {
+  color: #6b7280;
+}
+
+.theme-soft .text-slate-600 {
+  color: #4b5563;
+}
+
+.theme-soft .text-slate-700 {
+  color: #374151;
+}
+
+.theme-soft .text-slate-900 {
+  color: #111827;
 }
 
 .card-fade-in {

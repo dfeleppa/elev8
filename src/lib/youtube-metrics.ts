@@ -6,14 +6,16 @@ type YoutubeMetrics = {
   views: number | null;
   watchMinutes: number | null;
   subscribersGained: number | null;
+  subscribersTotal: number | null;
   periodStart: string | null;
   periodEnd: string | null;
 };
 
-export async function getLatestYoutubeMetrics(): Promise<YoutubeMetrics> {
+export async function getLatestYoutubeMetrics(memberId: string): Promise<YoutubeMetrics> {
   const { data } = await supabaseAdmin
     .from("youtube_metrics")
-    .select("views, watch_minutes, subscribers_gained, period_start, period_end")
+    .select("views, watch_minutes, subscribers_gained, subscribers_total, period_start, period_end")
+    .eq("member_id", memberId)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -22,6 +24,7 @@ export async function getLatestYoutubeMetrics(): Promise<YoutubeMetrics> {
     views: data?.views ?? null,
     watchMinutes: data?.watch_minutes ?? null,
     subscribersGained: data?.subscribers_gained ?? null,
+    subscribersTotal: data?.subscribers_total ?? null,
     periodStart: data?.period_start ?? null,
     periodEnd: data?.period_end ?? null,
   };

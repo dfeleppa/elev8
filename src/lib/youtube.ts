@@ -11,8 +11,8 @@ const scopes = [
 ];
 
 export function getYoutubeOAuthClient() {
-  const clientId = process.env.YOUTUBE_CLIENT_ID;
-  const clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
+  const clientId = process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
 
   if (!clientId || !clientSecret || !redirectUri) {
     throw new Error("Missing YouTube OAuth environment variables.");
@@ -50,6 +50,19 @@ export async function fetchYoutubeChannelId(oauth2Client: InstanceType<typeof go
   }
 
   return channelId;
+}
+
+export async function fetchYoutubeChannelStats(oauth2Client: InstanceType<typeof google.auth.OAuth2>) {
+  const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+  const response = await youtube.channels.list({
+    mine: true,
+    part: ["statistics"],
+  });
+
+  const stats = response.data.items?.[0]?.statistics;
+  const subscriberCount = stats?.subscriberCount ? Number(stats.subscriberCount) : null;
+
+  return { subscriberCount };
 }
 
 export async function fetchYoutubeAnalytics(params: {

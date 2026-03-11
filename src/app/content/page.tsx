@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+
 import SidebarShell from "../../components/SidebarShell";
+import { hasRole, requireUserContext } from "../../lib/member";
 import { getLatestYoutubeMetrics } from "../../lib/youtube-metrics";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +16,12 @@ function formatCompact(value: number | null) {
 }
 
 export default async function ContentPage() {
-  const youtubeMetrics = await getLatestYoutubeMetrics();
+  const { error, role, userId } = await requireUserContext();
+  if (error || !userId || !hasRole("owner", role)) {
+    redirect("/health");
+  }
+
+  const youtubeMetrics = await getLatestYoutubeMetrics(userId);
   const metricsLabel = youtubeMetrics.periodStart && youtubeMetrics.periodEnd
     ? `${youtubeMetrics.periodStart} to ${youtubeMetrics.periodEnd}`
     : "Last 30 days";
@@ -34,7 +42,7 @@ export default async function ContentPage() {
             </div>
             <span className="text-xs text-slate-400">{metricsLabel}</span>
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">X followers</p>
               <p className="mt-2 text-2xl font-semibold text-slate-50">—</p>
@@ -47,6 +55,12 @@ export default async function ContentPage() {
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">YouTube subscribers gained</p>
               <p className="mt-2 text-2xl font-semibold text-slate-50">
                 {formatCompact(youtubeMetrics.subscribersGained)}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">YouTube total subscribers</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-50">
+                {formatCompact(youtubeMetrics.subscribersTotal)}
               </p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">

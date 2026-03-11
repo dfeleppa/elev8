@@ -1,6 +1,14 @@
-import SidebarShell from "../../../components/SidebarShell";
+import { redirect } from "next/navigation";
 
-export default function ContentYouTubePage() {
+import SidebarShell from "../../../components/SidebarShell";
+import { hasRole, requireUserContext } from "../../../lib/member";
+
+export default async function ContentYouTubePage() {
+  const { error, role } = await requireUserContext();
+  if (error || !hasRole("owner", role)) {
+    redirect("/health");
+  }
+
   return (
     <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
       <section>
