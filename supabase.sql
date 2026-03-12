@@ -200,6 +200,12 @@ create index if not exists organization_memberships_user_idx
 create index if not exists organization_memberships_org_idx
   on organization_memberships(organization_id);
 
+alter table if exists organization_memberships
+  add column if not exists coaching_payrate numeric;
+
+alter table if exists organization_memberships
+  add column if not exists office_payrate numeric;
+
 alter table if exists organization_members
   add column if not exists member_id uuid;
 
@@ -220,6 +226,7 @@ alter table if exists organizations enable row level security;
 alter table if exists organization_memberships enable row level security;
 alter table if exists organization_members enable row level security;
 
+drop policy if exists youtube_oauth_tokens_member_access on youtube_oauth_tokens;
 create policy youtube_oauth_tokens_member_access
   on youtube_oauth_tokens
   for all
@@ -227,6 +234,7 @@ create policy youtube_oauth_tokens_member_access
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
 
+drop policy if exists youtube_metrics_member_access on youtube_metrics;
 create policy youtube_metrics_member_access
   on youtube_metrics
   for all
@@ -234,6 +242,7 @@ create policy youtube_metrics_member_access
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
 
+drop policy if exists training_events_member_access on training_events;
 create policy training_events_member_access
   on training_events
   for all
@@ -241,6 +250,7 @@ create policy training_events_member_access
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
 
+drop policy if exists training_sessions_member_access on training_sessions;
 create policy training_sessions_member_access
   on training_sessions
   for all
@@ -248,6 +258,7 @@ create policy training_sessions_member_access
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
 
+drop policy if exists nutrition_days_member_access on nutrition_days;
 create policy nutrition_days_member_access
   on nutrition_days
   for all
@@ -255,6 +266,7 @@ create policy nutrition_days_member_access
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
 
+drop policy if exists nutrition_entries_member_access on nutrition_entries;
 create policy nutrition_entries_member_access
   on nutrition_entries
   for all
@@ -262,6 +274,7 @@ create policy nutrition_entries_member_access
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
 
+drop policy if exists health_stat_entries_member_access on health_stat_entries;
 create policy health_stat_entries_member_access
   on health_stat_entries
   for all
@@ -269,6 +282,7 @@ create policy health_stat_entries_member_access
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
 
+drop policy if exists projects_member_access on projects;
 create policy projects_member_access
   on projects
   for all
@@ -276,6 +290,7 @@ create policy projects_member_access
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
 
+drop policy if exists tasks_member_access on tasks;
 create policy tasks_member_access
   on tasks
   for all
@@ -283,18 +298,21 @@ create policy tasks_member_access
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
 
+drop policy if exists app_users_self_select on app_users;
 create policy app_users_self_select
   on app_users
   for select
   to authenticated
   using (id = auth.uid());
 
+drop policy if exists app_users_self_insert on app_users;
 create policy app_users_self_insert
   on app_users
   for insert
   to authenticated
   with check (id = auth.uid());
 
+drop policy if exists app_users_self_update on app_users;
 create policy app_users_self_update
   on app_users
   for update
@@ -302,6 +320,7 @@ create policy app_users_self_update
   using (id = auth.uid())
   with check (id = auth.uid());
 
+drop policy if exists organization_memberships_self_access on organization_memberships;
 create policy organization_memberships_self_access
   on organization_memberships
   for all
@@ -309,6 +328,7 @@ create policy organization_memberships_self_access
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+drop policy if exists organizations_member_read on organizations;
 create policy organizations_member_read
   on organizations
   for select
@@ -322,12 +342,14 @@ create policy organizations_member_read
     )
   );
 
+drop policy if exists organizations_member_insert on organizations;
 create policy organizations_member_insert
   on organizations
   for insert
   to authenticated
   with check (true);
 
+drop policy if exists organizations_admin_update on organizations;
 create policy organizations_admin_update
   on organizations
   for update
@@ -351,6 +373,7 @@ create policy organizations_admin_update
     )
   );
 
+drop policy if exists organizations_admin_delete on organizations;
 create policy organizations_admin_delete
   on organizations
   for delete
@@ -365,6 +388,7 @@ create policy organizations_admin_delete
     )
   );
 
+drop policy if exists organization_members_member_access on organization_members;
 create policy organization_members_member_access
   on organization_members
   for all

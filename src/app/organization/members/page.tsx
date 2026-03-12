@@ -6,181 +6,128 @@ import { supabaseAdmin } from "../../../lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
-type Organization = {
-  id: string;
-  name: string;
-};
+type MemberRow = Record<string, unknown>;
 
-type MembershipRow = {
-  id: string;
-  role: string | null;
-  user_id: string | null;
-};
-
-type AppUser = {
-  id: string;
-  full_name: string | null;
-  email: string | null;
-  role: string | null;
-};
-
-function formatRole(value: string | null | undefined) {
-  if (!value) {
-    return "Member";
+function formatCell(value: unknown) {
+  if (value === null || value === undefined) {
+    return "-";
   }
-  return value.replace(/\b\w/g, (match) => match.toUpperCase());
+
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return "[object]";
+    }
+  }
+
+  return String(value);
 }
 
-function getInitials(value: string | null) {
-  const trimmed = (value ?? "").trim();
-  if (!trimmed) {
-    return "?";
-  }
-  const parts = trimmed.split(/\s+/).filter(Boolean);
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
-  }
-  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-}
-
-async function getOrganizations(userId: string): Promise<Organization[]> {
-  const { data, error } = await supabaseAdmin
-    .from("organization_memberships")
-    .select("organization:organizations(id, name)")
-    .eq("user_id", userId);
-
-  if (error) {
-    return [];
+function getOrderedColumns(rows: MemberRow[]) {
+  const seen = new Set<string>();
+  for (const row of rows) {
+    for (const key of Object.keys(row)) {
+      seen.add(key);
+    }
   }
 
-  return (data ?? [])
-    .map((row) => (Array.isArray(row.organization) ? row.organization[0] : row.organization))
-    .filter((org): org is Organization => Boolean(org?.id));
-}
-
-async function getMemberships(organizationId: string): Promise<MembershipRow[]> {
-  const { data, error } = await supabaseAdmin
-    .from("organization_memberships")
-    .select("id, role, user_id")
-    .eq("organization_id", organizationId)
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    return [];
-  }
-
-  return data ?? [];
-}
-
-async function getUsers(userIds: string[]): Promise<AppUser[]> {
-  if (userIds.length === 0) {
-    return [];
-  }
-
-  const { data, error } = await supabaseAdmin
-    .from("app_users")
-    .select("id, full_name, email, role")
-    .in("id", userIds);
-
-  if (error) {
-    return [];
-  }
-
-  return data ?? [];
+  // Keep common identifiers first, then everything else in stable alpha order.
+  const preferred = ["id", "organization_id", "member_id", "first_name", "last_name", "email", "created_at", "updated_at"];
+  const all = Array.from(seen);
+  const preferredInRows = preferred.filter((key) => seen.has(key));
+  const remaining = all.filter((key) => !preferredInRows.includes(key)).sort((a, b) => a.localeCompare(b));
+  return [...preferredInRows, ...remaining];
 }
 
 export default async function OrganizationMembersPage() {
-  const { error, role, userId } = await requireUserContext();
-  if (error || !userId || !hasRole("admin", role)) {
+  const { error, role, organizationIds } = await requireUserContext();
+  if (error || !hasRole("admin", role)) {
     redirect("/health");
   }
 
-  const organizations = await getOrganizations(userId);
-  const activeOrganization = organizations[0] ?? null;
+  const activeOrganizationId = organizationIds[0] ?? null;
 
-  if (!activeOrganization) {
-    return (
-      <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
-        <section>
-          <h1 className="text-3xl font-semibold text-slate-100">Organization Members</h1>
-          <p className="mt-3 text-sm text-slate-400">No organization memberships found yet.</p>
-        </section>
-      </SidebarShell>
-    );
+  let query = supabaseAdmin.from("organization_members").select("*");
+  if (activeOrganizationId) {
+    query = query.eq("organization_id", activeOrganizationId);
   }
 
-  const memberships = await getMemberships(activeOrganization.id);
-  const userIds = memberships.map((membership) => membership.user_id).filter(Boolean) as string[];
-  const users = await getUsers(userIds);
+  let { data, error: membersError } = await query.order("created_at", { ascending: false });
 
-  const userMap = new Map(users.map((user) => [user.id, user]));
+  // If the table in this environment lacks organization_id, fallback to all rows.
+  if (membersError && activeOrganizationId && membersError.message.toLowerCase().includes("organization_id")) {
+    const retry = await supabaseAdmin.from("organization_members").select("*").order("created_at", { ascending: false });
+    data = retry.data;
+    membersError = retry.error;
+  }
+
+  const members = (data ?? []) as MemberRow[];
+  const columns = getOrderedColumns(members);
 
   return (
     <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
       <section className="space-y-8">
         <header>
           <h1 className="text-3xl font-semibold text-slate-100">Organization Members</h1>
-          <p className="mt-3 text-sm text-slate-400">Roster for {activeOrganization.name}.</p>
+          <p className="mt-3 text-sm text-slate-400">Full rows from organization_members.</p>
         </header>
 
         <section className="glass-panel rounded-[28px] border border-white/5 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Roster</p>
-              <h2 className="mt-2 text-xl font-semibold text-slate-50">Members</h2>
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Source Table</p>
+              <h2 className="mt-2 text-xl font-semibold text-slate-50">organization_members</h2>
             </div>
-            <span className="text-xs text-slate-400">{memberships.length} total</span>
+            <span className="text-xs text-slate-400">{members.length} rows</span>
           </div>
 
+          {membersError ? (
+            <div className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+              {membersError.message}
+            </div>
+          ) : null}
+
           <div className="mt-6 overflow-x-auto">
-            <table className="w-full min-w-[720px] border-separate border-spacing-y-3">
+            <table className="w-full min-w-[980px] border-separate border-spacing-y-3">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-[0.3em] text-slate-400">
-                  <th className="px-4">Name</th>
-                  <th className="px-4">Email</th>
-                  <th className="px-4">Org Role</th>
-                  <th className="px-4">User Role</th>
+                  {columns.map((column) => (
+                    <th key={column} className="px-4">
+                      {column}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {memberships.length === 0 ? (
+                {members.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={Math.max(columns.length, 1)}
                       className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-sm text-slate-400"
                     >
-                      No members found yet.
+                      No rows found in organization_members.
                     </td>
                   </tr>
                 ) : (
-                  memberships.map((membership) => {
-                    const user = membership.user_id ? userMap.get(membership.user_id) : null;
-                    const displayName = user?.full_name ?? user?.email ?? "Unknown";
-
-                    return (
-                      <tr key={membership.id}>
-                        <td className="rounded-l-2xl border-y border-white/10 bg-white/5 px-4 py-4">
-                          <div className="flex items-center gap-3">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-xs font-semibold text-slate-200">
-                              {getInitials(displayName)}
-                            </span>
-                            <div>
-                              <p className="text-base font-semibold text-slate-50">{displayName}</p>
-                            </div>
-                          </div>
+                  members.map((member, index) => (
+                    <tr key={(member.id as string | undefined) ?? `row-${index}`}>
+                      {columns.map((column, columnIndex) => (
+                        <td
+                          key={`${(member.id as string | undefined) ?? `row-${index}`}-${column}`}
+                          className={`border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300 ${
+                            columnIndex === 0 ? "rounded-l-2xl" : ""
+                          } ${columnIndex === columns.length - 1 ? "rounded-r-2xl" : ""}`}
+                        >
+                          {formatCell(member[column])}
                         </td>
-                        <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
-                          {user?.email ?? "—"}
-                        </td>
-                        <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
-                          {formatRole(membership.role)}
-                        </td>
-                        <td className="rounded-r-2xl border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
-                          {formatRole(user?.role)}
-                        </td>
-                      </tr>
-                    );
-                  })
+                      ))}
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
