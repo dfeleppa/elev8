@@ -95,6 +95,7 @@ export default function ProgrammingClient() {
   const [selectedDay, setSelectedDay] = useState("2026-03-11");
   const [sessions, setSessions] = useState<Record<string, SessionEntry[]>>(fallbackSessions);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>("wed-deadlift");
+  const [editorOpen, setEditorOpen] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [tracks, setTracks] = useState<TrackOption[]>([]);
   const [selectedTrackId, setSelectedTrackId] = useState<string>("");
@@ -187,6 +188,7 @@ export default function ProgrammingClient() {
         if (firstSession) {
           setSelectedDay(firstDay);
           setSelectedSessionId(firstSession.id);
+          setEditorOpen(false);
         }
       } catch {
         // Keep existing state when fetch fails.
@@ -290,6 +292,7 @@ export default function ProgrammingClient() {
         return next;
       });
       setSelectedSessionId(created.id);
+      setEditorOpen(true);
     } finally {
       setCreatingType(null);
     }
@@ -364,7 +367,7 @@ export default function ProgrammingClient() {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[2.2fr_1fr]">
+      <div className={`relative grid gap-6 transition-[padding] duration-300 ${editorOpen ? "lg:pr-[26rem]" : ""}`}>
         <div className="overflow-hidden rounded-[28px] border border-white/10 bg-white/5">
           <div className="grid min-w-[980px] grid-cols-7 border-b border-white/10 text-xs uppercase tracking-[0.2em] text-slate-400">
             {weekDays.map((day) => (
@@ -401,6 +404,7 @@ export default function ProgrammingClient() {
                           onClick={() => {
                             setSelectedDay(day.date);
                             setSelectedSessionId(session.id);
+                            setEditorOpen(true);
                           }}
                           className={`w-full rounded-2xl border p-4 text-left text-xs text-white shadow-[0_0_0_1px_rgba(56,189,248,0.15)] transition ${
                             isSelected
@@ -434,18 +438,48 @@ export default function ProgrammingClient() {
           </div>
         </div>
 
-        <aside className="space-y-4">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+        <button
+          type="button"
+          onClick={() => setEditorOpen((prev) => !prev)}
+          className="fixed bottom-6 right-6 z-40 rounded-full border border-white/20 bg-slate-900/90 px-4 py-2 text-xs font-semibold text-slate-100 shadow-lg backdrop-blur transition hover:border-white/40 lg:hidden"
+        >
+          {editorOpen ? "Close Editor" : "Open Editor"}
+        </button>
+
+        <div
+          aria-hidden={!editorOpen}
+          onClick={() => setEditorOpen(false)}
+          className={`fixed inset-0 z-30 bg-slate-950/45 transition-opacity duration-300 lg:hidden ${
+            editorOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        />
+
+        <aside
+          className={`fixed bottom-0 right-0 top-0 z-40 w-full max-w-[420px] border-l border-white/10 bg-slate-950/95 p-5 shadow-2xl backdrop-blur transition-transform duration-300 ${
+            editorOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="flex h-full flex-col">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Selected Day</p>
                 <h2 className="mt-2 text-lg font-semibold text-slate-100">{dayLabel}</h2>
               </div>
-              <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
-                {selected?.session.title || "No session"}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
+                  {selected?.session.title || "No session"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditorOpen(false)}
+                  className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-white/30"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-            <div className="mt-4 space-y-3">
+
+            <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { key: "warmup", label: "Add Warmup" },
@@ -474,7 +508,7 @@ export default function ProgrammingClient() {
                 id="session-title"
                 value={editor.session.title}
                 onChange={(event) => updateEditor("title", event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+                className="w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
               />
 
               <label className="text-xs uppercase tracking-[0.2em] text-slate-400" htmlFor="session-block">
@@ -484,7 +518,7 @@ export default function ProgrammingClient() {
                 id="session-block"
                 value={editor.session.block ?? "none"}
                 onChange={(event) => updateEditor("block", event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+                className="w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
               />
 
               <label className="text-xs uppercase tracking-[0.2em] text-slate-400" htmlFor="session-lines">
@@ -495,10 +529,10 @@ export default function ProgrammingClient() {
                 rows={8}
                 value={editor.session.lines.join("\n")}
                 onChange={(event) => updateEditor("lines", event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+                className="w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
               />
 
-              <div className="flex items-center justify-end gap-2">
+              <div className="flex items-center justify-end gap-2 pb-2">
                 <button
                   type="button"
                   disabled={saving}
