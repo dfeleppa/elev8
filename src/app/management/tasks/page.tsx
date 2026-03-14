@@ -157,7 +157,7 @@ export default async function ManagementTasksPage({
   const projectFilter = getSortParam(searchParams?.project) ?? "";
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("owner", role)) {
-    redirect("/health");
+    redirect("/organization");
   }
 
   const [tasks, projects] = await Promise.all([getTasks(userId), getProjects(userId)]);

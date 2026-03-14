@@ -37,34 +37,6 @@ const roleRank: Record<UserRole, number> = {
 
 const navItems: NavItem[] = [
   {
-    label: "Health",
-    href: "/health",
-    minRole: "member",
-    children: [
-      { label: "Training", href: "/health/training" },
-      { label: "Weekly", href: "/health/training/weekly" },
-    ],
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-        <path
-          d="M12 20s-6-4.2-8-7.8C2.6 9.4 4 7 6.8 7c1.8 0 3.2 1 4 2.4C11.6 8 13 7 14.8 7 17.6 7 19 9.4 20 12.2 18 15.8 12 20 12 20z"
-          fill="none"
-          stroke="currentColor"
-          strokeLinejoin="round"
-          strokeWidth="1.4"
-        />
-        <path
-          d="M8.5 12h2l1.3 2.4 1.7-4.2 1.2 1.8h2.8"
-          fill="none"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="1.4"
-        />
-      </svg>
-    ),
-  },
-  {
     label: "Organization",
     href: "/organization",
     minRole: "member",

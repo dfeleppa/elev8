@@ -47,6 +47,32 @@ function canAccessOrganization(organizationIds: string[], organizationId: string
   return organizationIds.includes(organizationId);
 }
 
+async function getOrganizationMembers(organizationId: string) {
+  let query = supabaseAdmin
+    .from("organization_members")
+    .select("first_name, last_name, email, role, membership")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: true });
+
+  let { data, error } = await query;
+
+  // Backward compatibility for environments where organization_id is missing.
+  if (error && error.message.toLowerCase().includes("organization_id")) {
+    const retry = await supabaseAdmin
+      .from("organization_members")
+      .select("first_name, last_name, email, role, membership")
+      .order("created_at", { ascending: true });
+    data = retry.data;
+    error = retry.error;
+  }
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ?? [];
+}
+
 export async function GET(request: NextRequest) {
   const { error, role, organizationIds } = await requireUserContext();
   if (error) {
@@ -95,7 +121,41 @@ export async function GET(request: NextRequest) {
   });
 
   const staff = rows.filter((row) => row.role === "coach" || row.role === "admin" || row.role === "owner");
-  const promotableMembers = rows.filter((row) => row.role === "member");
+  const staffEmails = new Set(
+    staff
+      .map((row) => row.user?.email?.toLowerCase().trim())
+      .filter((value): value is string => Boolean(value))
+  );
+
+  let promotableMembers: Array<{
+    email: string;
+    fullName: string;
+    membership: string | null;
+    role: string;
+  }> = [];
+
+  try {
+    const memberRows = await getOrganizationMembers(organizationId);
+    promotableMembers = memberRows
+      .map((row) => {
+        const email = normalizeEmail(row.email);
+        if (!email) {
+          return null;
+        }
+
+        const fullName = `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim();
+        return {
+          email,
+          fullName: fullName || email,
+          membership: typeof row.membership === "string" ? row.membership : null,
+          role: typeof row.role === "string" ? row.role : "member",
+        };
+      })
+      .filter((row): row is { email: string; fullName: string; membership: string | null; role: string } => Boolean(row))
+      .filter((row) => !staffEmails.has(row.email));
+  } catch (memberError) {
+    return NextResponse.json({ error: (memberError as Error).message }, { status: 500 });
+  }
 
   return NextResponse.json({ organizationId, staff, promotableMembers });
 }
@@ -113,6 +173,8 @@ export async function POST(request: NextRequest) {
   const payload = (await request.json().catch(() => null)) as {
     organizationId?: string;
     existingUserId?: string;
+    existingMemberEmail?: string;
+    existingMemberName?: string;
     fullName?: string;
     email?: string;
     role?: string;
@@ -141,19 +203,21 @@ export async function POST(request: NextRequest) {
   const officePayrate = normalizePayrate(payload.officePayrate);
 
   let userId = payload.existingUserId?.trim() || null;
+  let sourceEmail: string | null = null;
 
   if (!userId) {
-    const email = normalizeEmail(payload.email);
+    const email = normalizeEmail(payload.existingMemberEmail ?? payload.email);
     if (!email) {
       return NextResponse.json({ error: "A valid email is required when creating new staff." }, { status: 400 });
     }
+    sourceEmail = email;
 
     const { data: user, error: userError } = await supabaseAdmin
       .from("app_users")
       .upsert(
         {
           email,
-          full_name: normalizeName(payload.fullName),
+          full_name: normalizeName(payload.existingMemberName ?? payload.fullName),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "email" }
@@ -166,6 +230,17 @@ export async function POST(request: NextRequest) {
     }
 
     userId = user.id;
+  }
+
+  if (sourceEmail) {
+    await supabaseAdmin
+      .from("organization_members")
+      .update({
+        role: payload.role,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("organization_id", organizationId)
+      .eq("email", sourceEmail);
   }
 
   const { error: membershipError } = await supabaseAdmin.from("organization_memberships").upsert(

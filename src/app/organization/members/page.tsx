@@ -47,7 +47,7 @@ function getOrderedColumns(rows: MemberRow[]) {
 export default async function OrganizationMembersPage() {
   const { error, role, organizationIds } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
-    redirect("/health");
+    redirect("/organization");
   }
 
   const activeOrganizationId = organizationIds[0] ?? null;

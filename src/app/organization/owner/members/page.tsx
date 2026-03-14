@@ -33,7 +33,7 @@ export default async function OwnerMembersPage() {
   const members = (data ?? []) as OwnerMemberRow[];
 
   return (
-    <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
+    <SidebarShell mainClassName="w-full max-w-none px-5 py-10 lg:px-8 lg:py-16">
       <section className="space-y-8">
         <header>
           <h1 className="text-3xl font-semibold text-slate-100">Members</h1>

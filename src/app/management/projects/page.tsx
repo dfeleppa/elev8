@@ -163,7 +163,7 @@ function getInitials(value: string) {
 export default async function ManagementProjectsPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("owner", role)) {
-    redirect("/health");
+    redirect("/organization");
   }
 
   const projects = await getProjects(userId);

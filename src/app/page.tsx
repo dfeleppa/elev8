@@ -195,10 +195,7 @@ function formatCount(value: number) {
 export default async function Home() {
   const { error, role } = await requireUserContext();
   if (error || !hasRole("owner", role)) {
-    if (role === "admin" || role === "coach") {
-      redirect("/organization");
-    }
-    redirect("/health");
+    redirect("/organization");
   }
 
   const memberMetrics = await getMemberMetrics();

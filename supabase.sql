@@ -43,10 +43,10 @@ create table if not exists training_sessions (
 create table if not exists nutrition_days (
   id uuid primary key default gen_random_uuid(),
   day_date date not null unique,
-  calorie_target integer,
-  protein_target integer,
-  carbs_target integer,
-  fat_target integer,
+  calorie_target numeric(10,2),
+  protein_target numeric(10,2),
+  carbs_target numeric(10,2),
+  fat_target numeric(10,2),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -56,13 +56,29 @@ create table if not exists nutrition_entries (
   day_id uuid not null references nutrition_days(id) on delete cascade,
   meal_type text not null,
   entry_name text not null,
-  calories integer,
-  protein integer,
-  carbs integer,
-  fat integer,
+  quantity numeric(10,2) not null default 1,
+  calories numeric(10,2),
+  protein numeric(10,2),
+  carbs numeric(10,2),
+  fat numeric(10,2),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+create table if not exists nutrition_custom_foods (
+  id uuid primary key default gen_random_uuid(),
+  member_id uuid not null,
+  name text not null,
+  calories numeric(10,2),
+  protein numeric(10,2),
+  carbs numeric(10,2),
+  fat numeric(10,2),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists nutrition_custom_foods_member_idx
+  on nutrition_custom_foods(member_id, created_at desc);
 
 create table if not exists projects (
   id uuid primary key default gen_random_uuid(),
@@ -153,6 +169,61 @@ create unique index if not exists nutrition_days_member_day_idx
 alter table if exists nutrition_entries
   add column if not exists member_id uuid;
 
+alter table if exists nutrition_entries
+  add column if not exists quantity integer not null default 1;
+
+alter table if exists nutrition_entries
+  alter column quantity type numeric(10,2) using quantity::numeric,
+  alter column calories type numeric(10,2) using calories::numeric,
+  alter column protein type numeric(10,2) using protein::numeric,
+  alter column carbs type numeric(10,2) using carbs::numeric,
+  alter column fat type numeric(10,2) using fat::numeric;
+
+alter table if exists nutrition_days
+  alter column calorie_target type numeric(10,2) using calorie_target::numeric,
+  alter column protein_target type numeric(10,2) using protein_target::numeric,
+  alter column carbs_target type numeric(10,2) using carbs_target::numeric,
+  alter column fat_target type numeric(10,2) using fat_target::numeric;
+
+alter table if exists nutrition_custom_foods
+  alter column calories type numeric(10,2) using calories::numeric,
+  alter column protein type numeric(10,2) using protein::numeric,
+  alter column carbs type numeric(10,2) using carbs::numeric,
+  alter column fat type numeric(10,2) using fat::numeric;
+
+update nutrition_entries as entry
+set member_id = day.member_id
+from nutrition_days as day
+where entry.day_id = day.id
+  and entry.member_id is null
+  and day.member_id is not null;
+
+alter table if exists nutrition_days
+  drop constraint if exists nutrition_days_member_required;
+
+alter table if exists nutrition_days
+  add constraint nutrition_days_member_required
+  check (member_id is not null) not valid;
+
+alter table if exists nutrition_entries
+  drop constraint if exists nutrition_entries_member_required;
+
+alter table if exists nutrition_entries
+  add constraint nutrition_entries_member_required
+  check (member_id is not null) not valid;
+
+create unique index if not exists nutrition_days_id_member_idx
+  on nutrition_days(id, member_id);
+
+alter table if exists nutrition_entries
+  drop constraint if exists nutrition_entries_day_id_fkey;
+
+alter table if exists nutrition_entries
+  add constraint nutrition_entries_day_member_fkey
+  foreign key (day_id, member_id)
+  references nutrition_days(id, member_id)
+  on delete cascade;
+
 create index if not exists nutrition_entries_member_idx
   on nutrition_entries(member_id);
 
@@ -200,6 +271,25 @@ create index if not exists organization_memberships_user_idx
 create index if not exists organization_memberships_org_idx
   on organization_memberships(organization_id);
 
+create table if not exists organization_schedule_classes (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  name text not null,
+  class_time time not null,
+  duration_minutes integer not null check (duration_minutes > 0),
+  class_days text[] not null default '{}',
+  start_date date not null,
+  end_date date,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists organization_schedule_classes_org_idx
+  on organization_schedule_classes(organization_id);
+
+create index if not exists organization_schedule_classes_start_idx
+  on organization_schedule_classes(start_date);
+
 alter table if exists organization_memberships
   add column if not exists coaching_payrate numeric;
 
@@ -218,6 +308,7 @@ alter table if exists training_events enable row level security;
 alter table if exists training_sessions enable row level security;
 alter table if exists nutrition_days enable row level security;
 alter table if exists nutrition_entries enable row level security;
+alter table if exists nutrition_custom_foods enable row level security;
 alter table if exists health_stat_entries enable row level security;
 alter table if exists projects enable row level security;
 alter table if exists tasks enable row level security;
@@ -225,6 +316,7 @@ alter table if exists app_users enable row level security;
 alter table if exists organizations enable row level security;
 alter table if exists organization_memberships enable row level security;
 alter table if exists organization_members enable row level security;
+alter table if exists organization_schedule_classes enable row level security;
 
 drop policy if exists youtube_oauth_tokens_member_access on youtube_oauth_tokens;
 create policy youtube_oauth_tokens_member_access
@@ -274,6 +366,14 @@ create policy nutrition_entries_member_access
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
 
+drop policy if exists nutrition_custom_foods_member_access on nutrition_custom_foods;
+create policy nutrition_custom_foods_member_access
+  on nutrition_custom_foods
+  for all
+  to authenticated
+  using (member_id = auth.uid())
+  with check (member_id = auth.uid());
+
 drop policy if exists health_stat_entries_member_access on health_stat_entries;
 create policy health_stat_entries_member_access
   on health_stat_entries
@@ -297,6 +397,28 @@ create policy tasks_member_access
   to authenticated
   using (member_id = auth.uid())
   with check (member_id = auth.uid());
+
+drop policy if exists organization_schedule_classes_membership_access on organization_schedule_classes;
+create policy organization_schedule_classes_membership_access
+  on organization_schedule_classes
+  for all
+  to authenticated
+  using (
+    exists (
+      select 1
+      from organization_memberships m
+      where m.organization_id = organization_schedule_classes.organization_id
+        and m.user_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from organization_memberships m
+      where m.organization_id = organization_schedule_classes.organization_id
+        and m.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists app_users_self_select on app_users;
 create policy app_users_self_select

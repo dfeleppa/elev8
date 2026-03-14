@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 
 import SidebarShell from "../../../../components/SidebarShell";
+import HealthStatsPanel from "../../../../components/health/HealthStatsPanel";
+import { STAT_GROUPS } from "../../../../components/health/health-stats-config";
 import { hasRole, requireUserContext } from "../../../../lib/member";
-import HealthStatsPanel from "../../../health/stats/HealthStatsPanel";
-import { STAT_GROUPS } from "../../../health/stats/health-stats-config";
 
 export default async function MemberAthleteDashboardPage() {
   const { error, role, userId } = await requireUserContext();

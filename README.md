@@ -43,6 +43,14 @@ This project includes a YouTube analytics pipeline that stores last-30-days metr
 - `/api/cron/youtube` pulls last-30-days metrics and upserts them into Supabase.
 - Vercel Cron will call the route if configured in `vercel.json`.
 
+### Nutrition (Supabase, User-Scoped)
+Nutrition data is stored in Supabase and is tied to the authenticated user account.
+
+- `nutrition_days` stores day-level targets by `(member_id, day_date)`.
+- `nutrition_entries` stores meal entries and is constrained to the same `member_id` as its parent day.
+- API routes under `src/app/api/nutrition-*` resolve the logged-in user context before reading or writing records.
+- File-based JSON nutrition storage is not used in this app.
+
 ### Project Structure
 - `src/app/page.tsx` hosts the entire dashboard layout with typed data models.
 - `src/app/layout.tsx` wires up fonts and metadata.

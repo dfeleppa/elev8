@@ -9,7 +9,7 @@ function isValidDate(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
-function toOptionalInt(value: unknown) {
+function toOptionalDecimal(value: unknown) {
   if (value === null || value === undefined || value === "") {
     return null;
   }
@@ -17,7 +17,7 @@ function toOptionalInt(value: unknown) {
   if (!Number.isFinite(parsed)) {
     return null;
   }
-  return Math.max(0, Math.round(parsed));
+  return Math.max(0, parsed);
 }
 
 export async function GET(request: Request) {
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
 
   const { data: entries, error: entriesError } = await supabaseAdmin
     .from("nutrition_entries")
-    .select("id, meal_type, entry_name, calories, protein, carbs, fat, created_at")
+    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, created_at")
     .eq("day_id", day.id)
     .order("created_at", { ascending: true });
 
@@ -80,10 +80,10 @@ export async function POST(request: Request) {
       {
         member_id: userId,
         day_date: dayDate,
-        calorie_target: toOptionalInt(body?.calorieTarget),
-        protein_target: toOptionalInt(body?.proteinTarget),
-        carbs_target: toOptionalInt(body?.carbsTarget),
-        fat_target: toOptionalInt(body?.fatTarget),
+        calorie_target: toOptionalDecimal(body?.calorieTarget),
+        protein_target: toOptionalDecimal(body?.proteinTarget),
+        carbs_target: toOptionalDecimal(body?.carbsTarget),
+        fat_target: toOptionalDecimal(body?.fatTarget),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "member_id,day_date" }

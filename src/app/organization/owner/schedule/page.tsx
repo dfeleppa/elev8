@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import SidebarShell from "../../../../components/SidebarShell";
 import { hasRole, requireUserContext } from "../../../../lib/member";
+import OwnerScheduleClient from "./OwnerScheduleClient";
 
 export default async function OwnerSchedulePage() {
   const { error, role, userId } = await requireUserContext();
@@ -10,15 +11,8 @@ export default async function OwnerSchedulePage() {
   }
 
   return (
-    <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
-      <section className="space-y-6">
-        <header>
-          <h1 className="text-3xl font-semibold text-slate-100">Schedule</h1>
-          <p className="mt-3 text-sm text-slate-400">
-            Oversee organization scheduling and staffing coverage.
-          </p>
-        </header>
-      </section>
+    <SidebarShell mainClassName="w-full max-w-none px-5 py-10 lg:px-8 lg:py-16">
+      <OwnerScheduleClient />
     </SidebarShell>
   );
 }

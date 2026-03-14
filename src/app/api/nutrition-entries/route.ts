@@ -11,7 +11,7 @@ function isValidDate(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
-function toOptionalInt(value: unknown) {
+function toOptionalDecimal(value: unknown) {
   if (value === null || value === undefined || value === "") {
     return null;
   }
@@ -19,7 +19,15 @@ function toOptionalInt(value: unknown) {
   if (!Number.isFinite(parsed)) {
     return null;
   }
-  return Math.max(0, Math.round(parsed));
+  return Math.max(0, parsed);
+}
+
+function toPositiveDecimal(value: unknown) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return 1;
+  }
+  return Math.max(0.01, parsed);
 }
 
 export async function POST(request: Request) {
@@ -61,13 +69,14 @@ export async function POST(request: Request) {
       day_id: day.id,
       meal_type: mealType,
       entry_name: entryName,
-      calories: toOptionalInt(body?.calories),
-      protein: toOptionalInt(body?.protein),
-      carbs: toOptionalInt(body?.carbs),
-      fat: toOptionalInt(body?.fat),
+      quantity: toPositiveDecimal(body?.quantity),
+      calories: toOptionalDecimal(body?.calories),
+      protein: toOptionalDecimal(body?.protein),
+      carbs: toOptionalDecimal(body?.carbs),
+      fat: toOptionalDecimal(body?.fat),
       updated_at: new Date().toISOString(),
     })
-    .select("id, meal_type, entry_name, calories, protein, carbs, fat, created_at")
+    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, created_at")
     .single();
 
   if (error) {

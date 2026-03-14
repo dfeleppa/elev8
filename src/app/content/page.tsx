@@ -18,7 +18,7 @@ function formatCompact(value: number | null) {
 export default async function ContentPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("owner", role)) {
-    redirect("/health");
+    redirect("/organization");
   }
 
   const youtubeMetrics = await getLatestYoutubeMetrics(userId);

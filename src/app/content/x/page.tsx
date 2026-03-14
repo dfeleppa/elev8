@@ -6,7 +6,7 @@ import { hasRole, requireUserContext } from "../../../lib/member";
 export default async function ContentXPage() {
   const { error, role } = await requireUserContext();
   if (error || !hasRole("owner", role)) {
-    redirect("/health");
+    redirect("/organization");
   }
 
   return (
