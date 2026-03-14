@@ -46,6 +46,7 @@ const navItems: NavItem[] = [
         href: "/organization/owner",
         minRole: "owner",
         children: [
+          { label: "Agents", href: "/organization/owner/agents", minRole: "owner" },
           { label: "Staff", href: "/organization/owner/staff", minRole: "owner" },
           { label: "Schedule", href: "/organization/owner/schedule", minRole: "owner" },
           { label: "Payroll", href: "/organization/owner/payroll", minRole: "owner" },

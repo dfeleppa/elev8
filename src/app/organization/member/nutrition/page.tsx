@@ -54,6 +54,9 @@ type LibraryFood = {
   protein: number | null;
   carbs: number | null;
   fat: number | null;
+  sugar?: number | null;
+  fiber?: number | null;
+  saturated_fat?: number | null;
   quantity?: number | null;
 };
 
@@ -138,6 +141,9 @@ export default function HealthNutritionPage() {
     protein: "",
     carbs: "",
     fat: "",
+    sugar: "",
+    fiber: "",
+    saturatedFat: "",
   });
   const [creatingFood, setCreatingFood] = useState(false);
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
@@ -147,6 +153,9 @@ export default function HealthNutritionPage() {
     protein: "",
     carbs: "",
     fat: "",
+    sugar: "",
+    fiber: "",
+    saturatedFat: "",
   });
   const [drafts, setDrafts] = useState<Record<MealKey, EntryDraft>>({
     breakfast: { ...emptyDraft },
@@ -630,6 +639,9 @@ export default function HealthNutritionPage() {
           protein: createFoodDraft.protein,
           carbs: createFoodDraft.carbs,
           fat: createFoodDraft.fat,
+          sugar: createFoodDraft.sugar,
+          fiber: createFoodDraft.fiber,
+          saturatedFat: createFoodDraft.saturatedFat,
         }),
       });
       const payload = await response.json().catch(() => null);
@@ -640,7 +652,16 @@ export default function HealthNutritionPage() {
 
       setMyFoods((prev) => [payload.food, ...prev]);
       setDialogTab("mine");
-      setCreateFoodDraft({ name: "", calories: "", protein: "", carbs: "", fat: "" });
+      setCreateFoodDraft({
+        name: "",
+        calories: "",
+        protein: "",
+        carbs: "",
+        fat: "",
+        sugar: "",
+        fiber: "",
+        saturatedFat: "",
+      });
     } finally {
       setCreatingFood(false);
     }
@@ -654,6 +675,9 @@ export default function HealthNutritionPage() {
       protein: food.protein?.toString() ?? "",
       carbs: food.carbs?.toString() ?? "",
       fat: food.fat?.toString() ?? "",
+      sugar: food.sugar?.toString() ?? "",
+      fiber: food.fiber?.toString() ?? "",
+      saturatedFat: food.saturated_fat?.toString() ?? "",
     });
   }
 
@@ -1069,40 +1093,85 @@ export default function HealthNutritionPage() {
 
               {dialogTab === "create" ? (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <input
-                    value={createFoodDraft.name}
-                    onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, name: event.target.value }))}
-                    placeholder="Food name"
-                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none sm:col-span-2"
-                  />
-                  <input
-                    value={createFoodDraft.calories}
-                    onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, calories: event.target.value }))}
-                    placeholder="Calories"
-                    inputMode="numeric"
-                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
-                  />
-                  <input
-                    value={createFoodDraft.protein}
-                    onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, protein: event.target.value }))}
-                    placeholder="Protein"
-                    inputMode="numeric"
-                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
-                  />
-                  <input
-                    value={createFoodDraft.carbs}
-                    onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, carbs: event.target.value }))}
-                    placeholder="Carbs"
-                    inputMode="numeric"
-                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
-                  />
-                  <input
-                    value={createFoodDraft.fat}
-                    onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, fat: event.target.value }))}
-                    placeholder="Fat"
-                    inputMode="numeric"
-                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
-                  />
+                  <label className="space-y-1 sm:col-span-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Food Name</span>
+                    <input
+                      value={createFoodDraft.name}
+                      onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, name: event.target.value }))}
+                      placeholder="Food name"
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Calories</span>
+                    <input
+                      value={createFoodDraft.calories}
+                      onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, calories: event.target.value }))}
+                      placeholder="Calories"
+                      inputMode="numeric"
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Protein</span>
+                    <input
+                      value={createFoodDraft.protein}
+                      onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, protein: event.target.value }))}
+                      placeholder="Protein"
+                      inputMode="numeric"
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Carbs</span>
+                    <input
+                      value={createFoodDraft.carbs}
+                      onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, carbs: event.target.value }))}
+                      placeholder="Carbs"
+                      inputMode="numeric"
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Fat</span>
+                    <input
+                      value={createFoodDraft.fat}
+                      onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, fat: event.target.value }))}
+                      placeholder="Fat"
+                      inputMode="numeric"
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Sugar</span>
+                    <input
+                      value={createFoodDraft.sugar}
+                      onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, sugar: event.target.value }))}
+                      placeholder="Sugar"
+                      inputMode="numeric"
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Fiber</span>
+                    <input
+                      value={createFoodDraft.fiber}
+                      onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, fiber: event.target.value }))}
+                      placeholder="Fiber"
+                      inputMode="numeric"
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                    />
+                  </label>
+                  <label className="space-y-1 sm:col-span-2">
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Saturated Fat</span>
+                    <input
+                      value={createFoodDraft.saturatedFat}
+                      onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, saturatedFat: event.target.value }))}
+                      placeholder="Saturated fat"
+                      inputMode="numeric"
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                    />
+                  </label>
                   <button
                     type="button"
                     onClick={createCustomFood}
@@ -1238,40 +1307,85 @@ export default function HealthNutritionPage() {
                 <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-600">Edit Food</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <input
-                      value={editFoodDraft.name}
-                      onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, name: event.target.value }))}
-                      placeholder="Food name"
-                      className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none sm:col-span-2"
-                    />
-                    <input
-                      value={editFoodDraft.calories}
-                      onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, calories: event.target.value }))}
-                      placeholder="Calories"
-                      inputMode="numeric"
-                      className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
-                    />
-                    <input
-                      value={editFoodDraft.protein}
-                      onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, protein: event.target.value }))}
-                      placeholder="Protein"
-                      inputMode="numeric"
-                      className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
-                    />
-                    <input
-                      value={editFoodDraft.carbs}
-                      onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, carbs: event.target.value }))}
-                      placeholder="Carbs"
-                      inputMode="numeric"
-                      className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
-                    />
-                    <input
-                      value={editFoodDraft.fat}
-                      onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, fat: event.target.value }))}
-                      placeholder="Fat"
-                      inputMode="numeric"
-                      className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
-                    />
+                    <label className="space-y-1 sm:col-span-2">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Food Name</span>
+                      <input
+                        value={editFoodDraft.name}
+                        onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, name: event.target.value }))}
+                        placeholder="Food name"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Calories</span>
+                      <input
+                        value={editFoodDraft.calories}
+                        onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, calories: event.target.value }))}
+                        placeholder="Calories"
+                        inputMode="numeric"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Protein</span>
+                      <input
+                        value={editFoodDraft.protein}
+                        onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, protein: event.target.value }))}
+                        placeholder="Protein"
+                        inputMode="numeric"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Carbs</span>
+                      <input
+                        value={editFoodDraft.carbs}
+                        onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, carbs: event.target.value }))}
+                        placeholder="Carbs"
+                        inputMode="numeric"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Fat</span>
+                      <input
+                        value={editFoodDraft.fat}
+                        onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, fat: event.target.value }))}
+                        placeholder="Fat"
+                        inputMode="numeric"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Sugar</span>
+                      <input
+                        value={editFoodDraft.sugar}
+                        onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, sugar: event.target.value }))}
+                        placeholder="Sugar"
+                        inputMode="numeric"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Fiber</span>
+                      <input
+                        value={editFoodDraft.fiber}
+                        onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, fiber: event.target.value }))}
+                        placeholder="Fiber"
+                        inputMode="numeric"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                      />
+                    </label>
+                    <label className="space-y-1 sm:col-span-2">
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Saturated Fat</span>
+                      <input
+                        value={editFoodDraft.saturatedFat}
+                        onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, saturatedFat: event.target.value }))}
+                        placeholder="Saturated fat"
+                        inputMode="numeric"
+                        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
+                      />
+                    </label>
                     <div className="sm:col-span-2 flex items-center gap-2">
                       <button
                         type="button"
