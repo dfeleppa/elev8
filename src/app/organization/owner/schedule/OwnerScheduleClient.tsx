@@ -7,21 +7,53 @@ type ScheduleView = "list" | "calendar";
 
 type RecurringClass = {
   id: string;
+  track_id: string | null;
   name: string;
   class_time: string;
   duration_minutes: number;
   class_days: string[];
   start_date: string;
   end_date: string | null;
+  default_coach_user_id: string | null;
+  size_limit: number;
+  reservation_cutoff_hours: number;
+  calendar_color: string;
+  track?: {
+    id: string;
+    name: string;
+  } | null;
+  default_coach?: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+  } | null;
 };
 
 type ClassDraft = {
+  trackId: string;
   name: string;
   time: string;
   durationMinutes: string;
   days: string[];
   startDate: string;
+  endDate: string;
+  defaultCoachUserId: string;
+  sizeLimit: string;
+  reservationCutoffHours: string;
+  calendarColor: string;
 };
+
+type TrackOption = {
+  id: string;
+  name: string;
+};
+
+type CoachOption = {
+  userId: string;
+  label: string;
+};
+
+type ColumnKey = "name" | "time" | "duration" | "days" | "start" | "actions";
 
 const tabs: Array<{ key: ScheduleTab; label: string }> = [
   { key: "current", label: "Current Classes" },
@@ -31,12 +63,45 @@ const tabs: Array<{ key: ScheduleTab; label: string }> = [
 
 const weekDays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
+const calendarColorOptions = [
+  { value: "#3B82F6", label: "Blue" },
+  { value: "#10B981", label: "Green" },
+  { value: "#F59E0B", label: "Amber" },
+  { value: "#EF4444", label: "Red" },
+  { value: "#8B5CF6", label: "Purple" },
+  { value: "#EC4899", label: "Pink" },
+];
+
+const columnDefs: Array<{ key: ColumnKey; label: string }> = [
+  { key: "name", label: "Name" },
+  { key: "time", label: "Time" },
+  { key: "duration", label: "Duration" },
+  { key: "days", label: "Days" },
+  { key: "start", label: "Start" },
+  { key: "actions", label: "Actions" },
+];
+
+const defaultVisibleColumns: Record<ColumnKey, boolean> = {
+  name: true,
+  time: true,
+  duration: true,
+  days: true,
+  start: true,
+  actions: true,
+};
+
 const emptyDraft: ClassDraft = {
+  trackId: "",
   name: "",
   time: "09:00",
   durationMinutes: "60",
   days: ["Mo", "Tu", "We", "Th", "Fr"],
   startDate: toLocalDateKey(new Date()),
+  endDate: "",
+  defaultCoachUserId: "",
+  sizeLimit: "0",
+  reservationCutoffHours: "0",
+  calendarColor: "#3B82F6",
 };
 
 function formatTime(value: string) {
@@ -89,35 +154,107 @@ function toLocalDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function normalizeDateKey(value: string | null) {
+  if (!value) {
+    return "";
+  }
+  return value.slice(0, 10);
+}
+
 function classifyClassByDate(row: RecurringClass, todayKey: string): ScheduleTab {
-  if (row.start_date > todayKey) {
+  const startKey = normalizeDateKey(row.start_date);
+  const endKey = normalizeDateKey(row.end_date);
+
+  if (startKey > todayKey) {
     return "future";
   }
 
-  if (row.end_date && row.end_date < todayKey) {
+  if (endKey && endKey < todayKey) {
     return "past";
   }
 
   return "current";
 }
 
-function iconButton(label: string) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/10"
-    >
-      {label}
-    </button>
-  );
+function toCsvCell(value: string) {
+  const escaped = value.replace(/"/g, '""');
+  return `"${escaped}"`;
 }
+
+function downloadCsv(fileName: string, csvText: string) {
+  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+const columnsIcon = (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+    <path d="M3 5h6v14H3zM10 5h4v14h-4zM15 5h6v14h-6z" fill="currentColor" />
+  </svg>
+);
+
+const filtersIcon = (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+    <path d="M4 6h16l-6 7v5l-4-2v-3z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+  </svg>
+);
+
+const exportIcon = (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+    <path d="M12 3v10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <path d="m8.5 9.5 3.5 3.5 3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M4 17h16v4H4z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+  </svg>
+);
+
+const editIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path d="M4 20h4l10-10-4-4L4 16z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="m12.5 7.5 4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+const copyIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    <rect x="4" y="4" width="11" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+);
+
+const deleteIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path d="M5 7h14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M9 7V5h6v2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M8 7l1 12h6l1-12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+  </svg>
+);
+
+const saveIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path d="M4 5h13l3 3v11H4z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M8 5v6h8V5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+  </svg>
+);
+
+const cancelIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
 
 export default function OwnerScheduleClient() {
   const [activeTab, setActiveTab] = useState<ScheduleTab>("current");
   const [view, setView] = useState<ScheduleView>("list");
   const [query, setQuery] = useState("");
   const [rows, setRows] = useState<RecurringClass[]>([]);
+  const [tracks, setTracks] = useState<TrackOption[]>([]);
+  const [coaches, setCoaches] = useState<CoachOption[]>([]);
   const [organizationId, setOrganizationId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -127,6 +264,11 @@ export default function OwnerScheduleClient() {
   const [createDraft, setCreateDraft] = useState<ClassDraft>(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<ClassDraft>(emptyDraft);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [dayFilter, setDayFilter] = useState<string>("all");
+  const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(defaultVisibleColumns);
+  const visibleColumnCount = columnDefs.filter((column) => visibleColumns[column.key]).length || 1;
 
   const loadClasses = async () => {
     setLoading(true);
@@ -139,7 +281,31 @@ export default function OwnerScheduleClient() {
         return;
       }
       setRows(payload.classes ?? []);
-      setOrganizationId(payload.organizationId ?? "");
+      const nextOrganizationId = payload.organizationId ?? "";
+      setOrganizationId(nextOrganizationId);
+
+      if (nextOrganizationId) {
+        const [tracksResponse, staffResponse] = await Promise.all([
+          fetch(`/api/programming/tracks?organizationId=${encodeURIComponent(nextOrganizationId)}`, { cache: "no-store" }),
+          fetch(`/api/owner/staff?organizationId=${encodeURIComponent(nextOrganizationId)}`, { cache: "no-store" }),
+        ]);
+
+        const tracksPayload = (await tracksResponse.json().catch(() => ({}))) as { tracks?: Array<{ id: string; name: string }> };
+        const nextTracks = (tracksPayload.tracks ?? []).map((track) => ({ id: track.id, name: track.name }));
+        setTracks(nextTracks);
+
+        const staffPayload = (await staffResponse.json().catch(() => ({}))) as {
+          staff?: Array<{ role: string; userId: string; user: { fullName: string | null; email: string | null } | null }>;
+        };
+        const nextCoaches = (staffPayload.staff ?? [])
+          .filter((row) => row.role === "coach" || row.role === "admin" || row.role === "owner")
+          .map((row) => ({
+            userId: row.userId,
+            label: row.user?.fullName || row.user?.email || "Unknown",
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+        setCoaches(nextCoaches);
+      }
     } catch {
       setError("Failed to load classes.");
     } finally {
@@ -150,6 +316,26 @@ export default function OwnerScheduleClient() {
   useEffect(() => {
     loadClasses();
   }, []);
+
+  useEffect(() => {
+    if (tracks.length === 0) {
+      return;
+    }
+
+    setCreateDraft((prev) => {
+      if (prev.trackId) {
+        return prev;
+      }
+      return { ...prev, trackId: tracks[0]?.id ?? "" };
+    });
+
+    setEditDraft((prev) => {
+      if (prev.trackId) {
+        return prev;
+      }
+      return { ...prev, trackId: tracks[0]?.id ?? "" };
+    });
+  }, [tracks]);
 
   const setDraft = (setter: (updater: ClassDraft) => void, key: keyof ClassDraft, value: string) => {
     setter({ ...((setter === setCreateDraft ? createDraft : editDraft)), [key]: value });
@@ -166,6 +352,10 @@ export default function OwnerScheduleClient() {
   };
 
   const submitCreate = async () => {
+    if (!createDraft.trackId) {
+      setError("Track is required.");
+      return;
+    }
     if (!createDraft.name.trim()) {
       setError("Class name is required.");
       return;
@@ -192,11 +382,17 @@ export default function OwnerScheduleClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           organizationId,
+          trackId: createDraft.trackId,
           name: createDraft.name,
           time: createDraft.time,
           durationMinutes: Number(createDraft.durationMinutes),
           days: createDraft.days,
           startDate: createDraft.startDate,
+          endDate: createDraft.endDate || null,
+          defaultCoachUserId: createDraft.defaultCoachUserId || null,
+          sizeLimit: Number(createDraft.sizeLimit || "0"),
+          reservationCutoffHours: Number(createDraft.reservationCutoffHours || "0"),
+          calendarColor: createDraft.calendarColor,
         }),
       });
       const payload = (await response.json()) as { error?: string };
@@ -219,11 +415,17 @@ export default function OwnerScheduleClient() {
   const startEdit = (row: RecurringClass) => {
     setEditingId(row.id);
     setEditDraft({
+      trackId: row.track_id ?? tracks[0]?.id ?? "",
       name: row.name,
       time: row.class_time.slice(0, 5),
       durationMinutes: String(row.duration_minutes),
       days: row.class_days,
       startDate: toInputDate(row.start_date),
+      endDate: toInputDate(row.end_date),
+      defaultCoachUserId: row.default_coach_user_id ?? "",
+      sizeLimit: String(row.size_limit ?? 0),
+      reservationCutoffHours: String(row.reservation_cutoff_hours ?? 0),
+      calendarColor: row.calendar_color || "#3B82F6",
     });
   };
 
@@ -237,11 +439,17 @@ export default function OwnerScheduleClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           organizationId,
+          trackId: editDraft.trackId,
           name: editDraft.name,
           time: editDraft.time,
           durationMinutes: Number(editDraft.durationMinutes),
           days: editDraft.days,
           startDate: editDraft.startDate,
+          endDate: editDraft.endDate || null,
+          defaultCoachUserId: editDraft.defaultCoachUserId || null,
+          sizeLimit: Number(editDraft.sizeLimit || "0"),
+          reservationCutoffHours: Number(editDraft.reservationCutoffHours || "0"),
+          calendarColor: editDraft.calendarColor,
         }),
       });
       const payload = (await response.json()) as { error?: string };
@@ -293,11 +501,17 @@ export default function OwnerScheduleClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           organizationId,
+          trackId: row.track_id,
           name: `${row.name} (Copy)`,
           time: row.class_time.slice(0, 5),
           durationMinutes: row.duration_minutes,
           days: row.class_days,
           startDate: row.start_date,
+          endDate: row.end_date,
+          defaultCoachUserId: row.default_coach_user_id,
+          sizeLimit: row.size_limit,
+          reservationCutoffHours: row.reservation_cutoff_hours,
+          calendarColor: row.calendar_color,
         }),
       });
       const payload = (await response.json()) as { error?: string };
@@ -321,6 +535,7 @@ export default function OwnerScheduleClient() {
 
     return rows
       .filter((row) => classifyClassByDate(row, today) === activeTab)
+      .filter((row) => (dayFilter === "all" ? true : row.class_days.includes(dayFilter)))
       .filter((row) => {
         if (!needle) {
           return true;
@@ -328,32 +543,76 @@ export default function OwnerScheduleClient() {
         const haystack = `${row.name} ${formatTime(row.class_time)} ${formatDuration(row.duration_minutes)} ${row.class_days.join(" ")} ${row.start_date}`.toLowerCase();
         return haystack.includes(needle);
       });
-  }, [rows, activeTab, query]);
+  }, [rows, activeTab, dayFilter, query]);
+
+  const calendarRows = useMemo(() => {
+    return weekDays.map((day) => ({
+      day,
+      rows: filteredRows
+        .filter((row) => row.class_days.includes(day))
+        .sort((a, b) => a.class_time.localeCompare(b.class_time)),
+    }));
+  }, [filteredRows]);
+
+  const toggleColumn = (key: ColumnKey) => {
+    setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const exportCurrentRows = () => {
+    const exportColumns = columnDefs.filter((column) => column.key !== "actions" && visibleColumns[column.key]);
+    const columns = exportColumns.length > 0 ? exportColumns : columnDefs.filter((column) => column.key !== "actions");
+
+    const header = columns.map((column) => toCsvCell(column.label)).join(",");
+    const lines = filteredRows.map((row) => {
+      const values = columns.map((column) => {
+        switch (column.key) {
+          case "name":
+            return row.name;
+          case "time":
+            return formatTime(row.class_time);
+          case "duration":
+            return formatDuration(row.duration_minutes);
+          case "days":
+            return row.class_days.join(" ");
+          case "start":
+            return toUiDate(row.start_date);
+          default:
+            return "";
+        }
+      });
+      return values.map((value) => toCsvCell(value)).join(",");
+    });
+
+    const tabLabel = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+    const csvText = [header, ...lines].join("\n");
+    downloadCsv(`schedule-${tabLabel.toLowerCase()}-${toLocalDateKey(new Date())}.csv`, csvText);
+    setMessage(`Exported ${filteredRows.length} class${filteredRows.length === 1 ? "" : "es"}.`);
+  };
 
   return (
     <section className="space-y-8">
       <header>
-        <h1 className="text-3xl font-semibold text-slate-100">Schedule</h1>
-        <p className="mt-3 text-sm text-slate-200">
+        <h1 className="text-3xl font-semibold text-[#101a35]">Schedule</h1>
+        <p className="mt-3 text-sm text-[#4a5f86]">
           Class setup and recurring schedule management.
         </p>
       </header>
 
       {error ? (
-        <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</div>
+        <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-700">{error}</div>
       ) : null}
       {message ? (
-        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{message}</div>
+        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">{message}</div>
       ) : null}
 
-      <section className="glass-panel overflow-hidden rounded-[28px] border border-white/10">
-        <div className="flex items-center justify-between bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 px-6 py-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/90">
+      <section className="app-card overflow-hidden rounded-[28px] border border-cyan-400/30 bg-white shadow-[0_18px_44px_rgba(5,9,20,0.25)]">
+        <div className="flex items-center justify-between bg-[#e11d8a] px-6 py-4">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">
             Class Setup - Recurring
           </p>
           <button
             type="button"
-            className="rounded-lg border border-white/30 bg-black/20 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-black/30"
+            className="rounded-lg border border-cyan-200/40 bg-[#06111f]/40 px-3 py-1.5 text-xs font-medium text-cyan-50 transition hover:bg-[#06111f]/65"
           >
             Settings
           </button>
@@ -364,17 +623,19 @@ export default function OwnerScheduleClient() {
             <button
               type="button"
               onClick={() => setCreateOpen((current) => !current)}
-              className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+              className="rounded-xl bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] px-4 py-2 text-sm font-semibold text-[#031525] transition hover:brightness-110"
             >
               {createOpen ? "Close" : "+ Create Recurring Class"}
             </button>
 
-            <div className="inline-flex rounded-xl border border-white/10 bg-slate-900/40 p-1">
+            <div className="inline-flex rounded-xl border border-fuchsia-400/35 bg-[#43206f] p-1 shadow-[0_8px_18px_rgba(67,32,111,0.35)]">
               <button
                 type="button"
                 onClick={() => setView("list")}
                 className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                  view === "list" ? "bg-white/15 text-slate-100" : "text-slate-300 hover:text-slate-100"
+                  view === "list"
+                    ? "bg-white text-[#041327] shadow-[0_4px_12px_rgba(255,255,255,0.35)]"
+                    : "text-[#d3c7f5] hover:bg-white/10 hover:text-white"
                 }`}
               >
                 List
@@ -383,7 +644,9 @@ export default function OwnerScheduleClient() {
                 type="button"
                 onClick={() => setView("calendar")}
                 className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                  view === "calendar" ? "bg-white/15 text-slate-100" : "text-slate-300 hover:text-slate-100"
+                  view === "calendar"
+                    ? "bg-white text-[#041327] shadow-[0_4px_12px_rgba(255,255,255,0.35)]"
+                    : "text-[#d3c7f5] hover:bg-white/10 hover:text-white"
                 }`}
               >
                 Calendar
@@ -392,49 +655,127 @@ export default function OwnerScheduleClient() {
           </div>
 
           {createOpen ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(9,18,29,0.08)]">
+              {tracks.length === 0 ? (
+                <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  Create at least one track before adding recurring classes.
+                </div>
+              ) : null}
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-100">Class Name</span>
+                  <span className="text-sm font-medium text-slate-800">Track</span>
+                  <select
+                    value={createDraft.trackId}
+                    onChange={(event) => setDraft(setCreateDraft, "trackId", event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                  >
+                    {tracks.length === 0 ? <option value="">No tracks found</option> : null}
+                    {tracks.map((track) => (
+                      <option key={track.id} value={track.id}>
+                        {track.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="space-y-1">
+                  <span className="text-sm font-medium text-slate-800">Class Name</span>
                   <input
                     value={createDraft.name}
                     onChange={(event) => setDraft(setCreateDraft, "name", event.target.value)}
                     placeholder="Class name"
-                    className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-300 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-100">Time</span>
+                  <span className="text-sm font-medium text-slate-800">Time</span>
                   <input
                     type="time"
                     value={createDraft.time}
                     onChange={(event) => setDraft(setCreateDraft, "time", event.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-100">Duration (Minutes)</span>
+                  <span className="text-sm font-medium text-slate-800">Duration (Minutes)</span>
                   <input
                     type="number"
                     min="1"
                     value={createDraft.durationMinutes}
                     onChange={(event) => setDraft(setCreateDraft, "durationMinutes", event.target.value)}
                     placeholder="Duration minutes"
-                    className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-300 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-100">Start Date</span>
+                  <span className="text-sm font-medium text-slate-800">Start Date</span>
                   <input
                     type="date"
                     value={createDraft.startDate}
                     onChange={(event) => setDraft(setCreateDraft, "startDate", event.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
+                <label className="space-y-1">
+                  <span className="text-sm font-medium text-slate-800">End Date (Optional)</span>
+                  <input
+                    type="date"
+                    value={createDraft.endDate}
+                    onChange={(event) => setDraft(setCreateDraft, "endDate", event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                  />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-sm font-medium text-slate-800">Default Coach (Optional)</span>
+                  <select
+                    value={createDraft.defaultCoachUserId}
+                    onChange={(event) => setDraft(setCreateDraft, "defaultCoachUserId", event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                  >
+                    <option value="">None</option>
+                    {coaches.map((coach) => (
+                      <option key={coach.userId} value={coach.userId}>
+                        {coach.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="space-y-1">
+                  <span className="text-sm font-medium text-slate-800">Size Limit (0 = no limit)</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={createDraft.sizeLimit}
+                    onChange={(event) => setDraft(setCreateDraft, "sizeLimit", event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                  />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-sm font-medium text-slate-800">Reservation Cutoff Hours</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={createDraft.reservationCutoffHours}
+                    onChange={(event) => setDraft(setCreateDraft, "reservationCutoffHours", event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                  />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-sm font-medium text-slate-800">Calendar Color</span>
+                  <select
+                    value={createDraft.calendarColor}
+                    onChange={(event) => setDraft(setCreateDraft, "calendarColor", event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                  >
+                    {calendarColorOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <div className="space-y-1">
-                  <span className="text-sm font-medium text-slate-100">Days</span>
-                  <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900/60 px-2 py-2">
+                  <span className="text-sm font-medium text-slate-800">Days</span>
+                  <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2 py-2">
                     {weekDays.map((day) => {
                       const active = createDraft.days.includes(day);
                       return (
@@ -443,7 +784,7 @@ export default function OwnerScheduleClient() {
                           type="button"
                           onClick={() => toggleDraftDay(createDraft, setCreateDraft, day)}
                           className={`rounded-full px-2 py-1 text-xs transition ${
-                            active ? "bg-emerald-300/20 text-emerald-200" : "bg-white/5 text-slate-300 hover:bg-white/10"
+                            active ? "bg-cyan-500/15 text-cyan-800" : "bg-slate-100 text-slate-700 hover:bg-cyan-50 hover:text-cyan-800"
                           }`}
                         >
                           {day}
@@ -457,8 +798,8 @@ export default function OwnerScheduleClient() {
                 <button
                   type="button"
                   onClick={submitCreate}
-                  disabled={saving}
-                  className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-900 transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-slate-500"
+                  disabled={saving || tracks.length === 0}
+                  className="rounded-lg bg-gradient-to-r from-[#00c5ff] to-[#5ec8ff] px-3 py-2 text-sm font-semibold text-[#031525] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving ? "Saving..." : "Create Class"}
                 </button>
@@ -466,7 +807,7 @@ export default function OwnerScheduleClient() {
             </div>
           ) : null}
 
-          <div className="flex flex-wrap gap-2 border-b border-white/10 pb-2">
+          <div className="flex flex-wrap gap-2 border-b border-cyan-500/20 pb-2">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -474,8 +815,8 @@ export default function OwnerScheduleClient() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`rounded-t-lg px-3 py-2 text-sm transition ${
                   activeTab === tab.key
-                    ? "border-b-2 border-emerald-300 text-emerald-200"
-                    : "text-slate-300 hover:text-slate-100"
+                    ? "border-b-2 border-[#00c5ff] text-slate-900"
+                    : "text-slate-700 hover:text-slate-900"
                 }`}
               >
                 {tab.label}
@@ -484,63 +825,188 @@ export default function OwnerScheduleClient() {
           </div>
 
           {view === "calendar" ? (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-slate-950/30 px-4 py-8 text-center text-sm text-slate-400">
-              Calendar view is next. List view is active and ready.
+            <div className="rounded-2xl border border-slate-300 bg-white p-3 md:p-4">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
+                {calendarRows.map((bucket) => (
+                  <article key={bucket.day} className="rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+                    <h3 className="text-sm font-semibold text-slate-900">{bucket.day}</h3>
+                    {bucket.rows.length === 0 ? (
+                      <p className="mt-2 text-xs text-slate-500">No classes</p>
+                    ) : (
+                      <div className="mt-2 space-y-2">
+                        {bucket.rows.map((row) => (
+                          <div key={`${bucket.day}-${row.id}`} className="rounded-lg border border-slate-200 bg-white px-2 py-2">
+                            <p className="truncate text-xs font-semibold text-slate-900">{row.name}</p>
+                            <p className="text-[11px] text-slate-500">{row.track?.name ?? "No track"}</p>
+                            <p className="text-xs text-slate-600">{formatTime(row.class_time)}</p>
+                            <p className="text-[11px] text-slate-500">{formatDuration(row.duration_minutes)}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  {iconButton("Columns")}
-                  {iconButton("Filters")}
-                  {iconButton("Export")}
-                </div>
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search..."
-                  className="w-full max-w-xs rounded-lg border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-300 focus:outline-none"
-                />
-              </div>
+              <div className="app-table-shell overflow-hidden rounded-xl border border-slate-300/80">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-400/40 bg-[#4a4a4a] px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setColumnsOpen((current) => !current);
+                          setFiltersOpen(false);
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-1 py-1 text-sm font-medium transition ${
+                          columnsOpen
+                            ? "text-cyan-200"
+                            : "text-white hover:text-cyan-200"
+                        }`}
+                      >
+                        {columnsIcon}
+                        Columns
+                      </button>
+                      {columnsOpen ? (
+                        <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-slate-300 bg-white p-2 shadow-xl">
+                          {columnDefs.map((column) => (
+                            <label key={column.key} className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-slate-700 hover:bg-slate-100">
+                              <input
+                                type="checkbox"
+                                checked={visibleColumns[column.key]}
+                                onChange={() => toggleColumn(column.key)}
+                                className="h-3.5 w-3.5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                              />
+                              {column.label}
+                            </label>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
 
-              <div className="overflow-x-auto rounded-xl border border-white/10">
-                <table className="w-full min-w-[900px] border-collapse text-sm">
-                  <thead className="bg-slate-900/70 text-slate-300">
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFiltersOpen((current) => !current);
+                          setColumnsOpen(false);
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-1 py-1 text-sm font-medium transition ${
+                          filtersOpen || dayFilter !== "all"
+                            ? "text-cyan-200"
+                            : "text-white hover:text-cyan-200"
+                        }`}
+                      >
+                        {filtersIcon}
+                        Filters
+                      </button>
+                      {filtersOpen ? (
+                        <div className="absolute left-0 z-20 mt-2 w-52 rounded-xl border border-slate-300 bg-white p-2 shadow-xl">
+                          <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Filter by day</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDayFilter("all");
+                              setFiltersOpen(false);
+                            }}
+                            className={`mb-1 w-full rounded-md px-2 py-1 text-left text-xs transition ${
+                              dayFilter === "all" ? "bg-cyan-50 text-cyan-700" : "text-slate-700 hover:bg-slate-100"
+                            }`}
+                          >
+                            All days
+                          </button>
+                          <div className="grid grid-cols-3 gap-1">
+                            {weekDays.map((day) => (
+                              <button
+                                key={`filter-${day}`}
+                                type="button"
+                                onClick={() => {
+                                  setDayFilter(day);
+                                  setFiltersOpen(false);
+                                }}
+                                className={`rounded-md px-2 py-1 text-xs transition ${
+                                  dayFilter === day ? "bg-cyan-50 text-cyan-700" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={exportCurrentRows}
+                      className="inline-flex items-center gap-1.5 px-1 py-1 text-sm font-medium text-white transition hover:text-cyan-200"
+                    >
+                      {exportIcon}
+                      Export
+                    </button>
+                  </div>
+                  <input
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search..."
+                    className="w-full max-w-xs rounded-lg border border-slate-300/60 bg-[#2f2f2f] px-3 py-2 text-sm text-white placeholder:text-slate-300 focus:border-cyan-300 focus:outline-none"
+                  />
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="app-table w-full min-w-[900px] border-collapse text-sm">
+                    <thead>
                     <tr>
-                      <th className="px-3 py-3 text-left font-medium">Name</th>
-                      <th className="px-3 py-3 text-left font-medium">Time</th>
-                      <th className="px-3 py-3 text-left font-medium">Duration</th>
-                      <th className="px-3 py-3 text-left font-medium">Days</th>
-                      <th className="px-3 py-3 text-left font-medium">Start</th>
-                      <th className="px-3 py-3 text-right font-medium">Actions</th>
+                        {visibleColumns.name ? <th className="px-3 py-3 text-left font-medium">Name</th> : null}
+                        {visibleColumns.time ? <th className="px-3 py-3 text-left font-medium">Time</th> : null}
+                        {visibleColumns.duration ? <th className="px-3 py-3 text-left font-medium">Duration</th> : null}
+                        {visibleColumns.days ? <th className="px-3 py-3 text-left font-medium">Days</th> : null}
+                        {visibleColumns.start ? <th className="px-3 py-3 text-left font-medium">Start</th> : null}
+                        {visibleColumns.actions ? <th className="px-3 py-3 text-right font-medium">Actions</th> : null}
                     </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRows.map((row) => (
-                      <tr key={row.id} className="border-t border-white/10 bg-white/[0.02] text-slate-200">
+                    </thead>
+                    <tbody>
+                    {filteredRows.length === 0 ? (
+                      <tr className="app-table-empty border-t border-slate-200 bg-white text-slate-900">
+                        <td colSpan={visibleColumnCount} className="h-14 px-3 py-6">
+                          &nbsp;
+                        </td>
+                      </tr>
+                    ) : filteredRows.map((row) => (
+                      <tr key={row.id} className="border-t border-slate-200 bg-white text-slate-900">
+                        {visibleColumns.name ? (
                         <td className="px-3 py-3">
                           {editingId === row.id ? (
                             <input
                               value={editDraft.name}
                               onChange={(event) => setDraft(setEditDraft, "name", event.target.value)}
-                              className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1.5 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none"
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-cyan-300 focus:outline-none"
                             />
                           ) : (
-                            row.name
+                            <div>
+                              <p className="font-medium text-slate-900">{row.name}</p>
+                              <p className="text-xs text-slate-500">{row.track?.name ?? "No track"}</p>
+                            </div>
                           )}
                         </td>
+                        ) : null}
+                        {visibleColumns.time ? (
                         <td className="px-3 py-3">
                           {editingId === row.id ? (
                             <input
                               type="time"
                               value={editDraft.time}
                               onChange={(event) => setDraft(setEditDraft, "time", event.target.value)}
-                              className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1.5 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none"
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-cyan-300 focus:outline-none"
                             />
                           ) : (
                             formatTime(row.class_time)
                           )}
                         </td>
+                        ) : null}
+                        {visibleColumns.duration ? (
                         <td className="px-3 py-3">
                           {editingId === row.id ? (
                             <input
@@ -548,12 +1014,14 @@ export default function OwnerScheduleClient() {
                               min="1"
                               value={editDraft.durationMinutes}
                               onChange={(event) => setDraft(setEditDraft, "durationMinutes", event.target.value)}
-                              className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1.5 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none"
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-cyan-300 focus:outline-none"
                             />
                           ) : (
                             formatDuration(row.duration_minutes)
                           )}
                         </td>
+                        ) : null}
+                        {visibleColumns.days ? (
                         <td className="px-3 py-3">
                           {editingId === row.id ? (
                             <div className="flex flex-wrap gap-1.5">
@@ -565,7 +1033,7 @@ export default function OwnerScheduleClient() {
                                     type="button"
                                     onClick={() => toggleDraftDay(editDraft, setEditDraft, day)}
                                     className={`rounded-full px-2 py-0.5 text-xs transition ${
-                                      active ? "bg-emerald-300/20 text-emerald-200" : "bg-white/5 text-slate-300 hover:bg-white/10"
+                                      active ? "bg-cyan-100 text-cyan-800" : "bg-slate-100 text-slate-700 hover:bg-fuchsia-100 hover:text-fuchsia-800"
                                     }`}
                                   >
                                     {day}
@@ -578,7 +1046,7 @@ export default function OwnerScheduleClient() {
                               {row.class_days.map((day) => (
                                 <span
                                   key={`${row.id}-${day}`}
-                                  className="rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-xs text-slate-200"
+                                  className="rounded-full border border-cyan-300 bg-cyan-50 px-2 py-0.5 text-xs text-cyan-800"
                                 >
                                   {day}
                                 </span>
@@ -586,18 +1054,22 @@ export default function OwnerScheduleClient() {
                             </div>
                           )}
                         </td>
+                        ) : null}
+                        {visibleColumns.start ? (
                         <td className="px-3 py-3">
                           {editingId === row.id ? (
                             <input
                               type="date"
                               value={editDraft.startDate}
                               onChange={(event) => setDraft(setEditDraft, "startDate", event.target.value)}
-                              className="w-full rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1.5 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none"
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-cyan-300 focus:outline-none"
                             />
                           ) : (
                             toUiDate(row.start_date)
                           )}
                         </td>
+                        ) : null}
+                        {visibleColumns.actions ? (
                         <td className="px-3 py-3 text-right">
                           {editingId === row.id ? (
                             <div className="inline-flex gap-1.5">
@@ -605,17 +1077,21 @@ export default function OwnerScheduleClient() {
                                 type="button"
                                 onClick={() => saveEdit(row.id)}
                                 disabled={saving}
-                                className="rounded-lg border border-emerald-300/40 bg-emerald-400/10 px-2.5 py-1.5 text-xs text-emerald-200 transition hover:bg-emerald-400/20"
+                                aria-label="Save class"
+                                title="Save"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-300 bg-cyan-50 text-cyan-700 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                Save
+                                {saveIcon}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setEditingId(null)}
                                 disabled={saving}
-                                className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-slate-200 transition hover:bg-white/10"
+                                aria-label="Cancel editing"
+                                title="Cancel"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                Cancel
+                                {cancelIcon}
                               </button>
                             </div>
                           ) : (
@@ -624,36 +1100,44 @@ export default function OwnerScheduleClient() {
                                 type="button"
                                 onClick={() => startEdit(row)}
                                 disabled={saving}
-                                className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-slate-200 transition hover:bg-white/10"
+                                aria-label="Edit class"
+                                title="Edit"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                Edit
+                                {editIcon}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => copyClass(row)}
                                 disabled={saving}
-                                className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-slate-200 transition hover:bg-white/10"
+                                aria-label="Copy class"
+                                title="Copy"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-fuchsia-300 bg-fuchsia-50 text-fuchsia-700 transition hover:bg-fuchsia-100 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                Copy
+                                {copyIcon}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => deleteClass(row.id)}
                                 disabled={saving}
-                                className="rounded-lg border border-rose-300/40 bg-rose-400/10 px-2.5 py-1.5 text-xs text-rose-200 transition hover:bg-rose-400/20"
+                                aria-label="Delete class"
+                                title="Delete"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-300 bg-rose-50 text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                Del
+                                {deleteIcon}
                               </button>
                             </div>
                           )}
                         </td>
+                        ) : null}
                       </tr>
                     ))}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              <div className="text-right text-xs text-slate-400">{loading ? "Loading..." : `Total Rows: ${filteredRows.length}`}</div>
+              <div className="text-right text-xs text-[#8ca7ce]">{loading ? "Loading..." : `Total Rows: ${filteredRows.length}`}</div>
             </div>
           )}
         </div>

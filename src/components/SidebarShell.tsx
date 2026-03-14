@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import type { ChangeEvent, ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type SidebarShellProps = {
   children: ReactNode;
@@ -80,11 +80,11 @@ const navItems: NavItem[] = [
         href: "/organization/member",
         minRole: "member",
         children: [
+          { label: "Athlete Dashboard", href: "/organization/member/athlete-dashboard", minRole: "member" },
           { label: "Workout", href: "/organization/member/workout", minRole: "member" },
           { label: "Nutrition", href: "/organization/member/nutrition", minRole: "member" },
           { label: "Class Schedule", href: "/organization/member/class-schedule", minRole: "member" },
           { label: "Account Dashboard", href: "/organization/member/account-dashboard", minRole: "member" },
-          { label: "Athlete Dashboard", href: "/organization/member/athlete-dashboard", minRole: "member" },
           { label: "Store", href: "/organization/member/store", minRole: "member" },
         ],
       },
@@ -114,8 +114,14 @@ const navItems: NavItem[] = [
 export default function SidebarShell({ children, mainClassName }: SidebarShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [openSubnav, setOpenSubnav] = useState<Record<string, boolean>>({});
   const [userRole, setUserRole] = useState<UserRole>("member");
+  const [userName, setUserName] = useState("User");
+  const [organizationName, setOrganizationName] = useState("Organization");
+  const [currentTrack, setCurrentTrack] = useState("Main");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isImportingResults, setIsImportingResults] = useState(false);
+  const [topBarNotice, setTopBarNotice] = useState<string | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const pathname = usePathname();
   const mainClasses = mainClassName ??
     "mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[1.6fr_1fr] lg:py-16";
@@ -150,6 +156,15 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         ) {
           setUserRole(payload.role);
         }
+        if (isMounted && typeof payload.userName === "string" && payload.userName.trim()) {
+          setUserName(payload.userName.trim());
+        }
+        if (isMounted && typeof payload.organizationName === "string" && payload.organizationName.trim()) {
+          setOrganizationName(payload.organizationName.trim());
+        }
+        if (isMounted && typeof payload.currentTrack === "string" && payload.currentTrack.trim()) {
+          setCurrentTrack(payload.currentTrack.trim());
+        }
       } catch {
         // Keep the default role for nav filtering.
       }
@@ -165,6 +180,57 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const canViewRole = (requiredRole?: UserRole) => {
     return roleRank[userRole] >= roleRank[requiredRole ?? "member"];
   };
+
+  const handleImportSelection = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      setIsImportingResults(true);
+      setTopBarNotice(null);
+      const csvText = await file.text();
+
+      const response = await fetch("/api/programming/results/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csvText }),
+      });
+      const payload = (await response.json()) as {
+        error?: string;
+        inserted?: number;
+        totalRows?: number;
+        failures?: number;
+        trackName?: string;
+      };
+
+      if (!response.ok) {
+        setTopBarNotice(payload.error ?? "Import failed.");
+        return;
+      }
+
+      if (payload.trackName) {
+        setCurrentTrack(payload.trackName);
+      }
+
+      const inserted = payload.inserted ?? 0;
+      const totalRows = payload.totalRows ?? 0;
+      const failures = payload.failures ?? 0;
+      setTopBarNotice(
+        failures > 0
+          ? `Imported ${inserted}/${totalRows} results (${failures} failed).`
+          : `Imported ${inserted}/${totalRows} workout results.`
+      );
+    } catch {
+      setTopBarNotice("Import failed.");
+    } finally {
+      setIsImportingResults(false);
+      event.target.value = "";
+    }
+  };
+
+  const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
 
   const visibleNavItems = navItems
     .filter((item) => canViewRole(item.minRole))
@@ -194,6 +260,10 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       return { ...item, children: visibleChildren };
     })
     .filter((item): item is NavItem => Boolean(item));
+
+  const sectionGroups = visibleNavItems.flatMap((item) => item.children ?? []).filter((section) =>
+    Array.isArray(section.children) && section.children.length > 0
+  );
 
   return (
     <div className="relative z-10 min-h-screen">
@@ -258,113 +328,30 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </button>
             </div>
 
-            <nav className="mt-6 space-y-2 text-sm">
-              {visibleNavItems.map((item) => {
-                const hasActiveChild = item.children?.some((child) =>
-                  pathname === child.href ||
-                  (child.children?.some((grandchild) => pathname === grandchild.href) ?? false)
-                ) ?? false;
-                const isActive = pathname === item.href || hasActiveChild;
-                return (
-                  <div key={item.label} className="space-y-1">
-                    <Link
-                      href={item.href}
-                      className={`group flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 font-medium text-slate-300 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-100 ${
-                        isActive
-                          ? "border-sky-300/40 bg-white/5 text-slate-50 shadow-[0_0_0_1px_rgba(56,189,248,0.25)]"
-                          : ""
-                      }`}
-                      onClick={() => setMobileSidebarOpen(false)}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      <span
-                        className={`text-slate-400 transition group-hover:text-slate-200 ${
-                          isActive ? "text-sky-200" : ""
-                        }`}
-                      >
-                        {item.icon}
-                      </span>
-                      <span>{item.label}</span>
-                    </Link>
-                    {item.children && (
-                      <div className="ml-10 space-y-1">
-                        {item.children.map((child) => {
-                          const hasActiveGrandchild = child.children?.some((grandchild) =>
-                            pathname === grandchild.href
-                          ) ?? false;
-                          const isChildActive = pathname === child.href || hasActiveGrandchild;
-                          const isExpanded = openSubnav[child.href] ?? hasActiveGrandchild;
-                          return (
-                            <div key={child.label} className="space-y-1">
-                              <div className="flex items-center gap-1">
-                                <Link
-                                  href={child.href}
-                                  className={`flex flex-1 items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-100 ${
-                                    isChildActive
-                                      ? "border-white/10 bg-white/5 text-slate-50"
-                                      : ""
-                                  }`}
-                                  onClick={() => setMobileSidebarOpen(false)}
-                                  aria-current={isChildActive ? "page" : undefined}
-                                >
-                                  {child.label}
-                                </Link>
-                                {child.children && (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setOpenSubnav((prev) => ({
-                                        ...prev,
-                                        [child.href]: !(prev[child.href] ?? hasActiveGrandchild),
-                                      }))
-                                    }
-                                    className="rounded-lg border border-transparent p-2 text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-100"
-                                    aria-label={`${isExpanded ? "Collapse" : "Expand"} ${child.label}`}
-                                    aria-expanded={isExpanded}
-                                  >
-                                    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
-                                      <path
-                                        d={isExpanded ? "M6 14l6-6 6 6" : "M6 10l6 6 6-6"}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="1.7"
-                                      />
-                                    </svg>
-                                  </button>
-                                )}
-                              </div>
-                              {child.children && isExpanded && (
-                                <div className="ml-6 space-y-1">
-                                  {child.children.map((grandchild) => {
-                                    const isGrandchildActive = pathname === grandchild.href;
-                                    return (
-                                      <Link
-                                        key={grandchild.label}
-                                        href={grandchild.href}
-                                        className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-[12px] text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-100 ${
-                                          isGrandchildActive
-                                            ? "border-white/10 bg-white/5 text-slate-50"
-                                            : ""
-                                        }`}
-                                        onClick={() => setMobileSidebarOpen(false)}
-                                        aria-current={isGrandchildActive ? "page" : undefined}
-                                      >
-                                        {grandchild.label}
-                                      </Link>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+            <nav className="mt-6 space-y-5 text-sm">
+              {sectionGroups.map((section) => (
+                <div key={section.label} className="space-y-2">
+                  <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{section.label}</p>
+                  <div className="space-y-1">
+                    {section.children?.map((entry) => {
+                      const isActive = pathname === entry.href;
+                      return (
+                        <Link
+                          key={entry.label}
+                          href={entry.href}
+                          className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-300 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-100 ${
+                            isActive ? "border-white/10 bg-white/5 text-slate-50" : ""
+                          }`}
+                          onClick={() => setMobileSidebarOpen(false)}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          {entry.label}
+                        </Link>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </nav>
           </aside>
         </div>
@@ -409,122 +396,132 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           )}
         </div>
 
-        <nav className="mt-6 space-y-2 text-sm">
-            {visibleNavItems.map((item) => {
-            const hasActiveChild = item.children?.some((child) =>
-              pathname === child.href ||
-              (child.children?.some((grandchild) => pathname === grandchild.href) ?? false)
-            ) ?? false;
-            const isActive = pathname === item.href || hasActiveChild;
-            return (
-              <div key={item.label} className="space-y-1">
-                <Link
-                  href={item.href}
-                  className={`group flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 font-medium text-slate-300 transition hover:border-white/10 hover:bg-white/5 hover:text-white ${
-                    sidebarCollapsed ? "justify-center" : "justify-start"
-                  } ${
-                    isActive
-                      ? "border-rose-200/60 bg-white/10 text-white shadow-[0_0_0_1px_rgba(251,113,133,0.35)]"
-                      : ""
-                  }`}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <span
-                    className={`text-slate-400 transition group-hover:text-slate-200 ${
-                      isActive ? "text-rose-200" : ""
-                    }`}
-                  >
-                    {item.icon}
-                  </span>
-                  <span className={sidebarCollapsed ? "sr-only" : "inline"}>{item.label}</span>
-                </Link>
-                {item.children && (
-                  <div className={`ml-10 space-y-1 ${sidebarCollapsed ? "hidden" : ""}`}>
-                    {item.children.map((child) => {
-                      const hasActiveGrandchild = child.children?.some((grandchild) =>
-                        pathname === grandchild.href
-                      ) ?? false;
-                      const isChildActive = pathname === child.href || hasActiveGrandchild;
-                      const isExpanded = openSubnav[child.href] ?? hasActiveGrandchild;
-                      return (
-                        <div key={child.label} className="space-y-1">
-                          <div className="flex items-center gap-1">
-                            <Link
-                              href={child.href}
-                              className={`flex flex-1 items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white ${
-                                isChildActive
-                                  ? "border-white/10 bg-white/5 text-white"
-                                  : ""
-                              }`}
-                              aria-current={isChildActive ? "page" : undefined}
-                            >
-                              {child.label}
-                            </Link>
-                            {child.children && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setOpenSubnav((prev) => ({
-                                    ...prev,
-                                    [child.href]: !(prev[child.href] ?? hasActiveGrandchild),
-                                  }))
-                                }
-                                className="rounded-lg border border-transparent p-2 text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white"
-                                aria-label={`${isExpanded ? "Collapse" : "Expand"} ${child.label}`}
-                                aria-expanded={isExpanded}
-                              >
-                                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
-                                  <path
-                                    d={isExpanded ? "M6 14l6-6 6 6" : "M6 10l6 6 6-6"}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="1.7"
-                                  />
-                                </svg>
-                              </button>
-                            )}
-                          </div>
-                          {child.children && isExpanded && (
-                            <div className="ml-6 space-y-1">
-                              {child.children.map((grandchild) => {
-                                const isGrandchildActive = pathname === grandchild.href;
-                                return (
-                                  <Link
-                                    key={grandchild.label}
-                                    href={grandchild.href}
-                                    className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-[12px] text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white ${
-                                      isGrandchildActive
-                                        ? "border-white/10 bg-white/5 text-white"
-                                        : ""
-                                    }`}
-                                    aria-current={isGrandchildActive ? "page" : undefined}
-                                  >
-                                    {grandchild.label}
-                                  </Link>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+        <nav className={`mt-6 space-y-5 text-sm ${sidebarCollapsed ? "hidden" : ""}`}>
+          {sectionGroups.map((section) => (
+            <div key={section.label} className="space-y-2">
+              <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{section.label}</p>
+              <div className="space-y-1">
+                {section.children?.map((entry) => {
+                  const isActive = pathname === entry.href;
+                  return (
+                    <Link
+                      key={entry.label}
+                      href={entry.href}
+                      className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white ${
+                        isActive ? "border-white/10 bg-white/5 text-white" : ""
+                      }`}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      {entry.label}
+                    </Link>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </nav>
       </aside>
 
-      <main
-        className={`theme-soft ${mainClasses} ${
-          sidebarCollapsed ? "lg:pl-28" : "lg:pl-72"
-        }`}
-      >
-        {children}
-      </main>
+      <div className={`${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
+        <header className="hidden h-14 w-full items-center justify-between bg-[#2fa8e8] px-5 text-white lg:flex">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">{organizationName}</p>
+            <p className="truncate text-xs text-sky-100">Current Track: {currentTrack}</p>
+          </div>
+          <div className="flex items-center gap-4 text-sm">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 text-sky-50 transition hover:text-white"
+              aria-label="TV display mode"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                <path d="M4 5h16v11H4z" fill="none" stroke="currentColor" strokeWidth="1.7" />
+                <path d="M10 19h4" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" />
+              </svg>
+              TV Display Mode
+            </button>
+
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 text-sky-50 transition hover:text-white"
+              aria-label="User account"
+            >
+              <span className="truncate max-w-[160px]">{userName}</span>
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-semibold text-white">
+                {userInitial}
+              </span>
+            </button>
+
+            <Link
+              href="/content"
+              className="inline-flex items-center text-sky-50 transition hover:text-white"
+              aria-label="Messenger"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                <path d="M4 6h16v10H8l-4 3z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.7" />
+              </svg>
+            </Link>
+
+            <button
+              type="button"
+              className="inline-flex items-center text-sky-50 transition hover:text-white"
+              aria-label="Notifications"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                <path d="M12 4a4 4 0 0 0-4 4v2.5c0 1.8-.7 3.5-2 4.7h12c-1.3-1.2-2-2.9-2-4.7V8a4 4 0 0 0-4-4z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.7" />
+                <path d="M10 18a2 2 0 0 0 4 0" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" />
+              </svg>
+            </button>
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                className="inline-flex items-center text-sky-50 transition hover:text-white"
+                aria-label="More options"
+                aria-expanded={menuOpen}
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                  <circle cx="12" cy="5" r="1.8" fill="currentColor" />
+                  <circle cx="12" cy="12" r="1.8" fill="currentColor" />
+                  <circle cx="12" cy="19" r="1.8" fill="currentColor" />
+                </svg>
+              </button>
+              {menuOpen ? (
+                <div className="absolute right-0 z-40 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      importInputRef.current?.click();
+                    }}
+                    disabled={isImportingResults}
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
+                  >
+                    {isImportingResults ? "Importing workout results..." : "Import Workout Results (CSV)"}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </header>
+
+        <input
+          ref={importInputRef}
+          type="file"
+          accept=".csv,text/csv"
+          onChange={handleImportSelection}
+          className="hidden"
+        />
+
+        {topBarNotice ? (
+          <div className="hidden border-b border-sky-200 bg-sky-50 px-5 py-2 text-sm text-sky-900 lg:block">
+            {topBarNotice}
+          </div>
+        ) : null}
+
+        <main className={`theme-soft ${mainClasses}`}>{children}</main>
+      </div>
     </div>
   );
 }

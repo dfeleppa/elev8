@@ -44,11 +44,57 @@ body {
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(231, 220, 210, 0.8);
-  box-shadow:
-    0 14px 38px rgba(60, 45, 30, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background: #ffffff;
+  border: 1px solid #d5deea;
+  box-shadow: 0 18px 44px rgba(5, 9, 20, 0.14);
+}
+
+.app-card {
+  background: #ffffff;
+  border: 1px solid #d5deea;
+  box-shadow: 0 18px 44px rgba(5, 9, 20, 0.14);
+}
+
+.app-table-shell {
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+.app-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.app-table thead tr {
+  background: #4a4a4a;
+  color: #ffffff;
+}
+
+.app-table thead th {
+  padding: 0.75rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-table tbody td {
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 0.75rem;
+  color: #0f172a;
+}
+
+.app-table tbody tr:nth-child(even) td {
+  background: #f8fafc;
+}
+
+.app-table-empty td {
+  height: 3.25rem;
+  background: #ffffff;
 }
 
 .theme-soft .text-slate-50 {

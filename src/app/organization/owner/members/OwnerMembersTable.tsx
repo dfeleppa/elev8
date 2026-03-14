@@ -7,17 +7,42 @@ import type { OwnerMemberRow } from "./page";
 type SortColumn = keyof OwnerMemberRow;
 type SortDirection = "asc" | "desc";
 
-const columns: Array<{ key: SortColumn; label: string }> = [
-  { key: "first_name", label: "First Name" },
-  { key: "last_name", label: "Last Name" },
-  { key: "membership", label: "Membership" },
-  { key: "last_check_in", label: "Last Check-In" },
-  { key: "mrr", label: "MRR" },
-  { key: "created_at", label: "Created" },
-  { key: "updated_at", label: "Updated" },
-  { key: "email", label: "Email" },
-  { key: "role", label: "Role" },
-];
+const columns = ["member", "status", "membership", "tracks", "last_check_in", "last_active"] as const;
+
+const externalIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path d="M8 8h8v8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M7 17L16 8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 5h7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    <path d="M5 5v14h14v-7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const phoneIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path
+      d="M7 4h3l1.4 3.3L9.8 9a13 13 0 0 0 5.2 5.2l1.7-1.6L20 14v3a2 2 0 0 1-2.2 2A15.8 15.8 0 0 1 5 6.2 2 2 0 0 1 7 4z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const messageIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path d="M4 5h16v10H9l-5 4z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const mailIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path d="M4 6h16v12H4z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="m5 7 7 6 7-6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 function textValue(value: unknown) {
   if (value === null || value === undefined) {
@@ -43,15 +68,77 @@ function formatDate(value: string | null) {
   }).format(date);
 }
 
-function formatMoney(value: number | null) {
-  if (value === null || value === undefined) {
-    return "-";
+function getFullName(row: OwnerMemberRow) {
+  const first = row.first_name?.trim() ?? "";
+  const last = row.last_name?.trim() ?? "";
+  const full = `${first} ${last}`.trim();
+  if (full) {
+    return full;
+  }
+  const email = row.email?.trim();
+  if (email) {
+    return email.split("@")[0] ?? "Unknown Member";
+  }
+  return "Unknown Member";
+}
+
+function getInitials(row: OwnerMemberRow) {
+  const full = getFullName(row)
+    .split(/\s+/)
+    .filter(Boolean);
+  if (full.length === 0) {
+    return "?";
+  }
+  if (full.length === 1) {
+    return full[0].slice(0, 1).toUpperCase();
+  }
+  return `${full[0][0] ?? ""}${full[1][0] ?? ""}`.toUpperCase();
+}
+
+function getMembershipTag(value: string | null) {
+  const text = (value ?? "").toLowerCase();
+  if (!text) {
+    return null;
+  }
+  if (text.includes("punch")) {
+    return "Punchcard";
+  }
+  if (text.includes("unlimited") || text.includes("subscription") || text.includes("monthly")) {
+    return "Subscription";
+  }
+  return null;
+}
+
+function getTracks(row: OwnerMemberRow) {
+  const dbTracks = row.tracks?.trim();
+  if (dbTracks) {
+    return dbTracks;
   }
 
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value);
+  const membership = (row.membership ?? "").toLowerCase();
+  if (membership.includes("pt") || membership.includes("personal")) {
+    return "Personal Training";
+  }
+  return "Main";
+}
+
+function getStatus(row: OwnerMemberRow) {
+  const dbStatus = row.status?.trim();
+  if (dbStatus) {
+    return dbStatus;
+  }
+
+  if (row.role && row.role !== "member") {
+    return "Active";
+  }
+  if (row.last_check_in || row.updated_at) {
+    return "Active";
+  }
+  return "Pending";
+}
+
+function getLastActive(row: OwnerMemberRow) {
+  return row.last_active ?? row.updated_at;
 }
 
 function compareValues(a: OwnerMemberRow, b: OwnerMemberRow, key: SortColumn) {
@@ -154,13 +241,13 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search name, email, membership, role"
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+          className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
         />
 
         <select
           value={membershipFilter}
           onChange={(event) => setMembershipFilter(event.target.value)}
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+          className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
         >
           <option value="all">All Memberships</option>
           {membershipOptions.map((option) => (
@@ -173,7 +260,7 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
         <select
           value={roleFilter}
           onChange={(event) => setRoleFilter(event.target.value)}
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+          className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
         >
           <option value="all">All Roles</option>
           {roleOptions.map((option) => (
@@ -184,27 +271,32 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
         </select>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1200px] border-separate border-spacing-y-3">
+      <div className="app-table-shell overflow-x-auto rounded-2xl border border-slate-300/70 bg-[#f8f7f4]">
+        <table className="app-table w-full min-w-[1180px] border-collapse">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-[0.25em] text-slate-400">
-              {columns.map((column) => {
-                const active = sortColumn === column.key;
-                const arrow = !active ? "" : sortDirection === "asc" ? " ▲" : " ▼";
-
-                return (
-                  <th key={column.key} className="px-4">
-                    <button
-                      type="button"
-                      onClick={() => onSort(column.key)}
-                      className={`font-semibold transition ${active ? "text-slate-100" : "text-slate-400 hover:text-slate-200"}`}
-                    >
-                      {column.label}
-                      {arrow}
-                    </button>
-                  </th>
-                );
-              })}
+            <tr className="text-left text-[11px] uppercase tracking-[0.14em] text-slate-500">
+              <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Member</th>
+              <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Status</th>
+              <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Membership</th>
+              <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Tracks</th>
+              <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">
+                <button
+                  type="button"
+                  onClick={() => onSort("last_check_in")}
+                  className="font-semibold text-slate-500 hover:text-slate-700"
+                >
+                  Last Check-In{sortColumn === "last_check_in" ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
+                </button>
+              </th>
+              <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">
+                <button
+                  type="button"
+                  onClick={() => onSort("last_active")}
+                  className="font-semibold text-slate-500 hover:text-slate-700"
+                >
+                  Last Active{sortColumn === "last_active" ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -212,25 +304,60 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-sm text-slate-400"
+                  className="px-4 py-8 text-sm text-slate-500"
                 >
                   No members match the current filters.
                 </td>
               </tr>
             ) : (
-              filteredRows.map((row, index) => (
-                <tr key={`${row.email ?? "member"}-${index}`}>
-                  <td className="rounded-l-2xl border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">{row.first_name ?? "-"}</td>
-                  <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">{row.last_name ?? "-"}</td>
-                  <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">{row.membership ?? "-"}</td>
-                  <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">{formatDate(row.last_check_in)}</td>
-                  <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">{formatMoney(row.mrr)}</td>
-                  <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">{formatDate(row.created_at)}</td>
-                  <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">{formatDate(row.updated_at)}</td>
-                  <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">{row.email ?? "-"}</td>
-                  <td className="rounded-r-2xl border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">{row.role ?? "-"}</td>
+              filteredRows.map((row, index) => {
+                const rowTone = index % 2 === 0 ? "bg-white/65" : "bg-slate-100/60";
+                const status = getStatus(row);
+                return (
+                <tr key={`${row.email ?? "member"}-${index}`} className={rowTone}>
+                  <td className="border-b border-slate-300/60 px-3 py-3 align-top">
+                    <div className="flex items-start gap-3">
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-emerald-400/50 bg-emerald-500/12 text-xs font-semibold text-emerald-700">
+                        {getInitials(row)}
+                      </div>
+                      <div>
+                        <p className="text-[28px] font-semibold leading-none text-slate-900">{getFullName(row)}</p>
+                        <p className="mt-1 text-[15px] text-slate-500">{row.email ?? "-"}</p>
+                        <div className="mt-2 flex items-center gap-2 text-slate-500">
+                          <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500">{externalIcon}</button>
+                          <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500">{phoneIcon}</button>
+                          <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500">{messageIcon}</button>
+                          <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500">{mailIcon}</button>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="border-b border-slate-300/60 px-3 py-3 align-top">
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="rounded-full border border-emerald-600/35 bg-emerald-500/12 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
+                        {status}
+                      </span>
+                      {!row.last_check_in && !row.status ? (
+                        <span className="rounded-full border border-slate-400/40 bg-slate-200/70 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                          Pending
+                        </span>
+                      ) : null}
+                    </div>
+                  </td>
+                  <td className="border-b border-slate-300/60 px-3 py-3 align-top">
+                    <p className="text-sm text-slate-700">{row.membership ?? "-"}</p>
+                    {getMembershipTag(row.membership) ? (
+                      <span className="mt-2 inline-block rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-white">
+                        {getMembershipTag(row.membership)}
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="border-b border-slate-300/60 px-3 py-3 align-top text-sm text-slate-700">{getTracks(row)}</td>
+                  <td className="border-b border-slate-300/60 px-3 py-3 align-top text-sm text-slate-700">{formatDate(row.last_check_in)}</td>
+                  <td className="border-b border-slate-300/60 px-3 py-3 align-top text-sm text-slate-700">{formatDate(getLastActive(row))}</td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>

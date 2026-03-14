@@ -9,12 +9,38 @@ const WEEKDAY_SET = new Set(["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]);
 
 type Payload = {
   organizationId?: string;
+  trackId?: string;
   name?: string;
   time?: string;
   durationMinutes?: number;
   days?: string[];
   startDate?: string;
+  endDate?: string | null;
+  defaultCoachUserId?: string | null;
+  sizeLimit?: number;
+  reservationCutoffHours?: number;
+  calendarColor?: string;
 };
+
+type ScheduleClassRow = {
+  id: string;
+  track_id: string;
+  name: string;
+  class_time: string;
+  duration_minutes: number;
+  class_days: string[];
+  start_date: string;
+  end_date: string | null;
+  default_coach_user_id: string | null;
+  size_limit: number;
+  reservation_cutoff_hours: number;
+  calendar_color: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type TrackLookupRow = { id: string; name: string };
+type CoachLookupRow = { id: string; full_name: string | null; email: string | null };
 
 function canAccessOrganization(organizationIds: string[], organizationId: string) {
   return organizationIds.includes(organizationId);
@@ -41,12 +67,24 @@ function normalizeDays(value: unknown): string[] {
 }
 
 function normalizePayload(payload: Payload) {
+  const trackId = String(payload.trackId ?? "").trim();
   const name = String(payload.name ?? "").trim();
   const time = String(payload.time ?? "").trim();
   const durationMinutes = Number(payload.durationMinutes ?? 0);
   const days = normalizeDays(payload.days);
   const startDate = String(payload.startDate ?? "").trim();
+  const endDateRaw = typeof payload.endDate === "string" ? payload.endDate.trim() : "";
+  const endDate = endDateRaw ? endDateRaw : null;
+  const defaultCoachUserId = typeof payload.defaultCoachUserId === "string"
+    ? payload.defaultCoachUserId.trim() || null
+    : null;
+  const sizeLimit = Number(payload.sizeLimit ?? 0);
+  const reservationCutoffHours = Number(payload.reservationCutoffHours ?? 0);
+  const calendarColor = String(payload.calendarColor ?? "#3B82F6").trim() || "#3B82F6";
 
+  if (!trackId) {
+    return { error: "Track is required." } as const;
+  }
   if (!name) {
     return { error: "Class name is required." } as const;
   }
@@ -62,17 +100,60 @@ function normalizePayload(payload: Payload) {
   if (!isValidDate(startDate)) {
     return { error: "Start date is invalid." } as const;
   }
+  if (endDate && !isValidDate(endDate)) {
+    return { error: "End date is invalid." } as const;
+  }
+  if (endDate && endDate < startDate) {
+    return { error: "End date must be on or after start date." } as const;
+  }
+  if (!Number.isFinite(sizeLimit) || sizeLimit < 0) {
+    return { error: "Size limit must be 0 or greater." } as const;
+  }
+  if (!Number.isFinite(reservationCutoffHours) || reservationCutoffHours < 0) {
+    return { error: "Reservation cutoff hours must be 0 or greater." } as const;
+  }
 
   return {
     value: {
+      track_id: trackId,
       name,
       class_time: time,
       duration_minutes: durationMinutes,
       class_days: days,
       start_date: startDate,
-      end_date: null,
+      end_date: endDate,
+      default_coach_user_id: defaultCoachUserId,
+      size_limit: Math.trunc(sizeLimit),
+      reservation_cutoff_hours: Math.trunc(reservationCutoffHours),
+      calendar_color: calendarColor,
     },
   } as const;
+}
+
+async function withLookups(rows: ScheduleClassRow[]) {
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const trackIds = Array.from(new Set(rows.map((row) => row.track_id).filter(Boolean)));
+  const coachIds = Array.from(new Set(rows.map((row) => row.default_coach_user_id).filter(Boolean))) as string[];
+
+  const { data: trackRows } = trackIds.length > 0
+    ? await supabaseAdmin.from("programming_tracks").select("id, name").in("id", trackIds)
+    : { data: [] as TrackLookupRow[] };
+
+  const { data: coachRows } = coachIds.length > 0
+    ? await supabaseAdmin.from("app_users").select("id, full_name, email").in("id", coachIds)
+    : { data: [] as CoachLookupRow[] };
+
+  const trackById = new Map((trackRows ?? []).map((row) => [row.id, row]));
+  const coachById = new Map((coachRows ?? []).map((row) => [row.id, row]));
+
+  return rows.map((row) => ({
+    ...row,
+    track: trackById.get(row.track_id) ?? null,
+    default_coach: row.default_coach_user_id ? coachById.get(row.default_coach_user_id) ?? null : null,
+  }));
 }
 
 export async function GET(request: NextRequest) {
@@ -96,7 +177,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error: queryError } = await supabaseAdmin
     .from("organization_schedule_classes")
-    .select("id, name, class_time, duration_minutes, class_days, start_date, end_date, created_at, updated_at")
+    .select("id, track_id, name, class_time, duration_minutes, class_days, start_date, end_date, default_coach_user_id, size_limit, reservation_cutoff_hours, calendar_color, created_at, updated_at")
     .eq("organization_id", organizationId)
     .order("start_date", { ascending: true })
     .order("class_time", { ascending: true });
@@ -105,7 +186,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: queryError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ organizationId, classes: data ?? [] });
+  const hydrated = await withLookups((data ?? []) as ScheduleClassRow[]);
+  return NextResponse.json({ organizationId, classes: hydrated });
 }
 
 export async function POST(request: NextRequest) {
@@ -137,6 +219,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: normalized.error }, { status: 400 });
   }
 
+  const { data: trackExists, error: trackError } = await supabaseAdmin
+    .from("programming_tracks")
+    .select("id")
+    .eq("id", normalized.value.track_id)
+    .eq("organization_id", organizationId)
+    .single();
+
+  if (trackError || !trackExists) {
+    return NextResponse.json({ error: "Selected track was not found." }, { status: 400 });
+  }
+
   const { data, error: insertError } = await supabaseAdmin
     .from("organization_schedule_classes")
     .insert({
@@ -144,12 +237,13 @@ export async function POST(request: NextRequest) {
       ...normalized.value,
       updated_at: new Date().toISOString(),
     })
-    .select("id, name, class_time, duration_minutes, class_days, start_date, end_date, created_at, updated_at")
+    .select("id, track_id, name, class_time, duration_minutes, class_days, start_date, end_date, default_coach_user_id, size_limit, reservation_cutoff_hours, calendar_color, created_at, updated_at")
     .single();
 
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ scheduleClass: data }, { status: 201 });
+  const [hydrated] = await withLookups(data ? [data as ScheduleClassRow] : []);
+  return NextResponse.json({ scheduleClass: hydrated ?? null }, { status: 201 });
 }

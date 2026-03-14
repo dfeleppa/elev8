@@ -194,7 +194,7 @@ export default function OwnerPayrollClient() {
 
   const headingClass = (column: SortColumn) => {
     const active = sortColumn === column;
-    return `font-semibold transition ${active ? "text-slate-100" : "text-slate-400 hover:text-slate-200"}`;
+    return `font-semibold transition ${active ? "text-white" : "text-slate-200 hover:text-white"}`;
   };
 
   return (
@@ -206,19 +206,25 @@ export default function OwnerPayrollClient() {
         </p>
       </header>
 
-      <section className="glass-panel rounded-[28px] border border-white/10 bg-white/5 p-6">
+      <section className="glass-panel app-card overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-0">
+        <div className="flex items-center justify-between bg-[#e11d8a] px-6 py-4">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Payroll Overview</p>
+          <span className="text-xs text-white/80">{filteredRows.length} rows</span>
+        </div>
+
+        <div className="p-6">
         <div className="grid gap-3 lg:grid-cols-[2fr_1fr_1fr]">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search week, staff, pay period, payment form, notes"
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
           />
 
           <select
             value={staffFilter}
             onChange={(event) => setStaffFilter(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
           >
             <option value="all">All Staff</option>
             {staffOptions.map((option) => (
@@ -231,7 +237,7 @@ export default function OwnerPayrollClient() {
           <select
             value={paymentFilter}
             onChange={(event) => setPaymentFilter(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
           >
             <option value="all">All Payment Forms</option>
             {paymentOptions.map((option) => (
@@ -242,10 +248,10 @@ export default function OwnerPayrollClient() {
           </select>
         </div>
 
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[1180px] border-separate border-spacing-y-3">
+        <div className="app-table-shell mt-6 overflow-x-auto">
+          <table className="app-table w-full min-w-[1180px] border-collapse">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-[0.22em] text-slate-400">
+              <tr>
                 <th className="px-4">
                   <button type="button" onClick={() => onSort("week")} className={headingClass("week")}>
                     Week
@@ -298,7 +304,7 @@ export default function OwnerPayrollClient() {
                 <tr>
                   <td
                     colSpan={9}
-                    className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-sm text-slate-400"
+                    className="px-4 py-6 text-sm text-slate-500"
                   >
                     No payroll rows match the current search/filters.
                   </td>
@@ -306,31 +312,31 @@ export default function OwnerPayrollClient() {
               ) : (
                 filteredRows.map((row, index) => (
                   <tr key={`${row.week}-${row.staffName}-${index}`}>
-                    <td className="rounded-l-2xl border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-200">
+                    <td className="rounded-l-2xl border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
                       {row.week}
                     </td>
-                    <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                    <td className="border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
                       {formatPeriod(row.payPeriodStart, row.payPeriodEnd)}
                     </td>
-                    <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm font-medium text-slate-100">
+                    <td className="border-y border-slate-200 px-4 py-4 text-sm font-medium text-slate-900">
                       {row.staffName}
                     </td>
-                    <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                    <td className="border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
                       {row.classesCoached}
                     </td>
-                    <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                    <td className="border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
                       {row.officeHours}
                     </td>
-                    <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm font-semibold text-emerald-300">
+                    <td className="border-y border-slate-200 px-4 py-4 text-sm font-semibold text-emerald-700">
                       {formatMoney(row.totalPay)}
                     </td>
-                    <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                    <td className="border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
                       {formatDate(row.payDate)}
                     </td>
-                    <td className="border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                    <td className="border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
                       {row.paymentForm}
                     </td>
-                    <td className="rounded-r-2xl border-y border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                    <td className="rounded-r-2xl border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
                       {row.notes || "N/A"}
                     </td>
                   </tr>
@@ -338,6 +344,7 @@ export default function OwnerPayrollClient() {
               )}
             </tbody>
           </table>
+        </div>
         </div>
       </section>
     </section>

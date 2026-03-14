@@ -22,6 +22,9 @@ type NutritionEntry = {
   protein: number | null;
   carbs: number | null;
   fat: number | null;
+  fiber?: number | null;
+  sugar?: number | null;
+  saturated_fat?: number | null;
   created_at: string;
 };
 
@@ -72,8 +75,12 @@ function toLocalDateInputValue(date: Date) {
   return local.toISOString().slice(0, 10);
 }
 
-function toNumber(value: number | null | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+function toNumber(value: number | string | null | undefined) {
+  if (value === null || value === undefined || value === "") {
+    return 0;
+  }
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function toEntryQuantity(value: number | null | undefined) {
@@ -103,7 +110,6 @@ export default function HealthNutritionPage() {
   const [day, setDay] = useState<NutritionDay | null>(null);
   const [entries, setEntries] = useState<NutritionEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingTargets, setSavingTargets] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"consumed" | "remaining">("remaining");
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,9 +123,10 @@ export default function HealthNutritionPage() {
   const [mealMenuOpen, setMealMenuOpen] = useState<MealKey | null>(null);
   const [copyTargetDate, setCopyTargetDate] = useState(() => toLocalDateInputValue(new Date()));
   const [copyTargetMeal, setCopyTargetMeal] = useState<MealKey>("breakfast");
+  const [coachMenuOpen, setCoachMenuOpen] = useState(false);
   const [foodDialogOpen, setFoodDialogOpen] = useState(false);
   const [activeMealDialog, setActiveMealDialog] = useState<MealKey | null>(null);
-  const [dialogTab, setDialogTab] = useState<"recent" | "mine" | "create">("recent");
+  const [dialogTab, setDialogTab] = useState<"recent" | "mine" | "create" | "usda">("recent");
   const [dialogSearch, setDialogSearch] = useState("");
   const [dialogLoading, setDialogLoading] = useState(false);
   const [dialogSaving, setDialogSaving] = useState(false);
@@ -199,9 +206,12 @@ export default function HealthNutritionPage() {
         acc.protein += toNumber(entry.protein) * quantity;
         acc.carbs += toNumber(entry.carbs) * quantity;
         acc.fat += toNumber(entry.fat) * quantity;
+        acc.fiber += toNumber(entry.fiber) * quantity;
+        acc.sugar += toNumber(entry.sugar) * quantity;
+        acc.saturatedFat += toNumber(entry.saturated_fat) * quantity;
         return acc;
       },
-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0, saturatedFat: 0 }
     );
   }, [entries]);
 
@@ -213,10 +223,10 @@ export default function HealthNutritionPage() {
   };
 
   const remaining = {
-    calories: Math.max(0, targetNumbers.calories - totals.calories),
-    protein: Math.max(0, targetNumbers.protein - totals.protein),
-    carbs: Math.max(0, targetNumbers.carbs - totals.carbs),
-    fat: Math.max(0, targetNumbers.fat - totals.fat),
+    calories: targetNumbers.calories - totals.calories,
+    protein: targetNumbers.protein - totals.protein,
+    carbs: targetNumbers.carbs - totals.carbs,
+    fat: targetNumbers.fat - totals.fat,
   };
 
   const calorieProgress = targetNumbers.calories
@@ -224,37 +234,43 @@ export default function HealthNutritionPage() {
     : 0;
 
   const macroRows = [
-    { label: "Protein", value: totals.protein, target: targetNumbers.protein, remaining: remaining.protein, color: "bg-cyan-400" },
-    { label: "Carbs", value: totals.carbs, target: targetNumbers.carbs, remaining: remaining.carbs, color: "bg-indigo-400" },
-    { label: "Fat", value: totals.fat, target: targetNumbers.fat, remaining: remaining.fat, color: "bg-amber-400" },
+    {
+      label: "Protein",
+      value: totals.protein,
+      target: targetNumbers.protein,
+      remaining: remaining.protein,
+      color: "bg-cyan-400",
+      subRows: [],
+    },
+    {
+      label: "Carbs",
+      value: totals.carbs,
+      target: targetNumbers.carbs,
+      remaining: remaining.carbs,
+      color: "bg-indigo-400",
+      subRows: [
+        { label: "Fiber", value: totals.fiber },
+        { label: "Sugar", value: totals.sugar },
+      ],
+    },
+    {
+      label: "Fat",
+      value: totals.fat,
+      target: targetNumbers.fat,
+      remaining: remaining.fat,
+      color: "bg-amber-400",
+      subRows: [{ label: "Saturated Fat", value: totals.saturatedFat }],
+    },
   ];
 
-  async function saveTargets() {
-    setSavingTargets(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/nutrition-days", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          dayDate: selectedDate,
-          calorieTarget: targets.calories,
-          proteinTarget: targets.protein,
-          carbsTarget: targets.carbs,
-          fatTarget: targets.fat,
-        }),
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Failed to save targets.");
-      }
-      setDay(payload.day);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save targets.");
-    } finally {
-      setSavingTargets(false);
+  const nextCheckIn = useMemo(() => {
+    const next = new Date(`${selectedDate}T00:00:00`);
+    if (Number.isNaN(next.getTime())) {
+      return "TBD";
     }
-  }
+    next.setDate(next.getDate() + 7);
+    return next.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }, [selectedDate]);
 
   async function addEntry(mealKey: MealKey) {
     const draft = drafts[mealKey];
@@ -489,13 +505,14 @@ export default function HealthNutritionPage() {
   }
 
   async function addFoodResult(result: FoodSearchResult) {
+    const targetMeal = activeMealDialog ?? searchMeal;
     setError(null);
     const response = await fetch("/api/nutrition-entries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         dayDate: selectedDate,
-        mealType: searchMeal,
+        mealType: targetMeal,
         name: result.brandOwner ? `${result.description} (${result.brandOwner})` : result.description,
         calories: result.calories,
         protein: result.protein,
@@ -697,31 +714,13 @@ export default function HealthNutritionPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-400">
-              {viewMode === "consumed" ? "Consumed" : "Remaining"}
-            </div>
-            <div className="flex rounded-full border border-white/10 bg-white/5 p-1">
-              {(["consumed", "remaining"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setViewMode(mode)}
-                  className={`rounded-full px-4 py-1 text-xs font-semibold transition ${
-                    viewMode === mode
-                      ? "bg-slate-100 text-slate-900"
-                      : "text-slate-300 hover:text-slate-100"
-                  }`}
-                >
-                  {mode === "consumed" ? "Consumed" : "Remaining"}
-                </button>
-              ))}
-            </div>
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
-              className="rounded-full border border-white/10 bg-white/10 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-white/30 hover:bg-white/20"
+              className="grid h-10 w-10 place-items-center rounded-full border border-slate-300 bg-white text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+              aria-label="Previous day"
             >
-              Prev
+              &lt;
             </button>
             <input
               id="nutrition-date"
@@ -729,36 +728,48 @@ export default function HealthNutritionPage() {
               type="date"
               value={selectedDate}
               onChange={(event) => setSelectedDate(event.target.value)}
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-100 shadow-inner focus:border-white/30 focus:outline-none"
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-inner focus:border-slate-400 focus:outline-none"
             />
             <button
               type="button"
               onClick={() => setSelectedDate(toLocalDateInputValue(new Date()))}
-              className="rounded-full border border-white/10 bg-white/10 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-white/30 hover:bg-white/20"
+              className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
             >
               Today
             </button>
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, 1))}
-              className="rounded-full border border-white/10 bg-white/10 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-white/30 hover:bg-white/20"
+              className="grid h-10 w-10 place-items-center rounded-full border border-slate-300 bg-white text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+              aria-label="Next day"
             >
-              Next
-            </button>
-            <button
-              type="button"
-              onClick={() => openFoodManagerDialog()}
-              className="rounded-full border border-cyan-300/40 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-400/20"
-            >
-              Manage Foods
+              &gt;
             </button>
           </div>
         </header>
 
-        <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-          <div className="glass-panel relative overflow-hidden rounded-[28px] border border-white/5 p-6">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.15),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(244,114,182,0.12),_transparent_50%)]" />
-            <div className="relative grid gap-6 md:grid-cols-[auto_1fr] md:items-center">
+        <section className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-5 flex items-center justify-between">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Macros</p>
+              <div className="inline-flex rounded-full border border-slate-300 bg-white p-1">
+                {(["consumed", "remaining"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setViewMode(mode)}
+                    className={`rounded-full px-4 py-1 text-xs font-semibold transition ${
+                      viewMode === mode
+                        ? "bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] text-[#031525]"
+                        : "bg-white text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    {mode === "consumed" ? "Consumed" : "Remaining"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-6 md:grid-cols-[auto_1fr] md:items-center">
               <div className="flex items-center justify-center">
                 <div
                   className="grid h-32 w-32 place-items-center rounded-full border border-white/20 bg-white/10"
@@ -766,9 +777,9 @@ export default function HealthNutritionPage() {
                     background: `conic-gradient(#38bdf8 ${calorieProgress}%, rgba(15,23,42,0.12) 0%)`,
                   }}
                 >
-                  <div className="grid h-24 w-24 place-items-center rounded-full bg-white/90 text-center">
+                  <div className="grid h-24 w-24 place-items-center rounded-full bg-white text-center">
                     <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cal</p>
-                    <p className="text-2xl font-semibold text-slate-100">
+                    <p className="text-2xl font-semibold text-slate-900">
                       {viewMode === "consumed" ? totals.calories : remaining.calories}
                     </p>
                     <p className="text-xs text-slate-500">
@@ -779,200 +790,104 @@ export default function HealthNutritionPage() {
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Macros</p>
-                    <h2 className="mt-2 text-xl font-semibold text-slate-100">
-                      {viewMode === "consumed" ? "Consumed" : "Remaining"}
-                    </h2>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={saveTargets}
-                    disabled={savingTargets}
-                    className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold text-slate-100 transition hover:border-white/30 hover:bg-white/20 disabled:opacity-60"
-                  >
-                    {savingTargets ? "Saving" : "Save targets"}
-                  </button>
-                </div>
-
                 <div className="grid gap-3">
                   {macroRows.map((macro) => (
-                    <div key={macro.label} className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <span className={`h-2.5 w-2.5 rounded-full ${macro.color}`} />
-                        <p className="text-sm text-slate-200">{macro.label}</p>
+                    <div key={macro.label} className="space-y-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className={`h-2.5 w-2.5 rounded-full ${macro.color}`} />
+                          <p className="text-sm text-slate-700">{macro.label}</p>
+                        </div>
+                        <p
+                          className={`text-sm ${
+                            viewMode === "remaining" && macro.remaining < 0
+                              ? "font-semibold text-rose-600"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          {viewMode === "consumed" ? macro.value : macro.remaining} / {macro.target}
+                        </p>
                       </div>
-                      <p className="text-sm text-slate-400">
-                        {viewMode === "consumed" ? macro.value : macro.remaining} / {macro.target}
-                      </p>
+                      {macro.subRows.length > 0 ? (
+                        <div className="pl-6">
+                          {macro.subRows.map((sub) => (
+                            <div key={`${macro.label}-${sub.label}`} className="flex items-center justify-between">
+                              <p className="text-xs text-slate-500">{sub.label}</p>
+                              <p className="text-xs text-slate-500">{sub.value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   ))}
                 </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="space-y-2 text-xs uppercase tracking-[0.3em] text-slate-500">
-                    Calories
-                    <input
-                      id="target-calories"
-                      name="targetCalories"
-                      inputMode="numeric"
-                      value={targets.calories}
-                      onChange={(event) =>
-                        setTargets((prev) => ({ ...prev, calories: event.target.value }))
-                      }
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
-                      placeholder="2350"
-                    />
-                  </label>
-                  <label className="space-y-2 text-xs uppercase tracking-[0.3em] text-slate-500">
-                    Protein
-                    <input
-                      id="target-protein"
-                      name="targetProtein"
-                      inputMode="numeric"
-                      value={targets.protein}
-                      onChange={(event) =>
-                        setTargets((prev) => ({ ...prev, protein: event.target.value }))
-                      }
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
-                      placeholder="192"
-                    />
-                  </label>
-                  <label className="space-y-2 text-xs uppercase tracking-[0.3em] text-slate-500">
-                    Carbs
-                    <input
-                      id="target-carbs"
-                      name="targetCarbs"
-                      inputMode="numeric"
-                      value={targets.carbs}
-                      onChange={(event) =>
-                        setTargets((prev) => ({ ...prev, carbs: event.target.value }))
-                      }
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
-                      placeholder="216"
-                    />
-                  </label>
-                  <label className="space-y-2 text-xs uppercase tracking-[0.3em] text-slate-500">
-                    Fat
-                    <input
-                      id="target-fat"
-                      name="targetFat"
-                      inputMode="numeric"
-                      value={targets.fat}
-                      onChange={(event) => setTargets((prev) => ({ ...prev, fat: event.target.value }))}
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
-                      placeholder="80"
-                    />
-                  </label>
-                </div>
               </div>
             </div>
           </div>
 
-          <div className="glass-panel rounded-[28px] border border-white/5 p-6">
-            <h3 className="text-xs uppercase tracking-[0.3em] text-slate-400">Daily notes</h3>
-            <p className="mt-3 text-sm text-slate-300">
-              {loading ? "Loading nutrition day..." : "Log meals and watch the totals adjust in real time."}
-            </p>
-            <div className="mt-6 space-y-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Status</p>
-                <p className="mt-2 text-sm text-slate-200">
-                  {day ? "Targets saved" : "Targets not saved yet"}
-                </p>
+          <div className="relative flex h-full flex-col rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Coach</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Entries</p>
-                <p className="mt-2 text-sm text-slate-200">{entries.length} logged</p>
-              </div>
-              {error && (
-                <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 p-4 text-sm text-rose-100">
-                  {error}
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="glass-panel rounded-[28px] border border-white/5 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Food search</p>
-              <h2 className="mt-2 text-lg font-semibold text-slate-100">USDA FoodData Central</h2>
-              <p className="mt-2 text-sm text-slate-400">Macros shown are per 100g when available.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <select
-                id="food-search-meal"
-                name="foodSearchMeal"
-                value={searchMeal}
-                onChange={(event) => setSearchMeal(event.target.value as MealKey)}
-                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
-              >
-                {meals.map((meal) => (
-                  <option key={meal.key} value={meal.key}>
-                    {meal.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <input
-              id="food-search"
-              name="foodSearch"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="min-w-[220px] flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
-              placeholder="Search foods"
-            />
-            <button
-              type="button"
-              onClick={handleFoodSearch}
-              className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-white/30 hover:bg-white/20"
-            >
-              {searchLoading ? "Searching" : "Search"}
-            </button>
-          </div>
-
-          {searchError && (
-            <div className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 p-4 text-sm text-rose-100">
-              {searchError}
-            </div>
-          )}
-
-          <div className="mt-6 grid gap-3 md:grid-cols-2">
-            {searchResults.length === 0 ? (
-              <p className="text-sm text-slate-500">
-                {searchPerformed ? `No results for "${searchQuery.trim()}".` : "Search for foods to add."}
-              </p>
-            ) : (
-              searchResults.map((result) => (
-                <div
-                  key={result.fdcId}
-                  className="flex flex-col justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setCoachMenuOpen((open) => !open)}
+                  className="grid h-9 w-9 place-items-center rounded-full border border-slate-300 text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
+                  aria-label="Coach card menu"
+                  aria-expanded={coachMenuOpen}
                 >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-100">{result.description}</p>
-                    {result.brandOwner && (
-                      <p className="mt-1 text-xs text-slate-400">{result.brandOwner}</p>
-                    )}
-                    <p className="mt-2 text-xs text-slate-400">
-                      {result.calories ?? 0} cal · {result.protein ?? 0}p · {result.carbs ?? 0}c · {result.fat ?? 0}f
-                    </p>
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                    <circle cx="12" cy="5" r="1.7" fill="currentColor" />
+                    <circle cx="12" cy="12" r="1.7" fill="currentColor" />
+                    <circle cx="12" cy="19" r="1.7" fill="currentColor" />
+                  </svg>
+                </button>
+                {coachMenuOpen ? (
+                  <div className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+                    <a
+                      href="#"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setCoachMenuOpen(false);
+                      }}
+                      className="block rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100"
+                    >
+                      Coach settings
+                    </a>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => addFoodResult(result)}
-                    className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:border-white/30 hover:bg-white/20"
-                  >
-                    Add to {meals.find((meal) => meal.key === searchMeal)?.label}
-                  </button>
-                </div>
-              ))
-            )}
+                ) : null}
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Current Goal Objective</p>
+                <p className="mt-1 text-sm text-slate-700">Lose weight</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Goal Weight</p>
+                <p className="mt-1 text-sm text-slate-700">180 lb</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Trend Weight</p>
+                <p className="mt-1 text-sm text-slate-700">183.6 lb</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Next Check-In Date</p>
+                <p className="mt-1 text-sm text-slate-700">{nextCheckIn}</p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                className="rounded-full bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] px-5 py-2 text-sm font-semibold text-[#031525] transition hover:brightness-110"
+              >
+                Check-in
+              </button>
+            </div>
           </div>
         </section>
 
@@ -995,7 +910,7 @@ export default function HealthNutritionPage() {
               <div key={meal.key} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="relative flex items-center justify-between">
                   <div>
-                    <h3 className="text-2xl font-semibold leading-none text-slate-900">{meal.label}</h3>
+                    <h3 className="text-xs uppercase tracking-[0.3em] text-slate-400">{meal.label}</h3>
                     <p className="mt-2 text-sm text-slate-500">
                       {Math.round(mealTotals.calories)} Cal, {Math.round(mealTotals.protein)}p, {Math.round(mealTotals.carbs)}c, {Math.round(mealTotals.fat)}f
                     </p>
@@ -1019,7 +934,7 @@ export default function HealthNutritionPage() {
                         setMealMenuOpen(null);
                         openMealDialog(meal.key);
                       }}
-                      className="rounded-full bg-[#0e1f49] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#122960]"
+                      className="rounded-full bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] px-5 py-2 text-sm font-semibold text-[#031525] transition hover:brightness-110"
                     >
                       Add
                     </button>
@@ -1103,13 +1018,13 @@ export default function HealthNutritionPage() {
 
         {foodDialogOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4">
-            <div className="w-full max-w-2xl rounded-2xl border border-slate-700 bg-[#030711] p-4 shadow-2xl">
+            <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="inline-block bg-[#0b3da8] px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.25em] text-white">
+                  <p className="text-sm font-medium text-slate-700">
                     {activeMealDialog ? `Add To ${meals.find((meal) => meal.key === activeMealDialog)?.label}` : "Manage Foods"}
                   </p>
-                  <h3 className="mt-1 text-3xl font-semibold leading-tight text-white">Search foods</h3>
+                  <h3 className="mt-1 text-3xl font-semibold leading-tight text-slate-900">Search foods</h3>
                 </div>
                 <button
                   type="button"
@@ -1118,7 +1033,7 @@ export default function HealthNutritionPage() {
                     setActiveMealDialog(null);
                     setEditingFoodId(null);
                   }}
-                  className="grid h-10 w-10 place-items-center rounded-full border border-[#14316f] text-lg text-slate-100 transition hover:border-[#2850a1] hover:text-white"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-slate-300 text-lg text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
                   aria-label="Close food dialog"
                 >
                   ×
@@ -1126,18 +1041,28 @@ export default function HealthNutritionPage() {
               </div>
 
               <div className="mt-4 flex items-center gap-2">
-                {(["recent", "mine", "create"] as const).map((tab) => (
+                {(
+                  activeMealDialog
+                    ? (["recent", "mine", "usda", "create"] as const)
+                    : (["recent", "mine", "create"] as const)
+                ).map((tab) => (
                   <button
                     key={tab}
                     type="button"
                     onClick={() => setDialogTab(tab)}
                       className={`rounded-full border px-4 py-1 text-sm font-semibold transition ${
                       dialogTab === tab
-                        ? "border-white bg-white text-slate-900"
-                        : "border-slate-500 text-slate-100 hover:border-slate-300 hover:text-white"
+                        ? "border-[#0b3da8] bg-[#0b3da8] text-white"
+                        : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:text-slate-900"
                     }`}
                   >
-                    {tab === "recent" ? "Recents" : tab === "mine" ? "My foods" : "Create food"}
+                    {tab === "recent"
+                      ? "Recents"
+                      : tab === "mine"
+                        ? "My foods"
+                        : tab === "usda"
+                          ? "USDA"
+                          : "Create food"}
                   </button>
                 ))}
               </div>
@@ -1148,45 +1073,103 @@ export default function HealthNutritionPage() {
                     value={createFoodDraft.name}
                     onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, name: event.target.value }))}
                     placeholder="Food name"
-                    className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-white/40 focus:outline-none sm:col-span-2"
+                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none sm:col-span-2"
                   />
                   <input
                     value={createFoodDraft.calories}
                     onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, calories: event.target.value }))}
                     placeholder="Calories"
                     inputMode="numeric"
-                    className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-white/40 focus:outline-none"
+                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
                   />
                   <input
                     value={createFoodDraft.protein}
                     onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, protein: event.target.value }))}
                     placeholder="Protein"
                     inputMode="numeric"
-                    className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-white/40 focus:outline-none"
+                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
                   />
                   <input
                     value={createFoodDraft.carbs}
                     onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, carbs: event.target.value }))}
                     placeholder="Carbs"
                     inputMode="numeric"
-                    className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-white/40 focus:outline-none"
+                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
                   />
                   <input
                     value={createFoodDraft.fat}
                     onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, fat: event.target.value }))}
                     placeholder="Fat"
                     inputMode="numeric"
-                    className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-white/40 focus:outline-none"
+                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={createCustomFood}
                     disabled={creatingFood}
-                    className="rounded-2xl border border-white/20 bg-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/25 disabled:opacity-60 sm:col-span-2"
+                    className="rounded-2xl bg-gradient-to-r from-[#2fa8e8] to-[#0b3da8] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60 sm:col-span-2"
                   >
                     {creatingFood ? "Saving" : "Save Food"}
                   </button>
                 </div>
+              ) : dialogTab === "usda" ? (
+                <>
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <input
+                      id="food-search"
+                      name="foodSearch"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      className="min-w-[220px] flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none"
+                      placeholder="Search foods"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleFoodSearch}
+                      className="rounded-2xl bg-gradient-to-r from-[#2fa8e8] to-[#0b3da8] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+                    >
+                      {searchLoading ? "Searching" : "Search"}
+                    </button>
+                  </div>
+
+                  {searchError ? (
+                    <div className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 p-4 text-sm text-rose-700">
+                      {searchError}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-6 grid gap-3 md:grid-cols-2">
+                    {searchResults.length === 0 ? (
+                      <p className="text-sm text-slate-600">
+                        {searchPerformed ? `No results for "${searchQuery.trim()}".` : "Search for foods to add."}
+                      </p>
+                    ) : (
+                      searchResults.map((result) => (
+                        <div
+                          key={result.fdcId}
+                          className="flex flex-col justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">{result.description}</p>
+                            {result.brandOwner ? (
+                              <p className="mt-1 text-xs text-slate-600">{result.brandOwner}</p>
+                            ) : null}
+                            <p className="mt-2 text-xs text-slate-600">
+                              {result.calories ?? 0} cal · {result.protein ?? 0}p · {result.carbs ?? 0}c · {result.fat ?? 0}f
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => addFoodResult(result)}
+                            className="rounded-xl bg-gradient-to-r from-[#2fa8e8] to-[#0b3da8] px-3 py-2 text-xs font-semibold text-white transition hover:brightness-110"
+                          >
+                            Add to {meals.find((meal) => meal.key === (activeMealDialog ?? searchMeal))?.label}
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
               ) : (
                 <>
                   <div className="mt-4">
@@ -1199,18 +1182,18 @@ export default function HealthNutritionPage() {
                   </div>
                   <div className="mt-4 max-h-80 space-y-2 overflow-y-auto pr-1">
                     {dialogLoading ? (
-                      <p className="text-sm text-slate-100">Loading foods...</p>
+                      <p className="text-sm text-slate-700">Loading foods...</p>
                     ) : dialogFoods.length === 0 ? (
-                      <p className="rounded-lg border border-slate-600 px-4 py-4 text-sm text-slate-100">No foods found. Try a different search.</p>
+                      <p className="rounded-lg border border-slate-200 px-4 py-4 text-sm text-slate-700">No foods found. Try a different search.</p>
                     ) : (
                       dialogFoods.map((food) => (
                         <div
                           key={`${dialogTab}-${food.id}`}
-                          className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                          className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3"
                         >
                           <span>
-                            <span className="block text-sm font-semibold text-slate-100">{food.name}</span>
-                            <span className="mt-1 block text-xs text-slate-200">
+                            <span className="block text-sm font-semibold text-slate-900">{food.name}</span>
+                            <span className="mt-1 block text-xs text-slate-600">
                               {food.calories ?? 0} cal · {food.protein ?? 0}p · {food.carbs ?? 0}c · {food.fat ?? 0}f
                             </span>
                           </span>
@@ -1219,7 +1202,7 @@ export default function HealthNutritionPage() {
                               <button
                                 type="button"
                                 onClick={() => addLibraryFood(food, activeMealDialog)}
-                                className="rounded-full border border-white/20 px-3 py-1 text-xs text-slate-100 transition hover:border-white/40 hover:text-white"
+                                className="rounded-full bg-gradient-to-r from-[#2fa8e8] to-[#0b3da8] px-3 py-1 text-xs font-semibold text-white transition hover:brightness-110"
                               >
                                 Add
                               </button>
@@ -1229,7 +1212,7 @@ export default function HealthNutritionPage() {
                                 <button
                                   type="button"
                                   onClick={() => beginEditFood(food)}
-                                  className="rounded-full border border-white/20 px-3 py-1 text-xs text-slate-100 transition hover:border-white/40 hover:text-white"
+                                  className="rounded-full border border-slate-300 px-3 py-1 text-xs text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
                                 >
                                   Edit
                                 </button>
@@ -1237,7 +1220,7 @@ export default function HealthNutritionPage() {
                                   type="button"
                                   disabled={dialogSaving}
                                   onClick={() => deleteFood(food.id)}
-                                  className="rounded-full border border-rose-400/40 px-3 py-1 text-xs text-rose-200 transition hover:border-rose-300 hover:text-rose-100 disabled:opacity-60"
+                                  className="rounded-full border border-rose-300 px-3 py-1 text-xs text-rose-700 transition hover:border-rose-400 hover:text-rose-800 disabled:opacity-60"
                                 >
                                   Delete
                                 </button>
@@ -1252,56 +1235,56 @@ export default function HealthNutritionPage() {
               )}
 
               {editingFoodId ? (
-                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-200">Edit Food</p>
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-600">Edit Food</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <input
                       value={editFoodDraft.name}
                       onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, name: event.target.value }))}
                       placeholder="Food name"
-                      className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-white/40 focus:outline-none sm:col-span-2"
+                      className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none sm:col-span-2"
                     />
                     <input
                       value={editFoodDraft.calories}
                       onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, calories: event.target.value }))}
                       placeholder="Calories"
                       inputMode="numeric"
-                      className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-white/40 focus:outline-none"
+                      className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
                     />
                     <input
                       value={editFoodDraft.protein}
                       onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, protein: event.target.value }))}
                       placeholder="Protein"
                       inputMode="numeric"
-                      className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-white/40 focus:outline-none"
+                      className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
                     />
                     <input
                       value={editFoodDraft.carbs}
                       onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, carbs: event.target.value }))}
                       placeholder="Carbs"
                       inputMode="numeric"
-                      className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-white/40 focus:outline-none"
+                      className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
                     />
                     <input
                       value={editFoodDraft.fat}
                       onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, fat: event.target.value }))}
                       placeholder="Fat"
                       inputMode="numeric"
-                      className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-300 focus:border-white/40 focus:outline-none"
+                      className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-400 focus:outline-none"
                     />
                     <div className="sm:col-span-2 flex items-center gap-2">
                       <button
                         type="button"
                         disabled={dialogSaving}
                         onClick={() => saveEditedFood(editingFoodId)}
-                        className="rounded-2xl border border-white/20 bg-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/25 disabled:opacity-60"
+                        className="rounded-2xl bg-gradient-to-r from-[#2fa8e8] to-[#0b3da8] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60"
                       >
                         Save Changes
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingFoodId(null)}
-                        className="rounded-2xl border border-white/20 px-4 py-2 text-sm text-slate-100 transition hover:border-white/40 hover:text-white"
+                        className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
                       >
                         Cancel
                       </button>

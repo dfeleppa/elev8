@@ -44,7 +44,43 @@ const ROLE_OPTIONS: Array<{ value: StaffRole; label: string }> = [
 ];
 
 const fieldClass = "w-full rounded-2xl border border-slate-400/70 bg-slate-800 px-4 py-3 text-sm text-white placeholder:text-slate-300 focus:border-cyan-300 focus:outline-none";
-const compactFieldClass = "w-full rounded-xl border border-slate-400/70 bg-slate-800 px-2 py-2 text-sm text-white placeholder:text-slate-300 focus:border-cyan-300 focus:outline-none";
+const tableSelectClass = "w-full rounded-xl border border-slate-300 bg-white px-2 py-2 text-sm text-slate-800 focus:border-slate-500 focus:outline-none";
+const tableInputClass = "w-full rounded-xl border border-slate-300 bg-white px-2 py-2 text-sm text-slate-800 focus:border-slate-500 focus:outline-none";
+
+const externalIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path d="M8 8h8v8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M7 17L16 8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 5h7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    <path d="M5 5v14h14v-7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const phoneIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path
+      d="M7 4h3l1.4 3.3L9.8 9a13 13 0 0 0 5.2 5.2l1.7-1.6L20 14v3a2 2 0 0 1-2.2 2A15.8 15.8 0 0 1 5 6.2 2 2 0 0 1 7 4z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const messageIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path d="M4 5h16v10H9l-5 4z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const mailIcon = (
+  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+    <path d="M4 6h16v12H4z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="m5 7 7 6 7-6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 function formatRole(role: string) {
   return role.replace(/\b\w/g, (ch) => ch.toUpperCase());
@@ -286,16 +322,16 @@ export default function OwnerStaffClient() {
       </header>
 
       {error ? (
-        <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</div>
+        <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-700">{error}</div>
       ) : null}
       {message ? (
-        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
           {message}
         </div>
       ) : null}
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <article className="rounded-[28px] border border-slate-700 bg-slate-900/70 p-5">
+        <article className="rounded-[28px] border border-slate-300 bg-white p-5 shadow-[0_10px_24px_rgba(9,18,29,0.08)]">
           <button
             type="button"
             onClick={() => setPromoteCardOpen((current) => !current)}
@@ -303,17 +339,17 @@ export default function OwnerStaffClient() {
             className="flex w-full items-start justify-between gap-4 text-left"
           >
             <div>
-              <h2 className="text-lg font-semibold text-slate-100">Promote Existing Member</h2>
-              <p className="mt-1 text-sm text-slate-200">Select an existing member and assign staff role + pay rates.</p>
+              <h2 className="text-lg font-semibold text-slate-900">Promote Existing Member</h2>
+              <p className="mt-1 text-sm text-slate-600">Select an existing member and assign staff role + pay rates.</p>
             </div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-100">
-              {promoteCardOpen ? "Collapse" : "Expand"}
+            <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-700" aria-hidden="true">
+              {promoteCardOpen ? "^" : "v"}
             </span>
           </button>
 
           {promoteCardOpen ? (
-            <form onSubmit={promoteMember} className="mt-4 space-y-3 border-t border-slate-700 pt-4">
-              <label className="block text-xs uppercase tracking-[0.2em] text-slate-200" htmlFor="promote-member">
+            <form onSubmit={promoteMember} className="mt-4 space-y-3 border-t border-slate-200 pt-4">
+              <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="promote-member">
                 Current Member
               </label>
               <select
@@ -332,7 +368,7 @@ export default function OwnerStaffClient() {
                 ))}
               </select>
 
-              <label className="block text-xs uppercase tracking-[0.2em] text-slate-200" htmlFor="promote-role">
+              <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="promote-role">
                 Staff Role
               </label>
               <select
@@ -351,7 +387,7 @@ export default function OwnerStaffClient() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-200" htmlFor="promote-coaching-rate">
+                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="promote-coaching-rate">
                     Coaching Payrate
                   </label>
                   <input
@@ -367,7 +403,7 @@ export default function OwnerStaffClient() {
                 </div>
 
                 <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-200" htmlFor="promote-office-rate">
+                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="promote-office-rate">
                     Office Payrate
                   </label>
                   <input
@@ -394,7 +430,7 @@ export default function OwnerStaffClient() {
           ) : null}
         </article>
 
-        <article className="rounded-[28px] border border-slate-700 bg-slate-900/70 p-5">
+        <article className="rounded-[28px] border border-slate-300 bg-white p-5 shadow-[0_10px_24px_rgba(9,18,29,0.08)]">
           <button
             type="button"
             onClick={() => setAddCardOpen((current) => !current)}
@@ -402,20 +438,20 @@ export default function OwnerStaffClient() {
             className="flex w-full items-start justify-between gap-4 text-left"
           >
             <div>
-              <h2 className="text-lg font-semibold text-slate-100">Add New Staff (Non-Member)</h2>
-              <p className="mt-1 text-sm text-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900">Add New Staff (Non-Member)</h2>
+              <p className="mt-1 text-sm text-slate-600">
                 Create a person in the system and assign staff role in one step.
               </p>
             </div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-600 px-3 py-1 text-xs text-slate-100">
-              {addCardOpen ? "Collapse" : "Expand"}
+            <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-700" aria-hidden="true">
+              {addCardOpen ? "^" : "v"}
             </span>
           </button>
 
           {addCardOpen ? (
-            <form onSubmit={createStaff} className="mt-4 space-y-3 border-t border-slate-700 pt-4">
+            <form onSubmit={createStaff} className="mt-4 space-y-3 border-t border-slate-200 pt-4">
               <div>
-                <label className="block text-xs uppercase tracking-[0.2em] text-slate-200" htmlFor="create-name">
+                <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="create-name">
                   Full Name
                 </label>
                 <input
@@ -428,7 +464,7 @@ export default function OwnerStaffClient() {
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-[0.2em] text-slate-200" htmlFor="create-email">
+                <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="create-email">
                   Email
                 </label>
                 <input
@@ -442,7 +478,7 @@ export default function OwnerStaffClient() {
                 />
               </div>
 
-              <label className="block text-xs uppercase tracking-[0.2em] text-slate-200" htmlFor="create-role">
+              <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="create-role">
                 Staff Role
               </label>
               <select
@@ -461,7 +497,7 @@ export default function OwnerStaffClient() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-200" htmlFor="create-coaching-rate">
+                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="create-coaching-rate">
                     Coaching Payrate
                   </label>
                   <input
@@ -477,7 +513,7 @@ export default function OwnerStaffClient() {
                 </div>
 
                 <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-200" htmlFor="create-office-rate">
+                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="create-office-rate">
                     Office Payrate
                   </label>
                   <input
@@ -505,22 +541,22 @@ export default function OwnerStaffClient() {
         </article>
       </section>
 
-      <section className="rounded-[28px] border border-slate-700 bg-slate-900/70 p-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-100">Current Staff</h2>
-          <span className="text-xs text-slate-200">{loading ? "Loading..." : `${staff.length} staff`}</span>
+      <section className="app-card overflow-hidden rounded-[28px] border border-slate-200/80 bg-white p-0 shadow-[0_14px_34px_rgba(9,18,29,0.16)]">
+        <div className="flex items-center justify-between bg-gradient-to-r from-[#e11d8a] to-[#be185d] px-6 py-4">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Current Staff</h2>
+          <span className="text-xs font-medium text-white/80">{loading ? "Loading..." : `${staff.length} staff`}</span>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[1160px] border-separate border-spacing-y-2">
+        <div className="app-table-shell m-4 overflow-x-auto rounded-2xl border border-slate-300/70 bg-[#f8f7f4]">
+          <table className="app-table w-full min-w-[1160px] border-collapse">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-[0.2em] text-slate-200">
-                <th className="px-3">Staff Member</th>
-                <th className="px-3">Email</th>
-                <th className="px-3 w-[180px]">Role</th>
-                <th className="px-3">Coaching Payrate</th>
-                <th className="px-3">Office Payrate</th>
-                <th className="px-3" />
+              <tr>
+                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Member</th>
+                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Status</th>
+                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold w-[180px]">Role</th>
+                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Coaching Payrate</th>
+                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Office Payrate</th>
+                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -528,15 +564,14 @@ export default function OwnerStaffClient() {
                 <tr>
                   <td
                     colSpan={6}
-                    className="rounded-2xl border border-dashed border-slate-600 bg-slate-800/60 px-4 py-5 text-sm text-slate-200"
+                    className="px-4 py-8 text-sm text-slate-500"
                   >
                     No staff yet.
                   </td>
                 </tr>
               ) : (
-                staff.map((row, index) => {
+                staff.map((row) => {
                   const isOwner = row.role === "owner";
-                  const rowBgClass = index % 2 === 0 ? "bg-slate-800/60" : "bg-slate-800/35";
                   const draft =
                     editing[row.id] ??
                     ({
@@ -547,53 +582,42 @@ export default function OwnerStaffClient() {
 
                   return (
                     <tr key={row.id}>
-                      <td className={`rounded-l-2xl border-y border-slate-700 ${rowBgClass} px-3 py-3 text-sm text-white`}>
+                      <td className="border-b border-slate-300/60 px-3 py-3 align-top">
                         <div className="flex items-start gap-3">
-                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-cyan-300/40 bg-cyan-400/15 text-xs font-semibold text-cyan-100">
+                          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-emerald-400/50 bg-emerald-500/12 text-xs font-semibold text-emerald-700">
                             {getInitials(row.user?.fullName || row.user?.email || "?")}
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-white">
+                            <p className="truncate text-[28px] font-semibold leading-none text-slate-900">
                               {row.user?.fullName || row.user?.email || "Unknown user"}
                             </p>
-                            <div className="mt-2 flex items-center gap-1.5">
+                            <p className="mt-1 text-[15px] text-slate-500">{row.user?.email || "-"}</p>
+                            <div className="mt-2 flex items-center gap-2 text-slate-500">
+                              <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500">{externalIcon}</button>
+                              <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500">{phoneIcon}</button>
+                              <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500">{messageIcon}</button>
                               <a
                                 href={row.user?.email ? `mailto:${row.user.email}` : "#"}
-                                className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-500 bg-slate-800 text-slate-200 transition hover:border-slate-300 hover:text-white"
+                                className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500"
                                 aria-label="Email staff member"
                               >
-                                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
-                                  <path d="M4 6h16v12H4z" fill="none" stroke="currentColor" strokeWidth="1.7" />
-                                  <path d="m5 7 7 6 7-6" fill="none" stroke="currentColor" strokeWidth="1.7" />
-                                </svg>
+                                {mailIcon}
                               </a>
-                              <button
-                                type="button"
-                                className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-500 bg-slate-800 text-slate-200 transition hover:border-slate-300 hover:text-white"
-                                aria-label="View staff profile"
-                              >
-                                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
-                                  <circle cx="12" cy="8" r="3" fill="none" stroke="currentColor" strokeWidth="1.7" />
-                                  <path d="M5 19c1.3-3 4-4.5 7-4.5s5.7 1.5 7 4.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
-                                </svg>
-                              </button>
-                              <button
-                                type="button"
-                                className="inline-flex h-6 w-6 items-center justify-center rounded border border-slate-500 bg-slate-800 text-slate-200 transition hover:border-slate-300 hover:text-white"
-                                aria-label="Message staff member"
-                              >
-                                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
-                                  <path d="M4 5h16v10H8l-4 4z" fill="none" stroke="currentColor" strokeWidth="1.7" />
-                                </svg>
-                              </button>
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className={`border-y border-slate-700 ${rowBgClass} px-3 py-3 text-sm text-slate-100`}>
-                        {row.user?.email || "-"}
+                      <td className="border-b border-slate-300/60 px-3 py-3 align-top">
+                        <div className="flex flex-wrap gap-1.5">
+                          <span className="rounded-full border border-emerald-600/35 bg-emerald-500/12 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
+                            Active
+                          </span>
+                          <span className="rounded-full border border-slate-400/40 bg-slate-200/70 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                            {formatRole(row.role)}
+                          </span>
+                        </div>
                       </td>
-                      <td className={`border-y border-slate-700 ${rowBgClass} px-3 py-3 text-sm text-slate-100 min-w-[180px]`}>
+                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-sm text-slate-700 min-w-[180px]">
                         {isOwner ? (
                           <span>{formatRole(row.role)}</span>
                         ) : (
@@ -608,7 +632,7 @@ export default function OwnerStaffClient() {
                                 },
                               }))
                             }
-                            className={compactFieldClass}
+                            className={tableSelectClass}
                             disabled={saving}
                           >
                             {ROLE_OPTIONS.map((option) => (
@@ -619,7 +643,7 @@ export default function OwnerStaffClient() {
                           </select>
                         )}
                       </td>
-                      <td className={`border-y border-slate-700 ${rowBgClass} px-3 py-3 text-sm text-slate-100`}>
+                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-sm text-slate-700">
                         <input
                           type="number"
                           min="0"
@@ -634,11 +658,11 @@ export default function OwnerStaffClient() {
                               },
                             }))
                           }
-                          className={compactFieldClass}
+                          className={tableInputClass}
                           disabled={saving || isOwner}
                         />
                       </td>
-                      <td className={`border-y border-slate-700 ${rowBgClass} px-3 py-3 text-sm text-slate-100`}>
+                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-sm text-slate-700">
                         <input
                           type="number"
                           min="0"
@@ -653,19 +677,19 @@ export default function OwnerStaffClient() {
                               },
                             }))
                           }
-                          className={compactFieldClass}
+                          className={tableInputClass}
                           disabled={saving || isOwner}
                         />
                       </td>
-                      <td className={`rounded-r-2xl border-y border-slate-700 ${rowBgClass} px-3 py-3 text-right`}>
+                      <td className="border-b border-slate-300/60 px-3 py-3 text-right">
                         {isOwner ? (
-                          <span className="text-xs text-slate-300">Locked</span>
+                          <span className="text-xs text-slate-500">Locked</span>
                         ) : (
                           <button
                             type="button"
                             onClick={() => saveStaffRow(row.id)}
                             disabled={saving}
-                            className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-slate-400"
+                            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-200"
                           >
                             Save
                           </button>

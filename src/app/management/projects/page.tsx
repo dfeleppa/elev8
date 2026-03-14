@@ -178,7 +178,7 @@ export default async function ManagementProjectsPage() {
           </p>
         </header>
 
-        <section className="glass-panel rounded-[28px] border border-white/5 p-6">
+        <section className="glass-panel app-card rounded-[28px] border border-white/5 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Portfolio</p>
@@ -188,8 +188,8 @@ export default async function ManagementProjectsPage() {
           </div>
 
           <div className="mt-6 grid gap-4">
-            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-              <table className="w-full min-w-[760px] text-[13px] text-slate-700">
+            <div className="app-table-shell overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+              <table className="app-table w-full min-w-[760px] text-[13px] text-slate-700">
                 <thead>
                   <tr className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">
                     <th className="px-4 py-2.5">Name</th>

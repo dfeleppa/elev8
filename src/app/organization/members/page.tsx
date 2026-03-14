@@ -77,7 +77,7 @@ export default async function OrganizationMembersPage() {
           <p className="mt-3 text-sm text-slate-400">Full rows from organization_members.</p>
         </header>
 
-        <section className="glass-panel rounded-[28px] border border-white/5 p-6">
+        <section className="glass-panel app-card rounded-[28px] border border-white/5 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Source Table</p>
@@ -87,13 +87,13 @@ export default async function OrganizationMembersPage() {
           </div>
 
           {membersError ? (
-            <div className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            <div className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-700">
               {membersError.message}
             </div>
           ) : null}
 
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full min-w-[980px] border-separate border-spacing-y-3">
+          <div className="app-table-shell mt-6 overflow-x-auto">
+            <table className="app-table w-full min-w-[980px] border-collapse">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-[0.3em] text-slate-400">
                   {columns.map((column) => (

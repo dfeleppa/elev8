@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
   const query = supabaseAdmin
     .from("programming_tracks")
-    .select("id, organization_id, name, code, description, is_active, created_at, updated_at")
+    .select("id, organization_id, name, code, description, is_active, is_private, preferred_programming_style, hide_workouts_days_prior, hide_workouts_hour, hide_workouts_minute, created_at, updated_at")
     .order("name", { ascending: true });
 
   const scoped = organizationId
@@ -48,6 +48,19 @@ export async function POST(request: Request) {
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const code = typeof body?.code === "string" ? body.code.trim() : null;
   const description = typeof body?.description === "string" ? body.description.trim() : null;
+  const isPrivate = typeof body?.isPrivate === "boolean" ? body.isPrivate : true;
+  const preferredProgrammingStyle = typeof body?.preferredProgrammingStyle === "string"
+    ? body.preferredProgrammingStyle.trim() || null
+    : null;
+  const hideWorkoutsDaysPrior = Number.isFinite(Number(body?.hideWorkoutsDaysPrior))
+    ? Math.max(0, Math.trunc(Number(body.hideWorkoutsDaysPrior)))
+    : 0;
+  const hideWorkoutsHour = Number.isFinite(Number(body?.hideWorkoutsHour))
+    ? Math.min(23, Math.max(0, Math.trunc(Number(body.hideWorkoutsHour))))
+    : 0;
+  const hideWorkoutsMinute = Number.isFinite(Number(body?.hideWorkoutsMinute))
+    ? Math.min(59, Math.max(0, Math.trunc(Number(body.hideWorkoutsMinute))))
+    : 0;
 
   if (!organizationId || !name) {
     return NextResponse.json({ error: "Invalid track payload." }, { status: 400 });
@@ -70,10 +83,15 @@ export async function POST(request: Request) {
       name,
       code,
       description,
+      is_private: isPrivate,
+      preferred_programming_style: preferredProgrammingStyle,
+      hide_workouts_days_prior: hideWorkoutsDaysPrior,
+      hide_workouts_hour: hideWorkoutsHour,
+      hide_workouts_minute: hideWorkoutsMinute,
       created_by: userId,
       updated_at: new Date().toISOString(),
     })
-    .select("id, organization_id, name, code, description, is_active, created_at, updated_at")
+    .select("id, organization_id, name, code, description, is_active, is_private, preferred_programming_style, hide_workouts_days_prior, hide_workouts_hour, hide_workouts_minute, created_at, updated_at")
     .single();
 
   if (insertError) {
