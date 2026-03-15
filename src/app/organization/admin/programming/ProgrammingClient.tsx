@@ -476,7 +476,7 @@ export default function ProgrammingClient() {
               className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-sm text-slate-700 hover:border-slate-400"
               aria-label="Pick date"
             >
-              D
+              📅
             </button>
             <input
               ref={datePickerRef}
@@ -530,6 +530,7 @@ export default function ProgrammingClient() {
             <select
               id="track-selector"
               name="track"
+              aria-label="Select track"
               className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800"
               value={selectedTrackId}
               onChange={(event) => setSelectedTrackId(event.target.value)}
@@ -541,8 +542,18 @@ export default function ProgrammingClient() {
                 </option>
               ))}
             </select>
+
+            {/* When no tracks exist, show a subtle action to create one to reduce friction for admins */}
+            {tracks.length === 0 ? (
+              <a
+                href="/organization/admin/tracks"
+                className="ml-2 text-xs font-semibold text-sky-600 hover:underline"
+              >
+                Create track
+              </a>
+            ) : null}
           </div>
-          <span className="text-xs text-slate-500">{loading ? "Loading programming..." : "Ready"}</span>
+          <span className="text-xs text-slate-500">{loading ? "Loading programming..." : tracks.length === 0 ? "No tracks" : "Ready"}</span>
         </div>
       </header>
 
@@ -745,12 +756,18 @@ export default function ProgrammingClient() {
               <label className="text-xs uppercase tracking-[0.2em] text-slate-400" htmlFor="session-block">
                 Score Type
               </label>
-              <input
+              <select
                 id="session-block"
                 value={editor.session.block ?? "none"}
                 onChange={(event) => updateEditor("block", event.target.value)}
                 className="w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
-              />
+              >
+                <option value="none">None</option>
+                <option value="time">Time</option>
+                <option value="reps">Reps</option>
+                <option value="weight">Weight</option>
+              </select>
+              <p className="mt-1 text-[11px] text-slate-500">Pick the scoring method for this block (affects leaderboard display).</p>
 
               <label className="text-xs uppercase tracking-[0.2em] text-slate-400" htmlFor="session-lines">
                 Details
