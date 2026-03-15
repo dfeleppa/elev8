@@ -2,6 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  ownerButtonPrimaryClass,
+  ownerButtonSecondaryClass,
+  ownerIconButtonNeutralClass,
+} from "../../../../components/owner/buttonStyles";
+
 type TrackRow = {
   id: string;
   organization_id: string;
@@ -10,7 +16,7 @@ type TrackRow = {
   description: string | null;
   is_active: boolean;
   is_private: boolean;
-  preferred_programming_style: string | null;
+  number_of_levels: number;
   hide_workouts_days_prior: number;
   hide_workouts_hour: number;
   hide_workouts_minute: number;
@@ -19,7 +25,7 @@ type TrackRow = {
 type TrackDraft = {
   name: string;
   isPrivate: "Y" | "N";
-  preferredProgrammingStyle: string;
+  numberOfLevels: "1" | "2" | "3";
   hideWorkoutsDaysPrior: string;
   hideWorkoutsHour: string;
   hideWorkoutsMinute: string;
@@ -34,7 +40,7 @@ type MemberAssignmentRow = {
   tracks: string[];
 };
 
-const styleOptions = ["General", "Strength", "Conditioning", "Hybrid", "Olympic", "Bodybuilding"];
+const numberOfLevelsOptions: Array<TrackDraft["numberOfLevels"]> = ["1", "2", "3"];
 
 const trackColumnDefs: Array<{ key: TrackColumnKey; label: string }> = [
   { key: "trackName", label: "Track Name" },
@@ -55,7 +61,7 @@ const defaultVisibleTrackColumns: Record<TrackColumnKey, boolean> = {
 const emptyDraft: TrackDraft = {
   name: "",
   isPrivate: "Y",
-  preferredProgrammingStyle: "",
+  numberOfLevels: "1",
   hideWorkoutsDaysPrior: "0",
   hideWorkoutsHour: "0",
   hideWorkoutsMinute: "0",
@@ -206,7 +212,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
         if (!needle) {
           return true;
         }
-        const haystack = `${track.name} ${track.preferred_programming_style ?? ""} ${track.code ?? ""}`.toLowerCase();
+        const haystack = `${track.name} ${track.number_of_levels} ${track.code ?? ""}`.toLowerCase();
         return haystack.includes(needle);
       });
   }, [tracks, query, privacyFilter]);
@@ -216,13 +222,13 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
   };
 
   const exportTracks = () => {
-    const header = ["Track Name", "Private", "Preferred Programming Style", "Hide Workouts Rule"];
+    const header = ["Track Name", "Private", "Number of Levels", "Hide Workouts Rule"];
     const lines = filteredTracks.map((track) => {
       const hideRule = `${track.hide_workouts_days_prior} day(s) prior at ${track.hide_workouts_hour}:${String(track.hide_workouts_minute).padStart(2, "0")}`;
       return [
         toCsvCell(track.name),
         toCsvCell(track.is_private ? "Y" : "N"),
-        toCsvCell(track.preferred_programming_style ?? ""),
+        toCsvCell(String(track.number_of_levels)),
         toCsvCell(hideRule),
       ].join(",");
     });
@@ -316,7 +322,9 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
     setDraft({
       name: track.name,
       isPrivate: track.is_private ? "Y" : "N",
-      preferredProgrammingStyle: track.preferred_programming_style ?? "",
+      numberOfLevels: numberOfLevelsOptions.includes(String(track.number_of_levels) as TrackDraft["numberOfLevels"])
+        ? (String(track.number_of_levels) as TrackDraft["numberOfLevels"])
+        : "1",
       hideWorkoutsDaysPrior: String(track.hide_workouts_days_prior ?? 0),
       hideWorkoutsHour: String(track.hide_workouts_hour ?? 0),
       hideWorkoutsMinute: String(track.hide_workouts_minute ?? 0),
@@ -339,7 +347,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
       organizationId,
       name: draft.name,
       isPrivate: draft.isPrivate === "Y",
-      preferredProgrammingStyle: draft.preferredProgrammingStyle || null,
+      numberOfLevels: Number(draft.numberOfLevels),
       hideWorkoutsDaysPrior: Number(draft.hideWorkoutsDaysPrior || "0"),
       hideWorkoutsHour: Number(draft.hideWorkoutsHour || "0"),
       hideWorkoutsMinute: Number(draft.hideWorkoutsMinute || "0"),
@@ -386,7 +394,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
           code: track.code,
           description: track.description,
           isPrivate: track.is_private,
-          preferredProgrammingStyle: track.preferred_programming_style,
+          numberOfLevels: track.number_of_levels,
           hideWorkoutsDaysPrior: track.hide_workouts_days_prior,
           hideWorkoutsHour: track.hide_workouts_hour,
           hideWorkoutsMinute: track.hide_workouts_minute,
@@ -424,7 +432,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
           <button
             type="button"
             onClick={openCreate}
-            className="rounded-lg border border-white/30 bg-black/20 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-black/30"
+            className="rounded-lg border border-white/50 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
           >
             + New Track
           </button>
@@ -566,7 +574,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                             type="button"
                             onClick={() => openEdit(track)}
                             title="Settings"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100"
+                            className={ownerIconButtonNeutralClass}
                           >
                             {settingsIcon}
                           </button>
@@ -577,7 +585,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                             onClick={() => copyTrack(track)}
                             title="Copy"
                             disabled={saving}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
+                            className={ownerIconButtonNeutralClass}
                           >
                             {copyIcon}
                           </button>
@@ -588,7 +596,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                               type="button"
                               onClick={() => openMembers(track)}
                               title="Members"
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100"
+                              className={ownerIconButtonNeutralClass}
                             >
                               {membersIcon}
                             </button>
@@ -655,16 +663,15 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                 </label>
 
                 <label className="space-y-1">
-                  <span className="text-xs uppercase tracking-[0.12em] text-slate-500">Preferred Programming Style</span>
+                  <span className="text-xs uppercase tracking-[0.12em] text-slate-500">Number of Levels</span>
                   <select
-                    value={draft.preferredProgrammingStyle}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, preferredProgrammingStyle: event.target.value }))}
+                    value={draft.numberOfLevels}
+                    onChange={(event) => setDraft((prev) => ({ ...prev, numberOfLevels: event.target.value as TrackDraft["numberOfLevels"] }))}
                     className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
                   >
-                    <option value="">Select style</option>
-                    {styleOptions.map((style) => (
-                      <option key={style} value={style}>
-                        {style}
+                    {numberOfLevelsOptions.map((level) => (
+                      <option key={level} value={level}>
+                        {level}
                       </option>
                     ))}
                   </select>
@@ -673,34 +680,47 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
 
               <div className="mt-6">
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-600">Keep Workouts Hidden Until (Optional)</p>
-                <div className="mt-3 grid gap-3 md:grid-cols-[140px_60px_140px_140px]">
-                  <input
-                    type="number"
-                    min="0"
-                    value={draft.hideWorkoutsDaysPrior}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsDaysPrior: event.target.value }))}
-                    placeholder="Day(s) prior"
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
-                  />
-                  <div className="grid place-items-center text-sm text-slate-600">at</div>
-                  <input
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={draft.hideWorkoutsHour}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsHour: event.target.value }))}
-                    placeholder="Hour"
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={draft.hideWorkoutsMinute}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsMinute: event.target.value }))}
-                    placeholder="Minute"
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
-                  />
+                <div className="mt-3 flex flex-wrap items-end gap-4 rounded-xl border border-slate-300 bg-[#efefeb] p-3">
+                  <label className="space-y-1">
+                    <span className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Day(s) Prior</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={draft.hideWorkoutsDaysPrior}
+                      onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsDaysPrior: event.target.value }))}
+                      placeholder="7"
+                      className="w-32 rounded-md border border-slate-400/80 bg-white px-3 py-2 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] focus:border-slate-600 focus:outline-none"
+                    />
+                  </label>
+                  <div className="pb-2 text-sm font-medium text-slate-600">at</div>
+                  <div className="flex items-end gap-2 rounded-md border border-slate-400/80 bg-white px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                    <label className="space-y-1">
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">HH</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="23"
+                        value={draft.hideWorkoutsHour}
+                        onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsHour: event.target.value }))}
+                        placeholder="00"
+                        className="w-16 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-center text-sm text-slate-900 focus:border-slate-600 focus:outline-none"
+                      />
+                    </label>
+                    <div className="pb-2 text-base font-semibold text-slate-600">:</div>
+                    <label className="space-y-1">
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">MM</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={draft.hideWorkoutsMinute}
+                        onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsMinute: event.target.value }))}
+                        placeholder="00"
+                        className="w-16 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-center text-sm text-slate-900 focus:border-slate-600 focus:outline-none"
+                      />
+                    </label>
+                  </div>
+                  <p className="pb-2 text-xs font-medium text-slate-500">24-hour time</p>
                 </div>
               </div>
 
@@ -708,7 +728,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                 <button
                   type="button"
                   onClick={() => setDialogOpen(false)}
-                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                  className={ownerButtonSecondaryClass}
                 >
                   Cancel
                 </button>
@@ -716,7 +736,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                   type="button"
                   onClick={saveTrack}
                   disabled={saving}
-                  className="rounded-lg bg-[#3f2b7a] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#352366] disabled:opacity-60"
+                  className={ownerButtonPrimaryClass}
                 >
                   {saving ? "Saving..." : "Save Track"}
                 </button>

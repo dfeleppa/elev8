@@ -24,7 +24,7 @@ type Payload = {
 
 type ScheduleClassRow = {
   id: string;
-  track_id: string;
+  track_id: string | null;
   name: string;
   class_time: string;
   duration_minutes: number;
@@ -35,6 +35,18 @@ type ScheduleClassRow = {
   size_limit: number;
   reservation_cutoff_hours: number;
   calendar_color: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type LegacyScheduleClassRow = {
+  id: string;
+  name: string;
+  class_time: string;
+  duration_minutes: number;
+  class_days: string[];
+  start_date: string;
+  end_date: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -52,6 +64,21 @@ function isValidDate(value: string) {
 
 function isValidTime(value: string) {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function isMissingColumnError(message: string) {
+  return /column\s+organization_schedule_classes\.[a-z_]+\s+does\s+not\s+exist/i.test(message);
+}
+
+function withScheduleDefaults(row: LegacyScheduleClassRow): ScheduleClassRow {
+  return {
+    ...row,
+    track_id: null,
+    default_coach_user_id: null,
+    size_limit: 0,
+    reservation_cutoff_hours: 0,
+    calendar_color: "#3B82F6",
+  };
 }
 
 function normalizeDays(value: unknown): string[] {
@@ -135,7 +162,7 @@ async function withLookups(rows: ScheduleClassRow[]) {
     return [];
   }
 
-  const trackIds = Array.from(new Set(rows.map((row) => row.track_id).filter(Boolean)));
+  const trackIds = Array.from(new Set(rows.map((row) => row.track_id).filter(Boolean))) as string[];
   const coachIds = Array.from(new Set(rows.map((row) => row.default_coach_user_id).filter(Boolean))) as string[];
 
   const { data: trackRows } = trackIds.length > 0
@@ -214,6 +241,31 @@ export async function PATCH(
     .eq("organization_id", organizationId)
     .select("id, track_id, name, class_time, duration_minutes, class_days, start_date, end_date, default_coach_user_id, size_limit, reservation_cutoff_hours, calendar_color, created_at, updated_at")
     .single();
+
+  if (updateError && isMissingColumnError(updateError.message)) {
+    const { data: legacyData, error: legacyUpdateError } = await supabaseAdmin
+      .from("organization_schedule_classes")
+      .update({
+        name: normalized.value.name,
+        class_time: normalized.value.class_time,
+        duration_minutes: normalized.value.duration_minutes,
+        class_days: normalized.value.class_days,
+        start_date: normalized.value.start_date,
+        end_date: normalized.value.end_date,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("organization_id", organizationId)
+      .select("id, name, class_time, duration_minutes, class_days, start_date, end_date, created_at, updated_at")
+      .single();
+
+    if (legacyUpdateError) {
+      return NextResponse.json({ error: legacyUpdateError.message }, { status: 500 });
+    }
+
+    const [hydratedLegacy] = await withLookups(legacyData ? [withScheduleDefaults(legacyData as LegacyScheduleClassRow)] : []);
+    return NextResponse.json({ scheduleClass: hydratedLegacy ?? null });
+  }
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });

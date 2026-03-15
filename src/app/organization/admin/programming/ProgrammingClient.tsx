@@ -185,6 +185,7 @@ export default function ProgrammingClient() {
   }, [currentDate]);
 
   const selected = useMemo(() => getSessionById(sessions, selectedSessionId), [sessions, selectedSessionId]);
+  const selectedDaySessions = sessions[selectedDay] ?? [];
 
   const editor = selected ?? {
     day: selectedDay,
@@ -306,7 +307,15 @@ export default function ProgrammingClient() {
     }
 
     const daySessions = sessions[selectedDay] ?? [];
-    if (!selectedSessionId && daySessions[0]) {
+    if (daySessions.length === 0) {
+      if (selectedSessionId !== null) {
+        setSelectedSessionId(null);
+      }
+      return;
+    }
+
+    const selectedBelongsToDay = daySessions.some((entry) => entry.id === selectedSessionId);
+    if (!selectedBelongsToDay) {
       setSelectedSessionId(daySessions[0].id);
     }
   }, [selectedDay, sessions, selectedSessionId]);
@@ -569,6 +578,8 @@ export default function ProgrammingClient() {
                       onClick={() => {
                         setSelectedDay(dayKey);
                         setCurrentDate(day.dateObj);
+                        setSelectedSessionId(daySessions[0]?.id ?? null);
+                        setEditorOpen(true);
                       }}
                       className={`min-h-[150px] border-r border-t border-slate-300 px-2 py-2 text-left align-top transition ${
                         isSelectedDay ? "bg-blue-50" : day.inMonth ? "bg-white/80" : "bg-slate-100/60"
@@ -577,9 +588,20 @@ export default function ProgrammingClient() {
                       <p className="text-xs font-semibold text-slate-600">{day.dateObj.getDate()}</p>
                       <div className="mt-1 space-y-1">
                         {daySessions.slice(0, 2).map((session) => (
-                          <div key={session.id} className="rounded-md bg-[#2f3136] px-2 py-1 text-[10px] text-white">
+                          <button
+                            key={session.id}
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSelectedDay(dayKey);
+                              setCurrentDate(day.dateObj);
+                              setSelectedSessionId(session.id);
+                              setEditorOpen(true);
+                            }}
+                            className="w-full rounded-md bg-[#2f3136] px-2 py-1 text-left text-[10px] text-white"
+                          >
                             {session.title}
-                          </div>
+                          </button>
                         ))}
                         {daySessions.length > 2 ? (
                           <p className="text-[10px] text-slate-500">+{daySessions.length - 2} more</p>
@@ -656,9 +678,17 @@ export default function ProgrammingClient() {
                         })}
 
                         {daySessions.length === 0 ? (
-                          <div className="rounded-xl border border-dashed border-slate-400 bg-white/60 px-3 py-5 text-center text-xs text-slate-500">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedDay(day.date);
+                              setSelectedSessionId(null);
+                              setEditorOpen(true);
+                            }}
+                            className="w-full rounded-xl border border-dashed border-slate-400 bg-white/60 px-3 py-5 text-center text-xs text-slate-500 transition hover:border-slate-500 hover:bg-white"
+                          >
                             No blocks yet
-                          </div>
+                          </button>
                         ) : null}
                       </div>
                     </div>
@@ -680,30 +710,27 @@ export default function ProgrammingClient() {
         <div
           aria-hidden={!editorOpen}
           onClick={() => setEditorOpen(false)}
-          className={`fixed inset-0 z-30 bg-slate-950/35 transition-opacity duration-300 lg:hidden ${
+          className={`fixed inset-0 z-30 bg-slate-900/20 transition-opacity duration-300 lg:hidden ${
             editorOpen ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         />
 
         <aside
-          className={`fixed bottom-0 right-0 top-0 z-40 w-full max-w-[420px] border-l border-white/10 bg-slate-950/95 p-5 shadow-2xl backdrop-blur transition-transform duration-300 ${
+          className={`fixed bottom-0 right-0 top-0 z-40 w-full sm:w-[70vw] lg:w-[48vw] xl:w-[40vw] max-w-[860px] border-l border-slate-300 bg-[#f8fafc]/95 p-5 shadow-2xl backdrop-blur transition-transform duration-300 ${
             editorOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
           <div className="flex h-full flex-col">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Selected Day</p>
-                <h2 className="mt-2 text-lg font-semibold text-slate-100">{dayLabel}</h2>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Selected Day</p>
+                <h2 className="mt-2 text-lg font-semibold text-slate-900">{dayLabel}</h2>
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
-                  {selected?.session.title || "No session"}
-                </span>
                 <button
                   type="button"
                   onClick={() => setEditorOpen(false)}
-                  className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-white/30"
+                  className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
                 >
                   Close
                 </button>
@@ -725,54 +752,87 @@ export default function ProgrammingClient() {
                       createBlock(item.key as "warmup" | "lift" | "workout" | "cooldown")
                     }
                     disabled={Boolean(creatingType)}
-                    className="rounded-2xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-2xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-cyan-500 hover:text-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {creatingType === item.key ? "Creating..." : item.label}
                   </button>
                 ))}
               </div>
 
-              <label className="text-xs uppercase tracking-[0.2em] text-slate-400" htmlFor="session-title">
-                Session Title
-              </label>
-              <input
-                id="session-title"
-                value={editor.session.title}
-                onChange={(event) => updateEditor("title", event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
-              />
-
-              <label className="text-xs uppercase tracking-[0.2em] text-slate-400" htmlFor="session-block">
-                Score Type
-              </label>
-              <input
-                id="session-block"
-                value={editor.session.block ?? "none"}
-                onChange={(event) => updateEditor("block", event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
-              />
-
-              <label className="text-xs uppercase tracking-[0.2em] text-slate-400" htmlFor="session-lines">
-                Details
-              </label>
-              <textarea
-                id="session-lines"
-                rows={8}
-                value={editor.session.lines.join("\n")}
-                onChange={(event) => updateEditor("lines", event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
-              />
-
-              <div className="flex items-center justify-end gap-2 pb-2">
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={saveSelectedSession}
-                  className="rounded-2xl bg-white px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-slate-400"
-                >
-                  {saving ? "Saving..." : "Save"}
-                </button>
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Entries</p>
+                {selectedDaySessions.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-500">
+                    No entries yet for this day.
+                  </div>
+                ) : (
+                  selectedDaySessions.map((session) => {
+                    const isActive = selectedSessionId === session.id;
+                    const scoreLabel = getScoreLabel(session.block) ?? "None";
+                    return (
+                      <button
+                        key={session.id}
+                        type="button"
+                        onClick={() => setSelectedSessionId(session.id)}
+                        className={`w-full rounded-2xl border px-3 py-3 text-left transition ${
+                          isActive
+                            ? "border-cyan-400 bg-cyan-50"
+                            : "border-slate-300 bg-white hover:border-cyan-300"
+                        }`}
+                      >
+                        <p className="text-sm font-semibold text-slate-900">{session.title}</p>
+                        <p className="mt-1 text-xs text-slate-500">{scoreLabel}</p>
+                      </button>
+                    );
+                  })
+                )}
               </div>
+
+              {selected ? (
+                <>
+                  <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-title">
+                    Session Title
+                  </label>
+                  <input
+                    id="session-title"
+                    value={editor.session.title}
+                    onChange={(event) => updateEditor("title", event.target.value)}
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none"
+                  />
+
+                  <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-block">
+                    Score Type
+                  </label>
+                  <input
+                    id="session-block"
+                    value={editor.session.block ?? "none"}
+                    onChange={(event) => updateEditor("block", event.target.value)}
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none"
+                  />
+
+                  <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-lines">
+                    Details
+                  </label>
+                  <textarea
+                    id="session-lines"
+                    rows={8}
+                    value={editor.session.lines.join("\n")}
+                    onChange={(event) => updateEditor("lines", event.target.value)}
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none"
+                  />
+
+                  <div className="flex items-center justify-end gap-2 pb-2">
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={saveSelectedSession}
+                      className="rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(2,132,199,0.35)] transition hover:from-sky-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {saving ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
         </aside>

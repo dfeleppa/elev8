@@ -2,6 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  ownerButtonDarkGhostClass,
+  ownerButtonPrimaryClass,
+  ownerIconButtonAccentClass,
+  ownerIconButtonDangerClass,
+  ownerIconButtonNeutralClass,
+  ownerIconButtonSuccessClass,
+} from "../../../../components/owner/buttonStyles";
+import { ownerToolbarActionButtonClass, ownerToolbarSearchInputDarkClass } from "../../../../components/owner/controlStyles";
+import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
+
 type ScheduleTab = "current" | "future" | "past";
 type ScheduleView = "list" | "calendar";
 
@@ -605,25 +616,25 @@ export default function OwnerScheduleClient() {
         <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">{message}</div>
       ) : null}
 
-      <section className="app-card overflow-hidden rounded-[28px] border border-cyan-400/30 bg-white shadow-[0_18px_44px_rgba(5,9,20,0.25)]">
-        <div className="flex items-center justify-between bg-[#e11d8a] px-6 py-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">
-            Class Setup - Recurring
-          </p>
+      <OwnerSectionCard
+        title="Class Setup - Recurring"
+        meta={loading ? "Loading..." : `${filteredRows.length} rows`}
+        headerClassName="bg-gradient-to-r from-[#e11d8a] to-[#be185d]"
+        headerRight={(
           <button
             type="button"
-            className="rounded-lg border border-cyan-200/40 bg-[#06111f]/40 px-3 py-1.5 text-xs font-medium text-cyan-50 transition hover:bg-[#06111f]/65"
+            className={ownerButtonDarkGhostClass}
           >
             Settings
           </button>
-        </div>
-
-        <div className="space-y-5 px-4 py-5 md:px-6 md:py-6">
+        )}
+      >
+        <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => setCreateOpen((current) => !current)}
-              className="rounded-xl bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] px-4 py-2 text-sm font-semibold text-[#031525] transition hover:brightness-110"
+              className={ownerButtonPrimaryClass}
             >
               {createOpen ? "Close" : "+ Create Recurring Class"}
             </button>
@@ -799,7 +810,7 @@ export default function OwnerScheduleClient() {
                   type="button"
                   onClick={submitCreate}
                   disabled={saving || tracks.length === 0}
-                  className="rounded-lg bg-gradient-to-r from-[#00c5ff] to-[#5ec8ff] px-3 py-2 text-sm font-semibold text-[#031525] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={ownerButtonPrimaryClass}
                 >
                   {saving ? "Saving..." : "Create Class"}
                 </button>
@@ -860,7 +871,7 @@ export default function OwnerScheduleClient() {
                           setColumnsOpen((current) => !current);
                           setFiltersOpen(false);
                         }}
-                        className={`inline-flex items-center gap-1.5 px-1 py-1 text-sm font-medium transition ${
+                        className={`${ownerToolbarActionButtonClass} ${
                           columnsOpen
                             ? "text-cyan-200"
                             : "text-white hover:text-cyan-200"
@@ -893,7 +904,7 @@ export default function OwnerScheduleClient() {
                           setFiltersOpen((current) => !current);
                           setColumnsOpen(false);
                         }}
-                        className={`inline-flex items-center gap-1.5 px-1 py-1 text-sm font-medium transition ${
+                        className={`${ownerToolbarActionButtonClass} ${
                           filtersOpen || dayFilter !== "all"
                             ? "text-cyan-200"
                             : "text-white hover:text-cyan-200"
@@ -941,7 +952,7 @@ export default function OwnerScheduleClient() {
                     <button
                       type="button"
                       onClick={exportCurrentRows}
-                      className="inline-flex items-center gap-1.5 px-1 py-1 text-sm font-medium text-white transition hover:text-cyan-200"
+                      className={`${ownerToolbarActionButtonClass} text-white hover:text-cyan-200`}
                     >
                       {exportIcon}
                       Export
@@ -951,7 +962,7 @@ export default function OwnerScheduleClient() {
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search..."
-                    className="w-full max-w-xs rounded-lg border border-slate-300/60 bg-[#2f2f2f] px-3 py-2 text-sm text-white placeholder:text-slate-300 focus:border-cyan-300 focus:outline-none"
+                    className={ownerToolbarSearchInputDarkClass}
                   />
                 </div>
 
@@ -1079,7 +1090,7 @@ export default function OwnerScheduleClient() {
                                 disabled={saving}
                                 aria-label="Save class"
                                 title="Save"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-300 bg-cyan-50 text-cyan-700 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                className={ownerIconButtonSuccessClass}
                               >
                                 {saveIcon}
                               </button>
@@ -1089,7 +1100,7 @@ export default function OwnerScheduleClient() {
                                 disabled={saving}
                                 aria-label="Cancel editing"
                                 title="Cancel"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                className={ownerIconButtonNeutralClass}
                               >
                                 {cancelIcon}
                               </button>
@@ -1102,7 +1113,7 @@ export default function OwnerScheduleClient() {
                                 disabled={saving}
                                 aria-label="Edit class"
                                 title="Edit"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                className={ownerIconButtonNeutralClass}
                               >
                                 {editIcon}
                               </button>
@@ -1112,7 +1123,7 @@ export default function OwnerScheduleClient() {
                                 disabled={saving}
                                 aria-label="Copy class"
                                 title="Copy"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-fuchsia-300 bg-fuchsia-50 text-fuchsia-700 transition hover:bg-fuchsia-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                className={ownerIconButtonAccentClass}
                               >
                                 {copyIcon}
                               </button>
@@ -1122,7 +1133,7 @@ export default function OwnerScheduleClient() {
                                 disabled={saving}
                                 aria-label="Delete class"
                                 title="Delete"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-300 bg-rose-50 text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                className={ownerIconButtonDangerClass}
                               >
                                 {deleteIcon}
                               </button>
@@ -1141,7 +1152,7 @@ export default function OwnerScheduleClient() {
             </div>
           )}
         </div>
-      </section>
+      </OwnerSectionCard>
     </section>
   );
 }

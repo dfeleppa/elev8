@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:elev8_mobile/components/elev8_background.dart';
 
 // ----------------------------------------------------------------------
 // DATA MODELS
@@ -192,6 +193,22 @@ class _SidebarShellState extends ConsumerState<SidebarShell> {
     }
   }
 
+  String _getPageTitle(String path) {
+    if (path.isEmpty || path == '/') return 'Dashboard';
+    for (var item in navItems) {
+      if (item.href == path) return item.label;
+      if (item.children != null) {
+        for (var child in item.children!) {
+          if (child.href == path) return child.label;
+        }
+      }
+    }
+    final segments = Uri.parse(path).pathSegments;
+    if (segments.isEmpty) return 'Dashboard';
+    final last = segments.last;
+    return last.split('-').map((s) => s.isNotEmpty ? '${s[0].toUpperCase()}${s.substring(1).toLowerCase()}' : '').join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final roleAsync = ref.watch(userRoleProvider);
@@ -201,11 +218,12 @@ class _SidebarShellState extends ConsumerState<SidebarShell> {
     final currentPath = GoRouterState.of(context).uri.toString();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF020617), // slate-950
+      backgroundColor: Colors.transparent, // Let gradient show through
       // If it's desktop, show side drawer, else show bottom/hamburger logic (Using Drawer for simplicity here)
       drawer: isDesktop ? null : _buildDrawer(roleAsync.value ?? UserRole.member, currentPath),
-      body: Row(
-        children: [
+      body: Elev8Background(
+        child: Row(
+          children: [
           // Fixed Sidebar for Desktop
           if (isDesktop)
             Container(
@@ -227,23 +245,27 @@ class _SidebarShellState extends ConsumerState<SidebarShell> {
                 if (!isDesktop)
                   Container(
                     height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      border: const Border(bottom: BorderSide(color: Colors.white10)),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      border: Border(bottom: BorderSide(color: Colors.black12)),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
+                    child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        Builder(
-                          builder: (ctx) => IconButton(
-                            icon: const Icon(Icons.menu, color: Colors.white),
-                            onPressed: () => Scaffold.of(ctx).openDrawer(),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Builder(
+                            builder: (ctx) => IconButton(
+                              icon: const Icon(Icons.menu, color: Color(0xFF020617)),
+                              onPressed: () => Scaffold.of(ctx).openDrawer(),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          "Elev8 Control Center",
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        Text(
+                          _getPageTitle(currentPath),
+                          style: const TextStyle(color: Color(0xFF020617), fontWeight: FontWeight.bold, fontSize: 16),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -254,6 +276,7 @@ class _SidebarShellState extends ConsumerState<SidebarShell> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

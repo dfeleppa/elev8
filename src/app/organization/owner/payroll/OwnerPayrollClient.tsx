@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 
+import { ownerControlBarGridClass, ownerControlInputClass, ownerControlSelectClass } from "../../../../components/owner/controlStyles";
+import OwnerDataTable from "../../../../components/owner/OwnerDataTable";
+import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
+
 type PayrollRow = {
   week: number;
   payPeriodStart: string;
@@ -194,7 +198,7 @@ export default function OwnerPayrollClient() {
 
   const headingClass = (column: SortColumn) => {
     const active = sortColumn === column;
-    return `font-semibold transition ${active ? "text-white" : "text-slate-200 hover:text-white"}`;
+    return `font-semibold transition ${active ? "text-white" : "text-white/90 hover:text-white"}`;
   };
 
   return (
@@ -206,25 +210,19 @@ export default function OwnerPayrollClient() {
         </p>
       </header>
 
-      <section className="glass-panel app-card overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-0">
-        <div className="flex items-center justify-between bg-[#e11d8a] px-6 py-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Payroll Overview</p>
-          <span className="text-xs text-white/80">{filteredRows.length} rows</span>
-        </div>
-
-        <div className="p-6">
-        <div className="grid gap-3 lg:grid-cols-[2fr_1fr_1fr]">
+      <OwnerSectionCard title="Payroll Overview" meta={`${filteredRows.length} rows`}>
+        <div className={ownerControlBarGridClass}>
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search week, staff, pay period, payment form, notes"
-            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
+            className={ownerControlInputClass}
           />
 
           <select
             value={staffFilter}
             onChange={(event) => setStaffFilter(event.target.value)}
-            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
+            className={ownerControlSelectClass}
           >
             <option value="all">All Staff</option>
             {staffOptions.map((option) => (
@@ -237,7 +235,7 @@ export default function OwnerPayrollClient() {
           <select
             value={paymentFilter}
             onChange={(event) => setPaymentFilter(event.target.value)}
-            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
+            className={ownerControlSelectClass}
           >
             <option value="all">All Payment Forms</option>
             {paymentOptions.map((option) => (
@@ -248,8 +246,7 @@ export default function OwnerPayrollClient() {
           </select>
         </div>
 
-        <div className="app-table-shell mt-6 overflow-x-auto">
-          <table className="app-table w-full min-w-[1180px] border-collapse">
+        <OwnerDataTable minWidthClassName="min-w-[1180px]">
             <thead>
               <tr>
                 <th className="px-4">
@@ -343,10 +340,8 @@ export default function OwnerPayrollClient() {
                 ))
               )}
             </tbody>
-          </table>
-        </div>
-        </div>
-      </section>
+        </OwnerDataTable>
+      </OwnerSectionCard>
     </section>
   );
 }

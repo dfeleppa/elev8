@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import SidebarShell from "../../../../components/SidebarShell";
 import { hasRole, requireUserContext } from "../../../../lib/member";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
 import OwnerMembersTable from "./OwnerMembersTable";
 
 export const dynamic = "force-dynamic";
@@ -64,23 +65,16 @@ export default async function OwnerMembersPage() {
           </p>
         </header>
 
-        <section className="rounded-[28px] border border-slate-200/80 bg-[#f6f4ef] p-3 shadow-[0_14px_34px_rgba(9,18,29,0.24)] md:p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Owner Members</p>
-              <h2 className="mt-2 text-xl font-semibold text-slate-900">Directory</h2>
-            </div>
-            <span className="text-xs font-medium text-slate-500">{members.length} rows</span>
-          </div>
+        <OwnerSectionCard title="Member Directory" meta={`${members.length} rows`}>
 
           {membersError ? (
-            <div className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-700">
+            <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-700">
               {membersError.message}
             </div>
           ) : null}
 
           <OwnerMembersTable rows={members} />
-        </section>
+        </OwnerSectionCard>
       </section>
     </SidebarShell>
   );

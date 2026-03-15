@@ -2,6 +2,10 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
+import { ownerButtonPrimaryClass, ownerButtonSecondaryClass, ownerIconButtonCompactClass } from "../../../../components/owner/buttonStyles";
+import OwnerDataTable from "../../../../components/owner/OwnerDataTable";
+import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
+
 type StaffRole = "coach" | "admin";
 
 type PersonSummary = {
@@ -422,7 +426,7 @@ export default function OwnerStaffClient() {
               <button
                 type="submit"
                 disabled={saving || loading || promotableOptions.length === 0}
-                className="rounded-2xl bg-white px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className={ownerButtonPrimaryClass}
               >
                 {saving ? "Saving..." : "Promote to Staff"}
               </button>
@@ -532,7 +536,7 @@ export default function OwnerStaffClient() {
               <button
                 type="submit"
                 disabled={saving || loading}
-                className="rounded-2xl bg-white px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className={ownerButtonPrimaryClass}
               >
                 {saving ? "Saving..." : "Add Staff"}
               </button>
@@ -541,14 +545,8 @@ export default function OwnerStaffClient() {
         </article>
       </section>
 
-      <section className="app-card overflow-hidden rounded-[28px] border border-slate-200/80 bg-white p-0 shadow-[0_14px_34px_rgba(9,18,29,0.16)]">
-        <div className="flex items-center justify-between bg-gradient-to-r from-[#e11d8a] to-[#be185d] px-6 py-4">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Current Staff</h2>
-          <span className="text-xs font-medium text-white/80">{loading ? "Loading..." : `${staff.length} staff`}</span>
-        </div>
-
-        <div className="app-table-shell m-4 overflow-x-auto rounded-2xl border border-slate-300/70 bg-[#f8f7f4]">
-          <table className="app-table w-full min-w-[1160px] border-collapse">
+      <OwnerSectionCard title="Current Staff" meta={loading ? "Loading..." : `${staff.length} staff`}>
+        <OwnerDataTable minWidthClassName="min-w-[1160px]">
             <thead>
               <tr>
                 <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Member</th>
@@ -588,17 +586,17 @@ export default function OwnerStaffClient() {
                             {getInitials(row.user?.fullName || row.user?.email || "?")}
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate text-[28px] font-semibold leading-none text-slate-900">
+                            <p className="truncate text-sm font-medium leading-tight text-slate-900">
                               {row.user?.fullName || row.user?.email || "Unknown user"}
                             </p>
-                            <p className="mt-1 text-[15px] text-slate-500">{row.user?.email || "-"}</p>
+                            <p className="mt-1 text-xs text-slate-500">{row.user?.email || "-"}</p>
                             <div className="mt-2 flex items-center gap-2 text-slate-500">
-                              <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500">{externalIcon}</button>
-                              <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500">{phoneIcon}</button>
-                              <button type="button" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500">{messageIcon}</button>
+                              <button type="button" className={ownerIconButtonCompactClass}>{externalIcon}</button>
+                              <button type="button" className={ownerIconButtonCompactClass}>{phoneIcon}</button>
+                              <button type="button" className={ownerIconButtonCompactClass}>{messageIcon}</button>
                               <a
                                 href={row.user?.email ? `mailto:${row.user.email}` : "#"}
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white hover:border-slate-500"
+                                className={ownerIconButtonCompactClass}
                                 aria-label="Email staff member"
                               >
                                 {mailIcon}
@@ -617,7 +615,7 @@ export default function OwnerStaffClient() {
                           </span>
                         </div>
                       </td>
-                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-sm text-slate-700 min-w-[180px]">
+                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-xs text-slate-700 min-w-[180px]">
                         {isOwner ? (
                           <span>{formatRole(row.role)}</span>
                         ) : (
@@ -643,7 +641,7 @@ export default function OwnerStaffClient() {
                           </select>
                         )}
                       </td>
-                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-sm text-slate-700">
+                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-xs text-slate-700">
                         <input
                           type="number"
                           min="0"
@@ -662,7 +660,7 @@ export default function OwnerStaffClient() {
                           disabled={saving || isOwner}
                         />
                       </td>
-                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-sm text-slate-700">
+                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-xs text-slate-700">
                         <input
                           type="number"
                           min="0"
@@ -689,7 +687,7 @@ export default function OwnerStaffClient() {
                             type="button"
                             onClick={() => saveStaffRow(row.id)}
                             disabled={saving}
-                            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-200"
+                            className={ownerButtonSecondaryClass}
                           >
                             Save
                           </button>
@@ -700,9 +698,8 @@ export default function OwnerStaffClient() {
                 })
               )}
             </tbody>
-          </table>
-        </div>
-      </section>
+        </OwnerDataTable>
+      </OwnerSectionCard>
     </section>
   );
 }

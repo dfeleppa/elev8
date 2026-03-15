@@ -24,7 +24,7 @@ type Payload = {
 
 type ScheduleClassRow = {
   id: string;
-  track_id: string;
+  track_id: string | null;
   name: string;
   class_time: string;
   duration_minutes: number;
@@ -35,6 +35,18 @@ type ScheduleClassRow = {
   size_limit: number;
   reservation_cutoff_hours: number;
   calendar_color: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type LegacyScheduleClassRow = {
+  id: string;
+  name: string;
+  class_time: string;
+  duration_minutes: number;
+  class_days: string[];
+  start_date: string;
+  end_date: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -52,6 +64,21 @@ function isValidDate(value: string) {
 
 function isValidTime(value: string) {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function isMissingColumnError(message: string) {
+  return /column\s+organization_schedule_classes\.[a-z_]+\s+does\s+not\s+exist/i.test(message);
+}
+
+function withScheduleDefaults(row: LegacyScheduleClassRow): ScheduleClassRow {
+  return {
+    ...row,
+    track_id: null,
+    default_coach_user_id: null,
+    size_limit: 0,
+    reservation_cutoff_hours: 0,
+    calendar_color: "#3B82F6",
+  };
 }
 
 function normalizeDays(value: unknown): string[] {
@@ -135,7 +162,7 @@ async function withLookups(rows: ScheduleClassRow[]) {
     return [];
   }
 
-  const trackIds = Array.from(new Set(rows.map((row) => row.track_id).filter(Boolean)));
+  const trackIds = Array.from(new Set(rows.map((row) => row.track_id).filter(Boolean))) as string[];
   const coachIds = Array.from(new Set(rows.map((row) => row.default_coach_user_id).filter(Boolean))) as string[];
 
   const { data: trackRows } = trackIds.length > 0
@@ -181,6 +208,23 @@ export async function GET(request: NextRequest) {
     .eq("organization_id", organizationId)
     .order("start_date", { ascending: true })
     .order("class_time", { ascending: true });
+
+  if (queryError && isMissingColumnError(queryError.message)) {
+    const { data: legacyData, error: legacyError } = await supabaseAdmin
+      .from("organization_schedule_classes")
+      .select("id, name, class_time, duration_minutes, class_days, start_date, end_date, created_at, updated_at")
+      .eq("organization_id", organizationId)
+      .order("start_date", { ascending: true })
+      .order("class_time", { ascending: true });
+
+    if (legacyError) {
+      return NextResponse.json({ error: legacyError.message }, { status: 500 });
+    }
+
+    const legacyRows = (legacyData ?? []).map((row) => withScheduleDefaults(row as LegacyScheduleClassRow));
+    const hydratedLegacy = await withLookups(legacyRows);
+    return NextResponse.json({ organizationId, classes: hydratedLegacy });
+  }
 
   if (queryError) {
     return NextResponse.json({ error: queryError.message }, { status: 500 });
@@ -239,6 +283,30 @@ export async function POST(request: NextRequest) {
     })
     .select("id, track_id, name, class_time, duration_minutes, class_days, start_date, end_date, default_coach_user_id, size_limit, reservation_cutoff_hours, calendar_color, created_at, updated_at")
     .single();
+
+  if (insertError && isMissingColumnError(insertError.message)) {
+    const { data: legacyData, error: legacyInsertError } = await supabaseAdmin
+      .from("organization_schedule_classes")
+      .insert({
+        organization_id: organizationId,
+        name: normalized.value.name,
+        class_time: normalized.value.class_time,
+        duration_minutes: normalized.value.duration_minutes,
+        class_days: normalized.value.class_days,
+        start_date: normalized.value.start_date,
+        end_date: normalized.value.end_date,
+        updated_at: new Date().toISOString(),
+      })
+      .select("id, name, class_time, duration_minutes, class_days, start_date, end_date, created_at, updated_at")
+      .single();
+
+    if (legacyInsertError) {
+      return NextResponse.json({ error: legacyInsertError.message }, { status: 500 });
+    }
+
+    const [hydratedLegacy] = await withLookups(legacyData ? [withScheduleDefaults(legacyData as LegacyScheduleClassRow)] : []);
+    return NextResponse.json({ scheduleClass: hydratedLegacy ?? null }, { status: 201 });
+  }
 
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });

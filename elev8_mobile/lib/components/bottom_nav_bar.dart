@@ -29,7 +29,7 @@ class Elev8BottomNavBar extends ConsumerWidget {
     final profileAsync = ref.watch(userProfileProvider);
 
     return NavigationBar(
-      backgroundColor: const Color(0xFF020617),
+      backgroundColor: const Color(0xFF0F172A),
       indicatorColor: Colors.white12,
       selectedIndex: selectedIndex,
       onDestinationSelected: (index) {
