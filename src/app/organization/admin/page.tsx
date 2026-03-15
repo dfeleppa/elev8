@@ -21,7 +21,7 @@ export default async function OrganizationAdminPage() {
         </header>
 
         {/* Small, useful admin quick-actions to reduce friction for common tasks */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-6 gap-3">
           <Link
             href="/organization/members"
             className="inline-flex items-center justify-center rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"

@@ -492,6 +492,21 @@ export default function ProgrammingClient() {
             >
               📅
             </button>
+
+            {/* Quick-jump to Today improves navigation and reduces friction when scheduling */}
+            <button
+              type="button"
+              onClick={() => {
+                const today = new Date();
+                setCurrentDate(today);
+                setSelectedDay(formatDateKey(today));
+                setEditorOpen(false);
+              }}
+              title="Go to today"
+              className="ml-2 inline-flex h-8 items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1 text-sm text-slate-700 hover:border-slate-400"
+            >
+              Today
+            </button>
             <input
               ref={datePickerRef}
               type="date"

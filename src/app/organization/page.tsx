@@ -138,18 +138,26 @@ export default async function OrganizationPage() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
+                <label className="sr-only" htmlFor="org-name">Organization name</label>
                 <input
+                  id="org-name"
                   type="text"
                   name="name"
-                  placeholder="Organization name"
+                  placeholder="e.g. Acme CrossFit"
+                  aria-label="Organization name"
                   required
+                  minLength={2}
+                  maxLength={100}
                   className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                  title="Enter organization name (2-100 characters)"
                 />
                 <button
                   type="submit"
                   className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white/90"
+                  aria-label="Create organization"
+                  title="Create organization"
                 >
-                  Create
+                  Create organization
                 </button>
               </div>
             </form>

@@ -46,8 +46,19 @@ export default async function MemberWorkoutPage() {
 
         {/* Helpful hint when the page is empty - reduces confusion */}
         <div className="rounded-md border border-slate-700 bg-slate-900/40 p-4 text-sm text-slate-300">
-          Tip: Click "Create Workout" to add your first workout. You can add exercises, notes,
+          <strong className="text-slate-100">Tip:</strong> Click "Create Workout" to add your first workout. You can add exercises, notes,
           and schedule it for a future date. Or <Link href="/organization/member/workout/create" className="text-indigo-400 hover:text-indigo-300 underline">create one now</Link>.
+
+          {/* Add a small, clearly visible CTA under the tip for better discoverability */}
+          <div className="mt-4">
+            <Link
+              href="/organization/member/workout/create"
+              className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+              aria-label="Create your first workout"
+            >
+              Create your first workout
+            </Link>
+          </div>
         </div>
       </section>
     </SidebarShell>
