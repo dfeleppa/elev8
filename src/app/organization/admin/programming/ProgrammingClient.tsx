@@ -147,6 +147,20 @@ export default function ProgrammingClient() {
   const [sessions, setSessions] = useState<Record<string, SessionEntry[]>>(fallbackSessions);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+
+  // Close the editor with Escape for faster keyboard workflow and better UX
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setEditorOpen(false);
+      }
+    };
+    if (editorOpen) {
+      window.addEventListener("keydown", handler);
+      return () => window.removeEventListener("keydown", handler);
+    }
+    return () => {};
+  }, [editorOpen]);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [tracks, setTracks] = useState<TrackOption[]>([]);
   const [selectedTrackId, setSelectedTrackId] = useState<string>("");
@@ -580,6 +594,11 @@ export default function ProgrammingClient() {
                       onClick={() => {
                         setSelectedDay(dayKey);
                         setCurrentDate(day.dateObj);
+                        // If the day already has sessions, open the editor for faster access.
+                        // Otherwise keep the editor closed so admins can add blocks intentionally.
+                        if ((sessions[dayKey] ?? []).length > 0) {
+                          setEditorOpen(true);
+                        }
                       }}
                       className={`min-h-[150px] border-r border-t border-slate-300 px-2 py-2 text-left align-top transition ${
                         isSelectedDay ? "bg-blue-50" : day.inMonth ? "bg-white/80" : "bg-slate-100/60"
@@ -723,6 +742,13 @@ export default function ProgrammingClient() {
 
             <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
               <div className="grid grid-cols-2 gap-2">
+                {/* If no track is selected, discourage creating blocks and make buttons disabled to avoid confusing errors. */}
+                {!selectedTrackId ? (
+                  <p className="col-span-2 rounded-xl border border-dashed border-slate-500/30 bg-slate-800/60 px-3 py-3 text-center text-sm text-slate-300">
+                    Select a track first to add blocks
+                  </p>
+                ) : null}
+
                 {[
                   { key: "warmup", label: "Add Warmup" },
                   { key: "lift", label: "Add Lift" },
@@ -735,7 +761,8 @@ export default function ProgrammingClient() {
                     onClick={() =>
                       createBlock(item.key as "warmup" | "lift" | "workout" | "cooldown")
                     }
-                    disabled={Boolean(creatingType)}
+                    disabled={Boolean(creatingType) || !selectedTrackId}
+                    title={!selectedTrackId ? "Select a track to enable" : undefined}
                     className="rounded-2xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {creatingType === item.key ? "Creating..." : item.label}

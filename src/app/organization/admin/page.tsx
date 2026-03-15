@@ -37,13 +37,15 @@ export default async function OrganizationAdminPage() {
             aria-label="Manage programming"
             title="Manage programming (schedules, classes, and workouts)"
             data-testid="manage-programming-link"
+            aria-describedby="org-admin-quick-hint"
           >
             Manage programming
           </Link>
 
           {/* Small hint to guide admins when the page is empty - promoted to a subtle callout for clarity */}
-          <div className="mt-3 sm:mt-0 rounded-md border border-slate-700 bg-slate-800/40 px-3 py-2">
-            <p className="text-sm text-slate-300">
+          <div id="org-admin-quick-hint" className="mt-3 sm:mt-0 rounded-md border border-slate-700 bg-slate-800/60 px-3 py-2">
+            {/* Increased hint contrast and slightly stronger background so the quick-tip is easier to read in bright rooms. */}
+            <p className="text-sm text-slate-200">
               Tip: use the members page to invite, edit, or remove members. Check programming to manage schedules and classes.
             </p>
           </div>

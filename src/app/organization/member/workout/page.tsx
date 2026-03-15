@@ -37,7 +37,8 @@ export default async function MemberWorkoutPage() {
                 aria-label="Create a new workout"
                 data-testid="create-workout-button"
               >
-                + Create Workout
+                <span aria-hidden className="mr-2">+</span>
+                <span>Create Workout</span>
               </Link>
             </div>
           </div>

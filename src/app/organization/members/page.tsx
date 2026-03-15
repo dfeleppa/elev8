@@ -44,6 +44,18 @@ function getOrderedColumns(rows: MemberRow[]) {
   return [...preferredInRows, ...remaining];
 }
 
+// Convert snake_case or camelCase column keys into readable labels (e.g. first_name -> First name)
+function humanizeColumn(key: string) {
+  if (!key) return "";
+  // Replace underscores and hyphens with spaces
+  const withSpaces = key.replace(/[_-]+/g, " ");
+  // Insert space before camelCase transitions
+  const spaced = withSpaces.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+  // Lowercase and capitalize first letter
+  const lower = spaced.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
 export default async function OrganizationMembersPage() {
   const { error, role, organizationIds } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
@@ -98,7 +110,7 @@ export default async function OrganizationMembersPage() {
                 <tr className="text-left text-xs uppercase tracking-[0.3em] text-slate-400">
                   {columns.map((column) => (
                     <th key={column} className="px-4">
-                      {column}
+                      {humanizeColumn(column)}
                     </th>
                   ))}
                 </tr>
