@@ -32,13 +32,13 @@ export default async function MemberAthleteDashboardPage() {
   return (
     <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
       <section className="space-y-8">
-        <FitnessScoreCard />
-        <TotalWorkoutsLoggedCard totalWorkouts={totalWorkoutsLogged} />
         <HealthStatsPanel
           title="Athlete Dashboard"
           description="Track key performance markers across body composition, strength, and conditioning."
           groups={STAT_GROUPS}
         />
+        <FitnessScoreCard />
+        <TotalWorkoutsLoggedCard totalWorkouts={totalWorkoutsLogged} />
       </section>
     </SidebarShell>
   );

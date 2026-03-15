@@ -5,6 +5,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import {
+  Activity,
+  BarChart3,
+  Bot,
+  Briefcase,
+  CalendarDays,
+  CircleDot,
+  ClipboardList,
+  Dumbbell,
+  FileText,
+  HandPlatter,
+  PlugZap,
+  ShieldCheck,
+  UserCircle2,
+  Users,
+  Wallet,
+} from "lucide-react";
 
 type SidebarShellProps = {
   children: ReactNode;
@@ -16,6 +33,7 @@ type UserRole = "member" | "coach" | "admin" | "owner";
 type NavChild = {
   label: string;
   href: string;
+  icon?: ReactNode;
   children?: NavChild[];
   minRole?: UserRole;
 };
@@ -111,6 +129,55 @@ const navItems: NavItem[] = [
     ),
   },
 ];
+
+function getNavIcon(href: string) {
+  const iconClass = "h-[18px] w-[18px]";
+  const iconProps = {
+    className: iconClass,
+    strokeWidth: 1.9,
+    "aria-hidden": true as const,
+  };
+
+  switch (href) {
+    case "/organization/owner/agents":
+      return <Bot {...iconProps} />;
+    case "/organization/owner/staff":
+    case "/organization/owner/members":
+    case "/organization/members":
+      return <Users {...iconProps} />;
+    case "/organization/owner/schedule":
+    case "/organization/coach/schedule":
+    case "/organization/member/class-schedule":
+      return <CalendarDays {...iconProps} />;
+    case "/organization/owner/payroll":
+    case "/organization/owner/billing":
+    case "/organization/member/store":
+      return <Wallet {...iconProps} />;
+    case "/organization/owner/tracks-memberships":
+      return <ShieldCheck {...iconProps} />;
+    case "/organization/owner/integrations":
+      return <PlugZap {...iconProps} />;
+    case "/management":
+      return <Briefcase {...iconProps} />;
+    case "/content":
+      return <FileText {...iconProps} />;
+    case "/organization/admin/analytics":
+      return <BarChart3 {...iconProps} />;
+    case "/organization/admin/programming":
+    case "/organization/member/workout":
+      return <Dumbbell {...iconProps} />;
+    case "/organization/coach/reports-members":
+      return <ClipboardList {...iconProps} />;
+    case "/organization/member/athlete-dashboard":
+      return <Activity {...iconProps} />;
+    case "/organization/member/nutrition":
+      return <HandPlatter {...iconProps} />;
+    case "/organization/member/account-dashboard":
+      return <UserCircle2 {...iconProps} />;
+    default:
+      return <CircleDot {...iconProps} />;
+  }
+}
 
 export default function SidebarShell({ children, mainClassName }: SidebarShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -265,6 +332,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const sectionGroups = visibleNavItems.flatMap((item) => item.children ?? []).filter((section) =>
     Array.isArray(section.children) && section.children.length > 0
   );
+  const collapsedEntries = sectionGroups.flatMap((section) => section.children ?? []);
 
   return (
     <div className="relative z-10 min-h-screen">
@@ -346,6 +414,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                           onClick={() => setMobileSidebarOpen(false)}
                           aria-current={isActive ? "page" : undefined}
                         >
+                          <span className="mr-2 text-slate-400">{getNavIcon(entry.href)}</span>
                           {entry.label}
                         </Link>
                       );
@@ -385,42 +454,65 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <p className="text-xs text-slate-400">Control Center</p>
             </div>
           </button>
-          {!sidebarCollapsed && (
-            <button
-              type="button"
-              onClick={() => setSidebarCollapsed(true)}
-              className="rounded-full border border-white/10 p-2 text-slate-300 transition hover:border-white/30 hover:text-slate-100"
-              aria-label="Collapse sidebar"
-            >
-              {hamburgerIcon}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+            className="rounded-full border border-white/10 p-2 text-slate-300 transition hover:border-white/30 hover:text-slate-100"
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {hamburgerIcon}
+          </button>
         </div>
 
-        <nav className={`mt-6 space-y-5 text-sm ${sidebarCollapsed ? "hidden" : ""}`}>
-          {sectionGroups.map((section) => (
-            <div key={section.label} className="space-y-2">
-              <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{section.label}</p>
-              <div className="space-y-1">
-                {section.children?.map((entry) => {
-                  const isActive = pathname === entry.href;
-                  return (
-                    <Link
-                      key={entry.label}
-                      href={entry.href}
-                      className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white ${
-                        isActive ? "border-white/10 bg-white/5 text-white" : ""
-                      }`}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      {entry.label}
-                    </Link>
-                  );
-                })}
+        {sidebarCollapsed ? (
+          <nav className="mt-6 flex flex-1 flex-col items-center gap-2 overflow-y-auto">
+            {collapsedEntries.map((entry) => {
+              const isActive = pathname === entry.href;
+              return (
+                <Link
+                  key={entry.href}
+                  href={entry.href}
+                  className={`group flex h-10 w-10 items-center justify-center rounded-xl border text-slate-300 transition ${
+                    isActive
+                      ? "border-white/20 bg-white/10 text-white"
+                      : "border-transparent hover:border-white/10 hover:bg-white/5 hover:text-white"
+                  }`}
+                  aria-label={entry.label}
+                  title={entry.label}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  {getNavIcon(entry.href)}
+                </Link>
+              );
+            })}
+          </nav>
+        ) : (
+          <nav className="mt-6 space-y-5 text-sm">
+            {sectionGroups.map((section) => (
+              <div key={section.label} className="space-y-2">
+                <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{section.label}</p>
+                <div className="space-y-1">
+                  {section.children?.map((entry) => {
+                    const isActive = pathname === entry.href;
+                    return (
+                      <Link
+                        key={entry.label}
+                        href={entry.href}
+                        className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white ${
+                          isActive ? "border-white/10 bg-white/5 text-white" : ""
+                        }`}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <span className="mr-2 text-slate-400">{getNavIcon(entry.href)}</span>
+                        {entry.label}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </nav>
+            ))}
+          </nav>
+        )}
       </aside>
 
       <div className={`${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
