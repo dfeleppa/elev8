@@ -16,6 +16,13 @@ export default async function MemberWorkoutPage() {
         <header>
           <div className="flex items-start justify-between gap-4">
             <div>
+              {/* Small breadcrumb improves navigation and reduces confusion about where you are */}
+              <div className="mb-3">
+                <Link href="/organization/member" className="text-sm text-slate-400 hover:text-slate-300">
+                  ← Member
+                </Link>
+              </div>
+
               <h1 className="text-3xl font-semibold text-slate-100">Workout</h1>
               <p className="mt-3 text-sm text-slate-400">
                 Plan workouts, track progress, and review training history.
@@ -26,7 +33,9 @@ export default async function MemberWorkoutPage() {
             <div>
               <Link
                 href="/organization/member/workout/create"
-                className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+                className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+                aria-label="Create a new workout"
+                data-testid="create-workout-button"
               >
                 + Create Workout
               </Link>
