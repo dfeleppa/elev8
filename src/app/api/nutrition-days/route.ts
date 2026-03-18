@@ -20,6 +20,42 @@ function toOptionalDecimal(value: unknown) {
   return Math.max(0, parsed);
 }
 
+function areTargetsUnset(day: {
+  calorie_target: number | null;
+  protein_target: number | null;
+  carbs_target: number | null;
+  fat_target: number | null;
+}) {
+  return (
+    day.calorie_target === null &&
+    day.protein_target === null &&
+    day.carbs_target === null &&
+    day.fat_target === null
+  );
+}
+
+async function getCoachPlanTargets(memberId: string, date: string) {
+  const { data: plan, error } = await supabaseAdmin
+    .from("coach_nutrition_plans")
+    .select("target_calories, protein_grams, carbs_grams, fat_grams")
+    .eq("member_id", memberId)
+    .lte("effective_date", date)
+    .order("effective_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !plan) {
+    return null;
+  }
+
+  return {
+    calorie_target: toOptionalDecimal(plan.target_calories),
+    protein_target: toOptionalDecimal(plan.protein_grams),
+    carbs_target: toOptionalDecimal(plan.carbs_grams),
+    fat_target: toOptionalDecimal(plan.fat_grams),
+  };
+}
+
 export async function GET(request: Request) {
   const { error: userError, userId } = await requireUserContext();
   if (userError || !userId) {
@@ -44,21 +80,68 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: dayError.message }, { status: 500 });
   }
 
-  if (!day) {
+  let resolvedDay = day;
+
+  if (!resolvedDay) {
+    const planTargets = await getCoachPlanTargets(userId, date);
+    if (planTargets) {
+      const { data: createdDay, error: createError } = await supabaseAdmin
+        .from("nutrition_days")
+        .upsert(
+          {
+            member_id: userId,
+            day_date: date,
+            ...planTargets,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "member_id,day_date" }
+        )
+        .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target")
+        .single();
+
+      if (createError) {
+        return NextResponse.json({ error: createError.message }, { status: 500 });
+      }
+
+      resolvedDay = createdDay;
+    }
+  } else if (areTargetsUnset(resolvedDay)) {
+    const planTargets = await getCoachPlanTargets(userId, date);
+    if (planTargets) {
+      const { data: updatedDay, error: updateError } = await supabaseAdmin
+        .from("nutrition_days")
+        .update({
+          ...planTargets,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", resolvedDay.id)
+        .eq("member_id", userId)
+        .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target")
+        .single();
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
+      }
+
+      resolvedDay = updatedDay;
+    }
+  }
+
+  if (!resolvedDay) {
     return NextResponse.json({ day: null, entries: [] });
   }
 
   const { data: entries, error: entriesError } = await supabaseAdmin
     .from("nutrition_entries")
     .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, created_at")
-    .eq("day_id", day.id)
+    .eq("day_id", resolvedDay.id)
     .order("created_at", { ascending: true });
 
   if (entriesError) {
     return NextResponse.json({ error: entriesError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ day, entries: entries ?? [] });
+  return NextResponse.json({ day: resolvedDay, entries: entries ?? [] });
 }
 
 export async function POST(request: Request) {

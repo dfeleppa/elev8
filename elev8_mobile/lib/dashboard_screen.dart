@@ -216,7 +216,7 @@ class _TodaysProgrammingSection extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _getColorForBlockType(type).withOpacity(0.2),
+                          color: _getColorForBlockType(type).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(type, style: TextStyle(color: _getColorForBlockType(type), fontWeight: FontWeight.bold, fontSize: 12)),

@@ -83,10 +83,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 80),
-              const Icon(
-                Icons.fitness_center_rounded,
-                size: 64,
-                color: Colors.white,
+              Center(
+                child: Image.asset(
+                  'assets/logo.png',
+                  height: 100,
+                  fit: BoxFit.contain,
+                ),
               ),
               const SizedBox(height: 24),
               Text(

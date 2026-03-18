@@ -229,7 +229,7 @@ class _SidebarShellState extends ConsumerState<SidebarShell> {
             Container(
               width: 220, // narrower sidebar width
               decoration: BoxDecoration(
-                color: const Color(0xFF020617).withOpacity(0.95),
+                color: const Color(0xFF020617).withValues(alpha: 0.95),
                 border: const Border(
                   right: BorderSide(color: Colors.white10),
                 ),
@@ -283,7 +283,7 @@ class _SidebarShellState extends ConsumerState<SidebarShell> {
 
   Widget _buildDrawer(UserRole currentRole, String currentPath) {
     return Drawer(
-      backgroundColor: const Color(0xFF020617).withOpacity(0.95), // slate-950
+      backgroundColor: const Color(0xFF020617).withValues(alpha: 0.95), // slate-950
       child: SafeArea(
         child: _buildSidebarContent(currentRole, currentPath),
       ),
@@ -308,7 +308,10 @@ class _SidebarShellState extends ConsumerState<SidebarShell> {
                   color: Colors.white10,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.fitness_center, color: Colors.white, size: 20),
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+                ),
               ),
               const SizedBox(width: 12),
               Column(

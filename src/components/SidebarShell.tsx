@@ -370,7 +370,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             onClick={() => setMobileSidebarOpen(false)}
             aria-label="Close menu"
           />
-          <aside className="absolute inset-y-0 left-0 w-72 border-r border-white/10 bg-slate-950/95 px-3 py-6 backdrop-blur">
+          <aside className="absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden border-r border-white/10 bg-slate-950/95 px-3 py-6 backdrop-blur">
             <div className="flex items-center justify-between gap-2 px-2">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
@@ -397,7 +397,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </button>
             </div>
 
-            <nav className="mt-6 space-y-5 text-sm">
+            <nav className="mt-6 flex-1 space-y-5 overflow-y-auto overscroll-contain pb-4 text-sm">
               {sectionGroups.map((section) => (
                 <div key={section.label} className="space-y-2">
                   <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{section.label}</p>

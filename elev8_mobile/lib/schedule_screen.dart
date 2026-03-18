@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'components/sidebar_shell.dart';
 import 'components/bottom_nav_bar.dart';
@@ -65,7 +64,7 @@ class _ClassCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(20),
-        border: isActive ? Border.all(color: Colors.blueAccent.withOpacity(0.5), width: 2) : Border.all(color: Colors.white10),
+        border: isActive ? Border.all(color: Colors.blueAccent.withValues(alpha: 0.5), width: 2) : Border.all(color: Colors.white10),
       ),
       child: Row(
         children: [
@@ -93,7 +92,7 @@ class _ClassCard extends StatelessWidget {
                 onPressed: () {},
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: BorderSide(color: spots > 0 ? Colors.white38 : Colors.orangeAccent.withOpacity(0.5)),
+                  side: BorderSide(color: spots > 0 ? Colors.white38 : Colors.orangeAccent.withValues(alpha: 0.5)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 ),

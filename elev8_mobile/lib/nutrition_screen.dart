@@ -79,10 +79,10 @@ class NutritionScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.black.withOpacity(0.05)),
+                        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           )
@@ -153,10 +153,10 @@ class NutritionScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.black.withOpacity(0.05)),
+                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -176,7 +176,7 @@ class NutritionScreen extends ConsumerWidget {
                             value: 1.0,
                             strokeWidth: 9,
                             backgroundColor: Colors.transparent,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent.withOpacity(0.15)),
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent.withValues(alpha: 0.15)),
                           ),
                         ),
                         SizedBox(
@@ -195,7 +195,7 @@ class NutritionScreen extends ConsumerWidget {
                             value: 1.0,
                             strokeWidth: 9,
                             backgroundColor: Colors.transparent,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.orangeAccent.withOpacity(0.15)),
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.orangeAccent.withValues(alpha: 0.15)),
                           ),
                         ),
                         SizedBox(
@@ -214,7 +214,7 @@ class NutritionScreen extends ConsumerWidget {
                             value: 1.0,
                             strokeWidth: 9,
                             backgroundColor: Colors.transparent,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.greenAccent.withOpacity(0.15)),
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.greenAccent.withValues(alpha: 0.15)),
                           ),
                         ),
                         SizedBox(
@@ -417,7 +417,7 @@ class _CoachStat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -498,7 +498,7 @@ class _MacroRowItem extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: dotColor!.withOpacity(0.5),
+                  color: dotColor!.withValues(alpha: 0.5),
                   blurRadius: 4,
                 )
               ]
@@ -675,7 +675,7 @@ class _MealContainer extends StatelessWidget {
                 background: Container(
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
-                  color: Colors.redAccent.withOpacity(0.8),
+                  color: Colors.redAccent.withValues(alpha: 0.8),
                   child: const Icon(Icons.delete, color: Colors.white),
                 ),
                 onDismissed: (_) async {

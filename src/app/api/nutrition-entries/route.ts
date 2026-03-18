@@ -30,6 +30,42 @@ function toPositiveDecimal(value: unknown) {
   return Math.max(0.01, parsed);
 }
 
+function areTargetsUnset(day: {
+  calorie_target: number | null;
+  protein_target: number | null;
+  carbs_target: number | null;
+  fat_target: number | null;
+}) {
+  return (
+    day.calorie_target === null &&
+    day.protein_target === null &&
+    day.carbs_target === null &&
+    day.fat_target === null
+  );
+}
+
+async function getCoachPlanTargets(memberId: string, date: string) {
+  const { data: plan, error } = await supabaseAdmin
+    .from("coach_nutrition_plans")
+    .select("target_calories, protein_grams, carbs_grams, fat_grams")
+    .eq("member_id", memberId)
+    .lte("effective_date", date)
+    .order("effective_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !plan) {
+    return null;
+  }
+
+  return {
+    calorie_target: toOptionalDecimal(plan.target_calories),
+    protein_target: toOptionalDecimal(plan.protein_grams),
+    carbs_target: toOptionalDecimal(plan.carbs_grams),
+    fat_target: toOptionalDecimal(plan.fat_grams),
+  };
+}
+
 export async function POST(request: Request) {
   const { error: userError, userId } = await requireUserContext();
   if (userError || !userId) {
@@ -45,12 +81,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid nutrition entry payload." }, { status: 400 });
   }
 
-  const { data: day, error: dayError } = await supabaseAdmin
+  const { data: existingDay, error: dayLookupError } = await supabaseAdmin
+    .from("nutrition_days")
+    .select("id, calorie_target, protein_target, carbs_target, fat_target")
+    .eq("member_id", userId)
+    .eq("day_date", dayDate)
+    .maybeSingle();
+
+  if (dayLookupError) {
+    return NextResponse.json({ error: dayLookupError.message }, { status: 500 });
+  }
+
+  let dayId = existingDay?.id ?? null;
+
+  if (!existingDay) {
+    const planTargets = await getCoachPlanTargets(userId, dayDate);
+    const { data: createdDay, error: createDayError } = await supabaseAdmin
     .from("nutrition_days")
     .upsert(
       {
         member_id: userId,
         day_date: dayDate,
+        ...(planTargets ?? {}),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "member_id,day_date" }
@@ -58,15 +110,30 @@ export async function POST(request: Request) {
     .select("id")
     .single();
 
-  if (dayError || !day) {
-    return NextResponse.json({ error: dayError?.message ?? "Day not found." }, { status: 500 });
+    if (createDayError || !createdDay) {
+      return NextResponse.json({ error: createDayError?.message ?? "Day not found." }, { status: 500 });
+    }
+
+    dayId = createdDay.id;
+  } else if (areTargetsUnset(existingDay)) {
+    const planTargets = await getCoachPlanTargets(userId, dayDate);
+    if (planTargets) {
+      await supabaseAdmin
+        .from("nutrition_days")
+        .update({
+          ...planTargets,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingDay.id)
+        .eq("member_id", userId);
+    }
   }
 
   const { data: entry, error } = await supabaseAdmin
     .from("nutrition_entries")
     .insert({
       member_id: userId,
-      day_id: day.id,
+      day_id: dayId,
       meal_type: mealType,
       entry_name: entryName,
       quantity: toPositiveDecimal(body?.quantity),
