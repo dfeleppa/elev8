@@ -81,6 +81,29 @@ async function createTask(formData: FormData) {
   revalidatePath("/management");
 }
 
+async function createProject(formData: FormData) {
+  "use server";
+
+  const { error, role, userId } = await requireUserContext();
+  if (error || !userId || !hasRole("owner", role)) {
+    return;
+  }
+
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) {
+    return;
+  }
+
+  await supabaseAdmin
+    .from("projects")
+    .insert({
+      name,
+      member_id: userId,
+    });
+
+  revalidatePath("/management");
+}
+
 async function getTasks(memberId: string): Promise<Task[]> {
   const { data, error } = await supabaseAdmin
     .from("tasks")
@@ -124,7 +147,7 @@ function formatDate(value: string | null) {
 }
 
 function normalizeStatus(status: string | null) {
-  return status?.trim().toLowerCase() ?? "";
+  return status?.trim().toLowerCase().replace(/[_\s]+/g, "-") ?? "";
 }
 
 function getStatusLabel(status: string | null, isComplete?: boolean | null) {
@@ -137,11 +160,14 @@ function getStatusLabel(status: string | null, isComplete?: boolean | null) {
     return "Planned";
   }
 
-  if (normalized === "in progress") {
+  if (normalized === "in-progress") {
     return "In progress";
   }
 
-  return normalized.replace(/\b\w/g, (match) => match.toUpperCase());
+  return normalized
+    .split("-")
+    .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 function getStatusStyles(status: string | null, isComplete?: boolean | null) {
@@ -151,11 +177,11 @@ function getStatusStyles(status: string | null, isComplete?: boolean | null) {
 
   const normalized = normalizeStatus(status);
 
-  if (normalized === "doing" || normalized === "in progress" || normalized === "ongoing") {
+  if (normalized === "doing" || normalized === "in-progress" || normalized === "ongoing") {
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
 
-  if (normalized === "blocked" || normalized === "on hold") {
+  if (normalized === "blocked" || normalized === "on-hold") {
     return "border-rose-200 bg-rose-50 text-rose-700";
   }
 
@@ -194,10 +220,10 @@ function getColumnKey(status: string | null, isComplete?: boolean | null): Kanba
   if (normalized === "done" || normalized === "complete") {
     return "done";
   }
-  if (normalized === "blocked" || normalized === "on hold") {
+  if (normalized === "blocked" || normalized === "on-hold") {
     return "blocked";
   }
-  if (normalized === "doing" || normalized === "in progress" || normalized === "ongoing") {
+  if (normalized === "doing" || normalized === "in-progress" || normalized === "ongoing") {
     return "in-progress";
   }
 
@@ -238,16 +264,18 @@ function daysBetween(a: Date, b: Date) {
 export default async function ManagementPage({
   searchParams,
 }: {
-  searchParams?: { view?: string | string[] };
+  searchParams?: { view?: string | string[] } | Promise<{ view?: string | string[] }>;
 }) {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("owner", role)) {
     redirect("/organization");
   }
 
-  const viewParam = Array.isArray(searchParams?.view) ? searchParams?.view[0] : searchParams?.view;
-  const activeView: ViewMode = viewModes.some((mode) => mode.key === viewParam)
-    ? (viewParam as ViewMode)
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const viewParam = Array.isArray(resolvedSearchParams?.view) ? resolvedSearchParams?.view[0] : resolvedSearchParams?.view;
+  const normalizedView = viewParam?.trim().toLowerCase();
+  const activeView: ViewMode = viewModes.some((mode) => mode.key === normalizedView)
+    ? (normalizedView as ViewMode)
     : "list";
 
   const [tasks, projects] = await Promise.all([getTasks(userId), getProjects(userId)]);
@@ -280,6 +308,47 @@ export default async function ManagementPage({
         </header>
 
         <OwnerSectionCard title="Task Management" meta={`${tasks.length} tasks`}>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Projects</p>
+                <h2 className="mt-1 text-lg font-semibold text-slate-900">Create Project</h2>
+              </div>
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
+                {projects.length} total
+              </span>
+            </div>
+            <form action={createProject} className="mt-4 flex flex-wrap items-center gap-3">
+              <input
+                type="text"
+                name="name"
+                placeholder="Project name"
+                className="h-10 w-72 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 placeholder:text-slate-400"
+                required
+              />
+              <button
+                type="submit"
+                className={ownerButtonPrimaryClass}
+              >
+                Create Project
+              </button>
+            </form>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {projects.length === 0 ? (
+                <p className="text-sm text-slate-500">No projects yet.</p>
+              ) : (
+                projects.map((project) => (
+                  <span
+                    key={project.id}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700"
+                  >
+                    {project.name}
+                  </span>
+                ))
+              )}
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Task Views</p>
@@ -310,7 +379,7 @@ export default async function ManagementPage({
               <div className="space-y-4">
                 <OwnerDataTable minWidthClassName="min-w-[760px]">
                   <thead>
-                    <tr className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">
+                    <tr className="bg-slate-900 text-left text-[11px] font-semibold uppercase tracking-[0.26em] text-white">
                       <th className="px-4 py-2.5">Task</th>
                       <th className="px-4 py-2.5">Status</th>
                       <th className="px-4 py-2.5">Project</th>
