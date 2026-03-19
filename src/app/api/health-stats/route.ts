@@ -59,6 +59,12 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
+  const action = body?.action;
+
+  if (action === "log_body_comp") {
+    return handleLogBodyComp(userId, body);
+  }
+
   const statKey = typeof body?.statKey === "string" ? body.statKey : "";
   const unit = statUnitMap[statKey];
   const numericValue = Number(body?.value);
@@ -94,4 +100,73 @@ export async function POST(request: Request) {
       entryDate: data.entry_date,
     },
   });
+}
+
+async function handleLogBodyComp(userId: string, body: unknown) {
+  const req = body as Record<string, unknown>;
+  const bodyWeight = Number(req.bodyWeight);
+  const bodyFatPercent = Number(req.bodyFatPercent);
+  const entryDate = new Date().toISOString().slice(0, 10);
+
+  if (!Number.isFinite(bodyWeight) || bodyWeight <= 0) {
+    return NextResponse.json({ error: "Body weight is required and must be positive." }, { status: 400 });
+  }
+
+  const inserts: Array<{
+    member_id: string;
+    stat_key: string;
+    value: number;
+    unit: string;
+    entry_date: string;
+    updated_at: string;
+  }> = [
+    {
+      member_id: userId,
+      stat_key: "body_weight",
+      value: bodyWeight,
+      unit: "lb",
+      entry_date: entryDate,
+      updated_at: new Date().toISOString(),
+    },
+  ];
+
+  if (Number.isFinite(bodyFatPercent) && bodyFatPercent > 0 && bodyFatPercent < 100) {
+    const leanBodyMass = bodyWeight * (1 - bodyFatPercent / 100);
+    inserts.push({
+      member_id: userId,
+      stat_key: "body_fat",
+      value: bodyFatPercent,
+      unit: "%",
+      entry_date: entryDate,
+      updated_at: new Date().toISOString(),
+    });
+    inserts.push({
+      member_id: userId,
+      stat_key: "lean_body_mass",
+      value: Math.round(leanBodyMass * 10) / 10,
+      unit: "lb",
+      entry_date: entryDate,
+      updated_at: new Date().toISOString(),
+    });
+  }
+
+  const { data, error: insertError } = await supabaseAdmin
+    .from("health_stat_entries")
+    .insert(inserts)
+    .select("stat_key, value, unit, entry_date");
+
+  if (insertError) {
+    return NextResponse.json({ error: insertError.message }, { status: 500 });
+  }
+
+  const entries: Record<string, { value: string; unit: string; entryDate: string | null }> = {};
+  (data ?? []).forEach((row) => {
+    entries[row.stat_key] = {
+      value: row.value?.toString?.() ?? "",
+      unit: row.unit ?? "",
+      entryDate: row.entry_date ?? null,
+    };
+  });
+
+  return NextResponse.json({ entries, entryDate });
 }
