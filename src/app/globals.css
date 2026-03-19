@@ -2,65 +2,94 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --background: #f6f3ef;
-  --foreground: #1f2937;
-  --glow-primary: #ff8f9a;
-  --glow-secondary: #ffcf87;
-  --glow-tertiary: #b7e1ff;
-  --font-brand-sans: Arial, Helvetica, sans-serif;
-  --font-brand-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+  --app-bg: #111417;
+  --app-bg-elevated: #171c22;
+  --app-bg-muted: #1d2023;
+  --app-surface: #12171d;
+  --app-surface-soft: #191c1f;
+  --app-surface-strong: #272a2e;
+  --app-border: #2f3540;
+  --app-border-subtle: rgba(255, 255, 255, 0.08);
+  --app-text: #e1e2e7;
+  --app-text-muted: #9ba4b3;
+  --app-text-soft: #7f8794;
+  --app-primary: #ffb1c4;
+  --app-primary-strong: #ff4a8d;
+  --app-secondary: #63f7ff;
+  --app-success: #56d38a;
+  --app-warning: #f7c35f;
+  --app-danger: #ff8a9b;
+  --app-shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.45);
+  --app-shadow-md: 0 14px 36px rgba(0, 0, 0, 0.32);
+  --app-shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.2);
+  --font-brand-sans: var(--font-body), "Manrope", "Segoe UI", sans-serif;
+  --font-brand-heading: var(--font-heading), "Space Grotesk", "Segoe UI", sans-serif;
+  --font-brand-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--app-bg);
+  --color-foreground: var(--app-text);
   --font-sans: var(--font-brand-sans);
   --font-mono: var(--font-brand-mono);
 }
 
 body {
   min-height: 100vh;
-  background-color: var(--background);
+  background-color: var(--app-bg);
   background-image:
-    radial-gradient(circle at 12% 18%, rgba(255, 143, 154, 0.18), transparent 55%),
-    radial-gradient(circle at 86% 12%, rgba(255, 207, 135, 0.2), transparent 45%),
-    radial-gradient(circle at 68% 72%, rgba(183, 225, 255, 0.2), transparent 55%),
-    linear-gradient(135deg, #fbf8f4 0%, #f6f2ee 60%, #f2ede7 100%);
-  color: var(--foreground);
+    radial-gradient(circle at 10% 14%, rgba(255, 177, 196, 0.14), transparent 42%),
+    radial-gradient(circle at 82% 8%, rgba(99, 247, 255, 0.1), transparent 38%),
+    radial-gradient(circle at 64% 76%, rgba(255, 74, 141, 0.1), transparent 45%),
+    linear-gradient(145deg, #111417 0%, #101318 54%, #0b0f14 100%);
+  color: var(--app-text);
   font-family: var(--font-brand-sans);
   font-feature-settings: "liga" 1, "kern" 1;
   line-height: 1.5;
 }
 
+.app-root {
+  color: var(--app-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-brand-heading);
+}
+
 ::selection {
-  background: rgba(255, 143, 154, 0.35);
-  color: #111827;
+  background: rgba(255, 177, 196, 0.35);
+  color: #0c1118;
 }
 
 .gradient-haze {
-  background: radial-gradient(circle, rgba(255, 143, 154, 0.4), transparent 60%);
+  background: radial-gradient(circle, rgba(255, 177, 196, 0.35), transparent 62%);
   filter: blur(60px);
-  opacity: 0.55;
+  opacity: 0.62;
 }
 
 .glass-panel {
-  background: #ffffff;
-  border: 1px solid #d5deea;
-  box-shadow: 0 18px 44px rgba(5, 9, 20, 0.14);
+  background: color-mix(in srgb, var(--app-surface) 84%, transparent);
+  border: 1px solid var(--app-border-subtle);
+  box-shadow: var(--app-shadow-md);
+  backdrop-filter: blur(18px);
 }
 
 .app-card {
-  background: #ffffff;
-  border: 1px solid #d5deea;
-  box-shadow: 0 18px 44px rgba(5, 9, 20, 0.14);
+  background: var(--app-bg-elevated);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow-sm);
 }
 
 .app-table-shell {
   overflow-x: auto;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--app-border);
   border-radius: 1rem;
-  background: #ffffff;
+  background: var(--app-bg-elevated);
 }
 
 .app-table {
@@ -69,8 +98,8 @@ body {
 }
 
 .app-table thead tr {
-  background: #4a4a4a;
-  color: #ffffff;
+  background: var(--app-surface-strong);
+  color: var(--app-text);
 }
 
 .app-table thead th {
@@ -83,55 +112,19 @@ body {
 }
 
 .app-table tbody td {
-  border-top: 1px solid #e2e8f0;
-  background: #ffffff;
+  border-top: 1px solid var(--app-border);
+  background: var(--app-bg-elevated);
   padding: 0.75rem;
-  color: #0f172a;
+  color: var(--app-text);
 }
 
 .app-table tbody tr:nth-child(even) td {
-  background: #f8fafc;
+  background: var(--app-bg-muted);
 }
 
 .app-table-empty td {
   height: 3.25rem;
-  background: #ffffff;
-}
-
-.theme-soft .text-slate-50 {
-  color: #111827;
-}
-
-.theme-soft .text-slate-100 {
-  color: #1f2937;
-}
-
-.theme-soft .text-slate-200 {
-  color: #374151;
-}
-
-.theme-soft .text-slate-300 {
-  color: #6b7280;
-}
-
-.theme-soft .text-slate-400 {
-  color: #6b7280;
-}
-
-.theme-soft .text-slate-500 {
-  color: #6b7280;
-}
-
-.theme-soft .text-slate-600 {
-  color: #4b5563;
-}
-
-.theme-soft .text-slate-700 {
-  color: #374151;
-}
-
-.theme-soft .text-slate-900 {
-  color: #111827;
+  background: var(--app-bg-elevated);
 }
 
 .card-fade-in {
@@ -152,6 +145,37 @@ body {
 
 .orbital-glow {
   animation: orbit 18s ease-in-out infinite;
+}
+
+.app-shell-sidebar {
+  background: color-mix(in srgb, var(--app-surface) 90%, transparent);
+  border-right: 1px solid var(--app-border-subtle);
+  backdrop-filter: blur(16px);
+}
+
+.app-shell-topbar {
+  background: color-mix(in srgb, var(--app-surface) 82%, transparent);
+  border-bottom: 1px solid var(--app-border-subtle);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(14px);
+}
+
+.app-nav-link {
+  color: var(--app-text-muted);
+  border: 1px solid transparent;
+  transition: all 160ms ease;
+}
+
+.app-nav-link:hover {
+  color: var(--app-text);
+  border-color: var(--app-border-subtle);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.app-nav-link-active {
+  color: var(--app-primary);
+  border-color: rgba(255, 177, 196, 0.26);
+  background: linear-gradient(90deg, rgba(255, 177, 196, 0.14), transparent 70%);
 }
 
 @keyframes orbit {

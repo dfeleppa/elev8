@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import AppPlaceholderPage from "../../../../components/AppPlaceholderPage";
 import SidebarShell from "../../../../components/SidebarShell";
 import { hasRole, requireUserContext } from "../../../../lib/member";
 
@@ -11,14 +12,15 @@ export default async function MemberAccountDashboardPage() {
 
   return (
     <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
-      <section className="space-y-6">
-        <header>
-          <h1 className="text-3xl font-semibold text-slate-100">Account Dashboard</h1>
-          <p className="mt-3 text-sm text-slate-400">
-            Manage your profile, billing, and preferences.
-          </p>
-        </header>
-      </section>
+      <AppPlaceholderPage
+        eyebrow="Member"
+        title="Account Dashboard"
+        description="Manage profile details, notification preferences, and account-level settings for your training experience."
+        links={[
+          { label: "Open Athlete Dashboard", href: "/organization/member/athlete-dashboard" },
+          { label: "Open Nutrition", href: "/organization/member/nutrition" },
+        ]}
+      />
     </SidebarShell>
   );
 }

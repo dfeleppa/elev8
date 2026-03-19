@@ -1,5 +1,16 @@
 import type { Metadata } from "next";
+import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+
+const fontHeading = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-heading",
+});
+
+const fontBody = Manrope({
+  subsets: ["latin"],
+  variable: "--font-body",
+});
 
 export const metadata: Metadata = {
   title: "Elev8 Control Center",
@@ -13,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased bg-slate-950 text-slate-100">
+      <body className={`${fontHeading.variable} ${fontBody.variable} app-root antialiased`}>
         {children}
       </body>
     </html>

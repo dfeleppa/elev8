@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import AppPlaceholderPage from "../../../../components/AppPlaceholderPage";
 import SidebarShell from "../../../../components/SidebarShell";
 import { hasRole, requireUserContext } from "../../../../lib/member";
 
@@ -11,14 +12,15 @@ export default async function CoachSchedulePage() {
 
   return (
     <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
-      <section className="space-y-6">
-        <header>
-          <h1 className="text-3xl font-semibold text-slate-100">Schedule</h1>
-          <p className="mt-3 text-sm text-slate-400">
-            Coordinate sessions, classes, and coaching availability.
-          </p>
-        </header>
-      </section>
+      <AppPlaceholderPage
+        eyebrow="Coach"
+        title="Schedule"
+        description="Coordinate classes, assign coaching coverage, and keep athlete sessions balanced throughout the week."
+        links={[
+          { label: "Open Gym Dashboard", href: "/organization/gym-dashboard" },
+          { label: "Open Member Reports", href: "/organization/coach/reports-members" },
+        ]}
+      />
     </SidebarShell>
   );
 }

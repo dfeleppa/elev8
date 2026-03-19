@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import AppPlaceholderPage from "../../../../components/AppPlaceholderPage";
 import SidebarShell from "../../../../components/SidebarShell";
 import { hasRole, requireUserContext } from "../../../../lib/member";
 
@@ -11,14 +12,15 @@ export default async function CoachReportsMembersPage() {
 
   return (
     <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
-      <section className="space-y-6">
-        <header>
-          <h1 className="text-3xl font-semibold text-slate-100">Reports - Members</h1>
-          <p className="mt-3 text-sm text-slate-400">
-            Review member progress, attendance, and training insights.
-          </p>
-        </header>
-      </section>
+      <AppPlaceholderPage
+        eyebrow="Coach"
+        title="Reports - Members"
+        description="Review athlete adherence, attendance patterns, and progress trends to inform next coaching decisions."
+        links={[
+          { label: "Open Coach Schedule", href: "/organization/coach/schedule" },
+          { label: "Open Gym Dashboard", href: "/organization/gym-dashboard" },
+        ]}
+      />
     </SidebarShell>
   );
 }

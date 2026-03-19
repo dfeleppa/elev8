@@ -91,8 +91,8 @@ export default async function ManagementPage({
     <SidebarShell mainClassName="w-full px-5 py-10 lg:py-16">
       <section className="space-y-8">
         <header>
-          <h1 className="text-3xl font-semibold text-[#101a35]">Management</h1>
-          <p className="mt-3 text-sm text-[#4a5f86]">One workspace for task execution across list, kanban, calendar, and gantt.</p>
+          <h1 className="text-3xl font-semibold text-slate-100">Management</h1>
+          <p className="mt-3 text-sm text-slate-400">One workspace for task execution across list, kanban, calendar, and gantt.</p>
         </header>
 
         <ManagementPageClient

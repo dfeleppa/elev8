@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import AppPlaceholderPage from "../../../../components/AppPlaceholderPage";
 import SidebarShell from "../../../../components/SidebarShell";
 import { hasRole, requireUserContext } from "../../../../lib/member";
 
@@ -11,14 +12,15 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
-      <section className="space-y-6">
-        <header>
-          <h1 className="text-3xl font-semibold text-slate-100">Business Analytics</h1>
-          <p className="mt-3 text-sm text-slate-400">
-            Track business KPIs, revenue trends, and performance metrics.
-          </p>
-        </header>
-      </section>
+      <AppPlaceholderPage
+        eyebrow="Admin"
+        title="Business Analytics"
+        description="Track KPIs, monitor revenue movement, and align operating decisions across coaching and membership funnels."
+        links={[
+          { label: "Open Programming", href: "/organization/admin/programming" },
+          { label: "Open Organization Hub", href: "/organization" },
+        ]}
+      />
     </SidebarShell>
   );
 }

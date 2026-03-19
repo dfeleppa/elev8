@@ -373,14 +373,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   return (
     <div className="relative z-10 min-h-screen">
       <div className="lg:hidden">
-        <div className="flex items-center justify-between border-b border-slate-200/80 bg-white/80 px-5 py-4 backdrop-blur">
+        <div className="app-shell-topbar flex items-center justify-between px-5 py-4">
           <button
             type="button"
             onClick={() => setMobileSidebarOpen(true)}
             className="flex items-center gap-3 text-left"
             aria-label="Open menu"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900/10">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
               <Image
                 src="/Elev8rlogo (1).png"
                 alt="Elev8"
@@ -390,16 +390,16 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               />
             </span>
             <div>
-              <p className="text-sm font-semibold text-slate-900">Elev8</p>
-              <p className="text-xs text-slate-500">Control Center</p>
-            </div>
-          </button>
-          <div className="inline-flex items-center overflow-hidden rounded-md border border-slate-800/80 bg-[#071322] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <p className="text-sm font-semibold text-slate-100">Elev8</p>
+                <p className="text-xs text-slate-400">Control Center</p>
+              </div>
+            </button>
+          <div className="inline-flex items-center overflow-hidden rounded-md border border-white/15 bg-black/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <button
               type="button"
               onClick={() => handleSwitchView("gym")}
               className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition ${
-                viewMode === "gym" ? "bg-[#0e2036] text-[#d8e9ff]" : "text-[#7f8fa5]"
+                viewMode === "gym" ? "bg-[#251720] text-[#ffd6e1]" : "text-slate-400"
               }`}
             >
               Gym
@@ -408,7 +408,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               type="button"
               onClick={() => handleSwitchView("athlete")}
               className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition ${
-                viewMode === "athlete" ? "bg-[#0e2036] text-[#d8e9ff]" : "text-[#7f8fa5]"
+                viewMode === "athlete" ? "bg-[#251720] text-[#ffd6e1]" : "text-slate-400"
               }`}
             >
               Athlete
@@ -421,14 +421,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         <div className="fixed inset-0 z-30 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-slate-950/70"
+            className="absolute inset-0 bg-black/75"
             onClick={() => setMobileSidebarOpen(false)}
             aria-label="Close menu"
           />
-          <aside className="absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden border-r border-white/10 bg-slate-950/95 px-3 py-6 backdrop-blur">
+          <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-6">
             <div className="flex items-center justify-between gap-2 px-2">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
                   <Image
                     src="/Elev8rlogo (1).png"
                     alt="Elev8"
@@ -445,7 +445,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <button
                 type="button"
                 onClick={() => setMobileSidebarOpen(false)}
-                className="rounded-full border border-white/10 p-2 text-slate-300 transition hover:border-white/30 hover:text-slate-100"
+                className="rounded-full border border-white/15 p-2 text-slate-300 transition hover:border-white/35 hover:text-slate-100"
                 aria-label="Close menu"
               >
                 {hamburgerIcon}
@@ -460,8 +460,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                     <Link
                       key={entry.href}
                       href={entry.href}
-                      className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-300 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-100 ${
-                        isActive ? "border-white/10 bg-white/5 text-slate-50" : ""
+                      className={`app-nav-link flex items-center rounded-lg px-3 py-2 text-xs ${
+                        isActive ? "app-nav-link-active" : ""
                       }`}
                       onClick={() => setMobileSidebarOpen(false)}
                       aria-current={isActive ? "page" : undefined}
@@ -478,7 +478,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       )}
 
       <aside
-        className={`card-fade-in fixed inset-y-0 left-0 z-20 hidden border-r border-white/10 bg-slate-950/95 px-3 py-6 backdrop-blur lg:flex lg:flex-col ${
+        className={`app-shell-sidebar card-fade-in fixed inset-y-0 left-0 z-20 hidden px-3 py-6 lg:flex lg:flex-col ${
           sidebarCollapsed ? "lg:w-20" : "lg:w-64"
         }`}
         style={{ animationDelay: "0.05s" }}
@@ -490,7 +490,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             className={`flex items-center gap-3 ${sidebarCollapsed ? "justify-center" : ""}`}
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Sidebar logo"}
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
               <Image
                 src="/Elev8rlogo (1).png"
                 alt="Elev8"
@@ -507,7 +507,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           <button
             type="button"
             onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
-            className="rounded-full border border-white/10 p-2 text-slate-300 transition hover:border-white/30 hover:text-slate-100"
+            className="rounded-full border border-white/15 p-2 text-slate-300 transition hover:border-white/35 hover:text-slate-100"
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {hamburgerIcon}
@@ -524,7 +524,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                   href={entry.href}
                   className={`group flex h-10 w-10 items-center justify-center rounded-xl border text-slate-300 transition ${
                     isActive
-                      ? "border-white/20 bg-white/10 text-white"
+                      ? "border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4]"
                       : "border-transparent hover:border-white/10 hover:bg-white/5 hover:text-white"
                   }`}
                   aria-label={entry.label}
@@ -544,8 +544,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 <Link
                   key={entry.href}
                   href={entry.href}
-                  className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white ${
-                    isActive ? "border-white/10 bg-white/5 text-white" : ""
+                  className={`app-nav-link flex items-center rounded-lg px-3 py-2 text-xs ${
+                    isActive ? "app-nav-link-active" : ""
                   }`}
                   aria-current={isActive ? "page" : undefined}
                 >
@@ -559,18 +559,18 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       </aside>
 
       <div className={`${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
-        <header className="hidden h-14 w-full items-center justify-between bg-[#2fa8e8] px-5 text-white lg:flex">
+        <header className="app-shell-topbar hidden h-14 w-full items-center justify-between px-5 text-slate-100 lg:flex">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{organizationName}</p>
-            <p className="truncate text-xs text-sky-100">Current Track: {currentTrack}</p>
+            <p className="truncate text-xs text-slate-400">Current Track: {currentTrack}</p>
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <div className="inline-flex items-center overflow-hidden rounded-md border border-slate-900/60 bg-[#071322] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="inline-flex items-center overflow-hidden rounded-md border border-white/15 bg-black/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
               <button
                 type="button"
                 onClick={() => handleSwitchView("gym")}
                 className={`px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition ${
-                  viewMode === "gym" ? "bg-[#0e2036] text-[#d8e9ff]" : "text-[#7f8fa5] hover:text-[#d8e9ff]"
+                  viewMode === "gym" ? "bg-[#251720] text-[#ffd6e1]" : "text-slate-400 hover:text-slate-100"
                 }`}
               >
                 Gym
@@ -579,7 +579,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 type="button"
                 onClick={() => handleSwitchView("athlete")}
                 className={`px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition ${
-                  viewMode === "athlete" ? "bg-[#0e2036] text-[#d8e9ff]" : "text-[#7f8fa5] hover:text-[#d8e9ff]"
+                  viewMode === "athlete" ? "bg-[#251720] text-[#ffd6e1]" : "text-slate-400 hover:text-slate-100"
                 }`}
               >
                 Athlete
@@ -588,7 +588,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             <button
               type="button"
-              className="inline-flex items-center gap-2 text-sky-50 transition hover:text-white"
+              className="inline-flex items-center gap-2 text-slate-300 transition hover:text-white"
               aria-label="TV display mode"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -600,7 +600,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             <button
               type="button"
-              className="inline-flex items-center gap-2 text-sky-50 transition hover:text-white"
+              className="inline-flex items-center gap-2 text-slate-300 transition hover:text-white"
               aria-label="User account"
             >
               <span className="truncate max-w-[160px]">{userName}</span>
@@ -611,7 +611,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             <Link
               href="/content"
-              className="inline-flex items-center text-sky-50 transition hover:text-white"
+              className="inline-flex items-center text-slate-300 transition hover:text-white"
               aria-label="Messenger"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -621,7 +621,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             <button
               type="button"
-              className="inline-flex items-center text-sky-50 transition hover:text-white"
+              className="inline-flex items-center text-slate-300 transition hover:text-white"
               aria-label="Notifications"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -634,7 +634,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <button
                 type="button"
                 onClick={() => setMenuOpen((open) => !open)}
-                className="inline-flex items-center text-sky-50 transition hover:text-white"
+                className="inline-flex items-center text-slate-300 transition hover:text-white"
                 aria-label="More options"
                 aria-expanded={menuOpen}
               >
@@ -645,7 +645,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 </svg>
               </button>
               {menuOpen ? (
-                <div className="absolute right-0 z-40 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
+                <div className="absolute right-0 z-40 mt-2 w-56 rounded-xl border border-white/15 bg-[#161a20] p-2 shadow-2xl">
                   <button
                     type="button"
                     onClick={() => {
@@ -653,7 +653,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                       importInputRef.current?.click();
                     }}
                     disabled={isImportingResults}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-white/10 disabled:opacity-60"
                   >
                     {isImportingResults ? "Importing workout results..." : "Import Workout Results (CSV)"}
                   </button>
@@ -672,12 +672,12 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         />
 
         {topBarNotice ? (
-          <div className="hidden border-b border-sky-200 bg-sky-50 px-5 py-2 text-sm text-sky-900 lg:block">
+          <div className="hidden border-b border-[#ffb1c4]/30 bg-[#2a1720] px-5 py-2 text-sm text-[#ffdbe6] lg:block">
             {topBarNotice}
           </div>
         ) : null}
 
-        <main className={`theme-soft ${mainClasses}`}>{children}</main>
+        <main className={mainClasses}>{children}</main>
       </div>
     </div>
   );
