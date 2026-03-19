@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -29,6 +29,7 @@ type SidebarShellProps = {
 };
 
 type UserRole = "member" | "coach" | "admin" | "owner";
+type ViewMode = "gym" | "athlete";
 
 type NavChild = {
   label: string;
@@ -90,6 +91,7 @@ const navItems: NavItem[] = [
         href: "/organization/coach",
         minRole: "coach",
         children: [
+          { label: "Gym Dashboard", href: "/organization/gym-dashboard", minRole: "coach" },
           { label: "Schedule", href: "/organization/coach/schedule", minRole: "coach" },
           { label: "Reports - Members", href: "/organization/coach/reports-members", minRole: "coach" },
         ],
@@ -159,6 +161,8 @@ function getNavIcon(href: string) {
       return <PlugZap {...iconProps} />;
     case "/management":
       return <Briefcase {...iconProps} />;
+    case "/organization/gym-dashboard":
+      return <BarChart3 {...iconProps} />;
     case "/content":
       return <FileText {...iconProps} />;
     case "/organization/admin/analytics":
@@ -182,6 +186,7 @@ function getNavIcon(href: string) {
 export default function SidebarShell({ children, mainClassName }: SidebarShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("gym");
   const [userRole, setUserRole] = useState<UserRole>("member");
   const [userName, setUserName] = useState("User");
   const [organizationName, setOrganizationName] = useState("Organization");
@@ -191,6 +196,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const [topBarNotice, setTopBarNotice] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
   const mainClasses = mainClassName ??
     "mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[1.6fr_1fr] lg:py-16";
   const hamburgerIcon = (
@@ -204,6 +210,20 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       />
     </svg>
   );
+
+  useEffect(() => {
+    const storedMode = typeof window !== "undefined" ? window.localStorage.getItem("sidebar-view-mode") : null;
+    if (storedMode === "gym" || storedMode === "athlete") {
+      setViewMode(storedMode);
+      return;
+    }
+
+    if (pathname?.startsWith("/organization/member")) {
+      setViewMode("athlete");
+    } else {
+      setViewMode("gym");
+    }
+  }, [pathname]);
 
   useEffect(() => {
     let isMounted = true;
@@ -329,10 +349,26 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     })
     .filter((item): item is NavItem => Boolean(item));
 
-  const sectionGroups = visibleNavItems.flatMap((item) => item.children ?? []).filter((section) =>
-    Array.isArray(section.children) && section.children.length > 0
-  );
-  const collapsedEntries = sectionGroups.flatMap((section) => section.children ?? []);
+  const allSections = visibleNavItems
+    .flatMap((item) => item.children ?? [])
+    .filter((section) => Array.isArray(section.children) && section.children.length > 0);
+
+  const sectionByLabel = new Map(allSections.map((section) => [section.label.toLowerCase(), section]));
+
+  const gymSectionOrder: Array<"owner" | "admin" | "coach"> =
+    userRole === "owner" ? ["owner", "admin", "coach"] : userRole === "admin" ? ["admin", "coach"] : userRole === "coach" ? ["coach"] : [];
+
+  const gymEntries = gymSectionOrder.flatMap((label) => sectionByLabel.get(label)?.children ?? []);
+  const athleteEntries = sectionByLabel.get("member")?.children ?? [];
+  const visibleEntries = viewMode === "athlete" ? athleteEntries : gymEntries;
+
+  const handleSwitchView = (nextMode: ViewMode) => {
+    setViewMode(nextMode);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sidebar-view-mode", nextMode);
+    }
+    router.push(nextMode === "gym" ? "/organization/gym-dashboard" : "/organization/member/athlete-dashboard");
+  };
 
   return (
     <div className="relative z-10 min-h-screen">
@@ -358,7 +394,26 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <p className="text-xs text-slate-500">Control Center</p>
             </div>
           </button>
-          <div className="h-8 w-8" aria-hidden="true" />
+          <div className="inline-flex items-center overflow-hidden rounded-md border border-slate-800/80 bg-[#071322] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <button
+              type="button"
+              onClick={() => handleSwitchView("gym")}
+              className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition ${
+                viewMode === "gym" ? "bg-[#0e2036] text-[#d8e9ff]" : "text-[#7f8fa5]"
+              }`}
+            >
+              Gym
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchView("athlete")}
+              className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition ${
+                viewMode === "athlete" ? "bg-[#0e2036] text-[#d8e9ff]" : "text-[#7f8fa5]"
+              }`}
+            >
+              Athlete
+            </button>
+          </div>
         </div>
       </div>
 
@@ -398,30 +453,25 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             </div>
 
             <nav className="mt-6 flex-1 space-y-5 overflow-y-auto overscroll-contain pb-4 text-sm">
-              {sectionGroups.map((section) => (
-                <div key={section.label} className="space-y-2">
-                  <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{section.label}</p>
-                  <div className="space-y-1">
-                    {section.children?.map((entry) => {
-                      const isActive = pathname === entry.href;
-                      return (
-                        <Link
-                          key={entry.label}
-                          href={entry.href}
-                          className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-300 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-100 ${
-                            isActive ? "border-white/10 bg-white/5 text-slate-50" : ""
-                          }`}
-                          onClick={() => setMobileSidebarOpen(false)}
-                          aria-current={isActive ? "page" : undefined}
-                        >
-                          <span className="mr-2 text-slate-400">{getNavIcon(entry.href)}</span>
-                          {entry.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+              <div className="space-y-1">
+                {visibleEntries.map((entry) => {
+                  const isActive = pathname === entry.href;
+                  return (
+                    <Link
+                      key={entry.href}
+                      href={entry.href}
+                      className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-300 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-100 ${
+                        isActive ? "border-white/10 bg-white/5 text-slate-50" : ""
+                      }`}
+                      onClick={() => setMobileSidebarOpen(false)}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      <span className="mr-2 text-slate-400">{getNavIcon(entry.href)}</span>
+                      {entry.label}
+                    </Link>
+                  );
+                })}
+              </div>
             </nav>
           </aside>
         </div>
@@ -466,7 +516,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
         {sidebarCollapsed ? (
           <nav className="mt-6 flex flex-1 flex-col items-center gap-2 overflow-y-auto">
-            {collapsedEntries.map((entry) => {
+            {visibleEntries.map((entry) => {
               const isActive = pathname === entry.href;
               return (
                 <Link
@@ -487,30 +537,23 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             })}
           </nav>
         ) : (
-          <nav className="mt-6 space-y-5 text-sm">
-            {sectionGroups.map((section) => (
-              <div key={section.label} className="space-y-2">
-                <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{section.label}</p>
-                <div className="space-y-1">
-                  {section.children?.map((entry) => {
-                    const isActive = pathname === entry.href;
-                    return (
-                      <Link
-                        key={entry.label}
-                        href={entry.href}
-                        className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white ${
-                          isActive ? "border-white/10 bg-white/5 text-white" : ""
-                        }`}
-                        aria-current={isActive ? "page" : undefined}
-                      >
-                        <span className="mr-2 text-slate-400">{getNavIcon(entry.href)}</span>
-                        {entry.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+          <nav className="mt-6 space-y-1 text-sm">
+            {visibleEntries.map((entry) => {
+              const isActive = pathname === entry.href;
+              return (
+                <Link
+                  key={entry.href}
+                  href={entry.href}
+                  className={`flex items-center rounded-lg border border-transparent px-3 py-2 text-xs text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white ${
+                    isActive ? "border-white/10 bg-white/5 text-white" : ""
+                  }`}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <span className="mr-2 text-slate-400">{getNavIcon(entry.href)}</span>
+                  {entry.label}
+                </Link>
+              );
+            })}
           </nav>
         )}
       </aside>
@@ -522,6 +565,27 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             <p className="truncate text-xs text-sky-100">Current Track: {currentTrack}</p>
           </div>
           <div className="flex items-center gap-4 text-sm">
+            <div className="inline-flex items-center overflow-hidden rounded-md border border-slate-900/60 bg-[#071322] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+              <button
+                type="button"
+                onClick={() => handleSwitchView("gym")}
+                className={`px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition ${
+                  viewMode === "gym" ? "bg-[#0e2036] text-[#d8e9ff]" : "text-[#7f8fa5] hover:text-[#d8e9ff]"
+                }`}
+              >
+                Gym
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchView("athlete")}
+                className={`px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition ${
+                  viewMode === "athlete" ? "bg-[#0e2036] text-[#d8e9ff]" : "text-[#7f8fa5] hover:text-[#d8e9ff]"
+                }`}
+              >
+                Athlete
+              </button>
+            </div>
+
             <button
               type="button"
               className="inline-flex items-center gap-2 text-sky-50 transition hover:text-white"
