@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 
+import { requireUserContextFromBearer } from "../../../../lib/member";
+
 export const runtime = "nodejs";
 
 const baseUrl = "https://api.nal.usda.gov/fdc/v1/foods/search";
 
-type FoodNutrient = {
-  nutrientId?: number;
-  value?: number;
-};
+const USDA_NUTRIENT_IDS = {
+  energy: 1008,      // kcal
+  protein: 1003,     // g
+  carbs: 1005,       // g
+  fat: 1004,         // g
+} as const;
 
 type FoodResult = {
   fdcId: number;
@@ -24,6 +28,14 @@ function pickNutrient(foods: FoodNutrient[] | undefined, nutrientId: number) {
 }
 
 export async function GET(request: Request) {
+  const authHeader = request.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const { error } = await requireUserContextFromBearer(request);
+    if (error) {
+      return NextResponse.json({ error }, { status: 401 });
+    }
+  }
+
   const apiKey = process.env.USDA_API_KEY;
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("query");
@@ -57,10 +69,10 @@ export async function GET(request: Request) {
     brandOwner: food.brandOwner,
     servingSize: food.servingSize,
     servingSizeUnit: food.servingSizeUnit,
-    calories: pickNutrient(food.foodNutrients, 1008),
-    protein: pickNutrient(food.foodNutrients, 1003),
-    carbs: pickNutrient(food.foodNutrients, 1005),
-    fat: pickNutrient(food.foodNutrients, 1004),
+    calories: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.energy),
+    protein: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.protein),
+    carbs: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.carbs),
+    fat: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.fat),
   }));
 
   return NextResponse.json({ results });

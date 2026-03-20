@@ -49,6 +49,59 @@ export function hasRole(required: UserRole, actual: UserRole) {
   return roleOrder[actual] >= roleOrder[required];
 }
 
+async function resolveUserContext(userRow: { id: string; role: string | null }): Promise<UserContext> {
+  const { data: memberships, error: membershipError } = await supabaseAdmin
+    .from("organization_memberships")
+    .select("organization_id, role")
+    .eq("user_id", userRow.id);
+
+  if (membershipError) {
+    return {
+      userId: userRow.id,
+      role: normalizeRole(userRow.role),
+      organizationIds: [],
+      error: membershipError.message,
+    };
+  }
+
+  const organizationIds = (memberships ?? [])
+    .map((row) => row.organization_id)
+    .filter((id): id is string => Boolean(id));
+  const membershipRoles = (memberships ?? []).map((row) => normalizeRole(row.role));
+  const userRole = normalizeRole(userRow.role);
+  const role = getHighestRole([userRole, ...membershipRoles]);
+
+  return { userId: userRow.id, role, organizationIds, error: null };
+}
+
+export async function requireUserContextFromBearer(request: Request): Promise<UserContext> {
+  const authHeader = request.headers.get("Authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return { userId: null, role: "member", organizationIds: [], error: "Unauthorized" };
+  }
+
+  const { data: jwtUser, error: jwtError } = await supabaseAdmin.auth.getUser(token);
+  if (jwtError || !jwtUser?.user) {
+    return { userId: null, role: "member", organizationIds: [], error: "Invalid or expired token" };
+  }
+
+  const userId = jwtUser.user.id;
+
+  const { data: userRow, error: userError } = await supabaseAdmin
+    .from("app_users")
+    .select("id, role, full_name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (userError || !userRow) {
+    return { userId, role: "member", organizationIds: [], error: userError?.message ?? "User not found." };
+  }
+
+  return resolveUserContext(userRow);
+}
+
 export async function requireUserContext(): Promise<UserContext> {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email?.toLowerCase() ?? null;
@@ -81,31 +134,5 @@ export async function requireUserContext(): Promise<UserContext> {
     };
   }
 
-  const { data: memberships, error: membershipError } = await supabaseAdmin
-    .from("organization_memberships")
-    .select("organization_id, role")
-    .eq("user_id", userRow.id);
-
-  if (membershipError) {
-    return {
-      userId: userRow.id,
-      role: normalizeRole(userRow.role),
-      organizationIds: [],
-      error: membershipError.message,
-    };
-  }
-
-  const organizationIds = (memberships ?? [])
-    .map((row) => row.organization_id)
-    .filter((id): id is string => Boolean(id));
-  const membershipRoles = (memberships ?? []).map((row) => normalizeRole(row.role));
-  const userRole = normalizeRole(userRow.role);
-  const role = getHighestRole([userRole, ...membershipRoles]);
-
-  return {
-    userId: userRow.id,
-    role,
-    organizationIds,
-    error: null,
-  };
+  return resolveUserContext(userRow);
 }
