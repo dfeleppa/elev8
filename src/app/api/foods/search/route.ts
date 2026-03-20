@@ -13,6 +13,11 @@ const USDA_NUTRIENT_IDS = {
   fat: 1004,         // g
 } as const;
 
+type FoodNutrient = {
+  nutrientId?: number;
+  value?: number;
+};
+
 type FoodResult = {
   fdcId: number;
   description: string;
