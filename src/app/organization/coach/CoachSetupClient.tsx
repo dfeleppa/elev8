@@ -306,8 +306,14 @@ export default function CoachSetupClient() {
               <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Body Fat % (optional)</span>
               <input
                 value={bodyFatPercentage}
-                onChange={(event) => setBodyFatPercentage(event.target.value)}
+                onChange={(event) => {
+                  const val = event.target.value;
+                  if (val === "" || /^\d{1,2}(\.\d?)?$/.test(val)) {
+                    setBodyFatPercentage(val);
+                  }
+                }}
                 inputMode="decimal"
+                placeholder="e.g. 15.1"
                 className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               />
             </label>
