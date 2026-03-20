@@ -9,17 +9,45 @@ import 'nutrition_screen.dart';
 import 'schedule_screen.dart';
 import 'athlete_dashboard_screen.dart';
 import 'messenger_screen.dart';
+import 'auth_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
-  // Initialize Supabase. Replace with actual URL and Anon Key.
-  // In a real app we'd load these from flutter_dotenv.
+  // Initialize Supabase
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
+
+  // Set up auth state listener to keep app_users in sync (mirroring web app behavior)
+  final auth = Supabase.instance.client.auth;
+  auth.onAuthStateChange.listen((data) async {
+    final session = data.session;
+    final user = session?.user;
+    if (user != null) {
+      final email = user.email;
+      final fullName = user.userMetadata?['full_name'] as String? ??
+          user.userMetadata?['name'] as String? ??
+          user.email?.split('@').first;
+      try {
+        await Supabase.instance.client
+            .from('app_users')
+            .upsert(
+              {
+                'email': email,
+                'full_name': fullName,
+                'updated_at': DateTime.now().toIso8601String(),
+              },
+              onConflict: 'email',
+            );
+      } catch (e) {
+        // Optionally log error, but don't break the flow
+        debugPrint('Failed to upsert app_user: $e');
+      }
+    }
+  });
 
   runApp(const ProviderScope(child: Elev8App()));
 }
@@ -31,6 +59,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: '/auth',
+        builder: (context, state) => const AuthScreen(),
       ),
       GoRoute(
         path: '/schedule',

@@ -66,6 +66,17 @@
 		<string>mailto</string>
 		<string>tel</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>io.supabase.flutter</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSApp​Transport​Security</key>
 	<dict>
 		<key>NSAllows​Arbitrary​Loads</key>
