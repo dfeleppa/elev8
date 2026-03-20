@@ -23,7 +23,10 @@ class NutritionScreen extends ConsumerWidget {
     final viewMode = ref.watch(nutritionViewModeProvider);
 
     final displayDateStr = DateFormat('MMMM d, yyyy').format(selectedDate);
-    final isToday = DateFormat('yyyy-MM-dd').format(selectedDate) == DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final dateFormatter = DateFormat('yyyy-MM-dd');
+    final todayStr = dateFormatter.format(DateTime.now());
+    final selectedStr = dateFormatter.format(selectedDate);
+    final isToday = selectedStr == todayStr;
 
     return SidebarShell(
       child: Scaffold(
@@ -40,7 +43,7 @@ class NutritionScreen extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.chevron_left, color: Color(0xFF020617)),
                       onPressed: () {
-                        ref.read(selectedDateProvider.notifier).state = selectedDate.subtract(const Duration(days: 1));
+                        ref.read(selectedDateProvider.notifier).setDate(selectedDate.subtract(const Duration(days: 1)));
                       },
                     ),
                     GestureDetector(
@@ -61,7 +64,7 @@ class NutritionScreen extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.chevron_right, color: Color(0xFF020617)),
                       onPressed: () {
-                        ref.read(selectedDateProvider.notifier).state = selectedDate.add(const Duration(days: 1));
+                        ref.read(selectedDateProvider.notifier).setDate(selectedDate.add(const Duration(days: 1)));
                       },
                     ),
                   ],
