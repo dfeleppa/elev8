@@ -56,21 +56,21 @@ export default function FloatingCreateButton({ projects }: FloatingCreateButtonP
   return (
     <div className="fixed bottom-6 right-6 z-30">
       {isExpanded && (
-        <div className="absolute bottom-16 right-0 w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
+        <div className="absolute bottom-16 right-0 w-80 rounded-xl border border-white/10 bg-white/5 p-4 shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-3">
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Task title"
-              className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 placeholder:text-slate-400"
+              className="w-full h-10 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100 placeholder:text-slate-500"
               autoFocus
               required
             />
             <select
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
-              className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700"
+              className="w-full h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100"
             >
               <option value="">No project</option>
               {projects.map((project) => (
@@ -84,12 +84,12 @@ export default function FloatingCreateButton({ projects }: FloatingCreateButtonP
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="flex-1 h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700"
+                className="flex-1 h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100"
               />
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="flex-1 h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700"
+                className="flex-1 h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100"
               >
                 <option value="">Priority</option>
                 <option value="low">Low</option>
@@ -101,14 +101,14 @@ export default function FloatingCreateButton({ projects }: FloatingCreateButtonP
               <button
                 type="submit"
                 disabled={isSubmitting || !title.trim()}
-                className="flex-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-sm font-medium text-white shadow-[0_8px_20px_rgba(2,132,199,0.35)] transition hover:from-sky-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex-1 rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-4 py-2 text-sm font-bold uppercase tracking-widest text-white transition hover:brightness-110 active:scale-95 shadow-[0_4px_20px_rgba(255,177,196,0.2)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Create
               </button>
               <button
                 type="button"
                 onClick={() => setIsExpanded(false)}
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
               >
                 Cancel
               </button>

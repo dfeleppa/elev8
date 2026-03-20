@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import type { StatGroup } from "./health-stats-config";
 
@@ -51,8 +51,6 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
   }, [groups]);
 
   const [values, setValues] = useState<Record<string, StatValue>>(initialValues);
-  const [editingStat, setEditingStat] = useState<string | null>(null);
-  const [draftValue, setDraftValue] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -125,55 +123,6 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
       isMounted = false;
     };
   }, []);
-
-  const startEdit = (statKey: string) => {
-    setEditingStat(statKey);
-    setDraftValue(values[statKey]?.value ?? "");
-    setErrorMessage(null);
-  };
-
-  const cancelEdit = () => {
-    setEditingStat(null);
-    setDraftValue("");
-  };
-
-  const saveEdit = async () => {
-    if (!editingStat || draftValue.trim() === "") {
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/health-stats", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          statKey: editingStat,
-          value: Number(draftValue),
-        }),
-      });
-
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Unable to save stat.");
-      }
-
-      setValues((prev) => ({
-        ...prev,
-        [editingStat]: {
-          value: payload?.entry?.value?.toString?.() ?? draftValue.trim(),
-          unit: payload?.entry?.unit ?? prev[editingStat].unit,
-          entryDate: payload?.entry?.entryDate ?? prev[editingStat].entryDate,
-        },
-      }));
-      setEditingStat(null);
-      setDraftValue("");
-      setErrorMessage(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to save stat.";
-      setErrorMessage(message);
-    }
-  };
 
   const openProfileEdit = () => {
     setProfileSex(athleteProfile.sex ?? "");
@@ -293,34 +242,24 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
         {groups.map((group) => (
           <div
             key={group.title}
-            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+            className="glass-panel rounded-3xl border border-white/10 p-6"
           >
-            <h2 className="text-lg font-semibold text-slate-900">{group.title}</h2>
+            <h2 className="text-lg font-semibold text-slate-100">{group.title}</h2>
 
             {group.slug === "body-comp" ? (
               <>
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Athlete</p>
-                    <button
-                      type="button"
-                      onClick={openProfileEdit}
-                      className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
-                      aria-label="Edit athlete info"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </button>
-                  </div>
+                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Athlete</p>
                   <div className="mt-2 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Sex</p>
-                      <p className="mt-1 text-sm font-semibold capitalize text-slate-900">
+                    <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Sex</p>
+                      <p className="mt-1 text-sm font-semibold capitalize text-slate-100">
                         {isLoading ? "..." : athleteProfile.sex ?? "--"}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Age</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
+                    <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Age</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-100">
                         {isLoading ? "..." : athleteProfile.age ?? "--"}
                       </p>
                     </div>
@@ -331,53 +270,69 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
                   {group.stats.map((stat) => (
                     <div
                       key={stat.key}
-                      className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
+                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
                     >
-                      <span className="text-sm font-semibold text-slate-900">{stat.label}</span>
+                      <span className="text-sm font-semibold text-slate-200">{stat.label}</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-slate-900">{statDisplayValue(stat.key)}</span>
-                        <span className="text-xs uppercase tracking-[0.2em] text-slate-500">{statDisplayUnit(stat.key)}</span>
+                        <span className="text-sm font-semibold text-slate-100">{statDisplayValue(stat.key)}</span>
+                        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">{statDisplayUnit(stat.key)}</span>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Log Today&apos;s Weight</p>
-                  <form onSubmit={handleLogBodyComp} className="mt-3 space-y-3">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        step="any"
-                        placeholder="Body weight (lb)"
-                        value={logBodyWeight}
-                        onChange={(e) => setLogBodyWeight(e.target.value)}
-                        className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-emerald-400/60"
-                        required
-                      />
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        step="any"
-                        placeholder="Body fat % (optional)"
-                        value={logBodyFat}
-                        onChange={(e) => setLogBodyFat(e.target.value)}
-                        className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-emerald-400/60"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="submit"
-                        disabled={isLogging || !logBodyWeight.trim()}
-                        className="flex-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-sm font-medium text-white shadow-[0_8px_20px_rgba(2,132,199,0.35)] transition hover:from-sky-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none sm:px-6"
-                      >
-                        {isLogging ? "Logging..." : "Submit"}
-                      </button>
-                      {logSuccess && (
-                        <span className="text-xs text-emerald-600 font-medium">Saved!</span>
-                      )}
-                    </div>
+                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Log Today&apos;s Weight</p>
+                  <form onSubmit={handleLogBodyComp} className="mt-3 flex flex-wrap items-center gap-2">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.1"
+                      min="0"
+                      max="999.9"
+                      placeholder="lb"
+                      value={logBodyWeight}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        const num = parseFloat(v);
+                        if (v === "" || (Number.isFinite(num) && num >= 0 && num <= 999.9)) {
+                          setLogBodyWeight(v);
+                        } else if (v === "") {
+                          setLogBodyWeight("");
+                        }
+                      }}
+                      className="shrink-0 w-16 rounded-lg border border-white/15 bg-white/5 px-2 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-emerald-400/60"
+                      required
+                    />
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.1"
+                      min="3.0"
+                      max="50.0"
+                      placeholder="bf%"
+                      value={logBodyFat}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        const num = parseFloat(v);
+                        if (v === "" || (Number.isFinite(num) && num >= 3 && num <= 50)) {
+                          setLogBodyFat(v);
+                        } else if (v === "") {
+                          setLogBodyFat("");
+                        }
+                      }}
+                      className="shrink-0 w-16 rounded-lg border border-white/15 bg-white/5 px-2 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-emerald-400/60"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isLogging || !logBodyWeight.trim()}
+                      className="shrink-0 rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white active:scale-95 transition-transform shadow-[0_4px_20px_rgba(255,177,196,0.2)] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isLogging ? "Logging..." : "Submit"}
+                    </button>
+                    {logSuccess && (
+                      <span className="shrink-0 text-xs text-emerald-400 font-medium">Saved!</span>
+                    )}
                   </form>
                 </div>
               </>
@@ -386,57 +341,23 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
                 {group.stats.map((stat) => (
                   <div
                     key={stat.key}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
+                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
                   >
-                    <span className="text-sm font-semibold text-slate-900">{stat.label}</span>
-                    {editingStat === stat.key ? (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          step="any"
-                          value={draftValue}
-                          onChange={(event) => setDraftValue(event.target.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter") saveEdit();
-                            if (event.key === "Escape") cancelEdit();
-                          }}
-                          className="w-28 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-emerald-400/60"
-                          aria-label={`Enter ${stat.label} value`}
-                        />
-                        <button
-                          type="button"
-                          onClick={saveEdit}
-                          className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 transition hover:border-emerald-300"
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={cancelEdit}
-                          className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 transition hover:border-slate-300"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-slate-900">
-                          {isLoading ? "..." : values[stat.key]?.value ? values[stat.key].value : "-"}
-                        </span>
-                        <span className="text-xs uppercase tracking-[0.2em] text-slate-500">{stat.unit}</span>
-                        <button
-                          type="button"
-                          onClick={() => startEdit(stat.key)}
-                          className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
-                          aria-label={`Add ${stat.label} value`}
-                        >
-                          +
-                        </button>
-                      </div>
-                    )}
+                    <span className="text-sm font-semibold text-slate-200">{stat.label}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-slate-100">
+                        {isLoading ? "..." : values[stat.key]?.value ? values[stat.key].value : "-"}
+                      </span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">{stat.unit}</span>
+                    </div>
                   </div>
                 ))}
+                <button
+                  type="button"
+                  className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:text-white"
+                >
+                  {group.slug === "strength" ? "Log Lift" : "Log Benchmark"}
+                </button>
               </div>
             )}
           </div>
@@ -444,25 +365,25 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
       </section>
 
       {isEditingProfile ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55">
+          <div className="glass-panel w-full max-w-sm rounded-2xl border border-white/10 p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">Edit Athlete Info</h3>
+              <h3 className="text-lg font-semibold text-slate-100">Edit Athlete Info</h3>
               <button
                 type="button"
                 onClick={cancelProfileEdit}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-100"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 mb-1">Sex</label>
+                <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">Sex</label>
                 <select
                   value={profileSex}
                   onChange={(e) => setProfileSex(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                  className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
                 >
                   <option value="">Not set</option>
                   <option value="male">Male</option>
@@ -470,12 +391,12 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 mb-1">Birth Date</label>
+                <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">Birth Date</label>
                 <input
                   type="date"
                   value={profileBirthDate}
                   onChange={(e) => setProfileBirthDate(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                  className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
                 />
               </div>
               <div className="flex gap-2 pt-2">
@@ -483,14 +404,14 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
                   type="button"
                   onClick={saveProfile}
                   disabled={isSavingProfile}
-                  className="flex-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-sm font-medium text-white shadow-[0_8px_20px_rgba(2,132,199,0.35)] transition hover:from-sky-400 hover:to-blue-500 disabled:opacity-60"
+                  className="flex-1 rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:brightness-110 active:scale-95 shadow-[0_4px_20px_rgba(255,177,196,0.2)] disabled:opacity-60"
                 >
                   {isSavingProfile ? "Saving..." : "Save"}
                 </button>
                 <button
                   type="button"
                   onClick={cancelProfileEdit}
-                  className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
                 >
                   Cancel
                 </button>

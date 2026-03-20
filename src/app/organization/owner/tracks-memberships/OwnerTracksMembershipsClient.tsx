@@ -419,14 +419,14 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
   return (
     <section className="space-y-8">
       <header>
-        <h1 className="text-3xl font-semibold text-[#101a35]">Tracks</h1>
-        <p className="mt-3 text-sm text-[#4a5f86]">Manage recurring training tracks and visibility rules.</p>
+        <h1 className="text-3xl font-semibold text-slate-100">Tracks</h1>
+        <p className="mt-3 text-sm text-slate-400">Manage recurring training tracks and visibility rules.</p>
       </header>
 
       {error ? <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
       {message ? <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
 
-      <section className="app-card overflow-hidden rounded-[28px] border border-cyan-400/30 bg-white shadow-[0_18px_44px_rgba(5,9,20,0.25)]">
+      <section className="app-card overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-[0_18px_44px_rgba(5,9,20,0.25)]">
         <div className="flex items-center justify-between bg-[#e11d8a] px-6 py-4">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Track Setup</p>
           <button
@@ -439,8 +439,8 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
         </div>
 
         <div className="space-y-4 px-4 py-5 md:px-6 md:py-6">
-          <div className="app-table-shell overflow-hidden rounded-xl border border-slate-300/80">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-400/40 bg-[#4a4a4a] px-3 py-2">
+          <div className="app-table-shell overflow-hidden rounded-xl border border-white/10">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#4a4a4a] px-3 py-2">
               <div className="flex items-center gap-4 text-sm text-white">
                 <div className="relative">
                   <button
@@ -457,14 +457,14 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                     Columns
                   </button>
                   {columnsOpen ? (
-                    <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-slate-300 bg-white p-2 shadow-xl">
+                    <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-white/10 bg-[#0f172a] p-2 shadow-xl backdrop-blur">
                       {trackColumnDefs.map((column) => (
-                        <label key={column.key} className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-slate-700 hover:bg-slate-100">
+                        <label key={column.key} className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-slate-300 hover:bg-white/10">
                           <input
                             type="checkbox"
                             checked={visibleColumns[column.key]}
                             onChange={() => toggleColumn(column.key)}
-                            className="h-3.5 w-3.5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                            className="h-3.5 w-3.5 rounded border-white/20 bg-white/5 text-cyan-400 focus:ring-cyan-400"
                           />
                           {column.label}
                         </label>
@@ -488,7 +488,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                     Filters
                   </button>
                   {filtersOpen ? (
-                    <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-slate-300 bg-white p-2 shadow-xl">
+                    <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-white/10 bg-[#0f172a] p-2 shadow-xl backdrop-blur">
                       <button
                         type="button"
                         onClick={() => {
@@ -496,7 +496,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                           setFiltersOpen(false);
                         }}
                         className={`w-full rounded-md px-2 py-1 text-left text-xs transition ${
-                          privacyFilter === "all" ? "bg-cyan-50 text-cyan-700" : "text-slate-700 hover:bg-slate-100"
+                          privacyFilter === "all" ? "bg-sky-500/10 text-sky-300" : "text-slate-300 hover:bg-white/10"
                         }`}
                       >
                         All Tracks
@@ -508,7 +508,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                           setFiltersOpen(false);
                         }}
                         className={`mt-1 w-full rounded-md px-2 py-1 text-left text-xs transition ${
-                          privacyFilter === "Y" ? "bg-cyan-50 text-cyan-700" : "text-slate-700 hover:bg-slate-100"
+                          privacyFilter === "Y" ? "bg-sky-500/10 text-sky-300" : "text-slate-300 hover:bg-white/10"
                         }`}
                       >
                         Private Only
@@ -520,7 +520,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                           setFiltersOpen(false);
                         }}
                         className={`mt-1 w-full rounded-md px-2 py-1 text-left text-xs transition ${
-                          privacyFilter === "N" ? "bg-cyan-50 text-cyan-700" : "text-slate-700 hover:bg-slate-100"
+                          privacyFilter === "N" ? "bg-sky-500/10 text-sky-300" : "text-slate-300 hover:bg-white/10"
                         }`}
                       >
                         Public Only
@@ -542,7 +542,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search..."
-                className="w-full max-w-xs rounded-lg border border-slate-300/60 bg-[#2f2f2f] px-3 py-2 text-sm text-white placeholder:text-slate-300 focus:border-cyan-300 focus:outline-none"
+                className="w-full max-w-xs rounded-lg border border-white/10 bg-[#2f2f2f] px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none"
               />
             </div>
 
@@ -567,8 +567,8 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                   ) : (
                     filteredTracks.map((track) => (
                       <tr key={track.id}>
-                        {visibleColumns.trackName ? <td className="px-3 py-3 text-slate-900">{track.name}</td> : null}
-                        {visibleColumns.private ? <td className="px-3 py-3 text-slate-700">{track.is_private ? "Y" : "N"}</td> : null}
+                        {visibleColumns.trackName ? <td className="px-3 py-3 text-slate-200">{track.name}</td> : null}
+                        {visibleColumns.private ? <td className="px-3 py-3 text-slate-400">{track.is_private ? "Y" : "N"}</td> : null}
                         {visibleColumns.settings ? <td className="px-3 py-3 text-center">
                           <button
                             type="button"
@@ -600,7 +600,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                             >
                               {membersIcon}
                             </button>
-                            <span className="inline-flex min-w-7 items-center justify-center rounded-full bg-cyan-100 px-2 py-0.5 text-xs font-semibold text-cyan-800">
+                            <span className="inline-flex min-w-7 items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500/10 px-2 py-0.5 text-xs font-semibold text-cyan-300">
                               {memberCounts[track.name] ?? 0}
                             </span>
                           </div>
@@ -613,19 +613,19 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
             </div>
           </div>
 
-          <div className="text-right text-xs text-[#8ca7ce]">{loading ? "Loading..." : `Total Rows: ${filteredTracks.length}`}</div>
+          <div className="text-right text-xs text-slate-500">{loading ? "Loading..." : `Total Rows: ${filteredTracks.length}`}</div>
         </div>
       </section>
 
       {dialogOpen ? (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/45 p-6">
-          <div className="w-full max-w-6xl rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-              <h2 className="text-3xl font-semibold text-slate-900">{editingTrackId ? "Track Settings" : "New Track Settings"}</h2>
+          <div className="w-full max-w-6xl rounded-2xl border border-white/10 bg-[#0f172a] shadow-2xl backdrop-blur">
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+              <h2 className="text-3xl font-semibold text-slate-200">{editingTrackId ? "Track Settings" : "New Track Settings"}</h2>
               <button
                 type="button"
                 onClick={() => setDialogOpen(false)}
-                className="text-3xl leading-none text-slate-500 transition hover:text-slate-900"
+                className="text-3xl leading-none text-slate-400 transition hover:text-slate-200"
                 aria-label="Close"
               >
                 ×
@@ -634,10 +634,10 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
 
             <div className="px-6 py-5">
               <div className="mb-5 grid grid-cols-4 text-center text-sm text-slate-400">
-                <span className="border-b border-slate-300 pb-3">Track Info</span>
-                <span className="border-b border-slate-200 pb-3">Members</span>
-                <span className="border-b border-slate-200 pb-3">Content</span>
-                <span className="border-b border-slate-200 pb-3">Import/Export Data</span>
+                <span className="border-b border-cyan-400 pb-3 text-slate-200">Track Info</span>
+                <span className="border-b border-white/10 pb-3">Members</span>
+                <span className="border-b border-white/10 pb-3">Content</span>
+                <span className="border-b border-white/10 pb-3">Import/Export Data</span>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
@@ -646,7 +646,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                   <input
                     value={draft.name}
                     onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
 
@@ -655,7 +655,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                   <select
                     value={draft.isPrivate}
                     onChange={(event) => setDraft((prev) => ({ ...prev, isPrivate: event.target.value as "Y" | "N" }))}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
                   >
                     <option value="Y">Y</option>
                     <option value="N">N</option>
@@ -667,7 +667,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                   <select
                     value={draft.numberOfLevels}
                     onChange={(event) => setDraft((prev) => ({ ...prev, numberOfLevels: event.target.value as TrackDraft["numberOfLevels"] }))}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
                   >
                     {numberOfLevelsOptions.map((level) => (
                       <option key={level} value={level}>
@@ -679,8 +679,8 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
               </div>
 
               <div className="mt-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-600">Keep Workouts Hidden Until (Optional)</p>
-                <div className="mt-3 flex flex-wrap items-end gap-4 rounded-xl border border-slate-300 bg-[#efefeb] p-3">
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">Keep Workouts Hidden Until (Optional)</p>
+                <div className="mt-3 flex flex-wrap items-end gap-4 rounded-xl border border-white/10 bg-white/5 p-3">
                   <label className="space-y-1">
                     <span className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Day(s) Prior</span>
                     <input
@@ -689,11 +689,11 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                       value={draft.hideWorkoutsDaysPrior}
                       onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsDaysPrior: event.target.value }))}
                       placeholder="7"
-                      className="w-32 rounded-md border border-slate-400/80 bg-white px-3 py-2 text-sm text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] focus:border-slate-600 focus:outline-none"
+                      className="w-32 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
                     />
                   </label>
-                  <div className="pb-2 text-sm font-medium text-slate-600">at</div>
-                  <div className="flex items-end gap-2 rounded-md border border-slate-400/80 bg-white px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                  <div className="pb-2 text-sm font-medium text-slate-400">at</div>
+                  <div className="flex items-end gap-2 rounded-md border border-white/10 bg-white/5 px-2 py-2">
                     <label className="space-y-1">
                       <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">HH</span>
                       <input
@@ -703,10 +703,10 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                         value={draft.hideWorkoutsHour}
                         onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsHour: event.target.value }))}
                         placeholder="00"
-                        className="w-16 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-center text-sm text-slate-900 focus:border-slate-600 focus:outline-none"
+                        className="w-16 rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-center text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
                       />
                     </label>
-                    <div className="pb-2 text-base font-semibold text-slate-600">:</div>
+                    <div className="pb-2 text-base font-semibold text-slate-400">:</div>
                     <label className="space-y-1">
                       <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">MM</span>
                       <input
@@ -716,7 +716,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                         value={draft.hideWorkoutsMinute}
                         onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsMinute: event.target.value }))}
                         placeholder="00"
-                        className="w-16 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-center text-sm text-slate-900 focus:border-slate-600 focus:outline-none"
+                        className="w-16 rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-center text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
                       />
                     </label>
                   </div>
@@ -748,13 +748,13 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
 
       {membersDialogOpen && activeMembersTrack ? (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/45 p-6">
-          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-              <h2 className="text-2xl font-semibold text-slate-900">Track Members: {activeMembersTrack.name}</h2>
+          <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0f172a] shadow-2xl backdrop-blur">
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+              <h2 className="text-2xl font-semibold text-slate-200">Track Members: {activeMembersTrack.name}</h2>
               <button
                 type="button"
                 onClick={() => setMembersDialogOpen(false)}
-                className="text-3xl leading-none text-slate-500 transition hover:text-slate-900"
+                className="text-3xl leading-none text-slate-400 transition hover:text-slate-200"
                 aria-label="Close"
               >
                 ×
@@ -771,9 +771,9 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                     const assigned = member.tracks.includes(activeMembersTrack.name);
                     const disabled = membersSavingEmail === member.email;
                     return (
-                      <label key={member.email} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
+                      <label key={member.email} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                         <div>
-                          <p className="text-sm font-medium text-slate-900">{member.fullName}</p>
+                          <p className="text-sm font-medium text-slate-200">{member.fullName}</p>
                           <p className="text-xs text-slate-500">{member.email}</p>
                         </div>
                         <input
@@ -781,7 +781,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                           checked={assigned}
                           disabled={disabled}
                           onChange={(event) => setMemberAssigned(member, event.target.checked)}
-                          className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                          className="h-4 w-4 rounded border-white/20 bg-white/5 text-cyan-400 focus:ring-cyan-400"
                         />
                       </label>
                     );

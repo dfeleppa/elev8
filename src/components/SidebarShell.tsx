@@ -61,6 +61,16 @@ const navItems: NavItem[] = [
     minRole: "member",
     children: [
       {
+        label: "Coach",
+        href: "/organization/coach",
+        minRole: "coach",
+        children: [
+          { label: "Gym Dashboard", href: "/organization/gym-dashboard", minRole: "coach" },
+          { label: "Schedule", href: "/organization/coach/schedule", minRole: "coach" },
+          { label: "Reports - Members", href: "/organization/coach/reports-members", minRole: "coach" },
+        ],
+      },
+      {
         label: "Owner",
         href: "/organization/owner",
         minRole: "owner",
@@ -84,16 +94,6 @@ const navItems: NavItem[] = [
           { label: "Content", href: "/content", minRole: "admin" },
           { label: "Business Analytics", href: "/organization/admin/analytics", minRole: "admin" },
           { label: "Programming", href: "/organization/admin/programming", minRole: "admin" },
-        ],
-      },
-      {
-        label: "Coach",
-        href: "/organization/coach",
-        minRole: "coach",
-        children: [
-          { label: "Gym Dashboard", href: "/organization/gym-dashboard", minRole: "coach" },
-          { label: "Schedule", href: "/organization/coach/schedule", minRole: "coach" },
-          { label: "Reports - Members", href: "/organization/coach/reports-members", minRole: "coach" },
         ],
       },
       {
@@ -394,26 +394,22 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 <p className="text-xs text-slate-400">Control Center</p>
               </div>
             </button>
-          <div className="inline-flex items-center overflow-hidden rounded-md border border-white/15 bg-black/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-            <button
-              type="button"
-              onClick={() => handleSwitchView("gym")}
-              className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition ${
-                viewMode === "gym" ? "bg-[#251720] text-[#ffd6e1]" : "text-slate-400"
-              }`}
-            >
-              Gym
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSwitchView("athlete")}
-              className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition ${
-                viewMode === "athlete" ? "bg-[#251720] text-[#ffd6e1]" : "text-slate-400"
-              }`}
-            >
-              Athlete
-            </button>
-          </div>
+          <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => handleSwitchView("gym")}
+                className={viewMode === "gym" ? "text-[#ffb1c4] border-b-2 border-[#ffb1c4] pb-1 text-xs font-semibold tracking-tighter transition-colors" : "text-slate-400 hover:text-white transition-colors text-xs font-semibold tracking-tighter"}
+              >
+                Gym
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchView("athlete")}
+                className={viewMode === "athlete" ? "text-[#ffb1c4] border-b-2 border-[#ffb1c4] pb-1 text-xs font-semibold tracking-tighter transition-colors" : "text-slate-400 hover:text-white transition-colors text-xs font-semibold tracking-tighter"}
+              >
+                Athlete
+              </button>
+            </div>
         </div>
       </div>
 
@@ -565,22 +561,18 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             <p className="truncate text-xs text-slate-400">Current Track: {currentTrack}</p>
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <div className="inline-flex items-center overflow-hidden rounded-md border border-white/15 bg-black/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+            <div className="flex items-center gap-6">
               <button
                 type="button"
                 onClick={() => handleSwitchView("gym")}
-                className={`px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition ${
-                  viewMode === "gym" ? "bg-[#251720] text-[#ffd6e1]" : "text-slate-400 hover:text-slate-100"
-                }`}
+                className={viewMode === "gym" ? "text-[#ffb1c4] border-b-2 border-[#ffb1c4] pb-1 font-semibold tracking-tighter transition-colors" : "text-slate-400 hover:text-white transition-colors font-semibold tracking-tighter"}
               >
                 Gym
               </button>
               <button
                 type="button"
                 onClick={() => handleSwitchView("athlete")}
-                className={`px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition ${
-                  viewMode === "athlete" ? "bg-[#251720] text-[#ffd6e1]" : "text-slate-400 hover:text-slate-100"
-                }`}
+                className={viewMode === "athlete" ? "text-[#ffb1c4] border-b-2 border-[#ffb1c4] pb-1 font-semibold tracking-tighter transition-colors" : "text-slate-400 hover:text-white transition-colors font-semibold tracking-tighter"}
               >
                 Athlete
               </button>

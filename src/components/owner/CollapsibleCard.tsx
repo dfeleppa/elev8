@@ -40,7 +40,7 @@ export default function CollapsibleCard({
   };
 
   return (
-    <div className={`rounded-2xl border border-slate-200 bg-white p-4 ${className}`}>
+    <div className={`glass-panel rounded-2xl border border-white/10 p-4 ${className}`}>
       <button
         type="button"
         onClick={toggle}
@@ -48,8 +48,8 @@ export default function CollapsibleCard({
       >
         <div className="flex items-center gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{meta}</p>
-            <h2 className="mt-1 text-lg font-semibold text-slate-900">{title}</h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{meta}</p>
+            <h2 className="mt-1 text-lg font-semibold text-slate-100">{title}</h2>
           </div>
         </div>
         <svg

@@ -71,13 +71,13 @@ function getStatusLabel(status: string | null, isComplete?: boolean | null) {
 }
 
 function getStatusStyles(status: string | null, isComplete?: boolean | null) {
-  if (isComplete) return "border-violet-200 bg-violet-50 text-violet-700";
+  if (isComplete) return "border-violet-400/30 bg-violet-500/10 text-violet-300";
   const normalized = normalizeStatus(status);
-  if (normalized === "doing" || normalized === "in-progress" || normalized === "ongoing") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (normalized === "blocked" || normalized === "on-hold") return "border-rose-200 bg-rose-50 text-rose-700";
-  if (normalized === "planned" || normalized === "open") return "border-sky-200 bg-sky-50 text-sky-700";
-  if (normalized === "done" || normalized === "complete") return "border-violet-200 bg-violet-50 text-violet-700";
-  return "border-slate-200 bg-white text-slate-600";
+  if (normalized === "doing" || normalized === "in-progress" || normalized === "ongoing") return "border-emerald-400/30 bg-emerald-500/10 text-emerald-300";
+  if (normalized === "blocked" || normalized === "on-hold") return "border-rose-400/30 bg-rose-500/10 text-rose-300";
+  if (normalized === "planned" || normalized === "open") return "border-sky-400/30 bg-sky-500/10 text-sky-300";
+  if (normalized === "done" || normalized === "complete") return "border-violet-400/30 bg-violet-500/10 text-violet-300";
+  return "border-white/10 bg-white/5 text-slate-300";
 }
 
 function getInitials(value: string) {
@@ -176,12 +176,12 @@ export default function ManagementPageClient({
               type="text"
               name="name"
               placeholder="Project name"
-              className="h-10 w-72 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 placeholder:text-slate-400"
+              className="h-10 w-72 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100 placeholder:text-slate-500"
               required
             />
             <button
               type="submit"
-              className="rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-sm font-medium text-white shadow-[0_8px_20px_rgba(2,132,199,0.35)] transition hover:from-sky-400 hover:to-blue-500"
+              className="rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white active:scale-95 transition-transform shadow-[0_4px_20px_rgba(255,177,196,0.2)]"
             >
               Create Project
             </button>
@@ -216,10 +216,10 @@ export default function ManagementPageClient({
 
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Task Views</p>
-          <h2 className="mt-2 text-xl font-semibold text-slate-900">Execution hub</h2>
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Task Views</p>
+          <h2 className="mt-2 text-xl font-semibold text-slate-100">Execution hub</h2>
         </div>
-        <div className="inline-flex rounded-xl border border-slate-300 bg-white p-1 shadow-sm">
+        <div className="inline-flex rounded-xl border border-white/10 bg-white/5 p-1">
           {viewModes.map((mode) => {
             const isActive = activeView === mode.key;
             return (
@@ -227,7 +227,7 @@ export default function ManagementPageClient({
                 key={mode.key}
                 href={`/management?view=${mode.key}`}
                 className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                  isActive ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  isActive ? "bg-[#ffb1c4]/20 text-[#ffb1c4]" : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
                 }`}
               >
                 {mode.label}
@@ -240,10 +240,10 @@ export default function ManagementPageClient({
       <div>
         {activeView === "list" ? (
           <div className="space-y-4">
-            <div className="min-w-[760px] overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <div className="min-w-[760px] overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-900 text-left text-[11px] font-semibold uppercase tracking-[0.26em] text-white">
+                  <tr className="border-b border-white/10 bg-white/5 text-left text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-300">
                     <th className="px-4 py-2.5">Task</th>
                     <th className="px-4 py-2.5">Status</th>
                     <th className="px-4 py-2.5">Project</th>
@@ -251,10 +251,10 @@ export default function ManagementPageClient({
                     <th className="px-4 py-2.5">Priority</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-white/10">
                   {tasks.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-5 text-sm text-slate-500">
+                      <td colSpan={5} className="px-4 py-5 text-sm text-slate-400">
                         No tasks yet. Create your first task above.
                       </td>
                     </tr>
@@ -262,16 +262,16 @@ export default function ManagementPageClient({
                     tasks.map((task) => (
                       <tr
                         key={task.id}
-                        className="cursor-pointer transition hover:bg-slate-50"
+                        className="cursor-pointer transition hover:bg-white/5"
                         onClick={() => handleTaskClick(task)}
                       >
                         <td className="px-4 py-2.5 align-middle">
                           <div className="flex items-center gap-3">
-                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-semibold text-slate-600">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 text-[10px] font-semibold text-slate-300">
                               {getInitials(task.title)}
                             </span>
                             <div>
-                              <p className="text-[13px] font-semibold text-slate-900">{task.title}</p>
+                              <p className="text-[13px] font-semibold text-slate-100">{task.title}</p>
                             </div>
                           </div>
                         </td>
@@ -280,9 +280,9 @@ export default function ManagementPageClient({
                             {getStatusLabel(task.status, task.is_complete)}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 align-middle text-[13px] text-slate-700">{task.project?.name ?? "Unassigned"}</td>
-                        <td className="px-4 py-2.5 align-middle text-[13px] text-slate-700">{formatDate(task.due_date)}</td>
-                        <td className="px-4 py-2.5 align-middle text-[13px] text-slate-700">{task.priority ?? "TBD"}</td>
+                        <td className="px-4 py-2.5 align-middle text-[13px] text-slate-300">{task.project?.name ?? "Unassigned"}</td>
+                        <td className="px-4 py-2.5 align-middle text-[13px] text-slate-300">{formatDate(task.due_date)}</td>
+                        <td className="px-4 py-2.5 align-middle text-[13px] text-slate-300">{task.priority ?? "TBD"}</td>
                       </tr>
                     ))
                   )}
@@ -296,7 +296,7 @@ export default function ManagementPageClient({
           <div className="overflow-x-auto">
             <div className="flex min-h-[55vh] gap-4 items-stretch">
               {taskCountByColumn.map((column) => (
-                <div key={column.key} className="flex h-full w-72 flex-shrink-0 flex-col rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
+                <div key={column.key} className="flex h-full w-72 flex-shrink-0 flex-col rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs uppercase tracking-[0.28em] text-slate-400">{column.label}</p>
@@ -306,12 +306,12 @@ export default function ManagementPageClient({
                   </div>
                   <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
                     {column.tasks.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-xs text-slate-400">Nothing here yet.</div>
+                      <div className="rounded-xl border border-dashed border-white/10 bg-white/5 px-3 py-4 text-xs text-slate-400">Nothing here yet.</div>
                     ) : (
                       column.tasks.map((task) => (
                         <article
                           key={task.id}
-                          className="cursor-pointer rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-3 shadow-sm transition hover:border-slate-300 hover:bg-slate-100/50"
+                          className="cursor-pointer rounded-xl border border-white/10 bg-white/5 px-3 py-3 transition hover:border-white/20 hover:bg-white/10"
                           onClick={() => handleTaskClick(task)}
                         >
                           <div className="flex items-center justify-between">
@@ -320,8 +320,8 @@ export default function ManagementPageClient({
                               {getStatusLabel(task.status, task.is_complete)}
                             </span>
                           </div>
-                          <p className="mt-2 text-sm font-semibold text-slate-900">{task.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">{task.project?.name ?? "Unassigned"}</p>
+                          <p className="mt-2 text-sm font-semibold text-slate-100">{task.title}</p>
+                          <p className="mt-1 text-xs text-slate-400">{task.project?.name ?? "Unassigned"}</p>
                           <p className="mt-1 text-[11px] text-slate-400">{formatDate(task.due_date)}</p>
                         </article>
                       ))
@@ -336,23 +336,23 @@ export default function ManagementPageClient({
         {activeView === "calendar" ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {calendarBuckets.length === 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-5 text-sm text-slate-500">No tasks available.</div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-400">No tasks available.</div>
             ) : (
               calendarBuckets.map((bucket) => (
-                <article key={bucket.date} className="rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-                  <h3 className="text-sm font-semibold text-slate-900">
+                <article key={bucket.date} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <h3 className="text-sm font-semibold text-slate-100">
                     {bucket.date === "unscheduled" ? "No due date" : formatDate(bucket.date)}
                   </h3>
-                  <p className="mt-1 text-xs text-slate-500">{bucket.tasks.length} task{bucket.tasks.length === 1 ? "" : "s"}</p>
+                  <p className="mt-1 text-xs text-slate-400">{bucket.tasks.length} task{bucket.tasks.length === 1 ? "" : "s"}</p>
                   <div className="mt-3 space-y-2">
                     {bucket.tasks.map((task) => (
                       <div
                         key={task.id}
-                        className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 transition hover:border-slate-300 hover:bg-slate-100"
+                        className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2 transition hover:border-white/20 hover:bg-white/10"
                         onClick={() => handleTaskClick(task)}
                       >
-                        <p className="text-sm font-medium text-slate-900">{task.title}</p>
-                        <p className="mt-1 text-xs text-slate-500">{task.project?.name ?? "Unassigned"}</p>
+                        <p className="text-sm font-medium text-slate-100">{task.title}</p>
+                        <p className="mt-1 text-xs text-slate-400">{task.project?.name ?? "Unassigned"}</p>
                       </div>
                     ))}
                   </div>
@@ -363,13 +363,13 @@ export default function ManagementPageClient({
         ) : null}
 
         {activeView === "gantt" ? (
-          <div className="space-y-3 rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between text-xs text-slate-500">
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="flex items-center justify-between text-xs text-slate-400">
               <span>{formatDate(timelineStart.toISOString())}</span>
               <span>{formatDate(timelineEnd.toISOString())}</span>
             </div>
             {datedTasks.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-sm text-slate-500">
+              <div className="rounded-xl border border-dashed border-white/10 bg-white/5 px-3 py-4 text-sm text-slate-400">
                 Add due dates to tasks to populate the gantt timeline.
               </div>
             ) : (
@@ -381,16 +381,16 @@ export default function ManagementPageClient({
                 return (
                   <div
                     key={task.id}
-                    className="grid grid-cols-[240px_1fr] items-center gap-3 cursor-pointer transition hover:bg-slate-50 rounded-lg px-2 py-1"
+                    className="grid grid-cols-[240px_1fr] items-center gap-3 cursor-pointer transition hover:bg-white/5 rounded-lg px-2 py-1"
                     onClick={() => handleTaskClick(task)}
                   >
                     <div>
-                      <p className="truncate text-sm font-medium text-slate-900">{task.title}</p>
-                      <p className="text-xs text-slate-500">{task.project?.name ?? "Unassigned"}</p>
+                      <p className="truncate text-sm font-medium text-slate-100">{task.title}</p>
+                      <p className="text-xs text-slate-400">{task.project?.name ?? "Unassigned"}</p>
                     </div>
-                    <div className="relative h-7 rounded-lg bg-slate-100">
+                    <div className="relative h-7 rounded-lg bg-white/10">
                       <div
-                        className="absolute top-1 h-5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 cursor-pointer"
+                        className="absolute top-1 h-5 rounded-md bg-gradient-to-r from-sky-400 to-blue-500 cursor-pointer"
                         style={{ left: `${Math.min(left, 98)}%`, width: `${Math.max(width, 2)}%` }}
                         title={`${formatDate(task.created_at)} -> ${formatDate(task.due_date)}`}
                       />

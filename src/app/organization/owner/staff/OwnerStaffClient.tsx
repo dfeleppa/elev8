@@ -48,8 +48,8 @@ const ROLE_OPTIONS: Array<{ value: StaffRole; label: string }> = [
 ];
 
 const fieldClass = "w-full rounded-2xl border border-slate-400/70 bg-slate-800 px-4 py-3 text-sm text-white placeholder:text-slate-300 focus:border-cyan-300 focus:outline-none";
-const tableSelectClass = "w-full rounded-xl border border-slate-300 bg-white px-2 py-2 text-sm text-slate-800 focus:border-slate-500 focus:outline-none";
-const tableInputClass = "w-full rounded-xl border border-slate-300 bg-white px-2 py-2 text-sm text-slate-800 focus:border-slate-500 focus:outline-none";
+const tableSelectClass = "w-full rounded-xl border border-white/10 bg-white/5 px-2 py-2 text-sm text-slate-100 focus:border-slate-500 focus:outline-none";
+const tableInputClass = "w-full rounded-xl border border-white/10 bg-white/5 px-2 py-2 text-sm text-slate-100 focus:border-slate-500 focus:outline-none";
 
 const externalIcon = (
   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
@@ -335,7 +335,7 @@ export default function OwnerStaffClient() {
       ) : null}
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <article className="rounded-[28px] border border-slate-300 bg-white p-5 shadow-[0_10px_24px_rgba(9,18,29,0.08)]">
+        <article className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_10px_24px_rgba(9,18,29,0.08)]">
           <button
             type="button"
             onClick={() => setPromoteCardOpen((current) => !current)}
@@ -343,17 +343,17 @@ export default function OwnerStaffClient() {
             className="flex w-full items-start justify-between gap-4 text-left"
           >
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Promote Existing Member</h2>
-              <p className="mt-1 text-sm text-slate-600">Select an existing member and assign staff role + pay rates.</p>
+              <h2 className="text-lg font-semibold text-slate-100">Promote Existing Member</h2>
+              <p className="mt-1 text-sm text-slate-300">Select an existing member and assign staff role + pay rates.</p>
             </div>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-700" aria-hidden="true">
+            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white/5 px-3 py-1 text-xs text-slate-300" aria-hidden="true">
               {promoteCardOpen ? "^" : "v"}
             </span>
           </button>
 
           {promoteCardOpen ? (
-            <form onSubmit={promoteMember} className="mt-4 space-y-3 border-t border-slate-200 pt-4">
-              <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="promote-member">
+            <form onSubmit={promoteMember} className="mt-4 space-y-3 border-t border-white/10 pt-4">
+              <label className="block text-xs uppercase tracking-[0.2em] text-slate-300" htmlFor="promote-member">
                 Current Member
               </label>
               <select
@@ -372,7 +372,7 @@ export default function OwnerStaffClient() {
                 ))}
               </select>
 
-              <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="promote-role">
+              <label className="block text-xs uppercase tracking-[0.2em] text-slate-300" htmlFor="promote-role">
                 Staff Role
               </label>
               <select
@@ -391,7 +391,7 @@ export default function OwnerStaffClient() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="promote-coaching-rate">
+                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-300" htmlFor="promote-coaching-rate">
                     Coaching Payrate
                   </label>
                   <input
@@ -407,7 +407,7 @@ export default function OwnerStaffClient() {
                 </div>
 
                 <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="promote-office-rate">
+                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-300" htmlFor="promote-office-rate">
                     Office Payrate
                   </label>
                   <input
@@ -434,7 +434,7 @@ export default function OwnerStaffClient() {
           ) : null}
         </article>
 
-        <article className="rounded-[28px] border border-slate-300 bg-white p-5 shadow-[0_10px_24px_rgba(9,18,29,0.08)]">
+        <article className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_10px_24px_rgba(9,18,29,0.08)]">
           <button
             type="button"
             onClick={() => setAddCardOpen((current) => !current)}
@@ -442,20 +442,20 @@ export default function OwnerStaffClient() {
             className="flex w-full items-start justify-between gap-4 text-left"
           >
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Add New Staff (Non-Member)</h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <h2 className="text-lg font-semibold text-slate-100">Add New Staff (Non-Member)</h2>
+              <p className="mt-1 text-sm text-slate-300">
                 Create a person in the system and assign staff role in one step.
               </p>
             </div>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-700" aria-hidden="true">
+            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white/5 px-3 py-1 text-xs text-slate-300" aria-hidden="true">
               {addCardOpen ? "^" : "v"}
             </span>
           </button>
 
           {addCardOpen ? (
-            <form onSubmit={createStaff} className="mt-4 space-y-3 border-t border-slate-200 pt-4">
+            <form onSubmit={createStaff} className="mt-4 space-y-3 border-t border-white/10 pt-4">
               <div>
-                <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="create-name">
+                <label className="block text-xs uppercase tracking-[0.2em] text-slate-300" htmlFor="create-name">
                   Full Name
                 </label>
                 <input
@@ -468,7 +468,7 @@ export default function OwnerStaffClient() {
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="create-email">
+                <label className="block text-xs uppercase tracking-[0.2em] text-slate-300" htmlFor="create-email">
                   Email
                 </label>
                 <input
@@ -482,7 +482,7 @@ export default function OwnerStaffClient() {
                 />
               </div>
 
-              <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="create-role">
+              <label className="block text-xs uppercase tracking-[0.2em] text-slate-300" htmlFor="create-role">
                 Staff Role
               </label>
               <select
@@ -501,7 +501,7 @@ export default function OwnerStaffClient() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="create-coaching-rate">
+                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-300" htmlFor="create-coaching-rate">
                     Coaching Payrate
                   </label>
                   <input
@@ -517,7 +517,7 @@ export default function OwnerStaffClient() {
                 </div>
 
                 <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-600" htmlFor="create-office-rate">
+                  <label className="block text-xs uppercase tracking-[0.2em] text-slate-300" htmlFor="create-office-rate">
                     Office Payrate
                   </label>
                   <input
@@ -549,12 +549,12 @@ export default function OwnerStaffClient() {
         <OwnerDataTable minWidthClassName="min-w-[1160px]">
             <thead>
               <tr>
-                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Member</th>
-                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Status</th>
-                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold w-[180px]">Role</th>
-                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Coaching Payrate</th>
-                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Office Payrate</th>
-                <th className="border-b border-slate-300/80 px-3 py-3 font-semibold">Actions</th>
+                <th className="border-b border-white/10 px-3 py-3 font-semibold">Member</th>
+                <th className="border-b border-white/10 px-3 py-3 font-semibold">Status</th>
+                <th className="border-b border-white/10 px-3 py-3 font-semibold w-[180px]">Role</th>
+                <th className="border-b border-white/10 px-3 py-3 font-semibold">Coaching Payrate</th>
+                <th className="border-b border-white/10 px-3 py-3 font-semibold">Office Payrate</th>
+                <th className="border-b border-white/10 px-3 py-3 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -580,13 +580,13 @@ export default function OwnerStaffClient() {
 
                   return (
                     <tr key={row.id}>
-                      <td className="border-b border-slate-300/60 px-3 py-3 align-top">
+                      <td className="border-b border-white/10 px-3 py-3 align-top">
                         <div className="flex items-start gap-3">
                           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-emerald-400/50 bg-emerald-500/12 text-xs font-semibold text-emerald-700">
                             {getInitials(row.user?.fullName || row.user?.email || "?")}
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium leading-tight text-slate-900">
+                            <p className="truncate text-sm font-medium leading-tight text-slate-100">
                               {row.user?.fullName || row.user?.email || "Unknown user"}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">{row.user?.email || "-"}</p>
@@ -605,17 +605,17 @@ export default function OwnerStaffClient() {
                           </div>
                         </div>
                       </td>
-                      <td className="border-b border-slate-300/60 px-3 py-3 align-top">
+                      <td className="border-b border-white/10 px-3 py-3 align-top">
                         <div className="flex flex-wrap gap-1.5">
                           <span className="rounded-full border border-emerald-600/35 bg-emerald-500/12 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
                             Active
                           </span>
-                          <span className="rounded-full border border-slate-400/40 bg-slate-200/70 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+                          <span className="rounded-full border border-slate-400/40 bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-300">
                             {formatRole(row.role)}
                           </span>
                         </div>
                       </td>
-                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-xs text-slate-700 min-w-[180px]">
+                      <td className="border-b border-white/10 px-3 py-3 align-top text-xs text-slate-300 min-w-[180px]">
                         {isOwner ? (
                           <span>{formatRole(row.role)}</span>
                         ) : (
@@ -641,7 +641,7 @@ export default function OwnerStaffClient() {
                           </select>
                         )}
                       </td>
-                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-xs text-slate-700">
+                      <td className="border-b border-white/10 px-3 py-3 align-top text-xs text-slate-300">
                         <input
                           type="number"
                           min="0"
@@ -660,7 +660,7 @@ export default function OwnerStaffClient() {
                           disabled={saving || isOwner}
                         />
                       </td>
-                      <td className="border-b border-slate-300/60 px-3 py-3 align-top text-xs text-slate-700">
+                      <td className="border-b border-white/10 px-3 py-3 align-top text-xs text-slate-300">
                         <input
                           type="number"
                           min="0"
@@ -679,7 +679,7 @@ export default function OwnerStaffClient() {
                           disabled={saving || isOwner}
                         />
                       </td>
-                      <td className="border-b border-slate-300/60 px-3 py-3 text-right">
+                      <td className="border-b border-white/10 px-3 py-3 text-right">
                         {isOwner ? (
                           <span className="text-xs text-slate-500">Locked</span>
                         ) : (

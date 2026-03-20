@@ -666,7 +666,7 @@ export default function OwnerScheduleClient() {
           </div>
 
           {createOpen ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(9,18,29,0.08)]">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 shadow-[0_10px_24px_rgba(9,18,29,0.08)]">
               {tracks.length === 0 ? (
                 <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                   Create at least one track before adding recurring classes.
@@ -674,11 +674,11 @@ export default function OwnerScheduleClient() {
               ) : null}
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">Track</span>
+                  <span className="text-sm font-medium text-slate-200">Track</span>
                   <select
                     value={createDraft.trackId}
                     onChange={(event) => setDraft(setCreateDraft, "trackId", event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
                   >
                     {tracks.length === 0 ? <option value="">No tracks found</option> : null}
                     {tracks.map((track) => (
@@ -689,58 +689,58 @@ export default function OwnerScheduleClient() {
                   </select>
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">Class Name</span>
+                  <span className="text-sm font-medium text-slate-200">Class Name</span>
                   <input
                     value={createDraft.name}
                     onChange={(event) => setDraft(setCreateDraft, "name", event.target.value)}
                     placeholder="Class name"
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">Time</span>
+                  <span className="text-sm font-medium text-slate-200">Time</span>
                   <input
                     type="time"
                     value={createDraft.time}
                     onChange={(event) => setDraft(setCreateDraft, "time", event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">Duration (Minutes)</span>
+                  <span className="text-sm font-medium text-slate-200">Duration (Minutes)</span>
                   <input
                     type="number"
                     min="1"
                     value={createDraft.durationMinutes}
                     onChange={(event) => setDraft(setCreateDraft, "durationMinutes", event.target.value)}
                     placeholder="Duration minutes"
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">Start Date</span>
+                  <span className="text-sm font-medium text-slate-200">Start Date</span>
                   <input
                     type="date"
                     value={createDraft.startDate}
                     onChange={(event) => setDraft(setCreateDraft, "startDate", event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">End Date (Optional)</span>
+                  <span className="text-sm font-medium text-slate-200">End Date (Optional)</span>
                   <input
                     type="date"
                     value={createDraft.endDate}
                     onChange={(event) => setDraft(setCreateDraft, "endDate", event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">Default Coach (Optional)</span>
+                  <span className="text-sm font-medium text-slate-200">Default Coach (Optional)</span>
                   <select
                     value={createDraft.defaultCoachUserId}
                     onChange={(event) => setDraft(setCreateDraft, "defaultCoachUserId", event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
                   >
                     <option value="">None</option>
                     {coaches.map((coach) => (
@@ -751,31 +751,31 @@ export default function OwnerScheduleClient() {
                   </select>
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">Size Limit (0 = no limit)</span>
+                  <span className="text-sm font-medium text-slate-200">Size Limit (0 = no limit)</span>
                   <input
                     type="number"
                     min="0"
                     value={createDraft.sizeLimit}
                     onChange={(event) => setDraft(setCreateDraft, "sizeLimit", event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">Reservation Cutoff Hours</span>
+                  <span className="text-sm font-medium text-slate-200">Reservation Cutoff Hours</span>
                   <input
                     type="number"
                     min="0"
                     value={createDraft.reservationCutoffHours}
                     onChange={(event) => setDraft(setCreateDraft, "reservationCutoffHours", event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">Calendar Color</span>
+                  <span className="text-sm font-medium text-slate-200">Calendar Color</span>
                   <select
                     value={createDraft.calendarColor}
                     onChange={(event) => setDraft(setCreateDraft, "calendarColor", event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
                   >
                     {calendarColorOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -785,8 +785,8 @@ export default function OwnerScheduleClient() {
                   </select>
                 </label>
                 <div className="space-y-1">
-                  <span className="text-sm font-medium text-slate-800">Days</span>
-                  <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2 py-2">
+                  <span className="text-sm font-medium text-slate-200">Days</span>
+                  <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2 py-2">
                     {weekDays.map((day) => {
                       const active = createDraft.days.includes(day);
                       return (
@@ -795,7 +795,7 @@ export default function OwnerScheduleClient() {
                           type="button"
                           onClick={() => toggleDraftDay(createDraft, setCreateDraft, day)}
                           className={`rounded-full px-2 py-1 text-xs transition ${
-                            active ? "bg-cyan-500/15 text-cyan-800" : "bg-slate-100 text-slate-700 hover:bg-cyan-50 hover:text-cyan-800"
+                            active ? "bg-cyan-500/15 text-cyan-300" : "bg-white/10 text-slate-300 hover:bg-cyan-500/10 hover:text-cyan-300"
                           }`}
                         >
                           {day}
@@ -826,8 +826,8 @@ export default function OwnerScheduleClient() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`rounded-t-lg px-3 py-2 text-sm transition ${
                   activeTab === tab.key
-                    ? "border-b-2 border-[#00c5ff] text-slate-900"
-                    : "text-slate-700 hover:text-slate-900"
+                    ? "border-b-2 border-[#00c5ff] text-slate-100"
+                    : "text-slate-300 hover:text-slate-100"
                 }`}
               >
                 {tab.label}
@@ -836,18 +836,18 @@ export default function OwnerScheduleClient() {
           </div>
 
           {view === "calendar" ? (
-            <div className="rounded-2xl border border-slate-300 bg-white p-3 md:p-4">
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-3 md:p-4">
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
                 {calendarRows.map((bucket) => (
-                  <article key={bucket.day} className="rounded-xl border border-slate-200 bg-slate-50/80 p-3">
-                    <h3 className="text-sm font-semibold text-slate-900">{bucket.day}</h3>
+                  <article key={bucket.day} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <h3 className="text-sm font-semibold text-slate-100">{bucket.day}</h3>
                     {bucket.rows.length === 0 ? (
                       <p className="mt-2 text-xs text-slate-500">No classes</p>
                     ) : (
                       <div className="mt-2 space-y-2">
                         {bucket.rows.map((row) => (
-                          <div key={`${bucket.day}-${row.id}`} className="rounded-lg border border-slate-200 bg-white px-2 py-2">
-                            <p className="truncate text-xs font-semibold text-slate-900">{row.name}</p>
+                          <div key={`${bucket.day}-${row.id}`} className="rounded-lg border border-white/10 bg-white/5 px-2 py-2">
+                            <p className="truncate text-xs font-semibold text-slate-100">{row.name}</p>
                             <p className="text-[11px] text-slate-500">{row.track?.name ?? "No track"}</p>
                             <p className="text-xs text-slate-600">{formatTime(row.class_time)}</p>
                             <p className="text-[11px] text-slate-500">{formatDuration(row.duration_minutes)}</p>
@@ -861,7 +861,7 @@ export default function OwnerScheduleClient() {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="app-table-shell overflow-hidden rounded-xl border border-slate-300/80">
+              <div className="app-table-shell overflow-hidden rounded-xl border border-white/10">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-400/40 bg-[#4a4a4a] px-3 py-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="relative">
@@ -881,14 +881,14 @@ export default function OwnerScheduleClient() {
                         Columns
                       </button>
                       {columnsOpen ? (
-                        <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-slate-300 bg-white p-2 shadow-xl">
+                        <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-white/15 bg-white/5 p-2 shadow-xl">
                           {columnDefs.map((column) => (
-                            <label key={column.key} className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-slate-700 hover:bg-slate-100">
+                            <label key={column.key} className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-slate-300 hover:bg-white/10">
                               <input
                                 type="checkbox"
                                 checked={visibleColumns[column.key]}
                                 onChange={() => toggleColumn(column.key)}
-                                className="h-3.5 w-3.5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                                className="h-3.5 w-3.5 rounded border-white/15 text-cyan-400 focus:ring-cyan-500"
                               />
                               {column.label}
                             </label>
@@ -914,7 +914,7 @@ export default function OwnerScheduleClient() {
                         Filters
                       </button>
                       {filtersOpen ? (
-                        <div className="absolute left-0 z-20 mt-2 w-52 rounded-xl border border-slate-300 bg-white p-2 shadow-xl">
+                        <div className="absolute left-0 z-20 mt-2 w-52 rounded-xl border border-white/15 bg-white/5 p-2 shadow-xl">
                           <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Filter by day</p>
                           <button
                             type="button"
@@ -923,7 +923,7 @@ export default function OwnerScheduleClient() {
                               setFiltersOpen(false);
                             }}
                             className={`mb-1 w-full rounded-md px-2 py-1 text-left text-xs transition ${
-                              dayFilter === "all" ? "bg-cyan-50 text-cyan-700" : "text-slate-700 hover:bg-slate-100"
+                              dayFilter === "all" ? "bg-cyan-500/10 text-cyan-300" : "text-slate-300 hover:bg-white/10"
                             }`}
                           >
                             All days
@@ -938,7 +938,7 @@ export default function OwnerScheduleClient() {
                                   setFiltersOpen(false);
                                 }}
                                 className={`rounded-md px-2 py-1 text-xs transition ${
-                                  dayFilter === day ? "bg-cyan-50 text-cyan-700" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                                  dayFilter === day ? "bg-cyan-500/10 text-cyan-300" : "bg-white/5 text-slate-300 hover:bg-white/10"
                                 }`}
                               >
                                 {day}
@@ -980,24 +980,24 @@ export default function OwnerScheduleClient() {
                     </thead>
                     <tbody>
                     {filteredRows.length === 0 ? (
-                      <tr className="app-table-empty border-t border-slate-200 bg-white text-slate-900">
+                      <tr className="app-table-empty border-t border-white/10 bg-white/5 text-slate-100">
                         <td colSpan={visibleColumnCount} className="h-14 px-3 py-6">
                           &nbsp;
                         </td>
                       </tr>
                     ) : filteredRows.map((row) => (
-                      <tr key={row.id} className="border-t border-slate-200 bg-white text-slate-900">
+                      <tr key={row.id} className="border-t border-white/10 bg-white/5 text-slate-100">
                         {visibleColumns.name ? (
                         <td className="px-3 py-3">
                           {editingId === row.id ? (
                             <input
                               value={editDraft.name}
                               onChange={(event) => setDraft(setEditDraft, "name", event.target.value)}
-                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-cyan-300 focus:outline-none"
+                              className="w-full rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"
                             />
                           ) : (
                             <div>
-                              <p className="font-medium text-slate-900">{row.name}</p>
+                              <p className="font-medium text-slate-100">{row.name}</p>
                               <p className="text-xs text-slate-500">{row.track?.name ?? "No track"}</p>
                             </div>
                           )}
@@ -1010,7 +1010,7 @@ export default function OwnerScheduleClient() {
                               type="time"
                               value={editDraft.time}
                               onChange={(event) => setDraft(setEditDraft, "time", event.target.value)}
-                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-cyan-300 focus:outline-none"
+                              className="w-full rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"
                             />
                           ) : (
                             formatTime(row.class_time)
@@ -1025,7 +1025,7 @@ export default function OwnerScheduleClient() {
                               min="1"
                               value={editDraft.durationMinutes}
                               onChange={(event) => setDraft(setEditDraft, "durationMinutes", event.target.value)}
-                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-cyan-300 focus:outline-none"
+                              className="w-full rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"
                             />
                           ) : (
                             formatDuration(row.duration_minutes)
@@ -1044,7 +1044,7 @@ export default function OwnerScheduleClient() {
                                     type="button"
                                     onClick={() => toggleDraftDay(editDraft, setEditDraft, day)}
                                     className={`rounded-full px-2 py-0.5 text-xs transition ${
-                                      active ? "bg-cyan-100 text-cyan-800" : "bg-slate-100 text-slate-700 hover:bg-fuchsia-100 hover:text-fuchsia-800"
+                                      active ? "bg-cyan-500/10 text-cyan-300" : "bg-white/10 text-slate-300 hover:bg-fuchsia-500/10 hover:text-fuchsia-300"
                                     }`}
                                   >
                                     {day}
@@ -1057,7 +1057,7 @@ export default function OwnerScheduleClient() {
                               {row.class_days.map((day) => (
                                 <span
                                   key={`${row.id}-${day}`}
-                                  className="rounded-full border border-cyan-300 bg-cyan-50 px-2 py-0.5 text-xs text-cyan-800"
+                                  className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-0.5 text-xs text-cyan-300"
                                 >
                                   {day}
                                 </span>
@@ -1073,7 +1073,7 @@ export default function OwnerScheduleClient() {
                               type="date"
                               value={editDraft.startDate}
                               onChange={(event) => setDraft(setEditDraft, "startDate", event.target.value)}
-                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-cyan-300 focus:outline-none"
+                              className="w-full rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"
                             />
                           ) : (
                             toUiDate(row.start_date)

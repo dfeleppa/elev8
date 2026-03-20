@@ -236,17 +236,17 @@ export default function CoachSetupClient() {
         </p>
       </header>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="glass-panel rounded-3xl border border-white/10 p-5">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{stepTitle}</p>
-          <p className="text-xs font-semibold text-slate-600">{step}/5</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{stepTitle}</p>
+          <p className="text-xs font-semibold text-slate-300">{step}/5</p>
         </div>
 
         <div className="mb-5 grid grid-cols-5 gap-2">
           {Array.from({ length: 5 }).map((_, index) => (
             <span
               key={`step-${index}`}
-              className={`h-1.5 rounded-full ${index + 1 <= step ? "bg-sky-500" : "bg-slate-200"}`}
+              className={`h-1.5 rounded-full ${index + 1 <= step ? "bg-sky-400" : "bg-white/10"}`}
             />
           ))}
         </div>
@@ -260,12 +260,12 @@ export default function CoachSetupClient() {
                 onClick={() => setGoalType(option.value)}
                 className={`rounded-2xl border p-4 text-left transition ${
                   goalType === option.value
-                    ? "border-sky-400 bg-sky-50"
-                    : "border-slate-200 bg-white hover:border-slate-300"
+                    ? "border-sky-400/40 bg-sky-500/10"
+                    : "border-white/10 bg-white/5 hover:border-white/20"
                 }`}
               >
-                <p className="text-sm font-semibold text-slate-800">{option.label}</p>
-                <p className="mt-1 text-xs text-slate-500">{option.description}</p>
+                <p className="text-sm font-semibold text-slate-100">{option.label}</p>
+                <p className="mt-1 text-xs text-slate-400">{option.description}</p>
               </button>
             ))}
           </div>
@@ -274,59 +274,59 @@ export default function CoachSetupClient() {
         {step === 2 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Sex</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Sex</span>
               <select
                 value={sex}
                 onChange={(event) => setSex(event.target.value as "male" | "female")}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
               </select>
             </label>
             <label className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Birth Date</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Birth Date</span>
               <input
                 type="date"
                 value={birthDate}
                 onChange={(event) => setBirthDate(event.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               />
             </label>
             <label className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Current Weight (kg)</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Current Weight (kg)</span>
               <input
                 value={currentWeightKg}
                 onChange={(event) => setCurrentWeightKg(event.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               />
             </label>
             <label className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Body Fat % (optional)</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Body Fat % (optional)</span>
               <input
                 value={bodyFatPercentage}
                 onChange={(event) => setBodyFatPercentage(event.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               />
             </label>
             <label className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Height (cm)</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Height (cm)</span>
               <input
                 value={heightCm}
                 onChange={(event) => setHeightCm(event.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               />
             </label>
             <label className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Target Weight (kg)</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Target Weight (kg)</span>
               <input
                 value={targetWeightKg}
                 onChange={(event) => setTargetWeightKg(event.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               />
             </label>
           </div>
@@ -336,21 +336,21 @@ export default function CoachSetupClient() {
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1">
-                <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Sessions / Week</span>
+                <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Sessions / Week</span>
                 <input
                   value={sessionsPerWeek}
                   onChange={(event) => setSessionsPerWeek(event.target.value)}
                   inputMode="decimal"
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
                 />
               </label>
               <label className="space-y-1">
-                <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Effective Date</span>
+                <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Effective Date</span>
                 <input
                   type="date"
                   value={effectiveDate}
                   onChange={(event) => setEffectiveDate(event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
                 />
               </label>
             </div>
@@ -365,15 +365,15 @@ export default function CoachSetupClient() {
             </button>
 
             {planPreview ? (
-              <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
-                <p className="text-sm text-slate-700">Formula: <span className="font-semibold">{planPreview.formulaUsed}</span></p>
-                <p className="text-sm text-slate-700">BMR: <span className="font-semibold">{planPreview.bmr}</span></p>
-                <p className="text-sm text-slate-700">Maintenance: <span className="font-semibold">{planPreview.maintenanceCalories} kcal</span></p>
-                <p className="text-sm text-slate-700">Target: <span className="font-semibold">{planPreview.targetCalories} kcal</span></p>
-                <p className="text-sm text-slate-700">Protein: <span className="font-semibold">{toDisplayNumber(planPreview.proteinGrams)} g</span></p>
-                <p className="text-sm text-slate-700">Carbs: <span className="font-semibold">{toDisplayNumber(planPreview.carbsGrams)} g</span></p>
-                <p className="text-sm text-slate-700">Fat: <span className="font-semibold">{toDisplayNumber(planPreview.fatGrams)} g</span></p>
-                <p className="text-sm text-slate-700">Activity: <span className="font-semibold">x{toDisplayNumber(planPreview.activityMultiplier)}</span></p>
+              <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 sm:grid-cols-2">
+                <p className="text-sm text-slate-300">Formula: <span className="font-semibold text-slate-100">{planPreview.formulaUsed}</span></p>
+                <p className="text-sm text-slate-300">BMR: <span className="font-semibold text-slate-100">{planPreview.bmr}</span></p>
+                <p className="text-sm text-slate-300">Maintenance: <span className="font-semibold text-slate-100">{planPreview.maintenanceCalories} kcal</span></p>
+                <p className="text-sm text-slate-300">Target: <span className="font-semibold text-slate-100">{planPreview.targetCalories} kcal</span></p>
+                <p className="text-sm text-slate-300">Protein: <span className="font-semibold text-slate-100">{toDisplayNumber(planPreview.proteinGrams)} g</span></p>
+                <p className="text-sm text-slate-300">Carbs: <span className="font-semibold text-slate-100">{toDisplayNumber(planPreview.carbsGrams)} g</span></p>
+                <p className="text-sm text-slate-300">Fat: <span className="font-semibold text-slate-100">{toDisplayNumber(planPreview.fatGrams)} g</span></p>
+                <p className="text-sm text-slate-300">Activity: <span className="font-semibold text-slate-100">x{toDisplayNumber(planPreview.activityMultiplier)}</span></p>
               </div>
             ) : null}
           </div>
@@ -382,11 +382,11 @@ export default function CoachSetupClient() {
         {step === 4 ? (
           <div className="space-y-4">
             <label className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Intensity Preset</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Intensity Preset</span>
               <select
                 value={intensityPreset}
                 onChange={(event) => setIntensityPreset(event.target.value as IntensityPreset)}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               >
                 {INTENSITY_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -396,7 +396,7 @@ export default function CoachSetupClient() {
               </select>
             </label>
 
-            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+            <label className="inline-flex items-center gap-2 text-sm text-slate-300">
               <input
                 type="checkbox"
                 checked={useAdvancedOverride}
@@ -408,21 +408,21 @@ export default function CoachSetupClient() {
             {useAdvancedOverride ? (
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="space-y-1">
-                  <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Weekly Rate % Override</span>
+                  <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Weekly Rate % Override</span>
                   <input
                     value={weeklyRatePercentOverride}
                     onChange={(event) => setWeeklyRatePercentOverride(event.target.value)}
                     inputMode="decimal"
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Reverse Diet Weekly kcal Override</span>
+                  <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Reverse Diet Weekly kcal Override</span>
                   <input
                     value={reverseDietWeeklyKcalOverride}
                     onChange={(event) => setReverseDietWeeklyKcalOverride(event.target.value)}
                     inputMode="decimal"
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800"
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
                   />
                 </label>
               </div>
@@ -432,7 +432,7 @@ export default function CoachSetupClient() {
               type="button"
               onClick={() => void runPlan("preview")}
               disabled={saving}
-              className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60"
+              className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 disabled:opacity-60"
             >
               Recalculate with intensity
             </button>
@@ -440,18 +440,18 @@ export default function CoachSetupClient() {
         ) : null}
 
         {step === 5 ? (
-          <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-sm font-semibold text-slate-800">Review</p>
-            <p className="text-sm text-slate-700">Goal: {goalType.replaceAll("_", " ")}</p>
-            <p className="text-sm text-slate-700">Current Weight: {currentWeightKg} kg</p>
-            <p className="text-sm text-slate-700">Target Weight: {targetWeightKg || "-"} kg</p>
-            <p className="text-sm text-slate-700">Intensity: {intensityPreset}</p>
+          <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-sm font-semibold text-slate-100">Review</p>
+            <p className="text-sm text-slate-300">Goal: {goalType.replaceAll("_", " ")}</p>
+            <p className="text-sm text-slate-300">Current Weight: {currentWeightKg} kg</p>
+            <p className="text-sm text-slate-300">Target Weight: {targetWeightKg || "-"} kg</p>
+            <p className="text-sm text-slate-300">Intensity: {intensityPreset}</p>
             {planPreview ? (
-              <p className="text-sm text-slate-700">
+              <p className="text-sm text-slate-300">
                 Targets: {planPreview.targetCalories} kcal, {toDisplayNumber(planPreview.proteinGrams)}p, {toDisplayNumber(planPreview.carbsGrams)}c, {toDisplayNumber(planPreview.fatGrams)}f
               </p>
             ) : (
-              <p className="text-sm text-amber-700">Generate targets before applying.</p>
+              <p className="text-sm text-amber-400">Generate targets before applying.</p>
             )}
 
             <button
@@ -465,15 +465,15 @@ export default function CoachSetupClient() {
           </div>
         ) : null}
 
-        {error ? <p className="mt-4 text-sm text-rose-600">{error}</p> : null}
-        {message ? <p className="mt-4 text-sm text-emerald-700">{message}</p> : null}
+        {error ? <p className="mt-4 text-sm text-rose-400">{error}</p> : null}
+        {message ? <p className="mt-4 text-sm text-emerald-400">{message}</p> : null}
 
         <div className="mt-6 flex items-center justify-between">
           <button
             type="button"
             onClick={() => setStep((current) => Math.max(1, current - 1))}
             disabled={step === 1}
-            className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 disabled:opacity-50"
+            className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 disabled:opacity-50"
           >
             Back
           </button>
@@ -481,7 +481,7 @@ export default function CoachSetupClient() {
             type="button"
             onClick={goNext}
             disabled={step === 5}
-            className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 disabled:opacity-50"
+            className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 disabled:opacity-50"
           >
             Next
           </button>

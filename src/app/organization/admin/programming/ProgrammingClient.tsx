@@ -459,22 +459,22 @@ export default function ProgrammingClient() {
 
   return (
     <section className="space-y-4">
-      <header className="rounded-2xl border border-slate-300 bg-[#f7f6f2] p-3">
+      <header className="rounded-2xl border border-white/10 bg-white/5/5 p-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => stepDate(-1)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/5 text-slate-300 hover:border-white/25"
               aria-label="Previous"
             >
               {"<"}
             </button>
-            <p className="text-xl font-semibold text-slate-800">{headerLabel}</p>
+            <p className="text-xl font-semibold text-slate-200">{headerLabel}</p>
             <button
               type="button"
               onClick={() => stepDate(1)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/5 text-slate-300 hover:border-white/25"
               aria-label="Next"
             >
               {">"}
@@ -482,7 +482,7 @@ export default function ProgrammingClient() {
             <button
               type="button"
               onClick={() => datePickerRef.current?.showPicker?.() ?? datePickerRef.current?.click()}
-              className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-sm text-slate-700 hover:border-slate-400"
+              className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/5 text-sm text-slate-300 hover:border-white/25"
               aria-label="Pick date"
             >
               D
@@ -504,7 +504,7 @@ export default function ProgrammingClient() {
           </div>
 
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-slate-300">
               <input
                 type="checkbox"
                 checked={showDetails}
@@ -514,14 +514,14 @@ export default function ProgrammingClient() {
               Show Details
             </label>
 
-            <div className="inline-flex rounded-md border border-slate-300 bg-white p-0.5">
+            <div className="inline-flex rounded-md border border-white/15 bg-white/5 p-0.5">
               {(["month", "week", "day"] as ViewMode[]).map((mode) => (
                 <button
                   key={mode}
                   type="button"
                   onClick={() => setViewMode(mode)}
                   className={`rounded px-3 py-1 text-sm font-medium transition ${
-                    viewMode === mode ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
+                    viewMode === mode ? "bg-slate-900 text-white" : "text-slate-300 hover:bg-white/10"
                   }`}
                 >
                   {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -531,7 +531,7 @@ export default function ProgrammingClient() {
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-300/80 pt-3">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-white/10/80 pt-3">
           <div className="flex items-center gap-2">
             <label className="text-xs uppercase tracking-[0.14em] text-slate-500" htmlFor="track-selector">
               Track
@@ -539,7 +539,7 @@ export default function ProgrammingClient() {
             <select
               id="track-selector"
               name="track"
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800"
+              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-slate-200"
               value={selectedTrackId}
               onChange={(event) => setSelectedTrackId(event.target.value)}
             >
@@ -556,10 +556,10 @@ export default function ProgrammingClient() {
       </header>
 
       <div className={`relative grid gap-4 transition-[padding] duration-300 ${editorOpen ? "lg:pr-[26rem]" : ""}`}>
-        <div className="overflow-hidden rounded-2xl border border-slate-300 bg-[#f8f7f4]">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5/5">
           {viewMode === "month" ? (
             <>
-              <div className="grid grid-cols-7 border-b border-slate-300 text-xs uppercase tracking-[0.14em] text-slate-500">
+              <div className="grid grid-cols-7 border-b border-white/10 text-xs uppercase tracking-[0.14em] text-slate-500">
                 {weekDayNames.map((name) => (
                   <div key={name} className="px-3 py-2 text-center font-semibold">
                     {name}
@@ -581,11 +581,11 @@ export default function ProgrammingClient() {
                         setSelectedSessionId(daySessions[0]?.id ?? null);
                         setEditorOpen(true);
                       }}
-                      className={`min-h-[150px] border-r border-t border-slate-300 px-2 py-2 text-left align-top transition ${
-                        isSelectedDay ? "bg-blue-50" : day.inMonth ? "bg-white/80" : "bg-slate-100/60"
+                      className={`min-h-[150px] border-r border-t border-white/10 px-2 py-2 text-left align-top transition ${
+                        isSelectedDay ? "bg-blue-500/10" : day.inMonth ? "bg-white/80" : "bg-white/10/60"
                       }`}
                     >
-                      <p className="text-xs font-semibold text-slate-600">{day.dateObj.getDate()}</p>
+                      <p className="text-xs font-semibold text-slate-400">{day.dateObj.getDate()}</p>
                       <div className="mt-1 space-y-1">
                         {daySessions.slice(0, 2).map((session) => (
                           <button
@@ -615,7 +615,7 @@ export default function ProgrammingClient() {
           ) : (
             <>
               <div
-                className="grid border-b border-slate-300 text-xs uppercase tracking-[0.14em] text-slate-500"
+                className="grid border-b border-white/10 text-xs uppercase tracking-[0.14em] text-slate-500"
                 style={{ gridTemplateColumns: `repeat(${visibleColumns.length}, minmax(0, 1fr))` }}
               >
                 {visibleColumns.map((day) => (
@@ -624,7 +624,7 @@ export default function ProgrammingClient() {
                     type="button"
                     onClick={() => setSelectedDay(day.date)}
                     className={`px-3 py-3 text-center font-semibold transition ${
-                      selectedDay === day.date ? "bg-blue-50 text-slate-900" : "hover:bg-slate-100"
+                      selectedDay === day.date ? "bg-blue-500/10 text-slate-100" : "hover:bg-white/10"
                     }`}
                   >
                     {day.label}
@@ -639,7 +639,7 @@ export default function ProgrammingClient() {
                 {visibleColumns.map((day) => {
                   const daySessions = sessions[day.date] ?? [];
                   return (
-                    <div key={day.date} className="min-h-[540px] border-r border-slate-300 px-2.5 pb-4 pt-2.5">
+                    <div key={day.date} className="min-h-[540px] border-r border-white/10 px-2.5 pb-4 pt-2.5">
                       <div className="space-y-2">
                         {daySessions.map((session) => {
                           const scoreLabel = getScoreLabel(session.block);
@@ -662,7 +662,7 @@ export default function ProgrammingClient() {
                             >
                               <p className="text-[20px] font-semibold leading-none">{session.title}</p>
                               {scoreLabel ? (
-                                <span className="mt-1 inline-flex rounded-full border border-slate-300/40 bg-slate-100/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-100">
+                                <span className="mt-1 inline-flex rounded-full border border-white/10/40 bg-white/10/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-100">
                                   {scoreLabel}
                                 </span>
                               ) : null}
@@ -702,7 +702,7 @@ export default function ProgrammingClient() {
         <button
           type="button"
           onClick={() => setEditorOpen((prev) => !prev)}
-          className="fixed bottom-6 right-6 z-40 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-800 shadow-lg transition hover:border-slate-500 lg:hidden"
+          className="fixed bottom-6 right-6 z-40 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 shadow-lg transition hover:border-slate-500 lg:hidden"
         >
           {editorOpen ? "Close Editor" : "Open Editor"}
         </button>
@@ -710,13 +710,13 @@ export default function ProgrammingClient() {
         <div
           aria-hidden={!editorOpen}
           onClick={() => setEditorOpen(false)}
-          className={`fixed inset-0 z-30 bg-slate-900/20 transition-opacity duration-300 lg:hidden ${
+          className={`fixed inset-0 z-30 bg-slate-950/40 transition-opacity duration-300 lg:hidden ${
             editorOpen ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         />
 
         <aside
-          className={`fixed bottom-0 right-0 top-0 z-40 w-full sm:w-[70vw] lg:w-[48vw] xl:w-[40vw] max-w-[860px] border-l border-slate-300 bg-[#f8fafc]/95 p-5 shadow-2xl backdrop-blur transition-transform duration-300 ${
+          className={`fixed bottom-0 right-0 top-0 z-40 w-full sm:w-[70vw] lg:w-[48vw] xl:w-[40vw] max-w-[860px] border-l border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur transition-transform duration-300 ${
             editorOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
@@ -724,13 +724,13 @@ export default function ProgrammingClient() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Selected Day</p>
-                <h2 className="mt-2 text-lg font-semibold text-slate-900">{dayLabel}</h2>
+                <h2 className="mt-2 text-lg font-semibold text-slate-100">{dayLabel}</h2>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setEditorOpen(false)}
-                  className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300 transition hover:border-white/25 hover:bg-white/5"
                 >
                   Close
                 </button>
@@ -752,7 +752,7 @@ export default function ProgrammingClient() {
                       createBlock(item.key as "warmup" | "lift" | "workout" | "cooldown")
                     }
                     disabled={Boolean(creatingType)}
-                    className="rounded-2xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-cyan-500 hover:text-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-2xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-cyan-500 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {creatingType === item.key ? "Creating..." : item.label}
                   </button>
@@ -762,7 +762,7 @@ export default function ProgrammingClient() {
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Entries</p>
                 {selectedDaySessions.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-3 py-4 text-sm text-slate-500">
+                  <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-3 py-4 text-sm text-slate-500">
                     No entries yet for this day.
                   </div>
                 ) : (
@@ -776,11 +776,11 @@ export default function ProgrammingClient() {
                         onClick={() => setSelectedSessionId(session.id)}
                         className={`w-full rounded-2xl border px-3 py-3 text-left transition ${
                           isActive
-                            ? "border-cyan-400 bg-cyan-50"
-                            : "border-slate-300 bg-white hover:border-cyan-300"
+                            ? "border-cyan-400 bg-cyan-500/10"
+                            : "border-white/15 bg-white/5 hover:border-cyan-300"
                         }`}
                       >
-                        <p className="text-sm font-semibold text-slate-900">{session.title}</p>
+                        <p className="text-sm font-semibold text-slate-100">{session.title}</p>
                         <p className="mt-1 text-xs text-slate-500">{scoreLabel}</p>
                       </button>
                     );
@@ -797,7 +797,7 @@ export default function ProgrammingClient() {
                     id="session-title"
                     value={editor.session.title}
                     onChange={(event) => updateEditor("title", event.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none"
+                    className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
                   />
 
                   <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-block">
@@ -807,7 +807,7 @@ export default function ProgrammingClient() {
                     id="session-block"
                     value={editor.session.block ?? "none"}
                     onChange={(event) => updateEditor("block", event.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none"
+                    className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
                   />
 
                   <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-lines">
@@ -818,7 +818,7 @@ export default function ProgrammingClient() {
                     rows={8}
                     value={editor.session.lines.join("\n")}
                     onChange={(event) => updateEditor("lines", event.target.value)}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none"
+                    className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
                   />
 
                   <div className="flex items-center justify-end gap-2 pb-2">

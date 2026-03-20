@@ -46,7 +46,7 @@ export default function TipTapEditor({ content, onChange, placeholder = "Add not
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm prose-slate max-w-none min-h-[120px] focus:outline-none px-3 py-2",
+        class: "prose prose-sm prose-invert max-w-none min-h-[120px] focus:outline-none px-3 py-2",
       },
     },
   });
@@ -59,13 +59,13 @@ export default function TipTapEditor({ content, onChange, placeholder = "Add not
 
   if (!isClient) {
     return (
-      <div className="min-h-[150px] rounded-lg border border-slate-200 bg-slate-50 animate-pulse" />
+      <div className="min-h-[150px] rounded-lg border border-white/10 bg-white/5 animate-pulse" />
     );
   }
 
   if (!editor) {
     return (
-      <div className="min-h-[150px] rounded-lg border border-slate-200 bg-slate-50 animate-pulse" />
+      <div className="min-h-[150px] rounded-lg border border-white/10 bg-white/5 animate-pulse" />
     );
   }
 
@@ -86,8 +86,8 @@ export default function TipTapEditor({ content, onChange, placeholder = "Add not
       title={title}
       className={`inline-flex h-8 w-8 items-center justify-center rounded border text-sm transition ${
         isActive
-          ? "border-slate-400 bg-slate-200 text-slate-900"
-          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:border-slate-300"
+          ? "border-[#ffb1c4]/40 bg-[#ffb1c4]/10 text-[#ffb1c4]"
+          : "border-white/15 bg-white/5 text-slate-300 hover:bg-white/10 hover:border-white/25"
       }`}
     >
       {children}
@@ -95,8 +95,8 @@ export default function TipTapEditor({ content, onChange, placeholder = "Add not
   );
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white">
-      <div className="flex flex-wrap gap-1 border-b border-slate-200 bg-slate-50 px-2 py-1.5">
+    <div className="rounded-lg border border-white/10 bg-white/5">
+      <div className="flex flex-wrap gap-1 border-b border-white/10 bg-white/5 px-2 py-1.5">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive("bold")}
@@ -126,7 +126,7 @@ export default function TipTapEditor({ content, onChange, placeholder = "Add not
           <span className="line-through">S</span>
         </ToolbarButton>
 
-        <div className="mx-1 w-px bg-slate-300" />
+        <div className="mx-1 w-px bg-white/10" />
 
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -150,7 +150,7 @@ export default function TipTapEditor({ content, onChange, placeholder = "Add not
           <span className="text-xs font-bold">H3</span>
         </ToolbarButton>
 
-        <div className="mx-1 w-px bg-slate-300" />
+        <div className="mx-1 w-px bg-white/10" />
 
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}

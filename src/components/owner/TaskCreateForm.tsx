@@ -56,7 +56,7 @@ export default function TaskCreateForm({ projects, onCreated, compact = false }:
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`flex flex-wrap items-end gap-3 ${compact ? "" : "rounded-xl border border-slate-200 bg-white px-4 py-3"}`}>
+    <form onSubmit={handleSubmit} className={`flex flex-wrap items-end gap-3 ${compact ? "" : "rounded-xl border border-white/10 bg-white/5 px-4 py-3"}`}>
       <div className="flex items-center">
         <span className="text-lg text-slate-400">+</span>
       </div>
@@ -65,16 +65,15 @@ export default function TaskCreateForm({ projects, onCreated, compact = false }:
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="New task title"
-        className={`rounded-lg border border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 ${
+        className={`rounded-lg border border-white/15 bg-white/5 text-slate-100 placeholder:text-slate-500 ${
           compact ? "h-9 w-64 text-[13px]" : "h-9 w-64 text-[13px]"
         }`}
-        style={{ padding: compact ? undefined : undefined }}
         required
       />
       <select
         value={projectId}
         onChange={(e) => setProjectId(e.target.value)}
-        className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[12px] text-slate-700"
+        className="h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-[12px] text-slate-100"
       >
         <option value="">No project</option>
         {projects.map((project) => (
@@ -87,12 +86,12 @@ export default function TaskCreateForm({ projects, onCreated, compact = false }:
         type="date"
         value={dueDate}
         onChange={(e) => setDueDate(e.target.value)}
-        className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[12px] text-slate-700"
+        className="h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-[12px] text-slate-100"
       />
       <select
         value={priority}
         onChange={(e) => setPriority(e.target.value)}
-        className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[12px] text-slate-700"
+        className="h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-[12px] text-slate-100"
       >
         <option value="">Priority</option>
         <option value="low">Low</option>

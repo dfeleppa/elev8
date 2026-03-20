@@ -78,14 +78,14 @@ export default function ProjectItem({ project, onUpdate, onDelete }: ProjectItem
 
   if (isEditing) {
     return (
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-sky-50 px-2 py-1">
+      <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-500/10 px-2 py-1">
         <input
           ref={inputRef}
           type="text"
           value={editName}
           onChange={(e) => setEditName(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="h-6 w-32 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700"
+          className="h-6 w-32 rounded-md border border-white/15 bg-white/5 px-2 text-xs text-slate-100"
           disabled={isLoading}
         />
         <button
@@ -113,8 +113,8 @@ export default function ProjectItem({ project, onUpdate, onDelete }: ProjectItem
   }
 
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1">
-      <span className="text-xs font-medium text-slate-700">{project.name}</span>
+    <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2 py-1">
+      <span className="text-xs font-medium text-slate-200">{project.name}</span>
       <button
         onClick={() => setIsEditing(true)}
         disabled={isLoading}

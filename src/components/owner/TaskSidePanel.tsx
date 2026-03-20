@@ -99,18 +99,18 @@ export default function TaskSidePanel({ task, projects, onClose }: TaskSidePanel
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 z-40 bg-slate-950/55 transition-opacity duration-300 md:hidden ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={onClose}
       />
       <div
-        className={`fixed right-0 top-0 z-50 flex h-full w-full flex-col bg-white shadow-xl transition-transform duration-300 md:w-1/2 ${
+        className={`fixed right-0 top-0 z-50 flex h-full w-full flex-col bg-[#090c0f] shadow-xl transition-transform duration-300 md:w-1/2 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-          <h2 className="text-lg font-semibold text-slate-900">Task Details</h2>
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <h2 className="text-lg font-semibold text-slate-100">Task Details</h2>
           <div className="flex items-center gap-2">
             {isSaving && (
               <span className="text-xs text-slate-400">Saving...</span>
@@ -118,7 +118,7 @@ export default function TaskSidePanel({ task, projects, onClose }: TaskSidePanel
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -129,20 +129,20 @@ export default function TaskSidePanel({ task, projects, onClose }: TaskSidePanel
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1">
               Title
             </label>
-            <p className="text-sm font-medium text-slate-900">{task.title}</p>
+            <p className="text-sm font-medium text-slate-100">{task.title}</p>
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1">
               Status
             </label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700"
+              className="w-full h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100"
             >
               <option value="">Planned</option>
               <option value="in-progress">In Progress</option>
@@ -152,13 +152,13 @@ export default function TaskSidePanel({ task, projects, onClose }: TaskSidePanel
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1">
               Project
             </label>
             <select
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
-              className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700"
+              className="w-full h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100"
             >
               <option value="">No project</option>
               {projects.map((project) => (
@@ -170,25 +170,25 @@ export default function TaskSidePanel({ task, projects, onClose }: TaskSidePanel
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1">
               Due Date
             </label>
             <input
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700"
+              className="w-full h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1">
               Priority
             </label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700"
+              className="w-full h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100"
             >
               <option value="">None</option>
               <option value="low">Low</option>
@@ -198,7 +198,7 @@ export default function TaskSidePanel({ task, projects, onClose }: TaskSidePanel
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1">
               Notes
             </label>
             <TipTapEditor

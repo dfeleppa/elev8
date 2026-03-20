@@ -5,11 +5,11 @@
   --app-bg: #111417;
   --app-bg-elevated: #171c22;
   --app-bg-muted: #1d2023;
-  --app-surface: #12171d;
-  --app-surface-soft: #191c1f;
-  --app-surface-strong: #272a2e;
-  --app-border: #2f3540;
-  --app-border-subtle: rgba(255, 255, 255, 0.08);
+  --app-surface: #090c0f;
+  --app-surface-soft: #0a0d12;
+  --app-surface-strong: #0e1118;
+  --app-border: #161b24;
+  --app-border-subtle: rgba(255, 255, 255, 0.06);
   --app-text: #e1e2e7;
   --app-text-muted: #9ba4b3;
   --app-text-soft: #7f8794;
@@ -148,7 +148,7 @@ h6 {
 }
 
 .app-shell-sidebar {
-  background: color-mix(in srgb, var(--app-surface) 90%, transparent);
+  background: var(--app-surface);
   border-right: 1px solid var(--app-border-subtle);
   backdrop-filter: blur(16px);
 }
@@ -169,7 +169,7 @@ h6 {
 .app-nav-link:hover {
   color: var(--app-text);
   border-color: var(--app-border-subtle);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .app-nav-link-active {

@@ -309,31 +309,31 @@ export default function OwnerPayrollClient() {
               ) : (
                 filteredRows.map((row, index) => (
                   <tr key={`${row.week}-${row.staffName}-${index}`}>
-                    <td className="rounded-l-2xl border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
+                    <td className="rounded-l-2xl border-y border-white/10 px-4 py-4 text-sm text-slate-300">
                       {row.week}
                     </td>
-                    <td className="border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
+                    <td className="border-y border-white/10 px-4 py-4 text-sm text-slate-300">
                       {formatPeriod(row.payPeriodStart, row.payPeriodEnd)}
                     </td>
-                    <td className="border-y border-slate-200 px-4 py-4 text-sm font-medium text-slate-900">
+                    <td className="border-y border-white/10 px-4 py-4 text-sm font-medium text-slate-100">
                       {row.staffName}
                     </td>
-                    <td className="border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
+                    <td className="border-y border-white/10 px-4 py-4 text-sm text-slate-300">
                       {row.classesCoached}
                     </td>
-                    <td className="border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
+                    <td className="border-y border-white/10 px-4 py-4 text-sm text-slate-300">
                       {row.officeHours}
                     </td>
-                    <td className="border-y border-slate-200 px-4 py-4 text-sm font-semibold text-emerald-700">
+                    <td className="border-y border-white/10 px-4 py-4 text-sm font-semibold text-emerald-300">
                       {formatMoney(row.totalPay)}
                     </td>
-                    <td className="border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
+                    <td className="border-y border-white/10 px-4 py-4 text-sm text-slate-300">
                       {formatDate(row.payDate)}
                     </td>
-                    <td className="border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
+                    <td className="border-y border-white/10 px-4 py-4 text-sm text-slate-300">
                       {row.paymentForm}
                     </td>
-                    <td className="rounded-r-2xl border-y border-slate-200 px-4 py-4 text-sm text-slate-700">
+                    <td className="rounded-r-2xl border-y border-white/10 px-4 py-4 text-sm text-slate-300">
                       {row.notes || "N/A"}
                     </td>
                   </tr>
