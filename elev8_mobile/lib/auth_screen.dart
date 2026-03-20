@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'data/auth_service.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -15,6 +18,33 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _isLogin = true;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  late final StreamSubscription<AuthState> _authStateSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    // If user is already signed in, navigate to home
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    if (currentUser != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.go('/');
+      });
+    }
+    // Listen for auth state changes (e.g., after Google OAuth returns)
+    _authStateSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.signedIn && mounted) {
+        context.go('/');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _authStateSubscription.cancel();
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     final email = _emailController.text.trim();
@@ -33,16 +63,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
 
     try {
-      final auth = Supabase.instance.client.auth;
+      final authService = ref.read(authServiceProvider);
       if (_isLogin) {
-        await auth.signInWithPassword(email: email, password: password);
+        await authService.signInWithPassword(email, password);
       } else {
-        await auth.signUp(email: email, password: password);
+        await authService.signUpWithPassword(email, password);
       }
-      
-      if (!mounted) return;
-      // After success, navigate to the dashboard
-      context.go('/dashboard');
+      // Navigation handled by auth state listener
     } on AuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,11 +89,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signInWithGoogle();
+      // The OAuth flow will redirect; no need to manually navigate.
+      // When the user returns, the auth state change listener in initState will navigate.
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: $e'), backgroundColor: Colors.redAccent),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -110,6 +151,29 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               ),
               const SizedBox(height: 48),
 
+              // Google Sign-In Button
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : _signInWithGoogle,
+                icon: const Icon(Icons.login, color: Color(0xFF4285F4)),
+                label: const Text(
+                  'Continue with Google',
+                  style: TextStyle(color: Color(0xFF4285F4)),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF020617),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              const Divider(color: Colors.white30),
+              const SizedBox(height: 24),
+
               // Email Field
               TextFormField(
                 controller: _emailController,
@@ -122,7 +186,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   hintStyle: const TextStyle(color: Colors.white24),
                   prefixIcon: const Icon(Icons.email_outlined, color: Colors.white54),
                   filled: true,
-                  fillColor: const Color(0xFF0F172A), // Tailwind slate-900
+                  fillColor: const Color(0xFF0F172A),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -141,7 +205,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   labelStyle: const TextStyle(color: Colors.white54),
                   prefixIcon: const Icon(Icons.lock_outline, color: Colors.white54),
                   filled: true,
-                  fillColor: const Color(0xFF0F172A), // Tailwind slate-900
+                  fillColor: const Color(0xFF0F172A),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -155,7 +219,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 onPressed: _isLoading ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF020617), // slate-950
+                  foregroundColor: const Color(0xFF020617),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

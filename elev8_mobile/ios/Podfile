@@ -42,4 +42,25 @@ post_install do |installer|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
     end
   end
+
+  # Fix: codesign embedded frameworks (objective_c.framework, etc.) on physical devices
+  project = installer.aggregate_targets.first&.user_project
+  if project
+    project.targets.each do |target|
+      next unless target.name == 'Runner'
+      phase = target.shell_script_build_phases.find { |p| p.name == 'Sign Embedded Frameworks' }
+      unless phase
+        phase = target.new_shell_script_build_phase('Sign Embedded Frameworks')
+        phase.shell_script = <<~SCRIPT
+          #!/bin/sh
+          if [ "$CODE_SIGNING_ALLOWED" = "YES" ] && [ -d "$CODESIGNING_FOLDER_PATH/Frameworks" ]; then
+            find "$CODESIGNING_FOLDER_PATH/Frameworks" -name "*.framework" -print0 | while IFS= read -r -d '' framework; do
+              /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --preserve-metadata=identifier,entitlements --timestamp=none "$framework"
+            done
+          fi
+        SCRIPT
+      end
+      project.save
+    end
+  end
 end
