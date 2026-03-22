@@ -183,7 +183,7 @@ export async function POST(request: Request) {
   }
 
   const currentWeightLbs = toNumber(body?.currentWeightLbs);
-  const weightKg = currentWeightLbs !== null ? currentWeightLbs / 2.20462 : null;
+  let weightKg: number | null = currentWeightLbs !== null ? currentWeightLbs / 2.20462 : null;
   const heightCm = toNumber(body?.heightCm);
   const bodyFatPercentage = toNumber(body?.bodyFatPercentage);
   const weeklyRatePercentOverride = toNumber(body?.weeklyRatePercentOverride);
@@ -194,6 +194,7 @@ export async function POST(request: Request) {
   if (currentWeightLbs === null || currentWeightLbs <= 0 || heightCm === null || heightCm <= 0) {
     return NextResponse.json({ error: "Current weight and height are required." }, { status: 400 });
   }
+  weightKg = currentWeightLbs / 2.20462;
 
   const derivedAge = birthDate ? calculateAgeFromBirthDate(birthDate) : null;
   const ageYears = derivedAge ?? toNumber(body?.ageYears);
