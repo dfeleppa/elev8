@@ -4,6 +4,7 @@ import SidebarShell from "../../../../components/SidebarShell";
 import { hasRole, requireUserContext } from "../../../../lib/member";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
 import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
+import MemberImportButton from "../../../../components/owner/MemberImportButton";
 import OwnerMembersTable from "./OwnerMembersTable";
 
 export const dynamic = "force-dynamic";
@@ -21,11 +22,18 @@ export type OwnerMemberRow = {
   status?: string | null;
   tracks?: string | null;
   last_active?: string | null;
+  phone?: string | null;
+  gender?: string | null;
+  address?: string | null;
+  birth_date?: string | null;
+  tags?: string | null;
+  attendance_count?: number | null;
+  status_notes?: string | null;
 };
 
 async function getOwnerMembers() {
   const richSelect =
-    "first_name, last_name, membership, last_check_in, mrr, created_at, updated_at, email, role, status, tracks, last_active";
+    "first_name, last_name, membership, last_check_in, mrr, created_at, updated_at, email, role, status, tracks, last_active, phone, gender, address, birth_date, tags, attendance_count, status_notes";
   const baseSelect =
     "first_name, last_name, membership, last_check_in, mrr, created_at, updated_at, email, role";
 
@@ -46,14 +54,14 @@ async function getOwnerMembers() {
 }
 
 export default async function OwnerMembersPage() {
-  const { error, role } = await requireUserContext();
+  const { error, role, organizationIds } = await requireUserContext();
   if (error || !hasRole("owner", role)) {
     redirect("/organization");
   }
 
   const { data, error: membersError } = await getOwnerMembers();
-
   const members = (data ?? []) as OwnerMemberRow[];
+  const organizationId = organizationIds[0] ?? undefined;
 
   return (
     <SidebarShell mainClassName="w-full max-w-none px-5 py-10 lg:px-8 lg:py-16">
@@ -65,14 +73,16 @@ export default async function OwnerMembersPage() {
           </p>
         </header>
 
-        <OwnerSectionCard title="Member Directory" meta={`${members.length} rows`}>
-
+        <OwnerSectionCard
+          title="Member Directory"
+          meta={`${members.length} rows`}
+          headerRight={<MemberImportButton organizationId={organizationId} />}
+        >
           {membersError ? (
             <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-700">
               {membersError.message}
             </div>
           ) : null}
-
           <OwnerMembersTable rows={members} />
         </OwnerSectionCard>
       </section>

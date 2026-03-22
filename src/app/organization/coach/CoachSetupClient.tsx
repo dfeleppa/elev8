@@ -64,8 +64,8 @@ export default function CoachSetupClient() {
   const [goalType, setGoalType] = useState<GoalType>("lose_weight");
   const [sex, setSex] = useState<"male" | "female">("male");
   const [birthDate, setBirthDate] = useState("");
-  const [currentWeightKg, setCurrentWeightKg] = useState("82");
-  const [targetWeightKg, setTargetWeightKg] = useState("78");
+  const [currentWeightLbs, setCurrentWeightLbs] = useState("180");
+  const [targetWeightLbs, setTargetWeightLbs] = useState("172");
   const [heightCm, setHeightCm] = useState("178");
   const [bodyFatPercentage, setBodyFatPercentage] = useState("");
   const [sessionsPerWeek, setSessionsPerWeek] = useState("4");
@@ -104,7 +104,7 @@ export default function CoachSetupClient() {
           setHeightCm(String(profile.height_cm));
         }
         if (typeof profile?.current_weight_kg === "number") {
-          setCurrentWeightKg(String(profile.current_weight_kg));
+          setCurrentWeightLbs(String(Math.round(profile.current_weight_kg * 2.20462 * 10) / 10));
         }
         if (typeof profile?.body_fat_percent === "number") {
           setBodyFatPercentage(String(profile.body_fat_percent));
@@ -116,8 +116,8 @@ export default function CoachSetupClient() {
         if (latestPlan?.intensity_preset) {
           setIntensityPreset(latestPlan.intensity_preset as IntensityPreset);
         }
-        if (typeof latestPlan?.target_weight_kg === "number") {
-          setTargetWeightKg(String(latestPlan.target_weight_kg));
+        if (typeof latestPlan?.target_weight_lbs === "number") {
+          setTargetWeightLbs(String(latestPlan.target_weight_lbs));
         }
         if (typeof latestPlan?.sessions_per_week === "number") {
           setSessionsPerWeek(String(latestPlan.sessions_per_week));
@@ -171,8 +171,8 @@ export default function CoachSetupClient() {
         goalType,
         sex,
         birthDate,
-        currentWeightKg,
-        targetWeightKg: targetWeightKg ? Number(targetWeightKg) : null,
+        currentWeightLbs,
+        targetWeightLbs: targetWeightLbs ? Number(targetWeightLbs) : null,
         heightCm,
         bodyFatPercentage: bodyFatPercentage ? Number(bodyFatPercentage) : null,
         sessionsPerWeek: sessionsPerWeek ? Number(sessionsPerWeek) : null,
@@ -210,7 +210,7 @@ export default function CoachSetupClient() {
 
   function goNext() {
     if (step === 2) {
-      if (!currentWeightKg || !heightCm || !birthDate) {
+      if (!currentWeightLbs || !heightCm || !birthDate) {
         setError("Current weight, height, and birth date are required.");
         return;
       }
@@ -294,10 +294,10 @@ export default function CoachSetupClient() {
               />
             </label>
             <label className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Current Weight (kg)</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Current Weight (lbs)</span>
               <input
-                value={currentWeightKg}
-                onChange={(event) => setCurrentWeightKg(event.target.value)}
+                value={currentWeightLbs}
+                onChange={(event) => setCurrentWeightLbs(event.target.value)}
                 inputMode="decimal"
                 className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               />
@@ -321,10 +321,10 @@ export default function CoachSetupClient() {
               />
             </label>
             <label className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Target Weight (kg)</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Target Weight (lbs)</span>
               <input
-                value={targetWeightKg}
-                onChange={(event) => setTargetWeightKg(event.target.value)}
+                value={targetWeightLbs}
+                onChange={(event) => setTargetWeightLbs(event.target.value)}
                 inputMode="decimal"
                 className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               />
@@ -443,8 +443,8 @@ export default function CoachSetupClient() {
           <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4">
             <p className="text-sm font-semibold text-slate-100">Review</p>
             <p className="text-sm text-slate-300">Goal: {goalType.replaceAll("_", " ")}</p>
-            <p className="text-sm text-slate-300">Current Weight: {currentWeightKg} kg</p>
-            <p className="text-sm text-slate-300">Target Weight: {targetWeightKg || "-"} kg</p>
+            <p className="text-sm text-slate-300">Current Weight: {currentWeightLbs} lbs</p>
+            <p className="text-sm text-slate-300">Target Weight: {targetWeightLbs || "-"} lbs</p>
             <p className="text-sm text-slate-300">Intensity: {intensityPreset}</p>
             {planPreview ? (
               <p className="text-sm text-slate-300">

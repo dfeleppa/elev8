@@ -125,7 +125,7 @@ export async function GET(request: Request) {
 
   const { data: plans, error: planError } = await supabaseAdmin
     .from("coach_nutrition_plans")
-    .select("id, goal_type, intensity_preset, weekly_rate_percent, reverse_diet_weekly_kcal, target_weight_kg, maintenance_calories, target_calories, protein_grams, carbs_grams, fat_grams, formula_used, sessions_per_week, effective_date, last_check_in_date, next_check_in_date, plan_payload")
+    .select("id, goal_type, intensity_preset, weekly_rate_percent, reverse_diet_weekly_kcal, target_weight_lbs, maintenance_calories, target_calories, protein_grams, carbs_grams, fat_grams, formula_used, sessions_per_week, effective_date, last_check_in_date, next_check_in_date, plan_payload")
     .eq("member_id", requestedMemberId)
     .order("effective_date", { ascending: false })
     .limit(1);
@@ -182,15 +182,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Sex is required for calculation fallback." }, { status: 400 });
   }
 
-  const weightKg = toNumber(body?.currentWeightKg);
+  const currentWeightLbs = toNumber(body?.currentWeightLbs);
+  const weightKg = currentWeightLbs !== null ? currentWeightLbs / 2.20462 : null;
   const heightCm = toNumber(body?.heightCm);
   const bodyFatPercentage = toNumber(body?.bodyFatPercentage);
   const weeklyRatePercentOverride = toNumber(body?.weeklyRatePercentOverride);
   const reverseDietWeeklyKcalOverride = toNumber(body?.reverseDietWeeklyKcalOverride);
-  const targetWeightKg = toNumber(body?.targetWeightKg);
+  const targetWeightLbs = toNumber(body?.targetWeightLbs);
   const sessionsPerWeekInput = toNumber(body?.sessionsPerWeek);
 
-  if (weightKg === null || weightKg <= 0 || heightCm === null || heightCm <= 0) {
+  if (currentWeightLbs === null || currentWeightLbs <= 0 || heightCm === null || heightCm <= 0) {
     return NextResponse.json({ error: "Current weight and height are required." }, { status: 400 });
   }
 
@@ -226,11 +227,11 @@ export async function POST(request: Request) {
         sex,
         birthDate,
         ageYears,
-        weightKg,
+        currentWeightLbs,
         heightCm,
         bodyFatPercentage,
         sessionsPerWeek,
-        targetWeightKg,
+        targetWeightLbs,
       },
       plan,
     });
@@ -264,7 +265,7 @@ export async function POST(request: Request) {
         intensity_preset: intensityPreset,
         weekly_rate_percent: plan.weeklyRatePercent,
         reverse_diet_weekly_kcal: plan.reverseDietWeeklyKcal,
-        target_weight_kg: targetWeightKg,
+        target_weight_lbs: targetWeightLbs,
         maintenance_calories: plan.maintenanceCalories,
         target_calories: plan.targetCalories,
         protein_grams: plan.proteinGrams,
@@ -282,7 +283,7 @@ export async function POST(request: Request) {
           ageYears,
           bodyFatPercentage,
           heightCm,
-          weightKg,
+          weightLbs: currentWeightLbs,
         },
         updated_at: new Date().toISOString(),
       },

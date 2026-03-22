@@ -39,9 +39,10 @@ type HealthStatsPanelProps = {
   title: string;
   description: string;
   groups: StatGroup[];
+  hideHeader?: boolean;
 };
 
-export default function HealthStatsPanel({ title, description, groups }: HealthStatsPanelProps) {
+export default function HealthStatsPanel({ title, description, groups, hideHeader }: HealthStatsPanelProps) {
   const initialValues = useMemo(() => {
     return Object.fromEntries(
       groups.flatMap((group) =>
@@ -232,11 +233,14 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
 
   return (
     <section>
-      <header>
-        <h1 className="text-3xl font-semibold text-slate-100">{title}</h1>
-        <p className="mt-3 text-sm text-slate-400">{description}</p>
-        {errorMessage ? <p className="mt-3 text-sm text-rose-300">{errorMessage}</p> : null}
-      </header>
+      {!hideHeader && (
+        <header>
+          <h1 className="text-3xl font-semibold text-slate-100">{title}</h1>
+          <p className="mt-3 text-sm text-slate-400">{description}</p>
+          {errorMessage ? <p className="mt-3 text-sm text-rose-300">{errorMessage}</p> : null}
+        </header>
+      )}
+      {hideHeader && errorMessage && <p className="mb-4 text-sm text-rose-300">{errorMessage}</p>}
 
       <section className="mt-8 grid gap-6 lg:grid-cols-3">
         {groups.map((group) => (
@@ -248,21 +252,18 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
 
             {group.slug === "body-comp" ? (
               <>
-                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Athlete</p>
-                  <div className="mt-2 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Sex</p>
-                      <p className="mt-1 text-sm font-semibold capitalize text-slate-100">
-                        {isLoading ? "..." : athleteProfile.sex ?? "--"}
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Age</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-100">
-                        {isLoading ? "..." : athleteProfile.age ?? "--"}
-                      </p>
-                    </div>
+                <div className="mt-4 flex gap-3">
+                  <div className="flex flex-1 items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <span className="text-sm font-semibold text-slate-200">Sex</span>
+                    <span className="text-sm font-semibold capitalize text-slate-100">
+                      {isLoading ? "..." : athleteProfile.sex ?? "--"}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <span className="text-sm font-semibold text-slate-200">Age</span>
+                    <span className="text-sm font-semibold text-slate-100">
+                      {isLoading ? "..." : athleteProfile.age ?? "--"}
+                    </span>
                   </div>
                 </div>
 
@@ -283,7 +284,7 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
 
                 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Log Today&apos;s Weight</p>
-                  <form onSubmit={handleLogBodyComp} className="mt-3 flex flex-wrap items-center gap-2">
+                  <form onSubmit={handleLogBodyComp} className="mt-3 flex items-center gap-2">
                     <input
                       type="number"
                       inputMode="decimal"
@@ -301,34 +302,34 @@ export default function HealthStatsPanel({ title, description, groups }: HealthS
                           setLogBodyWeight("");
                         }
                       }}
-                      className="shrink-0 w-16 rounded-lg border border-white/15 bg-white/5 px-2 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-emerald-400/60"
+                      className="w-20 min-w-0 rounded-lg border border-white/15 bg-white/5 px-2 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-emerald-400/60"
                       required
                     />
                     <input
                       type="number"
                       inputMode="decimal"
                       step="0.1"
-                      min="3.0"
-                      max="50.0"
+                      min="1"
+                      max="99"
                       placeholder="bf%"
                       value={logBodyFat}
                       onChange={(e) => {
                         const v = e.target.value;
                         const num = parseFloat(v);
-                        if (v === "" || (Number.isFinite(num) && num >= 3 && num <= 50)) {
+                        if (v === "" || (Number.isFinite(num) && num >= 1 && num <= 99)) {
                           setLogBodyFat(v);
                         } else if (v === "") {
                           setLogBodyFat("");
                         }
                       }}
-                      className="shrink-0 w-16 rounded-lg border border-white/15 bg-white/5 px-2 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-emerald-400/60"
+                      className="w-16 min-w-0 rounded-lg border border-white/15 bg-white/5 px-2 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-emerald-400/60"
                     />
                     <button
                       type="submit"
                       disabled={isLogging || !logBodyWeight.trim()}
                       className="shrink-0 rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white active:scale-95 transition-transform shadow-[0_4px_20px_rgba(255,177,196,0.2)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {isLogging ? "Logging..." : "Submit"}
+                      {isLogging ? "..." : "Add"}
                     </button>
                     {logSuccess && (
                       <span className="shrink-0 text-xs text-emerald-400 font-medium">Saved!</span>

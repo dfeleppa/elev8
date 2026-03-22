@@ -10,7 +10,7 @@ import type { OwnerMemberRow } from "./page";
 type SortColumn = keyof OwnerMemberRow;
 type SortDirection = "asc" | "desc";
 
-const columns = ["member", "status", "membership", "tracks", "last_check_in", "last_active"] as const;
+const columns = ["member", "status", "membership", "tags", "tracks", "gender", "birth_date", "attendance_count", "last_check_in", "last_active"] as const;
 
 const externalIcon = (
   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
@@ -215,6 +215,9 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
           row.email,
           row.membership,
           row.role,
+          row.phone,
+          row.tags,
+          row.status_notes,
         ]
           .map((value) => textValue(value).toLowerCase())
           .join(" ");
@@ -279,13 +282,33 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
         </select>
       </div>
 
-      <OwnerDataTable minWidthClassName="min-w-[1180px]">
+      <OwnerDataTable minWidthClassName="min-w-[1600px]">
           <thead>
             <tr>
               <th className="border-b border-white/10 px-3 py-3 font-semibold">Member</th>
               <th className="border-b border-white/10 px-3 py-3 font-semibold">Status</th>
               <th className="border-b border-white/10 px-3 py-3 font-semibold">Membership</th>
+              <th className="border-b border-white/10 px-3 py-3 font-semibold">Tags</th>
               <th className="border-b border-white/10 px-3 py-3 font-semibold">Tracks</th>
+              <th className="border-b border-white/10 px-3 py-3 font-semibold">Gender</th>
+              <th className="border-b border-white/10 px-3 py-3 font-semibold">
+                <button
+                  type="button"
+                  onClick={() => onSort("birth_date")}
+                  className={headingClass("birth_date")}
+                >
+                  Birth Date{sortColumn === "birth_date" ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
+                </button>
+              </th>
+              <th className="border-b border-white/10 px-3 py-3 font-semibold">
+                <button
+                  type="button"
+                  onClick={() => onSort("attendance_count")}
+                  className={headingClass("attendance_count")}
+                >
+                  Attendance{sortColumn === "attendance_count" ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
+                </button>
+              </th>
               <th className="border-b border-white/10 px-3 py-3 font-semibold">
                 <button
                   type="button"
@@ -310,7 +333,7 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
             {filteredRows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length}
+                  colSpan={10}
                   className="px-4 py-8 text-sm text-slate-500"
                 >
                   No members match the current filters.
@@ -329,6 +352,7 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
                       <div>
                         <p className="text-sm font-medium leading-tight text-slate-100">{getFullName(row)}</p>
                         <p className="mt-1 text-xs text-slate-500">{row.email ?? "-"}</p>
+                        {row.phone ? <p className="mt-0.5 text-xs text-slate-500">{row.phone}</p> : null}
                         <div className="mt-2 flex items-center gap-2 text-slate-500">
                           <button type="button" className={ownerIconButtonCompactClass}>{externalIcon}</button>
                           <button type="button" className={ownerIconButtonCompactClass}>{phoneIcon}</button>
@@ -349,6 +373,9 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
                         </span>
                       ) : null}
                     </div>
+                    {row.status_notes ? (
+                      <p className="mt-1.5 text-xs text-slate-500 italic">{row.status_notes}</p>
+                    ) : null}
                   </td>
                   <td className="border-y border-white/10 px-4 py-4 align-top">
                     <p className="text-sm text-slate-300">{row.membership ?? "-"}</p>
@@ -358,7 +385,21 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
                       </span>
                     ) : null}
                   </td>
+                  <td className="border-y border-white/10 px-4 py-4 align-top">
+                    {row.tags ? (
+                      <div className="flex flex-wrap gap-1">
+                        {row.tags.split(",").map((tag) => tag.trim()).filter(Boolean).map((tag) => (
+                          <span key={tag} className="rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-300">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    ) : <span className="text-sm text-slate-500">-</span>}
+                  </td>
                   <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{getTracks(row)}</td>
+                  <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{row.gender ?? "-"}</td>
+                  <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{formatDate(row.birth_date ?? null)}</td>
+                  <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{row.attendance_count != null ? row.attendance_count : "-"}</td>
                   <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{formatDate(row.last_check_in)}</td>
                   <td className="rounded-r-2xl border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{formatDate(getLastActive(row))}</td>
                 </tr>

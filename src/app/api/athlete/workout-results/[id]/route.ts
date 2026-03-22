@@ -1,0 +1,30 @@
+import { NextResponse } from "next/server";
+
+import { hasRole, requireUserContext } from "../../../../../lib/member";
+import { supabaseAdmin } from "../../../../../lib/supabase-admin";
+
+export const runtime = "nodejs";
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { error, role, userId } = await requireUserContext();
+  if (error || !userId || !hasRole("member", role)) {
+    return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  const { error: deleteError } = await supabaseAdmin
+    .from("workout_results")
+    .delete()
+    .eq("id", id)
+    .eq("member_id", userId);
+
+  if (deleteError) {
+    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}

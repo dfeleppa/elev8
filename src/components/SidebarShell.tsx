@@ -66,7 +66,6 @@ const navItems: NavItem[] = [
         minRole: "coach",
         children: [
           { label: "Gym Dashboard", href: "/organization/gym-dashboard", minRole: "coach" },
-          { label: "Schedule", href: "/organization/coach/schedule", minRole: "coach" },
           { label: "Reports - Members", href: "/organization/coach/reports-members", minRole: "coach" },
         ],
       },
@@ -77,7 +76,7 @@ const navItems: NavItem[] = [
         children: [
           { label: "Agents", href: "/organization/owner/agents", minRole: "owner" },
           { label: "Staff", href: "/organization/owner/staff", minRole: "owner" },
-          { label: "Schedule", href: "/organization/owner/schedule", minRole: "owner" },
+          { label: "Class Setup", href: "/organization/owner/schedule", minRole: "owner" },
           { label: "Payroll", href: "/organization/owner/payroll", minRole: "owner" },
           { label: "Billing", href: "/organization/owner/billing", minRole: "owner" },
           { label: "Tracks & Memberships", href: "/organization/owner/tracks-memberships", minRole: "owner" },
@@ -148,7 +147,6 @@ function getNavIcon(href: string) {
     case "/organization/members":
       return <Users {...iconProps} />;
     case "/organization/owner/schedule":
-    case "/organization/coach/schedule":
     case "/organization/member/class-schedule":
       return <CalendarDays {...iconProps} />;
     case "/organization/owner/payroll":
@@ -358,7 +356,10 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const gymSectionOrder: Array<"owner" | "admin" | "coach"> =
     userRole === "owner" ? ["owner", "admin", "coach"] : userRole === "admin" ? ["admin", "coach"] : userRole === "coach" ? ["coach"] : [];
 
-  const gymEntries = gymSectionOrder.flatMap((label) => sectionByLabel.get(label)?.children ?? []);
+  const rawGymEntries = gymSectionOrder.flatMap((label) => sectionByLabel.get(label)?.children ?? []);
+  const gymDashboardEntry = rawGymEntries.find((e) => e.href === "/organization/gym-dashboard");
+  const gymEntriesWithoutDashboard = rawGymEntries.filter((e) => e.href !== "/organization/gym-dashboard");
+  const gymEntries = gymDashboardEntry ? [gymDashboardEntry, ...gymEntriesWithoutDashboard] : rawGymEntries;
   const athleteEntries = sectionByLabel.get("member")?.children ?? [];
   const visibleEntries = viewMode === "athlete" ? athleteEntries : gymEntries;
 

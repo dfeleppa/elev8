@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(find /c/Users/DFele/elev8 -type f \\\\\\(-name *.sql -o -name *schema* -o -name *migration* \\\\\\))",
+      "Bash(find /c/Users/DFele/elev8/supabase -type f -name *.sql)",
+      "Bash(grep -l \"workout_blocks\\\\|workout_results\" /c/Users/DFele/elev8/supabase/migrations/*.sql)",
+      "Bash(ls -1 /c/Users/DFele/elev8/supabase/migrations/*.sql)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|jsx|js\\)$\")",
+      "Bash(xargs ls:*)",
+      "Bash(for file:*)",
+      "Bash(do grep:*)",
+      "Bash(echo \"File: $file\")",
+      "Bash(done)"
+    ]
+  }
+}

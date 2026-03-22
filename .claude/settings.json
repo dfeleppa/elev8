@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c//**)",
+      "Bash(find c:/Users/DFele/elev8 -maxdepth 4 -name *.tsx -o -name *.jsx)"
+    ]
+  }
+}

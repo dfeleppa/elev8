@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
-import AppPlaceholderPage from "../../../../components/AppPlaceholderPage";
 import SidebarShell from "../../../../components/SidebarShell";
 import { hasRole, requireUserContext } from "../../../../lib/member";
+import AccountDashboardClient from "./AccountDashboardClient";
 
 export default async function MemberAccountDashboardPage() {
   const { error, role, userId } = await requireUserContext();
@@ -11,16 +11,8 @@ export default async function MemberAccountDashboardPage() {
   }
 
   return (
-    <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
-      <AppPlaceholderPage
-        eyebrow="Member"
-        title="Account Dashboard"
-        description="Manage profile details, notification preferences, and account-level settings for your training experience."
-        links={[
-          { label: "Open Athlete Dashboard", href: "/organization/member/athlete-dashboard" },
-          { label: "Open Nutrition", href: "/organization/member/nutrition" },
-        ]}
-      />
+    <SidebarShell mainClassName="w-full pb-10 lg:pb-16">
+      <AccountDashboardClient />
     </SidebarShell>
   );
 }

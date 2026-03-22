@@ -332,7 +332,7 @@ export async function POST(request: Request) {
       const title = String(entry.row.Title ?? "").trim() || "Imported Workout";
       const date = parseDate(String(entry.row.Date ?? ""));
       const styleRaw = String(entry.row.Style ?? "").trim();
-      const repMax = toNumber(entry.row.RepMax);
+      const repMax = toNumber(entry.row.repmax ?? entry.row.RepMax);
       const primaryMovement = String(entry.row.PrimaryMovement ?? "").trim() || null;
       const bestScoreRaw = String(entry.row.BestScore ?? "").trim();
       const notes = String(entry.row.Notes ?? "").trim() || null;
@@ -397,6 +397,11 @@ export async function POST(request: Request) {
         const distance = toNumber(bestScoreRaw);
         resultPayload.distance = distance;
         resultPayload.score_value = distance;
+      }
+
+      if (style.blockType === "lift") {
+        resultPayload.total_reps = repMax ?? null;
+        resultPayload.score_value = toNumber(bestScoreRaw);
       }
 
       const { data: inserted, error: insertError } = await supabaseAdmin

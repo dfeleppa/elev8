@@ -21,7 +21,7 @@ export async function GET() {
     const [{ data: latestPlan, error: planError }, { data: profile, error: profileError }] = await Promise.all([
       supabaseAdmin
         .from("coach_nutrition_plans")
-        .select("goal_type, target_weight_kg, effective_date, last_check_in_date, next_check_in_date, plan_payload")
+        .select("goal_type, target_weight_lbs, effective_date, last_check_in_date, next_check_in_date, plan_payload")
         .eq("member_id", userId)
         .order("effective_date", { ascending: false })
         .limit(1)
@@ -49,20 +49,23 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
 
-    const planPayload = (latestPlan?.plan_payload ?? {}) as { weightKg?: number | null };
+    const planPayload = (latestPlan?.plan_payload ?? {}) as { weightLbs?: number | null; weightKg?: number | null };
 
+    // Prefer lbs stored directly; fall back to converting kg for legacy rows.
     const startWeight =
-      typeof planPayload.weightKg === "number" && Number.isFinite(planPayload.weightKg)
-        ? planPayload.weightKg
-        : typeof profile?.current_weight_kg === "number" && Number.isFinite(profile.current_weight_kg)
-          ? profile.current_weight_kg
-          : null;
+      typeof planPayload.weightLbs === "number" && Number.isFinite(planPayload.weightLbs)
+        ? planPayload.weightLbs
+        : typeof planPayload.weightKg === "number" && Number.isFinite(planPayload.weightKg)
+          ? Math.round(planPayload.weightKg * 2.20462 * 10) / 10
+          : typeof profile?.current_weight_kg === "number" && Number.isFinite(profile.current_weight_kg)
+            ? Math.round(profile.current_weight_kg * 2.20462 * 10) / 10
+            : null;
 
     const currentWeight =
       typeof currentWeightEntry?.value === "number" && Number.isFinite(currentWeightEntry.value)
         ? currentWeightEntry.value
         : typeof profile?.current_weight_kg === "number" && Number.isFinite(profile.current_weight_kg)
-          ? profile.current_weight_kg
+          ? Math.round(profile.current_weight_kg * 2.20462 * 10) / 10
           : startWeight;
 
     return NextResponse.json({
@@ -73,8 +76,8 @@ export async function GET() {
             startWeight,
             currentWeight,
             targetWeight:
-              typeof latestPlan.target_weight_kg === "number" && Number.isFinite(latestPlan.target_weight_kg)
-                ? latestPlan.target_weight_kg
+              typeof latestPlan.target_weight_lbs === "number" && Number.isFinite(latestPlan.target_weight_lbs)
+                ? latestPlan.target_weight_lbs
                 : null,
             effectiveDate: latestPlan.effective_date,
             lastCheckInDate: latestPlan.last_check_in_date,
