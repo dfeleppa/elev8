@@ -26,6 +26,73 @@ function toPositiveDecimal(value: unknown) {
   return Math.max(0.01, parsed);
 }
 
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { errorResponse, token, memberId } = getAgentConfig();
+  if (errorResponse) {
+    return errorResponse;
+  }
+
+  if (!isAuthorizedAgentRequest(request, token)) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const { id } = await context.params;
+  if (!id) {
+    return NextResponse.json({ error: "Missing entry id." }, { status: 400 });
+  }
+
+  const { data: entry, error } = await supabaseAdmin
+    .from("nutrition_entries")
+    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, created_at")
+    .eq("id", id)
+    .eq("member_id", memberId)
+    .maybeSingle();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!entry) {
+    return NextResponse.json({ error: "Entry not found." }, { status: 404 });
+  }
+
+  return NextResponse.json({ entry });
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { errorResponse, token, memberId } = getAgentConfig();
+  if (errorResponse) {
+    return errorResponse;
+  }
+
+  if (!isAuthorizedAgentRequest(request, token)) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const { id } = await context.params;
+  if (!id) {
+    return NextResponse.json({ error: "Missing entry id." }, { status: 400 });
+  }
+
+  const { error } = await supabaseAdmin
+    .from("nutrition_entries")
+    .delete()
+    .eq("id", id)
+    .eq("member_id", memberId);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, deleted: id });
+}
+
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }

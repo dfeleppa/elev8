@@ -30,6 +30,78 @@ function toPositiveDecimal(value: unknown) {
   return Math.max(0.01, parsed);
 }
 
+export async function GET(request: Request) {
+  const { errorResponse, token, memberId } = getAgentConfig();
+  if (errorResponse) {
+    return errorResponse;
+  }
+
+  if (!isAuthorizedAgentRequest(request, token)) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const date = searchParams.get("date") ?? "";
+  const mealType = searchParams.get("mealType") ?? null;
+
+  if (!isValidDate(date)) {
+    return NextResponse.json({ error: "Missing or invalid date. Use YYYY-MM-DD." }, { status: 400 });
+  }
+
+  if (mealType !== null && !allowedMeals.has(mealType)) {
+    return NextResponse.json({ error: "Invalid meal type." }, { status: 400 });
+  }
+
+  const { data: day, error: dayError } = await supabaseAdmin
+    .from("nutrition_days")
+    .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target")
+    .eq("member_id", memberId)
+    .eq("day_date", date)
+    .maybeSingle();
+
+  if (dayError) {
+    return NextResponse.json({ error: dayError.message }, { status: 500 });
+  }
+
+  if (!day) {
+    return NextResponse.json({ date, entries: [], totals: null, targets: null });
+  }
+
+  let query = supabaseAdmin
+    .from("nutrition_entries")
+    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, created_at")
+    .eq("member_id", memberId)
+    .eq("day_id", day.id)
+    .order("created_at", { ascending: true });
+
+  if (mealType !== null) {
+    query = query.eq("meal_type", mealType);
+  }
+
+  const { data: entries, error: entriesError } = await query;
+
+  if (entriesError) {
+    return NextResponse.json({ error: entriesError.message }, { status: 500 });
+  }
+
+  const rows = entries ?? [];
+  const totals = {
+    calories: rows.reduce((sum, e) => sum + (e.calories ?? 0), 0),
+    protein: rows.reduce((sum, e) => sum + (e.protein ?? 0), 0),
+    carbs: rows.reduce((sum, e) => sum + (e.carbs ?? 0), 0),
+    fat: rows.reduce((sum, e) => sum + (e.fat ?? 0), 0),
+  };
+
+  const targets = {
+    calories: day.calorie_target ?? null,
+    protein: day.protein_target ?? null,
+    carbs: day.carbs_target ?? null,
+    fat: day.fat_target ?? null,
+  };
+
+  return NextResponse.json({ date, entries: rows, totals, targets });
+}
+
 export async function POST(request: Request) {
   const { errorResponse, token, memberId } = getAgentConfig();
   if (errorResponse) {
