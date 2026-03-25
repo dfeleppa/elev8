@@ -12,6 +12,12 @@ import {
 import OwnerDataTable from "../../../../components/owner/OwnerDataTable";
 import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
 
+type StaffMember = {
+  name: string;
+  coachingPayrate: number;
+  officePayrate: number;
+};
+
 type PayrollEntry = {
   id: string;
   weekEndingDate: string;
@@ -55,8 +61,27 @@ function toDraft(entry: PayrollEntry): EntryDraft {
   };
 }
 
+function calcPay(
+  staffName: string,
+  coachingHours: string,
+  officeHours: string,
+  staffList: StaffMember[]
+): string {
+  const member = staffList.find((s) => s.name === staffName);
+  if (!member) return "";
+  const coaching = parseFloat(coachingHours) || 0;
+  const office = parseFloat(officeHours) || 0;
+  const total =
+    coaching * (member.coachingPayrate ?? 0) +
+    office * (member.officePayrate ?? 0);
+  return total.toFixed(2);
+}
+
 function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value);
 }
 
 function formatDate(value: string) {
@@ -74,6 +99,8 @@ const cellInputClass =
   "w-full rounded-lg border border-white/15 bg-black/30 px-2 py-1.5 text-sm text-slate-100 focus:border-[#ffb1c4]/60 focus:outline-none";
 const cellSelectClass =
   "w-full rounded-lg border border-white/15 bg-[#171c22] px-2 py-1.5 text-sm text-slate-100 focus:border-[#ffb1c4]/60 focus:outline-none";
+const cellPayClass =
+  "w-full rounded-lg border border-emerald-400/30 bg-emerald-400/5 px-2 py-1.5 text-sm font-semibold text-emerald-300 focus:border-emerald-400/60 focus:outline-none";
 
 export default function OwnerPayrollClient({
   organizationId,
@@ -81,33 +108,43 @@ export default function OwnerPayrollClient({
   organizationId: string | null;
 }) {
   const [entries, setEntries] = useState<PayrollEntry[]>([]);
-  const [staffNames, setStaffNames] = useState<string[]>([]);
+  const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
 
-  // Per-row edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<EntryDraft>(EMPTY_DRAFT);
 
-  // New blank row draft
   const [newDraft, setNewDraft] = useState<EntryDraft>(EMPTY_DRAFT);
 
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const newRowRef = useRef<HTMLTableRowElement>(null);
 
-  // Fetch staff names for the dropdown
+  // Fetch staff list with pay rates
   useEffect(() => {
     const params = new URLSearchParams();
     if (organizationId) params.set("organizationId", organizationId);
     fetch(`/api/owner/staff?${params}`)
       .then((r) => r.json())
       .then((data) => {
-        const names: string[] = (data.staff ?? [])
-          .map((s: { user?: { fullName?: string } }) => s.user?.fullName ?? "")
-          .filter(Boolean)
-          .sort((a: string, b: string) => a.localeCompare(b));
-        setStaffNames(names);
+        const members: StaffMember[] = (data.staff ?? [])
+          .filter((s: { user?: { fullName?: string } }) => s.user?.fullName)
+          .map(
+            (s: {
+              user: { fullName: string };
+              coachingPayrate: number | null;
+              officePayrate: number | null;
+            }) => ({
+              name: s.user.fullName,
+              coachingPayrate: Number(s.coachingPayrate ?? 0),
+              officePayrate: Number(s.officePayrate ?? 0),
+            })
+          )
+          .sort((a: StaffMember, b: StaffMember) =>
+            a.name.localeCompare(b.name)
+          );
+        setStaffList(members);
       })
       .catch(() => {});
   }, [organizationId]);
@@ -131,6 +168,48 @@ export default function OwnerPayrollClient({
   useEffect(() => {
     loadEntries();
   }, [loadEntries]);
+
+  // Helpers to update a draft field and auto-recalculate pay
+  function updateEditDraft(patch: Partial<EntryDraft>) {
+    setEditDraft((prev) => {
+      const next = { ...prev, ...patch };
+      // Recalculate when staff or hours change, unless totalPay was explicitly patched
+      if (
+        ("staffName" in patch ||
+          "coachingHours" in patch ||
+          "officeHours" in patch) &&
+        !("totalPay" in patch)
+      ) {
+        next.totalPay = calcPay(
+          next.staffName,
+          next.coachingHours,
+          next.officeHours,
+          staffList
+        );
+      }
+      return next;
+    });
+  }
+
+  function updateNewDraft(patch: Partial<EntryDraft>) {
+    setNewDraft((prev) => {
+      const next = { ...prev, ...patch };
+      if (
+        ("staffName" in patch ||
+          "coachingHours" in patch ||
+          "officeHours" in patch) &&
+        !("totalPay" in patch)
+      ) {
+        next.totalPay = calcPay(
+          next.staffName,
+          next.coachingHours,
+          next.officeHours,
+          staffList
+        );
+      }
+      return next;
+    });
+  }
 
   const startEdit = (entry: PayrollEntry) => {
     setEditingId(entry.id);
@@ -301,7 +380,7 @@ export default function OwnerPayrollClient({
                           type="date"
                           value={editDraft.weekEndingDate}
                           onChange={(e) =>
-                            setEditDraft((d) => ({ ...d, weekEndingDate: e.target.value }))
+                            updateEditDraft({ weekEndingDate: e.target.value })
                           }
                           className={cellInputClass}
                         />
@@ -310,14 +389,14 @@ export default function OwnerPayrollClient({
                         <select
                           value={editDraft.staffName}
                           onChange={(e) =>
-                            setEditDraft((d) => ({ ...d, staffName: e.target.value }))
+                            updateEditDraft({ staffName: e.target.value })
                           }
                           className={cellSelectClass}
                         >
                           <option value="">Select staff...</option>
-                          {staffNames.map((name) => (
-                            <option key={name} value={name}>
-                              {name}
+                          {staffList.map((s) => (
+                            <option key={s.name} value={s.name}>
+                              {s.name}
                             </option>
                           ))}
                         </select>
@@ -329,7 +408,7 @@ export default function OwnerPayrollClient({
                           step="0.5"
                           value={editDraft.coachingHours}
                           onChange={(e) =>
-                            setEditDraft((d) => ({ ...d, coachingHours: e.target.value }))
+                            updateEditDraft({ coachingHours: e.target.value })
                           }
                           className={cellInputClass}
                         />
@@ -341,7 +420,7 @@ export default function OwnerPayrollClient({
                           step="0.5"
                           value={editDraft.officeHours}
                           onChange={(e) =>
-                            setEditDraft((d) => ({ ...d, officeHours: e.target.value }))
+                            updateEditDraft({ officeHours: e.target.value })
                           }
                           className={cellInputClass}
                         />
@@ -353,9 +432,9 @@ export default function OwnerPayrollClient({
                           step="0.01"
                           value={editDraft.totalPay}
                           onChange={(e) =>
-                            setEditDraft((d) => ({ ...d, totalPay: e.target.value }))
+                            updateEditDraft({ totalPay: e.target.value })
                           }
-                          className={cellInputClass}
+                          className={cellPayClass}
                         />
                       </td>
                       <td className="border-y border-white/10 px-3 py-2">
@@ -363,7 +442,7 @@ export default function OwnerPayrollClient({
                           type="date"
                           value={editDraft.payDate}
                           onChange={(e) =>
-                            setEditDraft((d) => ({ ...d, payDate: e.target.value }))
+                            updateEditDraft({ payDate: e.target.value })
                           }
                           className={cellInputClass}
                         />
@@ -373,7 +452,7 @@ export default function OwnerPayrollClient({
                           type="text"
                           value={editDraft.notes}
                           onChange={(e) =>
-                            setEditDraft((d) => ({ ...d, notes: e.target.value }))
+                            updateEditDraft({ notes: e.target.value })
                           }
                           placeholder="Notes..."
                           className={cellInputClass}
@@ -405,7 +484,10 @@ export default function OwnerPayrollClient({
                 }
 
                 return (
-                  <tr key={entry.id} className="group transition hover:bg-white/[0.02]">
+                  <tr
+                    key={entry.id}
+                    className="group transition hover:bg-white/[0.02]"
+                  >
                     <td className="rounded-l-2xl border-y border-white/10 px-3 py-4 text-sm text-slate-300">
                       {formatDate(entry.weekEndingDate)}
                     </td>
@@ -453,7 +535,7 @@ export default function OwnerPayrollClient({
               })
             )}
 
-            {/* Divider row */}
+            {/* Divider */}
             <tr>
               <td colSpan={8} className="px-3 pb-1 pt-4">
                 <div className="flex items-center gap-3">
@@ -473,7 +555,7 @@ export default function OwnerPayrollClient({
                   type="date"
                   value={newDraft.weekEndingDate}
                   onChange={(e) =>
-                    setNewDraft((d) => ({ ...d, weekEndingDate: e.target.value }))
+                    updateNewDraft({ weekEndingDate: e.target.value })
                   }
                   className={cellInputClass}
                 />
@@ -482,14 +564,14 @@ export default function OwnerPayrollClient({
                 <select
                   value={newDraft.staffName}
                   onChange={(e) =>
-                    setNewDraft((d) => ({ ...d, staffName: e.target.value }))
+                    updateNewDraft({ staffName: e.target.value })
                   }
                   className={cellSelectClass}
                 >
                   <option value="">Select staff...</option>
-                  {staffNames.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
+                  {staffList.map((s) => (
+                    <option key={s.name} value={s.name}>
+                      {s.name}
                     </option>
                   ))}
                 </select>
@@ -501,7 +583,7 @@ export default function OwnerPayrollClient({
                   step="0.5"
                   value={newDraft.coachingHours}
                   onChange={(e) =>
-                    setNewDraft((d) => ({ ...d, coachingHours: e.target.value }))
+                    updateNewDraft({ coachingHours: e.target.value })
                   }
                   placeholder="0"
                   className={cellInputClass}
@@ -514,7 +596,7 @@ export default function OwnerPayrollClient({
                   step="0.5"
                   value={newDraft.officeHours}
                   onChange={(e) =>
-                    setNewDraft((d) => ({ ...d, officeHours: e.target.value }))
+                    updateNewDraft({ officeHours: e.target.value })
                   }
                   placeholder="0"
                   className={cellInputClass}
@@ -527,10 +609,10 @@ export default function OwnerPayrollClient({
                   step="0.01"
                   value={newDraft.totalPay}
                   onChange={(e) =>
-                    setNewDraft((d) => ({ ...d, totalPay: e.target.value }))
+                    updateNewDraft({ totalPay: e.target.value })
                   }
-                  placeholder="0.00"
-                  className={cellInputClass}
+                  placeholder="Auto"
+                  className={cellPayClass}
                 />
               </td>
               <td className="px-3 pb-3 pt-2">
@@ -538,7 +620,7 @@ export default function OwnerPayrollClient({
                   type="date"
                   value={newDraft.payDate}
                   onChange={(e) =>
-                    setNewDraft((d) => ({ ...d, payDate: e.target.value }))
+                    updateNewDraft({ payDate: e.target.value })
                   }
                   className={cellInputClass}
                 />
@@ -547,9 +629,7 @@ export default function OwnerPayrollClient({
                 <input
                   type="text"
                   value={newDraft.notes}
-                  onChange={(e) =>
-                    setNewDraft((d) => ({ ...d, notes: e.target.value }))
-                  }
+                  onChange={(e) => updateNewDraft({ notes: e.target.value })}
                   placeholder="Notes..."
                   className={cellInputClass}
                 />
@@ -558,7 +638,9 @@ export default function OwnerPayrollClient({
                 <button
                   type="button"
                   onClick={saveNew}
-                  disabled={saving || !newDraft.weekEndingDate || !newDraft.staffName}
+                  disabled={
+                    saving || !newDraft.weekEndingDate || !newDraft.staffName
+                  }
                   className={ownerIconButtonSuccessClass}
                   title="Save new entry"
                 >

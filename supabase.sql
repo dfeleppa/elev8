@@ -889,9 +889,9 @@ create policy member_movement_prs_member_access
   );
 
 -- Payroll entries
-create table if not exists payroll_entries (
+create table if not exists public.payroll_entries (
   id uuid primary key default gen_random_uuid(),
-  organization_id uuid not null references organizations(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
   week_ending_date date not null,
   staff_name text not null,
   coaching_hours numeric(10,2) not null default 0,
@@ -904,20 +904,20 @@ create table if not exists payroll_entries (
 );
 
 create index if not exists payroll_entries_org_idx
-  on payroll_entries(organization_id, week_ending_date desc);
+  on public.payroll_entries(organization_id, week_ending_date desc);
 
-alter table payroll_entries enable row level security;
+alter table public.payroll_entries enable row level security;
 
-drop policy if exists payroll_entries_owner_access on payroll_entries;
+drop policy if exists payroll_entries_owner_access on public.payroll_entries;
 create policy payroll_entries_owner_access
-  on payroll_entries
+  on public.payroll_entries
   for all
   to authenticated
   using (
     exists (
       select 1
-      from organization_memberships m
-      where m.organization_id = payroll_entries.organization_id
+      from public.organization_memberships m
+      where m.organization_id = public.payroll_entries.organization_id
         and m.user_id = auth.uid()
         and m.role in ('admin', 'owner')
     )
@@ -925,8 +925,8 @@ create policy payroll_entries_owner_access
   with check (
     exists (
       select 1
-      from organization_memberships m
-      where m.organization_id = payroll_entries.organization_id
+      from public.organization_memberships m
+      where m.organization_id = public.payroll_entries.organization_id
         and m.user_id = auth.uid()
         and m.role in ('admin', 'owner')
     )
