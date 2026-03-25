@@ -887,3 +887,47 @@ create policy member_movement_prs_member_access
         and m.role in ('coach', 'admin', 'owner')
     )
   );
+
+-- Payroll entries
+create table if not exists payroll_entries (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  week_ending_date date not null,
+  staff_name text not null,
+  coaching_hours numeric(10,2) not null default 0,
+  office_hours numeric(10,2) not null default 0,
+  total_pay numeric(10,2) not null default 0,
+  pay_date date,
+  notes text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists payroll_entries_org_idx
+  on payroll_entries(organization_id, week_ending_date desc);
+
+alter table payroll_entries enable row level security;
+
+drop policy if exists payroll_entries_owner_access on payroll_entries;
+create policy payroll_entries_owner_access
+  on payroll_entries
+  for all
+  to authenticated
+  using (
+    exists (
+      select 1
+      from organization_memberships m
+      where m.organization_id = payroll_entries.organization_id
+        and m.user_id = auth.uid()
+        and m.role in ('admin', 'owner')
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from organization_memberships m
+      where m.organization_id = payroll_entries.organization_id
+        and m.user_id = auth.uid()
+        and m.role in ('admin', 'owner')
+    )
+  );
