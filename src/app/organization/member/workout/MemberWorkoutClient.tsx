@@ -145,6 +145,7 @@ export default function MemberWorkoutClient() {
 
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [trackId, setTrackId] = useState<string | null>(null);
+  const [tracks, setTracks] = useState<{ id: string; name: string }[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
 
   const [selectedDay, setSelectedDay] = useState(todayKey);
@@ -174,15 +175,42 @@ export default function MemberWorkoutClient() {
       setOrganizationId(orgId);
       setUserId(me?.userId ?? null);
 
-      let tid: string | null = me?.trackId ?? null;
-      if (!tid && orgId) {
+      let tid: string | null = null;
+
+      if (orgId) {
         const tr = await fetch(`/api/programming/tracks?organizationId=${orgId}`, { cache: "no-store" });
         const tp = await tr.json();
-        tid = tp?.tracks?.[0]?.id ?? null;
+        const fetchedTracks: { id: string; name: string }[] = (tp?.tracks ?? []).map(
+          (t: { id: string; name: string }) => ({ id: t.id, name: t.name })
+        );
+        setTracks(fetchedTracks);
+
+        const storedId = localStorage.getItem("elev8-track-id");
+        if (storedId && fetchedTracks.some((t) => t.id === storedId)) {
+          tid = storedId;
+        } else if (me?.trackId) {
+          tid = me.trackId;
+        } else if (fetchedTracks.length > 0) {
+          tid = fetchedTracks[0].id;
+        }
+        if (tid) localStorage.setItem("elev8-track-id", tid);
       }
+
       setTrackId(tid);
     })();
   }, []);
+
+  // ---- React to track changes from the header dropdown ----
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === "elev8-track-id" && e.newValue && e.newValue !== trackId) {
+        setTrackId(e.newValue);
+        setDayCache({});
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [trackId]);
 
   // ---- Load week when day or track changes ----
   const loadWeek = useCallback(
@@ -288,11 +316,37 @@ export default function MemberWorkoutClient() {
     }
   }
 
+  function handleTrackSelect(id: string) {
+    if (id === trackId) return;
+    setTrackId(id);
+    setDayCache({});
+    localStorage.setItem("elev8-track-id", id);
+    window.dispatchEvent(new StorageEvent("storage", { key: "elev8-track-id", newValue: id }));
+  }
+
   const day = dayCache[selectedDay];
   const blocks = day?.blocks ?? [];
 
   return (
     <div className="space-y-6">
+      {/* ── Track selector ── */}
+      {tracks.length > 1 && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">Track</span>
+          <select
+            value={trackId ?? ""}
+            onChange={(e) => handleTrackSelect(e.target.value)}
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-300 outline-none transition hover:border-white/20 hover:text-slate-100"
+          >
+            {tracks.map((t) => (
+              <option key={t.id} value={t.id} className="bg-[#161a20] text-slate-100">
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* ── Date strip ── */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
         <div className="flex items-center gap-2">

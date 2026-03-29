@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Trash2, Upload, X } from "lucide-react";
 
 import FitnessScoreCard from "../../../../components/health/FitnessScoreCard";
+import TodaysWorkoutCard from "../../../../components/health/TodaysWorkoutCard";
 import HealthStatsPanel from "../../../../components/health/HealthStatsPanel";
 import TotalWorkoutsLoggedCard from "../../../../components/health/TotalWorkoutsLoggedCard";
 import NutritionCoachCard from "../../../../components/health/NutritionCoachCard";
@@ -218,7 +219,10 @@ export default function AthleteDashboardClient({ initialTab, totalWorkoutsLogged
       {/* Dashboard tab */}
       {activeTab === "dashboard" && (
         <>
-          <FitnessScoreCard />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <FitnessScoreCard />
+            <TodaysWorkoutCard />
+          </div>
           <HealthStatsPanel
             title="Athlete Dashboard"
             description="Track key performance markers across body composition, strength, and conditioning."

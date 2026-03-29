@@ -195,6 +195,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const [userName, setUserName] = useState("User");
   const [organizationName, setOrganizationName] = useState("Organization");
   const [currentTrack, setCurrentTrack] = useState("Main");
+  const [tracks, setTracks] = useState<{ id: string; name: string }[]>([]);
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isImportingResults, setIsImportingResults] = useState(false);
   const [topBarNotice, setTopBarNotice] = useState<string | null>(null);
@@ -256,6 +258,39 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         }
         if (isMounted && typeof payload.currentTrack === "string" && payload.currentTrack.trim()) {
           setCurrentTrack(payload.currentTrack.trim());
+        }
+
+        const orgId =
+          Array.isArray(payload.organizationIds) && payload.organizationIds.length > 0
+            ? payload.organizationIds[0]
+            : null;
+
+        if (orgId && isMounted) {
+          try {
+            const tr = await fetch(`/api/programming/tracks?organizationId=${orgId}`, { cache: "no-store" });
+            const tp = await tr.json();
+            const fetchedTracks: { id: string; name: string }[] = (tp?.tracks ?? []).map(
+              (t: { id: string; name: string }) => ({ id: t.id, name: t.name })
+            );
+            if (isMounted) {
+              setTracks(fetchedTracks);
+              const storedId = typeof window !== "undefined" ? localStorage.getItem("elev8-track-id") : null;
+              if (storedId && fetchedTracks.some((t) => t.id === storedId)) {
+                setSelectedTrackId(storedId);
+                const found = fetchedTracks.find((t) => t.id === storedId);
+                if (found) setCurrentTrack(found.name);
+              } else if (typeof payload.trackId === "string" && payload.trackId) {
+                setSelectedTrackId(payload.trackId);
+                localStorage.setItem("elev8-track-id", payload.trackId);
+              } else if (fetchedTracks.length > 0) {
+                setSelectedTrackId(fetchedTracks[0].id);
+                localStorage.setItem("elev8-track-id", fetchedTracks[0].id);
+                setCurrentTrack(fetchedTracks[0].name);
+              }
+            }
+          } catch {
+            // non-fatal
+          }
         }
       } catch {
         // Keep the default role for nav filtering.
@@ -321,6 +356,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       event.target.value = "";
     }
   };
+
+  function handleTrackChange(id: string) {
+    setSelectedTrackId(id);
+    localStorage.setItem("elev8-track-id", id);
+    const found = tracks.find((t) => t.id === id);
+    if (found) setCurrentTrack(found.name);
+    window.dispatchEvent(new StorageEvent("storage", { key: "elev8-track-id", newValue: id }));
+  }
 
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
 
@@ -565,7 +608,21 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         <header className="app-shell-topbar hidden h-14 w-full items-center justify-between px-5 text-slate-100 lg:flex">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{organizationName}</p>
-            <p className="truncate text-xs text-slate-400">Current Track: {currentTrack}</p>
+            {tracks.length > 1 ? (
+              <select
+                value={selectedTrackId ?? ""}
+                onChange={(e) => handleTrackChange(e.target.value)}
+                className="mt-0.5 max-w-[200px] cursor-pointer bg-transparent text-xs text-slate-400 outline-none transition hover:text-slate-200"
+              >
+                {tracks.map((t) => (
+                  <option key={t.id} value={t.id} className="bg-[#161a20] text-slate-100">
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="truncate text-xs text-slate-400">Track: {currentTrack}</p>
+            )}
           </div>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-6">
