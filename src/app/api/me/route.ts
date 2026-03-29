@@ -56,6 +56,7 @@ export async function GET() {
     organizationIds,
     userName: userRow?.full_name ?? userRow?.email ?? "User",
     organizationName: organizationRow?.name ?? "Organization",
+    trackId: latestTrackId,
     currentTrack: trackRow?.name ?? "Main",
   });
 }

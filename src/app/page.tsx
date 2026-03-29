@@ -6,7 +6,7 @@ export default async function Home() {
   const { error, role } = await requireUserContext();
 
   if (error) {
-    redirect("/api/auth/signin");
+    redirect("/login");
   }
 
   if (hasRole("admin", role)) {

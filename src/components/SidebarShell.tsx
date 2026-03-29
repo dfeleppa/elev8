@@ -17,7 +17,9 @@ import {
   FileText,
   HandPlatter,
   PlugZap,
+  Settings,
   ShieldCheck,
+  ShoppingBag,
   UserCircle2,
   Users,
   Wallet,
@@ -74,14 +76,13 @@ const navItems: NavItem[] = [
         href: "/organization/owner",
         minRole: "owner",
         children: [
-          { label: "Agents", href: "/organization/owner/agents", minRole: "owner" },
           { label: "Staff", href: "/organization/owner/staff", minRole: "owner" },
           { label: "Class Setup", href: "/organization/owner/schedule", minRole: "owner" },
           { label: "Payroll", href: "/organization/owner/payroll", minRole: "owner" },
           { label: "Billing", href: "/organization/owner/billing", minRole: "owner" },
           { label: "Tracks & Memberships", href: "/organization/owner/tracks-memberships", minRole: "owner" },
-          { label: "Integrations", href: "/organization/owner/integrations", minRole: "owner" },
           { label: "Members", href: "/organization/owner/members", minRole: "owner" },
+          { label: "Organization Settings", href: "/organization/owner/settings", minRole: "owner" },
         ],
       },
       {
@@ -151,12 +152,16 @@ function getNavIcon(href: string) {
       return <CalendarDays {...iconProps} />;
     case "/organization/owner/payroll":
     case "/organization/owner/billing":
-    case "/organization/member/store":
       return <Wallet {...iconProps} />;
+    case "/organization/owner/store-setup":
+    case "/organization/member/store":
+      return <ShoppingBag {...iconProps} />;
     case "/organization/owner/tracks-memberships":
       return <ShieldCheck {...iconProps} />;
     case "/organization/owner/integrations":
       return <PlugZap {...iconProps} />;
+    case "/organization/owner/settings":
+      return <Settings {...iconProps} />;
     case "/management":
       return <Briefcase {...iconProps} />;
     case "/organization/gym-dashboard":
@@ -166,6 +171,7 @@ function getNavIcon(href: string) {
     case "/organization/admin/analytics":
       return <BarChart3 {...iconProps} />;
     case "/organization/admin/programming":
+    case "/organization/admin/programming/builder":
     case "/organization/member/workout":
       return <Dumbbell {...iconProps} />;
     case "/organization/coach/reports-members":
@@ -452,7 +458,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             <nav className="mt-6 flex-1 space-y-5 overflow-y-auto overscroll-contain pb-4 text-sm">
               <div className="space-y-1">
                 {visibleEntries.map((entry) => {
-                  const isActive = pathname === entry.href;
+                  const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
                   return (
                     <Link
                       key={entry.href}
@@ -514,7 +520,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         {sidebarCollapsed ? (
           <nav className="mt-6 flex flex-1 flex-col items-center gap-2 overflow-y-auto">
             {visibleEntries.map((entry) => {
-              const isActive = pathname === entry.href;
+              const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
               return (
                 <Link
                   key={entry.href}
@@ -536,7 +542,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         ) : (
           <nav className="mt-6 space-y-1 text-sm">
             {visibleEntries.map((entry) => {
-              const isActive = pathname === entry.href;
+              const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
               return (
                 <Link
                   key={entry.href}

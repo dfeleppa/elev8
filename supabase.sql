@@ -244,6 +244,7 @@ create table if not exists app_users (
   email text not null unique,
   full_name text,
   role text default 'member',
+  password_hash text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -251,9 +252,17 @@ create table if not exists app_users (
 create table if not exists organizations (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  logo_url text,
+  address text,
+  phone text,
+  email text,
+  invitation_code text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+create unique index if not exists organizations_invitation_code_key
+  on organizations(invitation_code) where invitation_code is not null;
 
 create table if not exists organization_memberships (
   id uuid primary key default gen_random_uuid(),
@@ -931,3 +940,138 @@ create policy payroll_entries_owner_access
         and m.role in ('admin', 'owner')
     )
   );
+
+-- Coach nutrition plans
+create table if not exists public.coach_nutrition_plans (
+  id uuid primary key default gen_random_uuid(),
+  coach_id uuid not null references app_users(id) on delete cascade,
+  member_id uuid not null references app_users(id) on delete cascade,
+  goal_type text not null,
+  intensity_preset text not null,
+  weekly_rate_percent numeric(5,2),
+  reverse_diet_weekly_kcal integer,
+  target_weight_kg numeric(6,2),
+  maintenance_calories numeric(10,2) not null,
+  target_calories numeric(10,2) not null,
+  protein_grams numeric(10,2) not null,
+  carbs_grams numeric(10,2) not null,
+  fat_grams numeric(10,2) not null,
+  formula_used text not null,
+  activity_multiplier numeric(5,2) not null,
+  sessions_per_week numeric(5,2) not null,
+  effective_date date not null,
+  last_check_in_date date,
+  next_check_in_date date,
+  plan_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (member_id, effective_date)
+);
+
+create index if not exists coach_nutrition_plans_member_idx
+  on coach_nutrition_plans(member_id, effective_date desc);
+
+create index if not exists coach_nutrition_plans_coach_idx
+  on coach_nutrition_plans(coach_id, created_at desc);
+
+alter table public.coach_nutrition_plans enable row level security;
+
+drop policy if exists coach_nutrition_plans_coach_access on public.coach_nutrition_plans;
+create policy coach_nutrition_plans_coach_access
+  on public.coach_nutrition_plans
+  for all
+  to authenticated
+  using (
+    coach_id = auth.uid()
+    or exists (
+      select 1
+      from public.organization_memberships m
+      join public.app_users u on u.id = public.coach_nutrition_plans.member_id
+      where m.user_id = auth.uid()
+        and m.role in ('admin', 'owner')
+    )
+  )
+  with check (
+    coach_id = auth.uid()
+    or exists (
+      select 1
+      from public.organization_memberships m
+      join public.app_users u on u.id = public.coach_nutrition_plans.member_id
+      where m.user_id = auth.uid()
+        and m.role in ('admin', 'owner')
+    )
+  );
+
+drop policy if exists coach_nutrition_plans_member_read on public.coach_nutrition_plans;
+create policy coach_nutrition_plans_member_read
+  on public.coach_nutrition_plans
+  for select
+  to authenticated
+  using (member_id = auth.uid());
+
+-- Store products
+create table if not exists public.store_products (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  name text not null,
+  description text,
+  category text,
+  price numeric(10, 2) not null default 0,
+  coaches_price numeric(10, 2),
+  tax_rate text,
+  tax_included_in_price boolean not null default false,
+  inventory_count integer,
+  image_url text,
+  hidden_in_store boolean not null default false,
+  defer_to_invoice boolean not null default false,
+  notify_admins_on_purchase boolean not null default false,
+  has_options boolean not null default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Product options (sizes, colors, flavors, etc.)
+create table if not exists public.store_product_options (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid not null references public.store_products(id) on delete cascade,
+  option_name text not null,
+  option_values text[] not null default '{}',
+  created_at timestamptz default now()
+);
+
+-- Preorders
+create table if not exists public.store_preorders (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  name text not null,
+  description text,
+  order_deadline date,
+  estimated_delivery_date date,
+  is_active boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Preorder items (products linked to a preorder campaign)
+create table if not exists public.store_preorder_items (
+  id uuid primary key default gen_random_uuid(),
+  preorder_id uuid not null references public.store_preorders(id) on delete cascade,
+  product_id uuid not null references public.store_products(id) on delete cascade,
+  created_at timestamptz default now()
+);
+
+-- Member store orders
+create table if not exists public.store_orders (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  user_id uuid not null references public.app_users(id) on delete cascade,
+  product_id uuid not null references public.store_products(id) on delete cascade,
+  preorder_id uuid references public.store_preorders(id) on delete set null,
+  quantity integer not null default 1,
+  unit_price numeric(10, 2) not null,
+  selected_options jsonb,
+  status text not null default 'pending',
+  notes text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);

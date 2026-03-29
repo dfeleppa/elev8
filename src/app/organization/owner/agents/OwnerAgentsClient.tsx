@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import OwnerSettingsSubheader from "../../../../components/owner/OwnerSettingsSubheader";
 
 type PermissionRow = {
   key: string;
@@ -288,7 +289,9 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
   };
 
   return (
-    <section className="space-y-6">
+    <>
+      <OwnerSettingsSubheader />
+      <section className="space-y-6 px-5 py-10 lg:px-8 lg:py-16 mx-auto max-w-6xl">
       <header>
         <h1 className="text-3xl font-semibold text-slate-100">Agents</h1>
         <p className="mt-3 text-sm text-slate-300">
@@ -548,6 +551,7 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
           </div>
         </article>
       </section>
-    </section>
+      </section>
+    </>
   );
 }

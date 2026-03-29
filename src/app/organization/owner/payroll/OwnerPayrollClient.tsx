@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 
 import {
   ownerButtonPrimaryClass,
-  ownerIconButtonAccentClass,
   ownerIconButtonDangerClass,
   ownerIconButtonSuccessClass,
 } from "../../../../components/owner/buttonStyles";
@@ -38,6 +37,8 @@ type EntryDraft = {
   payDate: string;
   notes: string;
 };
+
+type DraftCol = keyof EntryDraft;
 
 const EMPTY_DRAFT: EntryDraft = {
   weekEndingDate: "",
@@ -96,7 +97,7 @@ function formatDate(value: string) {
 }
 
 const cellInputClass =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-2 py-1.5 text-sm text-slate-100 focus:border-[#ffb1c4]/60 focus:outline-none";
+  "w-full rounded-lg border border-white/15 bg-black/30 px-2 py-1.5 text-sm text-slate-100 focus:border-[#ffb1c4]/60 focus:outline-none [color-scheme:dark]";
 const cellSelectClass =
   "w-full rounded-lg border border-white/15 bg-[#171c22] px-2 py-1.5 text-sm text-slate-100 focus:border-[#ffb1c4]/60 focus:outline-none";
 const cellPayClass =
@@ -112,14 +113,50 @@ export default function OwnerPayrollClient({
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
 
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<EntryDraft>(EMPTY_DRAFT);
+  // Per-cell inline editing
+  const [editingCell, setEditingCell] = useState<{ id: string; col: DraftCol } | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, EntryDraft>>({});
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
 
-  const [newDraft, setNewDraft] = useState<EntryDraft>(EMPTY_DRAFT);
-
-  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [newDraft, setNewDraft] = useState<EntryDraft>(EMPTY_DRAFT);
+  const [savingNew, setSavingNew] = useState(false);
   const newRowRef = useRef<HTMLTableRowElement>(null);
+
+  type SortColumn = "weekEndingDate" | "staffName" | "coachingHours" | "officeHours" | "totalPay" | "payDate";
+  const [sortColumn, setSortColumn] = useState<SortColumn>("weekEndingDate");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  // Initialize drafts for newly loaded entries
+  useEffect(() => {
+    setDrafts((prev) => {
+      const updates: Record<string, EntryDraft> = {};
+      for (const e of entries) {
+        if (!prev[e.id]) updates[e.id] = toDraft(e);
+      }
+      return Object.keys(updates).length ? { ...prev, ...updates } : prev;
+    });
+  }, [entries]);
+
+  function handleSort(col: SortColumn) {
+    if (col === sortColumn) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(col);
+      setSortDir("asc");
+    }
+  }
+
+  const sortedEntries = [...entries].sort((a, b) => {
+    let cmp = 0;
+    if (sortColumn === "staffName") cmp = a.staffName.localeCompare(b.staffName);
+    else if (sortColumn === "coachingHours") cmp = a.coachingHours - b.coachingHours;
+    else if (sortColumn === "officeHours") cmp = a.officeHours - b.officeHours;
+    else if (sortColumn === "totalPay") cmp = a.totalPay - b.totalPay;
+    else if (sortColumn === "weekEndingDate") cmp = (a.weekEndingDate ?? "").localeCompare(b.weekEndingDate ?? "");
+    else if (sortColumn === "payDate") cmp = (a.payDate ?? "").localeCompare(b.payDate ?? "");
+    return sortDir === "asc" ? cmp : -cmp;
+  });
 
   // Fetch staff list with pay rates
   useEffect(() => {
@@ -141,9 +178,7 @@ export default function OwnerPayrollClient({
               officePayrate: Number(s.officePayrate ?? 0),
             })
           )
-          .sort((a: StaffMember, b: StaffMember) =>
-            a.name.localeCompare(b.name)
-          );
+          .sort((a: StaffMember, b: StaffMember) => a.name.localeCompare(b.name));
         setStaffList(members);
       })
       .catch(() => {});
@@ -169,85 +204,67 @@ export default function OwnerPayrollClient({
     loadEntries();
   }, [loadEntries]);
 
-  // Helpers to update a draft field and auto-recalculate pay
-  function updateEditDraft(patch: Partial<EntryDraft>) {
-    setEditDraft((prev) => {
-      const next = { ...prev, ...patch };
-      // Recalculate when staff or hours change, unless totalPay was explicitly patched
+  function updateDraft(id: string, patch: Partial<EntryDraft>) {
+    setDrafts((prev) => {
+      const current = prev[id] ?? EMPTY_DRAFT;
+      const next = { ...current, ...patch };
       if (
-        ("staffName" in patch ||
-          "coachingHours" in patch ||
-          "officeHours" in patch) &&
+        ("staffName" in patch || "coachingHours" in patch || "officeHours" in patch) &&
         !("totalPay" in patch)
       ) {
-        next.totalPay = calcPay(
-          next.staffName,
-          next.coachingHours,
-          next.officeHours,
-          staffList
-        );
+        next.totalPay = calcPay(next.staffName, next.coachingHours, next.officeHours, staffList);
       }
-      return next;
+      return { ...prev, [id]: next };
     });
   }
 
-  function updateNewDraft(patch: Partial<EntryDraft>) {
-    setNewDraft((prev) => {
-      const next = { ...prev, ...patch };
-      if (
-        ("staffName" in patch ||
-          "coachingHours" in patch ||
-          "officeHours" in patch) &&
-        !("totalPay" in patch)
-      ) {
-        next.totalPay = calcPay(
-          next.staffName,
-          next.coachingHours,
-          next.officeHours,
-          staffList
-        );
-      }
-      return next;
-    });
-  }
+  async function saveDraft(id: string, currentDrafts: Record<string, EntryDraft>) {
+    const draft = currentDrafts[id];
+    const original = entries.find((e) => e.id === id);
+    if (!draft || !original) return;
 
-  const startEdit = (entry: PayrollEntry) => {
-    setEditingId(entry.id);
-    setEditDraft(toDraft(entry));
-  };
+    const originalDraft = toDraft(original);
+    const changed = (Object.keys(draft) as DraftCol[]).some((k) => draft[k] !== originalDraft[k]);
+    if (!changed) return;
 
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditDraft(EMPTY_DRAFT);
-  };
-
-  const saveEdit = async (id: string) => {
-    setSaving(true);
+    setSavingIds((prev) => new Set(prev).add(id));
     const res = await fetch("/api/owner/payroll", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id,
         organizationId,
-        weekEndingDate: editDraft.weekEndingDate,
-        staffName: editDraft.staffName,
-        coachingHours: parseFloat(editDraft.coachingHours) || 0,
-        officeHours: parseFloat(editDraft.officeHours) || 0,
-        totalPay: parseFloat(editDraft.totalPay) || 0,
-        payDate: editDraft.payDate || null,
-        notes: editDraft.notes,
+        weekEndingDate: draft.weekEndingDate,
+        staffName: draft.staffName,
+        coachingHours: parseFloat(draft.coachingHours) || 0,
+        officeHours: parseFloat(draft.officeHours) || 0,
+        totalPay: parseFloat(draft.totalPay) || 0,
+        payDate: draft.payDate || null,
+        notes: draft.notes,
       }),
     });
     const data = await res.json();
-    setSaving(false);
+    setSavingIds((prev) => {
+      const s = new Set(prev);
+      s.delete(id);
+      return s;
+    });
     if (!res.ok) {
       setPageError(data.error ?? "Failed to save entry.");
+      setDrafts((prev) => ({ ...prev, [id]: originalDraft }));
       return;
     }
     setEntries((prev) => prev.map((e) => (e.id === id ? data.entry : e)));
-    setEditingId(null);
-    setEditDraft(EMPTY_DRAFT);
-  };
+  }
+
+  function handleCellBlur(id: string) {
+    setEditingCell(null);
+    // Read drafts from state at blur time via functional update trick
+    setDrafts((prev) => {
+      saveDraft(id, prev);
+      return prev;
+    });
+  }
 
   const deleteEntry = async (id: string) => {
     setDeletingId(id);
@@ -263,18 +280,32 @@ export default function OwnerPayrollClient({
       return;
     }
     setEntries((prev) => prev.filter((e) => e.id !== id));
-    if (editingId === id) {
-      setEditingId(null);
-      setEditDraft(EMPTY_DRAFT);
-    }
+    setDrafts((prev) => {
+      const d = { ...prev };
+      delete d[id];
+      return d;
+    });
   };
+
+  function updateNewDraft(patch: Partial<EntryDraft>) {
+    setNewDraft((prev) => {
+      const next = { ...prev, ...patch };
+      if (
+        ("staffName" in patch || "coachingHours" in patch || "officeHours" in patch) &&
+        !("totalPay" in patch)
+      ) {
+        next.totalPay = calcPay(next.staffName, next.coachingHours, next.officeHours, staffList);
+      }
+      return next;
+    });
+  }
 
   const saveNew = async () => {
     if (!newDraft.weekEndingDate || !newDraft.staffName) {
       setPageError("Week ending date and staff name are required.");
       return;
     }
-    setSaving(true);
+    setSavingNew(true);
     const res = await fetch("/api/owner/payroll", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -290,12 +321,12 @@ export default function OwnerPayrollClient({
       }),
     });
     const data = await res.json();
-    setSaving(false);
+    setSavingNew(false);
     if (!res.ok) {
       setPageError(data.error ?? "Failed to save entry.");
       return;
     }
-    setEntries((prev) => [data.entry, ...prev]);
+    setEntries((prev) => [...prev, data.entry]);
     setNewDraft(EMPTY_DRAFT);
   };
 
@@ -307,6 +338,19 @@ export default function OwnerPayrollClient({
 
   const thClass =
     "px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white/60";
+  const thSortClass =
+    "px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white/60 cursor-pointer select-none hover:text-white/90 transition-colors";
+
+  function SortIcon({ col }: { col: SortColumn }) {
+    if (sortColumn !== col) return <ChevronsUpDown size={12} className="ml-1 inline opacity-40" />;
+    return sortDir === "asc"
+      ? <ChevronUp size={12} className="ml-1 inline text-[#ffb1c4]" />
+      : <ChevronDown size={12} className="ml-1 inline text-[#ffb1c4]" />;
+  }
+
+  // Shared td class helpers
+  const tdDisplay = "border-y border-white/10 px-3 py-3 cursor-pointer transition-colors hover:bg-white/[0.04]";
+  const tdEditing = "border-y border-white/10 px-2 py-2 bg-white/[0.025]";
 
   return (
     <section className="space-y-8">
@@ -344,14 +388,26 @@ export default function OwnerPayrollClient({
         <OwnerDataTable minWidthClassName="min-w-[1080px]">
           <thead>
             <tr>
-              <th className={thClass}>Week Ending</th>
-              <th className={thClass}>Staff Name</th>
-              <th className={thClass}>Coaching Hrs</th>
-              <th className={thClass}>Office Hrs</th>
-              <th className={thClass}>Total Pay</th>
-              <th className={thClass}>Pay Date</th>
+              <th className={thSortClass} onClick={() => handleSort("weekEndingDate")}>
+                Week Ending<SortIcon col="weekEndingDate" />
+              </th>
+              <th className={thSortClass} onClick={() => handleSort("staffName")}>
+                Staff Name<SortIcon col="staffName" />
+              </th>
+              <th className={thSortClass} onClick={() => handleSort("coachingHours")}>
+                Coaching Hrs<SortIcon col="coachingHours" />
+              </th>
+              <th className={thSortClass} onClick={() => handleSort("officeHours")}>
+                Office Hrs<SortIcon col="officeHours" />
+              </th>
+              <th className={thSortClass} onClick={() => handleSort("totalPay")}>
+                Total Pay<SortIcon col="totalPay" />
+              </th>
+              <th className={thSortClass} onClick={() => handleSort("payDate")}>
+                Pay Date<SortIcon col="payDate" />
+              </th>
               <th className={thClass}>Notes</th>
-              <th className={thClass + " w-20"}>Actions</th>
+              <th className={thClass + " w-16"}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -368,157 +424,161 @@ export default function OwnerPayrollClient({
                 </td>
               </tr>
             ) : (
-              entries.map((entry) => {
-                const isEditing = editingId === entry.id;
+              sortedEntries.map((entry) => {
+                const draft = drafts[entry.id] ?? toDraft(entry);
+                const isSaving = savingIds.has(entry.id);
                 const isDeleting = deletingId === entry.id;
+                const activeCol = editingCell?.id === entry.id ? editingCell.col : null;
 
-                if (isEditing) {
-                  return (
-                    <tr key={entry.id} className="bg-white/[0.025]">
-                      <td className="rounded-l-2xl border-y border-white/10 px-3 py-2">
-                        <input
-                          type="date"
-                          value={editDraft.weekEndingDate}
-                          onChange={(e) =>
-                            updateEditDraft({ weekEndingDate: e.target.value })
-                          }
-                          className={cellInputClass}
-                        />
-                      </td>
-                      <td className="border-y border-white/10 px-3 py-2">
-                        <select
-                          value={editDraft.staffName}
-                          onChange={(e) =>
-                            updateEditDraft({ staffName: e.target.value })
-                          }
-                          className={cellSelectClass}
-                        >
-                          <option value="">Select staff...</option>
-                          {staffList.map((s) => (
-                            <option key={s.name} value={s.name}>
-                              {s.name}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="border-y border-white/10 px-3 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.5"
-                          value={editDraft.coachingHours}
-                          onChange={(e) =>
-                            updateEditDraft({ coachingHours: e.target.value })
-                          }
-                          className={cellInputClass}
-                        />
-                      </td>
-                      <td className="border-y border-white/10 px-3 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.5"
-                          value={editDraft.officeHours}
-                          onChange={(e) =>
-                            updateEditDraft({ officeHours: e.target.value })
-                          }
-                          className={cellInputClass}
-                        />
-                      </td>
-                      <td className="border-y border-white/10 px-3 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={editDraft.totalPay}
-                          onChange={(e) =>
-                            updateEditDraft({ totalPay: e.target.value })
-                          }
-                          className={cellPayClass}
-                        />
-                      </td>
-                      <td className="border-y border-white/10 px-3 py-2">
-                        <input
-                          type="date"
-                          value={editDraft.payDate}
-                          onChange={(e) =>
-                            updateEditDraft({ payDate: e.target.value })
-                          }
-                          className={cellInputClass}
-                        />
-                      </td>
-                      <td className="border-y border-white/10 px-3 py-2">
-                        <input
-                          type="text"
-                          value={editDraft.notes}
-                          onChange={(e) =>
-                            updateEditDraft({ notes: e.target.value })
-                          }
-                          placeholder="Notes..."
-                          className={cellInputClass}
-                        />
-                      </td>
-                      <td className="rounded-r-2xl border-y border-white/10 px-3 py-2">
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => saveEdit(entry.id)}
-                            disabled={saving}
-                            className={ownerIconButtonSuccessClass}
-                            title="Save"
-                          >
-                            <Check size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={cancelEdit}
-                            className={ownerIconButtonDangerClass}
-                            title="Cancel"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
+                function cell(col: DraftCol) {
+                  const isActive = activeCol === col;
+                  return {
+                    className: isActive ? tdEditing : tdDisplay,
+                    onClick: isActive ? undefined : () => setEditingCell({ id: entry.id, col }),
+                  };
                 }
+
+                const blurProps = {
+                  onBlur: () => handleCellBlur(entry.id),
+                  onKeyDown: (e: React.KeyboardEvent) => {
+                    if (e.key === "Enter") handleCellBlur(entry.id);
+                    if (e.key === "Escape") setEditingCell(null);
+                  },
+                };
 
                 return (
                   <tr
                     key={entry.id}
-                    className="group transition hover:bg-white/[0.02]"
+                    className={`group transition ${isSaving ? "opacity-60" : ""}`}
                   >
-                    <td className="rounded-l-2xl border-y border-white/10 px-3 py-4 text-sm text-slate-300">
-                      {formatDate(entry.weekEndingDate)}
+                    {/* Week Ending */}
+                    <td {...cell("weekEndingDate")} className={`rounded-l-2xl ${cell("weekEndingDate").className}`}>
+                      {activeCol === "weekEndingDate" ? (
+                        <input
+                          autoFocus
+                          type="date"
+                          value={draft.weekEndingDate}
+                          onChange={(e) => updateDraft(entry.id, { weekEndingDate: e.target.value })}
+                          {...blurProps}
+                          className={cellInputClass}
+                        />
+                      ) : (
+                        <span className="text-sm text-slate-300">{formatDate(draft.weekEndingDate)}</span>
+                      )}
                     </td>
-                    <td className="border-y border-white/10 px-3 py-4 text-sm font-medium text-slate-100">
-                      {entry.staffName}
-                    </td>
-                    <td className="border-y border-white/10 px-3 py-4 text-sm text-slate-300">
-                      {entry.coachingHours}
-                    </td>
-                    <td className="border-y border-white/10 px-3 py-4 text-sm text-slate-300">
-                      {entry.officeHours}
-                    </td>
-                    <td className="border-y border-white/10 px-3 py-4 text-sm font-semibold text-emerald-300">
-                      {formatMoney(entry.totalPay)}
-                    </td>
-                    <td className="border-y border-white/10 px-3 py-4 text-sm text-slate-300">
-                      {formatDate(entry.payDate)}
-                    </td>
-                    <td className="border-y border-white/10 px-3 py-4 text-sm text-slate-300">
-                      {entry.notes || "—"}
-                    </td>
-                    <td className="rounded-r-2xl border-y border-white/10 px-3 py-4">
-                      <div className="flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
-                        <button
-                          type="button"
-                          onClick={() => startEdit(entry)}
-                          className={ownerIconButtonAccentClass}
-                          title="Edit"
+
+                    {/* Staff Name */}
+                    <td {...cell("staffName")}>
+                      {activeCol === "staffName" ? (
+                        <select
+                          autoFocus
+                          value={draft.staffName}
+                          onChange={(e) => updateDraft(entry.id, { staffName: e.target.value })}
+                          onBlur={() => handleCellBlur(entry.id)}
+                          className={cellSelectClass}
                         >
-                          <Pencil size={14} />
-                        </button>
+                          <option value="">Select staff...</option>
+                          {staffList.map((s) => (
+                            <option key={s.name} value={s.name}>{s.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="text-sm font-medium text-slate-100">{draft.staffName || "—"}</span>
+                      )}
+                    </td>
+
+                    {/* Coaching Hours */}
+                    <td {...cell("coachingHours")}>
+                      {activeCol === "coachingHours" ? (
+                        <input
+                          autoFocus
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          value={draft.coachingHours}
+                          onChange={(e) => updateDraft(entry.id, { coachingHours: e.target.value })}
+                          {...blurProps}
+                          className={cellInputClass}
+                        />
+                      ) : (
+                        <span className="text-sm text-slate-300">{draft.coachingHours || "0"}</span>
+                      )}
+                    </td>
+
+                    {/* Office Hours */}
+                    <td {...cell("officeHours")}>
+                      {activeCol === "officeHours" ? (
+                        <input
+                          autoFocus
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          value={draft.officeHours}
+                          onChange={(e) => updateDraft(entry.id, { officeHours: e.target.value })}
+                          {...blurProps}
+                          className={cellInputClass}
+                        />
+                      ) : (
+                        <span className="text-sm text-slate-300">{draft.officeHours || "0"}</span>
+                      )}
+                    </td>
+
+                    {/* Total Pay */}
+                    <td {...cell("totalPay")}>
+                      {activeCol === "totalPay" ? (
+                        <input
+                          autoFocus
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={draft.totalPay}
+                          onChange={(e) => updateDraft(entry.id, { totalPay: e.target.value })}
+                          {...blurProps}
+                          className={cellPayClass}
+                        />
+                      ) : (
+                        <span className="text-sm font-semibold text-emerald-300">
+                          {formatMoney(parseFloat(draft.totalPay) || 0)}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Pay Date */}
+                    <td {...cell("payDate")}>
+                      {activeCol === "payDate" ? (
+                        <input
+                          autoFocus
+                          type="date"
+                          value={draft.payDate}
+                          onChange={(e) => updateDraft(entry.id, { payDate: e.target.value })}
+                          {...blurProps}
+                          className={cellInputClass}
+                        />
+                      ) : (
+                        <span className="text-sm text-slate-300">{formatDate(draft.payDate)}</span>
+                      )}
+                    </td>
+
+                    {/* Notes */}
+                    <td {...cell("notes")}>
+                      {activeCol === "notes" ? (
+                        <input
+                          autoFocus
+                          type="text"
+                          value={draft.notes}
+                          onChange={(e) => updateDraft(entry.id, { notes: e.target.value })}
+                          placeholder="Notes..."
+                          {...blurProps}
+                          className={cellInputClass}
+                        />
+                      ) : (
+                        <span className="text-sm text-slate-300">{draft.notes || "—"}</span>
+                      )}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="rounded-r-2xl border-y border-white/10 px-3 py-3">
+                      <div className="flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
                         <button
                           type="button"
                           onClick={() => deleteEntry(entry.id)}
@@ -554,25 +614,19 @@ export default function OwnerPayrollClient({
                 <input
                   type="date"
                   value={newDraft.weekEndingDate}
-                  onChange={(e) =>
-                    updateNewDraft({ weekEndingDate: e.target.value })
-                  }
+                  onChange={(e) => updateNewDraft({ weekEndingDate: e.target.value })}
                   className={cellInputClass}
                 />
               </td>
               <td className="px-3 pb-3 pt-2">
                 <select
                   value={newDraft.staffName}
-                  onChange={(e) =>
-                    updateNewDraft({ staffName: e.target.value })
-                  }
+                  onChange={(e) => updateNewDraft({ staffName: e.target.value })}
                   className={cellSelectClass}
                 >
                   <option value="">Select staff...</option>
                   {staffList.map((s) => (
-                    <option key={s.name} value={s.name}>
-                      {s.name}
-                    </option>
+                    <option key={s.name} value={s.name}>{s.name}</option>
                   ))}
                 </select>
               </td>
@@ -582,9 +636,7 @@ export default function OwnerPayrollClient({
                   min="0"
                   step="0.5"
                   value={newDraft.coachingHours}
-                  onChange={(e) =>
-                    updateNewDraft({ coachingHours: e.target.value })
-                  }
+                  onChange={(e) => updateNewDraft({ coachingHours: e.target.value })}
                   placeholder="0"
                   className={cellInputClass}
                 />
@@ -595,9 +647,7 @@ export default function OwnerPayrollClient({
                   min="0"
                   step="0.5"
                   value={newDraft.officeHours}
-                  onChange={(e) =>
-                    updateNewDraft({ officeHours: e.target.value })
-                  }
+                  onChange={(e) => updateNewDraft({ officeHours: e.target.value })}
                   placeholder="0"
                   className={cellInputClass}
                 />
@@ -608,9 +658,7 @@ export default function OwnerPayrollClient({
                   min="0"
                   step="0.01"
                   value={newDraft.totalPay}
-                  onChange={(e) =>
-                    updateNewDraft({ totalPay: e.target.value })
-                  }
+                  onChange={(e) => updateNewDraft({ totalPay: e.target.value })}
                   placeholder="Auto"
                   className={cellPayClass}
                 />
@@ -619,9 +667,7 @@ export default function OwnerPayrollClient({
                 <input
                   type="date"
                   value={newDraft.payDate}
-                  onChange={(e) =>
-                    updateNewDraft({ payDate: e.target.value })
-                  }
+                  onChange={(e) => updateNewDraft({ payDate: e.target.value })}
                   className={cellInputClass}
                 />
               </td>
@@ -638,9 +684,7 @@ export default function OwnerPayrollClient({
                 <button
                   type="button"
                   onClick={saveNew}
-                  disabled={
-                    saving || !newDraft.weekEndingDate || !newDraft.staffName
-                  }
+                  disabled={savingNew || !newDraft.weekEndingDate || !newDraft.staffName}
                   className={ownerIconButtonSuccessClass}
                   title="Save new entry"
                 >

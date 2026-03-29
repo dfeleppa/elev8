@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Read(//c//**)",
-      "Bash(find c:/Users/DFele/elev8 -maxdepth 4 -name *.tsx -o -name *.jsx)"
+      "Bash(find c:/Users/DFele/elev8 -maxdepth 4 -name *.tsx -o -name *.jsx)",
+      "Bash(grep -E \"\\\\.\\(json|ts|js\\)$\")",
+      "Bash(find /c/Users/DFele/elev8/src -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
+      "Bash(grep -r organization_members /c/Users/DFele/elev8/src --include=*.ts --include=*.tsx)"
     ]
   }
 }

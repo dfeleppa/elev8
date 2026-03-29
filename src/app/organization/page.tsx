@@ -83,7 +83,7 @@ async function createOrganization(formData: FormData) {
 export default async function OrganizationPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId) {
-    redirect("/api/auth/signin");
+    redirect("/login");
   }
 
   const organizations = await getOrganizations(userId);

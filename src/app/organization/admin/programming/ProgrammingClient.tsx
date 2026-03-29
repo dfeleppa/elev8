@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import ProgrammingSubheader from "../../../../components/admin/ProgrammingSubheader";
+import TipTapEditor from "../../../../components/owner/TipTapEditor";
+import TrackProgressionPanel from "../../../../components/admin/TrackProgressionPanel";
 
 type SessionEntry = {
   id: string;
   title: string;
   block?: string;
+  blockType: string;
   lines: string[];
+  htmlContent: string;
 };
 
 type TrackOption = {
@@ -25,6 +30,7 @@ type WeekDayResponse = {
     title: string;
     description: string | null;
     score_type: string;
+    block_type: string;
   }>;
 };
 
@@ -94,12 +100,20 @@ function toHeaderDayLabel(date: Date) {
   return `${weekDayNames[date.getDay()]} ${date.getMonth() + 1}/${date.getDate()}`;
 }
 
+const SCORE_LABELS: Record<string, string> = {
+  calories: "Calories",
+  distance: "Distance",
+  time: "For Time",
+  reps: "Reps",
+  rounds_reps: "Rounds & Reps",
+};
+
 function getScoreLabel(value?: string) {
   const text = (value ?? "none").trim();
   if (!text || text === "none") {
     return null;
   }
-  return text.charAt(0).toUpperCase() + text.slice(1);
+  return SCORE_LABELS[text] ?? (text.charAt(0).toUpperCase() + text.slice(1));
 }
 
 function getSessionById(
@@ -120,18 +134,29 @@ function getSessionById(
   return null;
 }
 
+function htmlToPlainLines(html: string): string[] {
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .split(/\s{2,}|\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
 function mapWeekResponse(days: WeekDayResponse[]) {
   const mapped: Record<string, SessionEntry[]> = {};
   for (const day of days) {
-    mapped[day.day_date] = day.blocks.map((block) => ({
-      id: block.id,
-      title: block.title,
-      block: block.score_type,
-      lines: (block.description ?? "")
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean),
-    }));
+    mapped[day.day_date] = day.blocks.map((block) => {
+      const raw = block.description ?? "";
+      const isHtml = raw.trimStart().startsWith("<");
+      return {
+        id: block.id,
+        title: block.title,
+        block: block.score_type,
+        blockType: block.block_type ?? "workout",
+        htmlContent: raw,
+        lines: isHtml ? htmlToPlainLines(raw) : raw.split("\n").map((l) => l.trim()).filter(Boolean),
+      };
+    });
   }
   return mapped;
 }
@@ -139,11 +164,11 @@ function mapWeekResponse(days: WeekDayResponse[]) {
 export default function ProgrammingClient() {
   const datePickerRef = useRef<HTMLInputElement | null>(null);
 
-  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 2, 14));
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [showDetails, setShowDetails] = useState(true);
 
-  const [selectedDay, setSelectedDay] = useState(() => formatDateKey(new Date(2026, 2, 14)));
+  const [selectedDay, setSelectedDay] = useState(() => formatDateKey(new Date()));
   const [sessions, setSessions] = useState<Record<string, SessionEntry[]>>(fallbackSessions);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -153,6 +178,7 @@ export default function ProgrammingClient() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [creatingType, setCreatingType] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"details" | "progression">("details");
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentDate);
@@ -193,7 +219,9 @@ export default function ProgrammingClient() {
       id: "empty",
       title: "",
       block: "none",
+      blockType: "workout",
       lines: [],
+      htmlContent: "",
     },
   };
 
@@ -302,6 +330,10 @@ export default function ProgrammingClient() {
   }, [organizationId, selectedTrackId, currentDate]);
 
   useEffect(() => {
+    setActiveTab("details");
+  }, [selectedSessionId]);
+
+  useEffect(() => {
     if (!selectedDay) {
       return;
     }
@@ -333,7 +365,7 @@ export default function ProgrammingClient() {
     setEditorOpen(false);
   };
 
-  const updateEditor = (field: "title" | "block" | "lines", value: string) => {
+  const updateEditor = (field: "title" | "block" | "htmlContent", value: string) => {
     setSessions((prev) => {
       const current = getSessionById(prev, selectedSessionId);
       if (!current) {
@@ -348,11 +380,9 @@ export default function ProgrammingClient() {
       }
 
       const updated = { ...daySessions[index] };
-      if (field === "lines") {
-        updated.lines = value
-          .split("\n")
-          .map((line) => line.trim())
-          .filter(Boolean);
+      if (field === "htmlContent") {
+        updated.htmlContent = value;
+        updated.lines = htmlToPlainLines(value);
       } else {
         updated[field] = value;
       }
@@ -410,7 +440,9 @@ export default function ProgrammingClient() {
         id: payload.block.id,
         title: payload.block.title,
         block: payload.block.score_type,
+        blockType: blockType,
         lines: [],
+        htmlContent: "",
       };
 
       setSessions((prev) => {
@@ -449,7 +481,7 @@ export default function ProgrammingClient() {
         body: JSON.stringify({
           title: current.session.title,
           scoreType: current.session.block ?? "none",
-          description: current.session.lines.join("\n"),
+          description: current.session.htmlContent || current.session.lines.join("\n"),
         }),
       });
     } finally {
@@ -458,6 +490,8 @@ export default function ProgrammingClient() {
   };
 
   return (
+    <>
+      <ProgrammingSubheader />
     <section className="space-y-4">
       <header className="rounded-2xl border border-white/10 bg-white/5/5 p-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -485,7 +519,12 @@ export default function ProgrammingClient() {
               className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/5 text-sm text-slate-300 hover:border-white/25"
               aria-label="Pick date"
             >
-              D
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
             </button>
             <input
               ref={datePickerRef}
@@ -716,7 +755,7 @@ export default function ProgrammingClient() {
         />
 
         <aside
-          className={`fixed bottom-0 right-0 top-0 z-40 w-full sm:w-[70vw] lg:w-[48vw] xl:w-[40vw] max-w-[860px] border-l border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur transition-transform duration-300 ${
+          className={`fixed bottom-0 right-0 top-0 z-40 w-full sm:w-[70vw] lg:w-[48vw] xl:w-[40vw] max-w-[860px] border-l border-white/10 bg-[#12151c] p-5 shadow-2xl transition-transform duration-300 ${
             editorOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
@@ -790,47 +829,87 @@ export default function ProgrammingClient() {
 
               {selected ? (
                 <>
-                  <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-title">
-                    Session Title
-                  </label>
-                  <input
-                    id="session-title"
-                    value={editor.session.title}
-                    onChange={(event) => updateEditor("title", event.target.value)}
-                    className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
-                  />
-
-                  <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-block">
-                    Score Type
-                  </label>
-                  <input
-                    id="session-block"
-                    value={editor.session.block ?? "none"}
-                    onChange={(event) => updateEditor("block", event.target.value)}
-                    className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
-                  />
-
-                  <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-lines">
-                    Details
-                  </label>
-                  <textarea
-                    id="session-lines"
-                    rows={8}
-                    value={editor.session.lines.join("\n")}
-                    onChange={(event) => updateEditor("lines", event.target.value)}
-                    className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
-                  />
-
-                  <div className="flex items-center justify-end gap-2 pb-2">
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={saveSelectedSession}
-                      className="rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(2,132,199,0.35)] transition hover:from-sky-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {saving ? "Saving..." : "Save"}
-                    </button>
+                  {/* ── Tabs ── */}
+                  <div className="flex gap-0.5 rounded-xl border border-white/10 bg-white/5 p-0.5">
+                    {(["details", "progression"] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setActiveTab(tab)}
+                        className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
+                          activeTab === tab
+                            ? "bg-slate-800 text-white"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      </button>
+                    ))}
                   </div>
+
+                  {activeTab === "details" ? (
+                    <>
+                      <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-title">
+                        Session Title
+                      </label>
+                      <input
+                        id="session-title"
+                        value={editor.session.title}
+                        onChange={(event) => updateEditor("title", event.target.value)}
+                        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
+                      />
+
+                      {selected.session.blockType !== "warmup" && (
+                        <>
+                          <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-block">
+                            Score Type
+                          </label>
+                          <select
+                            id="session-block"
+                            value={editor.session.block ?? "none"}
+                            onChange={(event) => updateEditor("block", event.target.value)}
+                            className="w-full rounded-2xl border border-white/15 bg-[#1a1d26] px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
+                          >
+                            <option value="none">None</option>
+                            <option value="calories">Calories</option>
+                            <option value="distance">Distance</option>
+                            <option value="time">For Time</option>
+                            <option value="reps">Reps</option>
+                            <option value="rounds_reps">Rounds &amp; Reps</option>
+                          </select>
+                        </>
+                      )}
+
+                      <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        Details
+                      </label>
+                      <TipTapEditor
+                        content={editor.session.htmlContent}
+                        onChange={(html) => updateEditor("htmlContent", html)}
+                        placeholder="Add workout details..."
+                      />
+
+                      <div className="flex items-center justify-end gap-2 pb-2">
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={saveSelectedSession}
+                          className="rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(2,132,199,0.35)] transition hover:from-sky-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {saving ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <TrackProgressionPanel
+                      blockId={selected.session.id}
+                      blockType={selected.session.blockType}
+                      trackId={selectedTrackId}
+                      organizationId={organizationId!}
+                      selectedDay={selected.day}
+                      onApplied={() => setCurrentDate((prev) => new Date(prev))}
+                    />
+                  )}
                 </>
               ) : null}
             </div>
@@ -838,5 +917,6 @@ export default function ProgrammingClient() {
         </aside>
       </div>
     </section>
+    </>
   );
 }

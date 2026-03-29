@@ -57,7 +57,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: resultError.message }, { status: 500 });
   }
 
-  const leaderboard = (data ?? []).map((entry, index) => ({ rank: index + 1, ...entry }));
+  // Batch-fetch member names.
+  const memberIds = [...new Set((data ?? []).map((r) => r.member_id).filter(Boolean))];
+  const { data: users } = memberIds.length
+    ? await supabaseAdmin.from("app_users").select("id, full_name, email").in("id", memberIds)
+    : { data: [] };
+
+  const nameMap = Object.fromEntries(
+    (users ?? []).map((u) => [u.id, u.full_name ?? u.email ?? "Athlete"])
+  );
+
+  const leaderboard = (data ?? []).map((entry, index) => ({
+    rank: index + 1,
+    ...entry,
+    memberName: nameMap[entry.member_id] ?? "Athlete",
+  }));
 
   return NextResponse.json({ leaderboard });
 }

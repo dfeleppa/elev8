@@ -13,7 +13,7 @@ export default async function OwnerAgentsPage() {
   const configuredMemberId = process.env.AGENT_MEMBER_ID ?? "";
 
   return (
-    <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
+    <SidebarShell mainClassName="w-full max-w-none pb-10 lg:pb-16">
       <OwnerAgentsClient configuredMemberId={configuredMemberId} />
     </SidebarShell>
   );

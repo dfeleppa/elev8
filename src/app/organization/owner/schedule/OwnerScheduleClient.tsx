@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import {
   ownerButtonDarkGhostClass,
@@ -678,7 +678,7 @@ export default function OwnerScheduleClient() {
                   <select
                     value={createDraft.trackId}
                     onChange={(event) => setDraft(setCreateDraft, "trackId", event.target.value)}
-                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none [color-scheme:dark]"
                   >
                     {tracks.length === 0 ? <option value="">No tracks found</option> : null}
                     {tracks.map((track) => (
@@ -740,7 +740,7 @@ export default function OwnerScheduleClient() {
                   <select
                     value={createDraft.defaultCoachUserId}
                     onChange={(event) => setDraft(setCreateDraft, "defaultCoachUserId", event.target.value)}
-                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none [color-scheme:dark]"
                   >
                     <option value="">None</option>
                     {coaches.map((coach) => (
@@ -775,7 +775,7 @@ export default function OwnerScheduleClient() {
                   <select
                     value={createDraft.calendarColor}
                     onChange={(event) => setDraft(setCreateDraft, "calendarColor", event.target.value)}
-                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none [color-scheme:dark]"
                   >
                     {calendarColorOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -986,73 +986,25 @@ export default function OwnerScheduleClient() {
                         </td>
                       </tr>
                     ) : filteredRows.map((row) => (
-                      <tr key={row.id} className="border-t border-white/10 bg-white/5 text-slate-100">
-                        {visibleColumns.name ? (
-                        <td className="px-3 py-3">
-                          {editingId === row.id ? (
-                            <input
-                              value={editDraft.name}
-                              onChange={(event) => setDraft(setEditDraft, "name", event.target.value)}
-                              className="w-full rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"
-                            />
-                          ) : (
+                      <React.Fragment key={row.id}>
+                        {/* Data row — always in display mode */}
+                        <tr className={`border-t border-white/10 text-slate-100 transition ${editingId === row.id ? "bg-cyan-500/5" : "bg-white/5"}`}>
+                          {visibleColumns.name ? (
+                          <td className="px-3 py-3">
                             <div>
                               <p className="font-medium text-slate-100">{row.name}</p>
                               <p className="text-xs text-slate-500">{row.track?.name ?? "No track"}</p>
                             </div>
-                          )}
-                        </td>
-                        ) : null}
-                        {visibleColumns.time ? (
-                        <td className="px-3 py-3">
-                          {editingId === row.id ? (
-                            <input
-                              type="time"
-                              value={editDraft.time}
-                              onChange={(event) => setDraft(setEditDraft, "time", event.target.value)}
-                              className="w-full rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"
-                            />
-                          ) : (
-                            formatTime(row.class_time)
-                          )}
-                        </td>
-                        ) : null}
-                        {visibleColumns.duration ? (
-                        <td className="px-3 py-3">
-                          {editingId === row.id ? (
-                            <input
-                              type="number"
-                              min="1"
-                              value={editDraft.durationMinutes}
-                              onChange={(event) => setDraft(setEditDraft, "durationMinutes", event.target.value)}
-                              className="w-full rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"
-                            />
-                          ) : (
-                            formatDuration(row.duration_minutes)
-                          )}
-                        </td>
-                        ) : null}
-                        {visibleColumns.days ? (
-                        <td className="px-3 py-3">
-                          {editingId === row.id ? (
-                            <div className="flex flex-wrap gap-1.5">
-                              {weekDays.map((day) => {
-                                const active = editDraft.days.includes(day);
-                                return (
-                                  <button
-                                    key={`${row.id}-edit-${day}`}
-                                    type="button"
-                                    onClick={() => toggleDraftDay(editDraft, setEditDraft, day)}
-                                    className={`rounded-full px-2 py-0.5 text-xs transition ${
-                                      active ? "bg-cyan-500/10 text-cyan-300" : "bg-white/10 text-slate-300 hover:bg-fuchsia-500/10 hover:text-fuchsia-300"
-                                    }`}
-                                  >
-                                    {day}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          ) : (
+                          </td>
+                          ) : null}
+                          {visibleColumns.time ? (
+                          <td className="px-3 py-3">{formatTime(row.class_time)}</td>
+                          ) : null}
+                          {visibleColumns.duration ? (
+                          <td className="px-3 py-3">{formatDuration(row.duration_minutes)}</td>
+                          ) : null}
+                          {visibleColumns.days ? (
+                          <td className="px-3 py-3">
                             <div className="flex flex-wrap gap-1.5">
                               {row.class_days.map((day) => (
                                 <span
@@ -1063,85 +1015,201 @@ export default function OwnerScheduleClient() {
                                 </span>
                               ))}
                             </div>
-                          )}
-                        </td>
+                          </td>
+                          ) : null}
+                          {visibleColumns.start ? (
+                          <td className="px-3 py-3">{toUiDate(row.start_date)}</td>
+                          ) : null}
+                          {visibleColumns.actions ? (
+                          <td className="px-3 py-3 text-right">
+                            {editingId === row.id ? (
+                              <div className="inline-flex gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => saveEdit(row.id)}
+                                  disabled={saving}
+                                  title="Save"
+                                  className={ownerIconButtonSuccessClass}
+                                >
+                                  {saveIcon}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingId(null)}
+                                  disabled={saving}
+                                  title="Cancel"
+                                  className={ownerIconButtonNeutralClass}
+                                >
+                                  {cancelIcon}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="inline-flex gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => startEdit(row)}
+                                  disabled={saving}
+                                  title="Edit"
+                                  className={ownerIconButtonNeutralClass}
+                                >
+                                  {editIcon}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => copyClass(row)}
+                                  disabled={saving}
+                                  title="Copy"
+                                  className={ownerIconButtonAccentClass}
+                                >
+                                  {copyIcon}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteClass(row.id)}
+                                  disabled={saving}
+                                  title="Delete"
+                                  className={ownerIconButtonDangerClass}
+                                >
+                                  {deleteIcon}
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                          ) : null}
+                        </tr>
+
+                        {/* Expanded edit form row */}
+                        {editingId === row.id ? (
+                          <tr className="border-t border-cyan-500/20 bg-white/[0.03]">
+                            <td colSpan={visibleColumnCount} className="px-4 py-4">
+                              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                <label className="space-y-1">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Track</span>
+                                  <select
+                                    value={editDraft.trackId}
+                                    onChange={(event) => setDraft(setEditDraft, "trackId", event.target.value)}
+                                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none [color-scheme:dark]"
+                                  >
+                                    {tracks.map((track) => (
+                                      <option key={track.id} value={track.id}>{track.name}</option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <label className="space-y-1">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Class Name</span>
+                                  <input
+                                    value={editDraft.name}
+                                    onChange={(event) => setDraft(setEditDraft, "name", event.target.value)}
+                                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none"
+                                  />
+                                </label>
+                                <label className="space-y-1">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Time</span>
+                                  <input
+                                    type="time"
+                                    value={editDraft.time}
+                                    onChange={(event) => setDraft(setEditDraft, "time", event.target.value)}
+                                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none [color-scheme:dark]"
+                                  />
+                                </label>
+                                <label className="space-y-1">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Duration (Minutes)</span>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={editDraft.durationMinutes}
+                                    onChange={(event) => setDraft(setEditDraft, "durationMinutes", event.target.value)}
+                                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                                  />
+                                </label>
+                                <label className="space-y-1">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Start Date</span>
+                                  <input
+                                    type="date"
+                                    value={editDraft.startDate}
+                                    onChange={(event) => setDraft(setEditDraft, "startDate", event.target.value)}
+                                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none [color-scheme:dark]"
+                                  />
+                                </label>
+                                <label className="space-y-1">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">End Date (Optional)</span>
+                                  <input
+                                    type="date"
+                                    value={editDraft.endDate}
+                                    onChange={(event) => setDraft(setEditDraft, "endDate", event.target.value)}
+                                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none [color-scheme:dark]"
+                                  />
+                                </label>
+                                <label className="space-y-1">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Default Coach (Optional)</span>
+                                  <select
+                                    value={editDraft.defaultCoachUserId}
+                                    onChange={(event) => setDraft(setEditDraft, "defaultCoachUserId", event.target.value)}
+                                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none [color-scheme:dark]"
+                                  >
+                                    <option value="">None</option>
+                                    {coaches.map((coach) => (
+                                      <option key={coach.userId} value={coach.userId}>{coach.label}</option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <label className="space-y-1">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Size Limit (0 = no limit)</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={editDraft.sizeLimit}
+                                    onChange={(event) => setDraft(setEditDraft, "sizeLimit", event.target.value)}
+                                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                                  />
+                                </label>
+                                <label className="space-y-1">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Reservation Cutoff Hours</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={editDraft.reservationCutoffHours}
+                                    onChange={(event) => setDraft(setEditDraft, "reservationCutoffHours", event.target.value)}
+                                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                                  />
+                                </label>
+                                <label className="space-y-1">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Calendar Color</span>
+                                  <select
+                                    value={editDraft.calendarColor}
+                                    onChange={(event) => setDraft(setEditDraft, "calendarColor", event.target.value)}
+                                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none [color-scheme:dark]"
+                                  >
+                                    {calendarColorOptions.map((option) => (
+                                      <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <div className="space-y-1 md:col-span-2 lg:col-span-3">
+                                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">Days</span>
+                                  <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2 py-2">
+                                    {weekDays.map((day) => {
+                                      const active = editDraft.days.includes(day);
+                                      return (
+                                        <button
+                                          key={`${row.id}-edit-${day}`}
+                                          type="button"
+                                          onClick={() => toggleDraftDay(editDraft, setEditDraft, day)}
+                                          className={`rounded-full px-2 py-1 text-xs transition ${
+                                            active ? "bg-cyan-500/15 text-cyan-300" : "bg-white/10 text-slate-300 hover:bg-cyan-500/10 hover:text-cyan-300"
+                                          }`}
+                                        >
+                                          {day}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
                         ) : null}
-                        {visibleColumns.start ? (
-                        <td className="px-3 py-3">
-                          {editingId === row.id ? (
-                            <input
-                              type="date"
-                              value={editDraft.startDate}
-                              onChange={(event) => setDraft(setEditDraft, "startDate", event.target.value)}
-                              className="w-full rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"
-                            />
-                          ) : (
-                            toUiDate(row.start_date)
-                          )}
-                        </td>
-                        ) : null}
-                        {visibleColumns.actions ? (
-                        <td className="px-3 py-3 text-right">
-                          {editingId === row.id ? (
-                            <div className="inline-flex gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => saveEdit(row.id)}
-                                disabled={saving}
-                                aria-label="Save class"
-                                title="Save"
-                                className={ownerIconButtonSuccessClass}
-                              >
-                                {saveIcon}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setEditingId(null)}
-                                disabled={saving}
-                                aria-label="Cancel editing"
-                                title="Cancel"
-                                className={ownerIconButtonNeutralClass}
-                              >
-                                {cancelIcon}
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="inline-flex gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => startEdit(row)}
-                                disabled={saving}
-                                aria-label="Edit class"
-                                title="Edit"
-                                className={ownerIconButtonNeutralClass}
-                              >
-                                {editIcon}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => copyClass(row)}
-                                disabled={saving}
-                                aria-label="Copy class"
-                                title="Copy"
-                                className={ownerIconButtonAccentClass}
-                              >
-                                {copyIcon}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => deleteClass(row.id)}
-                                disabled={saving}
-                                aria-label="Delete class"
-                                title="Delete"
-                                className={ownerIconButtonDangerClass}
-                              >
-                                {deleteIcon}
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                        ) : null}
-                      </tr>
+                      </React.Fragment>
                     ))}
                     </tbody>
                   </table>
