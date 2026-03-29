@@ -52,20 +52,28 @@ export async function GET(request: Request) {
   const movementId = searchParams.get("movementId");
 
   if (movementId) {
-    const { data, error: queryError } = await supabaseAdmin
-      .from("workout_results")
-      .select(
-        "id, day_date, score_type, score_text, score_value, total_reps, notes, workout_blocks!inner(title, block_type, movement_id), workout_result_lift_sets(set_order, reps, weight)"
-      )
-      .eq("member_id", userId)
-      .eq("workout_blocks.movement_id", movementId)
-      .order("day_date", { ascending: false });
+    const [workoutRes, liftLogRes] = await Promise.all([
+      supabaseAdmin
+        .from("workout_results")
+        .select(
+          "id, day_date, score_type, score_text, score_value, total_reps, notes, workout_blocks!inner(title, block_type, movement_id), workout_result_lift_sets(set_order, reps, weight)"
+        )
+        .eq("member_id", userId)
+        .eq("workout_blocks.movement_id", movementId)
+        .order("day_date", { ascending: false }),
+      supabaseAdmin
+        .from("athlete_lift_logs")
+        .select("id, day_date, notes, athlete_lift_log_sets(set_order, reps, weight)")
+        .eq("member_id", userId)
+        .eq("movement_id", movementId)
+        .order("day_date", { ascending: false }),
+    ]);
 
-    if (queryError) {
-      return NextResponse.json({ error: queryError.message }, { status: 500 });
+    if (workoutRes.error) {
+      return NextResponse.json({ error: workoutRes.error.message }, { status: 500 });
     }
 
-    const results = (data ?? []).map((row) => {
+    const workoutResults = (workoutRes.data ?? []).map((row) => {
       const r = row as unknown as ResultRow;
       const block = resolveBlock(r.workout_blocks);
       const sets = (Array.isArray(r.workout_result_lift_sets) ? r.workout_result_lift_sets : [])
@@ -83,6 +91,38 @@ export async function GET(request: Request) {
         blockType: block?.block_type ?? null,
         sets,
       };
+    });
+
+    type LiftLogRow = {
+      id: string;
+      day_date: string | null;
+      notes: string | null;
+      athlete_lift_log_sets: { set_order: number | null; reps: number | null; weight: number | null }[] | null;
+    };
+
+    const liftLogResults = (liftLogRes.data ?? []).map((row) => {
+      const r = row as unknown as LiftLogRow;
+      const sets = (Array.isArray(r.athlete_lift_log_sets) ? r.athlete_lift_log_sets : [])
+        .filter((s) => s.weight !== null || s.reps !== null)
+        .sort((a, b) => (a.set_order ?? 0) - (b.set_order ?? 0));
+      return {
+        id: r.id,
+        day_date: r.day_date,
+        score_type: null,
+        score_text: null,
+        score_value: null,
+        total_reps: null,
+        notes: r.notes,
+        blockTitle: "Manual Log",
+        blockType: "lift" as const,
+        sets,
+      };
+    });
+
+    const results = [...workoutResults, ...liftLogResults].sort((a, b) => {
+      if (!a.day_date) return 1;
+      if (!b.day_date) return -1;
+      return b.day_date.localeCompare(a.day_date);
     });
 
     return NextResponse.json({ results });

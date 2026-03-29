@@ -40,9 +40,10 @@ type HealthStatsPanelProps = {
   description: string;
   groups: StatGroup[];
   hideHeader?: boolean;
+  onLogLift?: () => void;
 };
 
-export default function HealthStatsPanel({ title, description, groups, hideHeader }: HealthStatsPanelProps) {
+export default function HealthStatsPanel({ title, description, groups, hideHeader, onLogLift }: HealthStatsPanelProps) {
   const initialValues = useMemo(() => {
     return Object.fromEntries(
       groups.flatMap((group) =>
@@ -353,12 +354,23 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                     </div>
                   </div>
                 ))}
-                <button
-                  type="button"
-                  className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:text-white"
-                >
-                  {group.slug === "strength" ? "Log Lift" : "Log Benchmark"}
-                </button>
+                {group.slug !== "conditioning" && (
+                  <button
+                    type="button"
+                    onClick={onLogLift}
+                    className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:text-white"
+                  >
+                    Log Lift
+                  </button>
+                )}
+                {group.slug === "conditioning" && (
+                  <button
+                    type="button"
+                    className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:text-white"
+                  >
+                    Log Benchmark
+                  </button>
+                )}
               </div>
             )}
           </div>

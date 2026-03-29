@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Dumbbell, Flame, Snowflake, Zap } from "lucide-react";
 
@@ -32,6 +32,10 @@ function startOfWeek(dateStr: string) {
   return `${y}-${m}-${day}`;
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 const SCORE_LABEL: Record<string, string> = {
   time: "For Time",
   reps: "For Reps",
@@ -61,55 +65,79 @@ export default function TodaysWorkoutCard() {
   const [loading, setLoading] = useState(true);
   const [noWorkout, setNoWorkout] = useState(false);
 
+  // Keep orgId available for storage-event refetches without re-calling /api/me
+  const orgIdRef = useRef<string | null>(null);
+
+  const loadWorkout = useCallback(async (orgId: string, trackId: string) => {
+    setLoading(true);
+    setNoWorkout(false);
+    setBlocks(null);
+    try {
+      const today = todayKey();
+      const weekStart = startOfWeek(today);
+      const res = await fetch(
+        `/api/programming/week?organizationId=${orgId}&trackId=${trackId}&startDate=${weekStart}`,
+        { cache: "no-store" }
+      );
+      const payload = await res.json();
+      const days: DayData[] = payload?.days ?? [];
+      const todayData = days.find((d) => d.day_date === today);
+
+      if (!todayData || todayData.blocks.length === 0) {
+        setNoWorkout(true);
+      } else {
+        setBlocks(todayData.blocks);
+      }
+    } catch {
+      setNoWorkout(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Bootstrap: fetch me + resolve track, then load workout
   useEffect(() => {
     (async () => {
       try {
         const meRes = await fetch("/api/me", { cache: "no-store" });
         const me = await meRes.json();
         const orgId = me?.organizationIds?.[0] ?? null;
+        if (!orgId) { setNoWorkout(true); setLoading(false); return; }
+        orgIdRef.current = orgId;
+
+        const storedId = localStorage.getItem("elev8-track-id");
+        const tr = await fetch(`/api/programming/tracks?organizationId=${orgId}`, { cache: "no-store" });
+        const tp = await tr.json();
+        const fetchedTracks: { id: string }[] = tp?.tracks ?? [];
+
         let trackId: string | null = null;
-
-        if (orgId) {
-          const storedId = localStorage.getItem("elev8-track-id");
-          const tr = await fetch(`/api/programming/tracks?organizationId=${orgId}`, { cache: "no-store" });
-          const tp = await tr.json();
-          const fetchedTracks: { id: string }[] = tp?.tracks ?? [];
-          if (storedId && fetchedTracks.some((t) => t.id === storedId)) {
-            trackId = storedId;
-          } else if (me?.trackId) {
-            trackId = me.trackId;
-          } else {
-            trackId = fetchedTracks[0]?.id ?? null;
-          }
-        }
-
-        if (!orgId || !trackId) {
-          setNoWorkout(true);
-          return;
-        }
-
-        const today = todayKey();
-        const weekStart = startOfWeek(today);
-        const res = await fetch(
-          `/api/programming/week?organizationId=${orgId}&trackId=${trackId}&startDate=${weekStart}`,
-          { cache: "no-store" }
-        );
-        const payload = await res.json();
-        const days: DayData[] = payload?.days ?? [];
-        const todayData = days.find((d) => d.day_date === today);
-
-        if (!todayData || todayData.blocks.length === 0) {
-          setNoWorkout(true);
+        if (storedId && fetchedTracks.some((t) => t.id === storedId)) {
+          trackId = storedId;
+        } else if (me?.trackId) {
+          trackId = me.trackId;
         } else {
-          setBlocks(todayData.blocks);
+          trackId = fetchedTracks[0]?.id ?? null;
         }
+
+        if (!trackId) { setNoWorkout(true); setLoading(false); return; }
+        await loadWorkout(orgId, trackId);
       } catch {
         setNoWorkout(true);
-      } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [loadWorkout]);
+
+  // React to track changes from header / workout page dropdowns
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === "elev8-track-id" && e.newValue && orgIdRef.current) {
+        loadWorkout(orgIdRef.current, e.newValue);
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [loadWorkout]);
 
   return (
     <div className="glass-panel flex flex-col rounded-3xl border border-white/10 p-6">
@@ -138,22 +166,25 @@ export default function TodaysWorkoutCard() {
         </div>
       ) : (
         <div className="flex flex-1 flex-col gap-2">
-          {blocks!.map((block) => (
-            <div
-              key={block.id}
-              className={`flex items-start gap-2.5 rounded-xl border px-3 py-2.5 ${blockAccent(block.block_type)}`}
-            >
-              <span className="mt-0.5 shrink-0">{blockIcon(block.block_type)}</span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-slate-100">{block.title}</p>
-                {block.description ? (
-                  <p className="mt-0.5 line-clamp-1 text-xs text-slate-400">{block.description}</p>
-                ) : block.score_type && SCORE_LABEL[block.score_type] ? (
-                  <p className="mt-0.5 text-xs text-slate-500">{SCORE_LABEL[block.score_type]}</p>
-                ) : null}
+          {blocks!.map((block) => {
+            const plainDesc = block.description ? stripHtml(block.description) : null;
+            return (
+              <div
+                key={block.id}
+                className={`flex items-start gap-2.5 rounded-xl border px-3 py-2.5 ${blockAccent(block.block_type)}`}
+              >
+                <span className="mt-0.5 shrink-0">{blockIcon(block.block_type)}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-slate-100">{block.title}</p>
+                  {plainDesc ? (
+                    <p className="mt-0.5 line-clamp-1 text-xs text-slate-400">{plainDesc}</p>
+                  ) : block.score_type && SCORE_LABEL[block.score_type] ? (
+                    <p className="mt-0.5 text-xs text-slate-500">{SCORE_LABEL[block.score_type]}</p>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

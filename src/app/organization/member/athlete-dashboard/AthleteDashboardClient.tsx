@@ -11,17 +11,19 @@ import TotalWorkoutsLoggedCard from "../../../../components/health/TotalWorkouts
 import NutritionCoachCard from "../../../../components/health/NutritionCoachCard";
 import BodyCompTrendChart from "../../../../components/health/BodyCompTrendChart";
 import MovementResultsSearch from "../../../../components/health/MovementResultsSearch";
+import LogLiftCard from "../../../../components/health/LogLiftCard";
 import {
   STAT_GROUP_BY_SLUG,
   STAT_GROUPS,
 } from "../../../../components/health/health-stats-config";
 
-type TabId = "dashboard" | "benchmarks" | "workouts" | "body-comp";
+type TabId = "dashboard" | "benchmarks" | "workouts" | "body-comp" | "movements";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
   { id: "benchmarks", label: "Benchmarks" },
-  { id: "workouts", label: "Results" },
+  { id: "movements", label: "Movements" },
+  { id: "workouts", label: "Log" },
   { id: "body-comp", label: "Body Comp" },
 ];
 
@@ -63,7 +65,7 @@ function formatDate(dateStr: string | null) {
 }
 
 function resolveTab(raw: string): TabId {
-  const valid: TabId[] = ["dashboard", "benchmarks", "workouts", "body-comp"];
+  const valid: TabId[] = ["dashboard", "benchmarks", "workouts", "body-comp", "movements"];
   return valid.includes(raw as TabId) ? (raw as TabId) : "dashboard";
 }
 
@@ -235,13 +237,21 @@ export default function AthleteDashboardClient({ initialTab, totalWorkoutsLogged
       {/* Benchmarks tab */}
       {activeTab === "benchmarks" && (
         <div className="space-y-8">
-          <MovementResultsSearch />
           <HealthStatsPanel
             title="Benchmarks"
             description="Key lift numbers and conditioning benchmarks."
             hideHeader
+            onLogLift={() => switchTab("movements")}
             groups={[STAT_GROUP_BY_SLUG["powerlifts"], STAT_GROUP_BY_SLUG["olympic-lifts"], STAT_GROUP_BY_SLUG["strength"], STAT_GROUP_BY_SLUG["gymnastics"], STAT_GROUP_BY_SLUG["conditioning"]]}
           />
+        </div>
+      )}
+
+      {/* Movements tab */}
+      {activeTab === "movements" && (
+        <div className="space-y-6">
+          <MovementResultsSearch />
+          <LogLiftCard />
         </div>
       )}
 
