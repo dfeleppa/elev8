@@ -13,10 +13,10 @@ export async function GET(request: NextRequest) {
 
   try {
     // Fetch all active and paused subscriptions
-    const subscriptions = await stripe.subscriptions.list(
-      { status: "all", limit: 100 },
-      { stripeAccount: organizationId }
-    );
+    const subscriptions = await stripe.subscriptions.list({
+      status: "all",
+      limit: 100
+    });
 
     // Calculate metrics
     let mrr = 0; // Monthly Recurring Revenue
@@ -38,10 +38,9 @@ export async function GET(request: NextRequest) {
     });
 
     // Fetch all charges to calculate LTV
-    const charges = await stripe.charges.list(
-      { limit: 100 },
-      { stripeAccount: organizationId }
-    );
+    const charges = await stripe.charges.list({
+      limit: 100
+    });
 
     let totalRevenue = 0;
     charges.data.forEach((charge: any) => {

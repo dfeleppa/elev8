@@ -15,14 +15,10 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(request.nextUrl.searchParams.get("limit") ?? "20"), 100);
     const offset = parseInt(request.nextUrl.searchParams.get("offset") ?? "0");
 
-    const customers = await stripe.customers.list(
-      { 
-        limit, 
-        starting_after: offset > 0 ? undefined : undefined,
-        expand: ["data.subscriptions"],
-      },
-      { stripeAccount: organizationId }
-    );
+    const customers = await stripe.customers.list({
+      limit,
+      expand: ["data.subscriptions"]
+    });
 
     const formattedCustomers = customers.data.map((cust: any) => {
       const subscription = cust.subscriptions?.data?.[0];

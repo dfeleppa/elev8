@@ -15,19 +15,16 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(request.nextUrl.searchParams.get("limit") ?? "50"), 100);
 
     // Fetch charges (payments)
-    const charges = await stripe.charges.list(
-      { 
-        limit, 
-        expand: ["data.customer"],
-      },
-      { stripeAccount: organizationId }
-    );
+    const charges = await stripe.charges.list({
+      limit,
+      expand: ["data.customer"]
+    });
 
     // Fetch refunds
-    const refunds = await stripe.refunds.list(
-      { limit: 20, expand: ["data.charge"] },
-      { stripeAccount: organizationId }
-    );
+    const refunds = await stripe.refunds.list({
+      limit: 20,
+      expand: ["data.charge"]
+    });
 
     // Combine and sort by date
     const transactions = [
