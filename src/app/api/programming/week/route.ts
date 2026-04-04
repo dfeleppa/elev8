@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     .order("day_date", { ascending: true });
 
   if (daysError) {
-    return NextResponse.json({ error: daysError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const dayIds = (days ?? []).map((row) => row.id);
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
     : { data: [], error: null };
 
   if (blocksError) {
-    return NextResponse.json({ error: blocksError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const blockIds = (blocks ?? []).map((row) => row.id);
@@ -73,7 +73,7 @@ export async function GET(request: Request) {
     : { data: [], error: null };
 
   if (levelsError) {
-    return NextResponse.json({ error: levelsError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const levelsByBlock = (levels ?? []).reduce<Record<string, unknown[]>>((acc, levelRow) => {

@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     .order("class_time", { ascending: true });
 
   if (classesError) {
-    return NextResponse.json({ error: classesError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const rows = classes ?? [];

@@ -58,7 +58,7 @@ export async function GET(request: Request) {
     .range(from, to);
 
   if (queryError) {
-    return NextResponse.json({ error: queryError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const totalCount = count ?? 0;

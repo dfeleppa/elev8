@@ -99,7 +99,7 @@ export async function GET() {
   ]);
 
   if (statsResult.error) {
-    return NextResponse.json({ error: statsResult.error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const latest: Record<string, { value: string; unit: string; entryDate: string | null }> = {};
@@ -225,7 +225,7 @@ export async function POST(request: Request) {
     .single();
 
   if (insertError || !data) {
-    return NextResponse.json({ error: insertError?.message ?? "Unable to save stat." }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({
@@ -292,7 +292,7 @@ async function handleLogBodyComp(userId: string, body: unknown) {
     .select("stat_key, value, unit, entry_date");
 
   if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const entries: Record<string, { value: string; unit: string; entryDate: string | null }> = {};

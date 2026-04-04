@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (progError) {
-    return NextResponse.json({ error: progError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   if (!progression) {
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     .order("week_number", { ascending: true });
 
   if (weeksError) {
-    return NextResponse.json({ error: weeksError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ progression: { ...progression, weeks: weeks ?? [] } });
@@ -121,7 +121,7 @@ export async function PUT(request: Request) {
     .single();
 
   if (upsertError || !progression) {
-    return NextResponse.json({ error: upsertError?.message ?? "Failed to upsert progression." }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const progressionId = progression.id;
@@ -133,7 +133,7 @@ export async function PUT(request: Request) {
     .eq("progression_id", progressionId);
 
   if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   if (Array.isArray(weeks) && weeks.length > 0) {
@@ -166,7 +166,7 @@ export async function PUT(request: Request) {
       .insert(rows);
 
     if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
   }
 

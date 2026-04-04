@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
 
-  if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
+  if (dbError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
   return NextResponse.json({ products: data ?? [] });
 }
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     .select("*")
     .single();
 
-  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
+  if (insertError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
   // Insert product options if provided
   if (body.hasOptions && Array.isArray(body.options) && body.options.length > 0) {

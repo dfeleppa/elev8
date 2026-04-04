@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (dayLookupError) {
-    return NextResponse.json({ error: dayLookupError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   let dayId = existingDay?.id ?? null;
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     .single();
 
     if (createDayError || !createdDay) {
-      return NextResponse.json({ error: createDayError?.message ?? "Day not found." }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     dayId = createdDay.id;
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ entry }, { status: 201 });

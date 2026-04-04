@@ -126,7 +126,7 @@ export async function PATCH(
       .eq("block_id", id);
 
     if (deleteError) {
-      return NextResponse.json({ error: deleteError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     const levelRows = levels
@@ -144,7 +144,7 @@ export async function PATCH(
         .from("workout_block_levels")
         .insert(levelRows);
       if (insertLevelsError) {
-        return NextResponse.json({ error: insertLevelsError.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error." }, { status: 500 });
       }
     }
   }
@@ -156,7 +156,7 @@ export async function PATCH(
     .order("level", { ascending: true });
 
   if (levelsError) {
-    return NextResponse.json({ error: levelsError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ block: { ...blockRow, levels: levelsData ?? [] } });
@@ -193,7 +193,7 @@ export async function DELETE(
 
   const { error: deleteError } = await supabaseAdmin.from("workout_blocks").delete().eq("id", id);
   if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

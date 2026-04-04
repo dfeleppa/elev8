@@ -1,5 +1,7 @@
 import { google } from "googleapis";
 
+export const YOUTUBE_OAUTH_STATE_COOKIE = "youtube_oauth_state";
+
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 const redirectUri =
   process.env.YOUTUBE_OAUTH_REDIRECT_URI ??
@@ -21,12 +23,13 @@ export function getYoutubeOAuthClient() {
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
 
-export function getYoutubeAuthUrl() {
+export function getYoutubeAuthUrl(state?: string) {
   const oauth2Client = getYoutubeOAuthClient();
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
     scope: scopes,
+    state,
   });
 }
 

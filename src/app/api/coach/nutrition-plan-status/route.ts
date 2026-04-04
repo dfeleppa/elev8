@@ -34,10 +34,10 @@ export async function GET() {
     ]);
 
     if (planError) {
-      return NextResponse.json({ error: planError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
     if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     const { data: currentWeightEntry } = await supabaseAdmin
@@ -87,6 +87,6 @@ export async function GET() {
     });
   } catch (queryError) {
     const message = queryError instanceof Error ? queryError.message : "Unable to check coach plan status.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

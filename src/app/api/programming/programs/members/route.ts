@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: true });
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const members = (data ?? []).map((row) => {

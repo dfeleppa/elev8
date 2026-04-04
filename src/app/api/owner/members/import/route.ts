@@ -225,9 +225,9 @@ export async function POST(request: NextRequest) {
     const batch = deduped.slice(i, i + BATCH_SIZE);
     const { error: upsertError } = await supabaseAdmin
       .from("organization_members")
-      .upsert(batch, { onConflict: "email" });
+      .upsert(batch, { onConflict: "organization_id,email" });
     if (upsertError) {
-      return NextResponse.json({ error: upsertError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
     upserted += batch.length;
   }

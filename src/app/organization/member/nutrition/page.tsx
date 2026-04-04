@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Pencil, X } from "lucide-react";
 
 import SidebarShell from "../../../../components/SidebarShell";
@@ -98,6 +98,8 @@ const emptyDraft: EntryDraft = {
   name: "",
   quantity: "1",
 };
+
+const FOOD_LIBRARY_TTL_MS = 2 * 60_000;
 
 function toLocalDateInputValue(date: Date) {
   const offset = date.getTimezoneOffset();
@@ -217,6 +219,8 @@ export default function HealthNutritionPage() {
   const [dialogSaving, setDialogSaving] = useState(false);
   const [recentFoods, setRecentFoods] = useState<LibraryFood[]>([]);
   const [myFoods, setMyFoods] = useState<LibraryFood[]>([]);
+  const recentFoodsFetchedAtRef = useRef(0);
+  const myFoodsFetchedAtRef = useRef(0);
   const [createFoodDraft, setCreateFoodDraft] = useState({
     name: "",
     calories: "",
@@ -251,6 +255,62 @@ export default function HealthNutritionPage() {
     carbs: "",
     fat: "",
   });
+
+  async function loadFoodLibraries(options?: {
+    includeRecent?: boolean;
+    includeMine?: boolean;
+    force?: boolean;
+  }) {
+    const includeRecent = options?.includeRecent ?? true;
+    const includeMine = options?.includeMine ?? true;
+    const force = options?.force ?? false;
+    const now = Date.now();
+
+    const shouldFetchRecent =
+      includeRecent && (force || recentFoods.length === 0 || now - recentFoodsFetchedAtRef.current > FOOD_LIBRARY_TTL_MS);
+    const shouldFetchMine =
+      includeMine && (force || myFoods.length === 0 || now - myFoodsFetchedAtRef.current > FOOD_LIBRARY_TTL_MS);
+
+    let nextRecent = recentFoods;
+    let nextMine = myFoods;
+
+    if (!shouldFetchRecent && !shouldFetchMine) {
+      return { recent: nextRecent, mine: nextMine };
+    }
+
+    const requests: Array<Promise<Response>> = [];
+    if (shouldFetchRecent) {
+      requests.push(fetch("/api/foods/recent?limit=40"));
+    }
+    if (shouldFetchMine) {
+      requests.push(fetch("/api/foods"));
+    }
+
+    const responses = await Promise.all(requests);
+    let cursor = 0;
+
+    if (shouldFetchRecent) {
+      const recentResponse = responses[cursor++];
+      const recentPayload = await recentResponse.json().catch(() => ({ items: [] }));
+      if (recentResponse.ok) {
+        nextRecent = recentPayload.items ?? [];
+        setRecentFoods(nextRecent);
+        recentFoodsFetchedAtRef.current = now;
+      }
+    }
+
+    if (shouldFetchMine) {
+      const mineResponse = responses[cursor++];
+      const minePayload = await mineResponse.json().catch(() => ({ foods: [] }));
+      if (mineResponse.ok) {
+        nextMine = minePayload.foods ?? [];
+        setMyFoods(nextMine);
+        myFoodsFetchedAtRef.current = now;
+      }
+    }
+
+    return { recent: nextRecent, mine: nextMine };
+  }
 
   useEffect(() => {
     let isActive = true;
@@ -547,19 +607,14 @@ export default function HealthNutritionPage() {
         return exactFromLoaded;
       }
 
-      const mineResponse = await fetch("/api/foods");
-      const minePayload = await mineResponse.json().catch(() => ({ foods: [] }));
-      if (mineResponse.ok) {
-        const foods: LibraryFood[] = minePayload.foods ?? [];
-        setMyFoods(foods);
-        const exact = foods.find((food) => food.name.toLowerCase() === lower);
-        if (exact) {
-          return exact;
-        }
-        const partial = foods.find((food) => food.name.toLowerCase().includes(lower));
-        if (partial) {
-          return partial;
-        }
+      const { mine: foods } = await loadFoodLibraries({ includeRecent: false, includeMine: true });
+      const exact = foods.find((food) => food.name.toLowerCase() === lower);
+      if (exact) {
+        return exact;
+      }
+      const partial = foods.find((food) => food.name.toLowerCase().includes(lower));
+      if (partial) {
+        return partial;
       }
 
       const searchResponse = await fetch(`/api/foods/search?query=${encodeURIComponent(foodName)}`);
@@ -803,33 +858,16 @@ export default function HealthNutritionPage() {
   }
 
   async function openMealDialog(mealKey: MealKey) {
-    async function loadFoodLibraries() {
-      setDialogLoading(true);
-      try {
-        const [recentResponse, mineResponse] = await Promise.all([
-          fetch("/api/foods/recent?limit=40"),
-          fetch("/api/foods"),
-        ]);
-
-        const recentPayload = await recentResponse.json().catch(() => ({ items: [] }));
-        const minePayload = await mineResponse.json().catch(() => ({ foods: [] }));
-
-        if (recentResponse.ok) {
-          setRecentFoods(recentPayload.items ?? []);
-        }
-        if (mineResponse.ok) {
-          setMyFoods(minePayload.foods ?? []);
-        }
-      } finally {
-        setDialogLoading(false);
-      }
-    }
-
     setFoodDialogOpen(true);
     setActiveMealDialog(mealKey);
     setDialogTab("recent");
     setDialogSearch("");
-    await loadFoodLibraries();
+    setDialogLoading(true);
+    try {
+      await loadFoodLibraries({ includeRecent: true, includeMine: true });
+    } finally {
+      setDialogLoading(false);
+    }
   }
 
   async function openFoodManagerDialog() {
@@ -839,19 +877,7 @@ export default function HealthNutritionPage() {
     setDialogSearch("");
     setDialogLoading(true);
     try {
-      const [recentResponse, mineResponse] = await Promise.all([
-        fetch("/api/foods/recent?limit=40"),
-        fetch("/api/foods"),
-      ]);
-
-      const recentPayload = await recentResponse.json().catch(() => ({ items: [] }));
-      const minePayload = await mineResponse.json().catch(() => ({ foods: [] }));
-      if (recentResponse.ok) {
-        setRecentFoods(recentPayload.items ?? []);
-      }
-      if (mineResponse.ok) {
-        setMyFoods(minePayload.foods ?? []);
-      }
+      await loadFoodLibraries({ includeRecent: true, includeMine: true });
     } finally {
       setDialogLoading(false);
     }
@@ -915,6 +941,7 @@ export default function HealthNutritionPage() {
       }
 
       setMyFoods((prev) => [payload.food, ...prev]);
+      myFoodsFetchedAtRef.current = Date.now();
       setDialogTab("mine");
       setCreateFoodDraft({
         name: "",
@@ -960,6 +987,7 @@ export default function HealthNutritionPage() {
         return;
       }
       setMyFoods((prev) => prev.map((food) => (food.id === foodId ? payload.food : food)));
+      myFoodsFetchedAtRef.current = Date.now();
       setEditingFoodId(null);
     } finally {
       setDialogSaving(false);
@@ -977,6 +1005,7 @@ export default function HealthNutritionPage() {
         return;
       }
       setMyFoods((prev) => prev.filter((food) => food.id !== foodId));
+      myFoodsFetchedAtRef.current = Date.now();
     } finally {
       setDialogSaving(false);
     }

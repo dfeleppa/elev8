@@ -42,7 +42,7 @@ export async function GET() {
   ]);
 
   if (userResult.error) {
-    return NextResponse.json({ error: userResult.error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const data = userResult.data;
@@ -117,7 +117,7 @@ export async function PUT(request: Request) {
     .maybeSingle();
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({

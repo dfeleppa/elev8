@@ -48,23 +48,13 @@ function canAccessOrganization(organizationIds: string[], organizationId: string
 }
 
 async function getOrganizationMembers(organizationId: string) {
-  let query = supabaseAdmin
+  const query = supabaseAdmin
     .from("organization_members")
     .select("first_name, last_name, email, role, membership")
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: true });
 
-  let { data, error } = await query;
-
-  // Backward compatibility for environments where organization_id is missing.
-  if (error && error.message.toLowerCase().includes("organization_id")) {
-    const retry = await supabaseAdmin
-      .from("organization_members")
-      .select("first_name, last_name, email, role, membership")
-      .order("created_at", { ascending: true });
-    data = retry.data;
-    error = retry.error;
-  }
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
@@ -99,7 +89,7 @@ export async function GET(request: NextRequest) {
     .order("created_at", { ascending: true });
 
   if (membershipError) {
-    return NextResponse.json({ error: membershipError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const rows = (data ?? []).map((row) => {
@@ -154,7 +144,7 @@ export async function GET(request: NextRequest) {
       .filter((row): row is { email: string; fullName: string; membership: string | null; role: string } => Boolean(row))
       .filter((row) => !staffEmails.has(row.email));
   } catch (memberError) {
-    return NextResponse.json({ error: (memberError as Error).message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ organizationId, staff, promotableMembers });
@@ -226,7 +216,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !user?.id) {
-      return NextResponse.json({ error: userError?.message ?? "Failed to create user." }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     userId = user.id;
@@ -256,7 +246,7 @@ export async function POST(request: NextRequest) {
   );
 
   if (membershipError) {
-    return NextResponse.json({ error: membershipError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const { data: updatedMembership, error: fetchError } = await supabaseAdmin
@@ -267,7 +257,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (fetchError || !updatedMembership) {
-    return NextResponse.json({ error: fetchError?.message ?? "Failed to fetch staff row." }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const user = Array.isArray(updatedMembership.user) ? updatedMembership.user[0] : updatedMembership.user;
@@ -355,7 +345,7 @@ export async function PATCH(request: NextRequest) {
     .eq("organization_id", organizationId);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

@@ -260,7 +260,7 @@ export async function PATCH(
       .single();
 
     if (legacyUpdateError) {
-      return NextResponse.json({ error: legacyUpdateError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     const [hydratedLegacy] = await withLookups(legacyData ? [withScheduleDefaults(legacyData as LegacyScheduleClassRow)] : []);
@@ -268,7 +268,7 @@ export async function PATCH(
   }
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const [hydrated] = await withLookups(data ? [data as ScheduleClassRow] : []);
@@ -309,7 +309,7 @@ export async function DELETE(
     .eq("organization_id", organizationId);
 
   if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

@@ -218,7 +218,7 @@ export async function GET(request: NextRequest) {
       .order("class_time", { ascending: true });
 
     if (legacyError) {
-      return NextResponse.json({ error: legacyError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     const legacyRows = (legacyData ?? []).map((row) => withScheduleDefaults(row as LegacyScheduleClassRow));
@@ -227,7 +227,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (queryError) {
-    return NextResponse.json({ error: queryError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const hydrated = await withLookups((data ?? []) as ScheduleClassRow[]);
@@ -301,7 +301,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (legacyInsertError) {
-      return NextResponse.json({ error: legacyInsertError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     const [hydratedLegacy] = await withLookups(legacyData ? [withScheduleDefaults(legacyData as LegacyScheduleClassRow)] : []);
@@ -309,7 +309,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const [hydrated] = await withLookups(data ? [data as ScheduleClassRow] : []);

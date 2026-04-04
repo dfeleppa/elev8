@@ -46,7 +46,7 @@ export async function GET(_request: Request, context: RouteContext) {
     .order("day_of_week", { ascending: true });
 
   if (daysError) {
-    return NextResponse.json({ error: daysError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ program, days: days ?? [] });
@@ -102,7 +102,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     .single();
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ program: data });
@@ -137,7 +137,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     .eq("id", programId);
 
   if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

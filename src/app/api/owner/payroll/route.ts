@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     .order("week_ending_date", { ascending: false });
 
   if (dbError) {
-    return NextResponse.json({ error: dbError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const entries = (data ?? []).map((row) => ({
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (dbError) {
-    return NextResponse.json({ error: dbError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({
@@ -174,7 +174,7 @@ export async function PATCH(request: NextRequest) {
     .single();
 
   if (dbError) {
-    return NextResponse.json({ error: dbError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({
@@ -225,7 +225,7 @@ export async function DELETE(request: NextRequest) {
     .eq("organization_id", organizationId);
 
   if (dbError) {
-    return NextResponse.json({ error: dbError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

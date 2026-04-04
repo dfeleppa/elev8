@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   const { data, error: fetchError } = await scoped;
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ programs: data ?? [] });
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     .single();
 
   if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ program: data }, { status: 201 });

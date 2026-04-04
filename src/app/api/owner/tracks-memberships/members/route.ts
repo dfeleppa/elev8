@@ -29,20 +29,11 @@ function toTrackString(values: string[]) {
 }
 
 async function getOrganizationMembers(organizationId: string) {
-  let { data, error } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("organization_members")
     .select("email, first_name, last_name, tracks")
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
-
-  if (error && error.message.toLowerCase().includes("organization_id")) {
-    const retry = await supabaseAdmin
-      .from("organization_members")
-      .select("email, first_name, last_name, tracks")
-      .order("created_at", { ascending: false });
-    data = retry.data;
-    error = retry.error;
-  }
 
   if (error) {
     throw new Error(error.message);
@@ -89,7 +80,7 @@ export async function GET(request: NextRequest) {
         .filter((row): row is { email: string; fullName: string; tracks: string[] } => Boolean(row)),
     });
   } catch (cause) {
-    return NextResponse.json({ error: (cause as Error).message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }
 
@@ -129,25 +120,15 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "email, trackName, and assigned are required." }, { status: 400 });
   }
 
-  let { data: existing, error: lookupError } = await supabaseAdmin
+  const { data: existing, error: lookupError } = await supabaseAdmin
     .from("organization_members")
     .select("tracks")
     .eq("organization_id", organizationId)
     .eq("email", email)
     .single();
 
-  if (lookupError && lookupError.message.toLowerCase().includes("organization_id")) {
-    const retry = await supabaseAdmin
-      .from("organization_members")
-      .select("tracks")
-      .eq("email", email)
-      .single();
-    existing = retry.data;
-    lookupError = retry.error;
-  }
-
   if (lookupError) {
-    return NextResponse.json({ error: lookupError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const current = normalizeTrackList(existing?.tracks ?? null);
@@ -155,22 +136,14 @@ export async function PATCH(request: NextRequest) {
     ? Array.from(new Set([...current, trackName]))
     : current.filter((name) => name !== trackName);
 
-  let { error: updateError } = await supabaseAdmin
+  const { error: updateError } = await supabaseAdmin
     .from("organization_members")
     .update({ tracks: toTrackString(next), updated_at: new Date().toISOString() })
     .eq("organization_id", organizationId)
     .eq("email", email);
 
-  if (updateError && updateError.message.toLowerCase().includes("organization_id")) {
-    const retry = await supabaseAdmin
-      .from("organization_members")
-      .update({ tracks: toTrackString(next), updated_at: new Date().toISOString() })
-      .eq("email", email);
-    updateError = retry.error;
-  }
-
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, tracks: next });

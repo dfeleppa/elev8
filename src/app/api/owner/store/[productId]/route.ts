@@ -48,7 +48,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     .select("*")
     .single();
 
-  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  if (updateError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
   return NextResponse.json({ product });
 }
@@ -76,7 +76,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     .delete()
     .eq("id", productId);
 
-  if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 });
+  if (deleteError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
   return NextResponse.json({ success: true });
 }

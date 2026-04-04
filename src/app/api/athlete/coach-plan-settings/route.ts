@@ -34,7 +34,7 @@ export async function PATCH(request: Request) {
     .maybeSingle();
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   if (!latest?.id) {
@@ -47,7 +47,7 @@ export async function PATCH(request: Request) {
     .eq("id", latest.id);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ goalType });

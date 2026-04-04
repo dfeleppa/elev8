@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     .single();
 
   if (dayError || !dayRow?.id) {
-    return NextResponse.json({ error: dayError?.message ?? "Failed to create program day." }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const { data: blockRow, error: blockError } = await supabaseAdmin
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
     .single();
 
   if (blockError || !blockRow?.id) {
-    return NextResponse.json({ error: blockError?.message ?? "Failed to create workout block." }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   if (levels.length > 0) {
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
     if (levelRows.length > 0) {
       const { error: levelError } = await supabaseAdmin.from("workout_block_levels").insert(levelRows);
       if (levelError) {
-        return NextResponse.json({ error: levelError.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error." }, { status: 500 });
       }
     }
   }
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
     .order("level", { ascending: true });
 
   if (levelsError) {
-    return NextResponse.json({ error: levelsError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ block: { ...blockRow, levels: levelsData ?? [] } }, { status: 201 });

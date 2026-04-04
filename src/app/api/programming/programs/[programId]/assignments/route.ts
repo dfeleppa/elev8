@@ -43,7 +43,7 @@ export async function GET(_request: Request, context: RouteContext) {
     .order("created_at", { ascending: false });
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ assignments: data ?? [] });
@@ -125,7 +125,7 @@ export async function POST(request: Request, context: RouteContext) {
     .single();
 
   if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ assignment: data }, { status: 201 });

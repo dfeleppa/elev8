@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (dayError) {
-    return NextResponse.json({ error: dayError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   if (!day) {
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
   const { data: entries, error: entriesError } = await query;
 
   if (entriesError) {
-    return NextResponse.json({ error: entriesError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const rows = entries ?? [];
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
     .single();
 
   if (dayError || !day) {
-    return NextResponse.json({ error: dayError?.message ?? "Day not found." }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const { data: entry, error } = await supabaseAdmin
@@ -156,7 +156,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ entry }, { status: 201 });

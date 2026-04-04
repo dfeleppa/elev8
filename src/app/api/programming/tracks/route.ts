@@ -68,14 +68,14 @@ export async function GET(request: Request) {
 
     const { data: legacyData, error: legacyError } = await legacyScoped;
     if (legacyError) {
-      return NextResponse.json({ error: legacyError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     return NextResponse.json({ tracks: (legacyData ?? []).map((row) => withTrackDefaults(row as LegacyTrackRow)) });
   }
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ tracks: data ?? [] });
@@ -155,14 +155,14 @@ export async function POST(request: Request) {
       .single();
 
     if (legacyError) {
-      return NextResponse.json({ error: legacyError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     return NextResponse.json({ track: withTrackDefaults(legacyData as LegacyTrackRow) }, { status: 201 });
   }
 
   if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ track: data }, { status: 201 });

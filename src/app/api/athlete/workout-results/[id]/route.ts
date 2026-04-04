@@ -23,7 +23,7 @@ export async function DELETE(
     .eq("member_id", userId);
 
   if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

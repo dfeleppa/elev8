@@ -120,7 +120,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (profileError) {
-    return NextResponse.json({ error: profileError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const { data: plans, error: planError } = await supabaseAdmin
@@ -131,7 +131,7 @@ export async function GET(request: Request) {
     .limit(1);
 
   if (planError) {
-    return NextResponse.json({ error: planError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   let hasPlan = false;
@@ -253,7 +253,7 @@ export async function POST(request: Request) {
     .eq("id", memberId);
 
   if (profileError) {
-    return NextResponse.json({ error: profileError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const { error: planError } = await supabaseAdmin
@@ -292,7 +292,7 @@ export async function POST(request: Request) {
     );
 
   if (planError) {
-    return NextResponse.json({ error: planError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const { error: targetError } = await supabaseAdmin
@@ -311,7 +311,7 @@ export async function POST(request: Request) {
     );
 
   if (targetError) {
-    return NextResponse.json({ error: targetError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({
