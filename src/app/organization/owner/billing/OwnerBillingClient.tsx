@@ -11,6 +11,7 @@ type Metrics = {
   total_customers: number;
   churn_rate: number;
   total_revenue: number;
+  timestamp?: string;
 };
 
 type Customer = {
@@ -49,9 +50,9 @@ export default function OwnerBillingClient() {
 
       try {
         const [metricsRes, customersRes, transactionsRes] = await Promise.all([
-          fetch("/api/owner/billing/metrics"),
-          fetch("/api/owner/billing/customers?limit=10"),
-          fetch("/api/owner/billing/transactions?limit=50"),
+          fetch("/api/owner/billing/metrics", { cache: "default" }),
+          fetch("/api/owner/billing/customers?limit=10", { cache: "default" }),
+          fetch("/api/owner/billing/transactions?limit=50", { cache: "default" }),
         ]);
 
         if (!metricsRes.ok || !customersRes.ok || !transactionsRes.ok) {
@@ -80,10 +81,11 @@ export default function OwnerBillingClient() {
     setError(null);
 
     try {
+      const refreshSuffix = `fresh=1&t=${Date.now()}`;
       const [metricsRes, customersRes, transactionsRes] = await Promise.all([
-        fetch("/api/owner/billing/metrics"),
-        fetch("/api/owner/billing/customers?limit=10"),
-        fetch("/api/owner/billing/transactions?limit=50"),
+        fetch(`/api/owner/billing/metrics?${refreshSuffix}`, { cache: "no-store" }),
+        fetch(`/api/owner/billing/customers?limit=10&${refreshSuffix}`, { cache: "no-store" }),
+        fetch(`/api/owner/billing/transactions?limit=50&${refreshSuffix}`, { cache: "no-store" }),
       ]);
 
       if (!metricsRes.ok || !customersRes.ok || !transactionsRes.ok) {
@@ -111,6 +113,11 @@ export default function OwnerBillingClient() {
         <div>
           <h1 className="text-3xl font-bold text-white">Billing</h1>
           <p className="text-slate-400 mt-2">Revenue, customers, and transaction management</p>
+          {metrics?.timestamp && (
+            <p className="text-xs text-slate-500 mt-1">
+              Last updated: {new Date(metrics.timestamp).toLocaleString()}
+            </p>
+          )}
         </div>
         <button
           onClick={handleRefresh}
