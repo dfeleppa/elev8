@@ -523,7 +523,7 @@ function BlockCard({
       {/* Description */}
       {block.description && (
         <p className="px-4 pb-3 text-sm leading-relaxed text-slate-300 whitespace-pre-wrap">
-          {block.description}
+          {block.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()}
         </p>
       )}
 
