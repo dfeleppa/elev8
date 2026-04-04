@@ -46,7 +46,7 @@ export async function GET(_request: Request, context: RouteContext) {
     .order("week_number", { ascending: true });
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ progressions: data ?? [] });
@@ -142,7 +142,7 @@ export async function PUT(request: Request, context: RouteContext) {
     .select("id, block_id, week_number, modality, progression_type, distance_meters, duration_seconds, interval_count, interval_distance_meters, interval_rest_seconds, target_pace_per_500m, notes, updated_at");
 
   if (upsertError) {
-    return NextResponse.json({ error: upsertError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ progressions: data ?? [] });

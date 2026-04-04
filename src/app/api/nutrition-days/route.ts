@@ -77,7 +77,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (dayError) {
-    return NextResponse.json({ error: dayError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   let resolvedDay = day;
@@ -100,7 +100,7 @@ export async function GET(request: Request) {
         .single();
 
       if (createError) {
-        return NextResponse.json({ error: createError.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error." }, { status: 500 });
       }
 
       resolvedDay = createdDay;
@@ -120,7 +120,7 @@ export async function GET(request: Request) {
         .single();
 
       if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error." }, { status: 500 });
       }
 
       resolvedDay = updatedDay;
@@ -138,7 +138,7 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: true });
 
   if (entriesError) {
-    return NextResponse.json({ error: entriesError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ day: resolvedDay, entries: entries ?? [] });
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ day });

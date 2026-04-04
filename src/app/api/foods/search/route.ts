@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContextFromBearer } from "../../../../lib/member";
+import { requireUserContext, requireUserContextFromBearer } from "../../../../lib/member";
 
 export const runtime = "nodejs";
 
@@ -12,6 +12,34 @@ const USDA_NUTRIENT_IDS = {
   carbs: 1005,       // g
   fat: 1004,         // g
 } as const;
+
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 30;
+const SEARCH_CACHE_TTL_MS = 5 * 60_000;
+
+type RateLimitBucket = {
+  count: number;
+  resetAt: number;
+};
+
+const rateLimitBuckets = new Map<string, RateLimitBucket>();
+
+type CachedSearchResult = {
+  results: Array<{
+    fdcId: number;
+    description: string;
+    brandOwner?: string;
+    servingSize?: number;
+    servingSizeUnit?: string;
+    calories: number | null;
+    protein: number | null;
+    carbs: number | null;
+    fat: number | null;
+  }>;
+  expiresAt: number;
+};
+
+const searchCache = new Map<string, CachedSearchResult>();
 
 type FoodNutrient = {
   nutrientId?: number;
@@ -32,13 +60,111 @@ function pickNutrient(foods: FoodNutrient[] | undefined, nutrientId: number) {
   return typeof value === "number" && Number.isFinite(value) ? Math.round(value) : null;
 }
 
+function getClientIp(request: Request) {
+  const forwarded = request.headers.get("x-forwarded-for") ?? "";
+  const first = forwarded.split(",")[0]?.trim();
+  if (first) {
+    return first;
+  }
+
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  if (realIp) {
+    return realIp;
+  }
+
+  return "unknown";
+}
+
+function consumeRateLimit(key: string) {
+  const now = Date.now();
+
+  if (rateLimitBuckets.size > 5000) {
+    for (const [bucketKey, bucket] of rateLimitBuckets.entries()) {
+      if (bucket.resetAt <= now) {
+        rateLimitBuckets.delete(bucketKey);
+      }
+    }
+  }
+
+  const existing = rateLimitBuckets.get(key);
+  if (!existing || existing.resetAt <= now) {
+    rateLimitBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, retryAfterSeconds: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000) };
+  }
+
+  existing.count += 1;
+  if (existing.count > RATE_LIMIT_MAX_REQUESTS) {
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
+    };
+  }
+
+  return {
+    allowed: true,
+    retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
+  };
+}
+
+function readCachedSearch(query: string) {
+  const cached = searchCache.get(query);
+  if (!cached) {
+    return null;
+  }
+
+  if (cached.expiresAt <= Date.now()) {
+    searchCache.delete(query);
+    return null;
+  }
+
+  return cached.results;
+}
+
+function writeCachedSearch(query: string, results: CachedSearchResult["results"]) {
+  if (searchCache.size > 1000) {
+    const now = Date.now();
+    for (const [key, value] of searchCache.entries()) {
+      if (value.expiresAt <= now) {
+        searchCache.delete(key);
+      }
+    }
+  }
+
+  searchCache.set(query, {
+    results,
+    expiresAt: Date.now() + SEARCH_CACHE_TTL_MS,
+  });
+}
+
 export async function GET(request: Request) {
+  let requesterId: string | null = null;
   const authHeader = request.headers.get("Authorization");
   if (authHeader?.startsWith("Bearer ")) {
-    const { error } = await requireUserContextFromBearer(request);
-    if (error) {
-      return NextResponse.json({ error }, { status: 401 });
+    const { error, userId } = await requireUserContextFromBearer(request);
+    if (error || !userId) {
+      return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
     }
+    requesterId = userId;
+  } else {
+    const { error, userId } = await requireUserContext();
+    if (error || !userId) {
+      return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
+    }
+    requesterId = userId;
+  }
+
+  const limiterKey = `${requesterId}:${getClientIp(request)}`;
+  const limit = consumeRateLimit(limiterKey);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many search requests. Please try again shortly." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(limit.retryAfterSeconds),
+        },
+      }
+    );
   }
 
   const apiKey = process.env.USDA_API_KEY;
@@ -49,13 +175,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing USDA_API_KEY." }, { status: 500 });
   }
 
-  if (!query || query.trim().length < 2) {
+  const normalizedQuery = query?.trim().toLowerCase() ?? "";
+  if (!normalizedQuery || normalizedQuery.length < 2) {
     return NextResponse.json({ error: "Query must be at least 2 characters." }, { status: 400 });
+  }
+
+  const cachedResults = readCachedSearch(normalizedQuery);
+  if (cachedResults) {
+    return NextResponse.json({ results: cachedResults });
   }
 
   const url = new URL(baseUrl);
   url.searchParams.set("api_key", apiKey);
-  url.searchParams.set("query", query.trim());
+  url.searchParams.set("query", normalizedQuery);
   url.searchParams.set("pageSize", "12");
   url.searchParams.set("requireAllWords", "true");
 
@@ -79,6 +211,8 @@ export async function GET(request: Request) {
     carbs: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.carbs),
     fat: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.fat),
   }));
+
+  writeCachedSearch(normalizedQuery, results);
 
   return NextResponse.json({ results });
 }

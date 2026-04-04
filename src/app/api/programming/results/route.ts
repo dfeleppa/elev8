@@ -68,7 +68,7 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: true });
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ results: data ?? [] });
@@ -151,7 +151,7 @@ export async function POST(request: Request) {
     .single();
 
   if (resultError || !result?.id) {
-    return NextResponse.json({ error: resultError?.message ?? "Failed to create result." }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   if (liftSets.length > 0) {
@@ -165,7 +165,7 @@ export async function POST(request: Request) {
 
     const { error: setError } = await supabaseAdmin.from("workout_result_lift_sets").insert(setRows);
     if (setError) {
-      return NextResponse.json({ error: setError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     if (block.movement_id) {
@@ -191,7 +191,7 @@ export async function POST(request: Request) {
         );
 
       if (prError) {
-        return NextResponse.json({ error: prError.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error." }, { status: 500 });
       }
     }
   }

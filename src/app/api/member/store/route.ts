@@ -19,7 +19,7 @@ export async function GET() {
     .eq("hidden_in_store", false)
     .order("created_at", { ascending: false });
 
-  if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
+  if (dbError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
   const { data: preorders } = await supabaseAdmin
     .from("store_preorders")

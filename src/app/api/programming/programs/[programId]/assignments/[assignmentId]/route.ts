@@ -54,7 +54,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     .single();
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ assignment: data });
@@ -80,7 +80,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     .eq("id", assignmentId);
 
   if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

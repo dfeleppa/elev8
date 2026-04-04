@@ -522,10 +522,9 @@ function BlockCard({
 
       {/* Description */}
       {block.description && (
-        <div
-          className="prose prose-sm prose-invert max-w-none px-4 pb-3 text-slate-300"
-          dangerouslySetInnerHTML={{ __html: block.description }}
-        />
+        <p className="px-4 pb-3 text-sm leading-relaxed text-slate-300 whitespace-pre-wrap">
+          {block.description}
+        </p>
       )}
 
       {/* Levels */}

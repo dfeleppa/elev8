@@ -58,7 +58,7 @@ export async function POST(
     .order("week_number", { ascending: true });
 
   if (weeksError) {
-    return NextResponse.json({ error: weeksError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const activeWeeks = weeks ?? [];

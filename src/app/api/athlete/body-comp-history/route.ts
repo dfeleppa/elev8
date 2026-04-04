@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     .order("entry_date", { ascending: true });
 
   if (queryError) {
-    return NextResponse.json({ error: queryError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   type DayEntry = { body_weight: number | null; body_fat: number | null; lean_body_mass: number | null };

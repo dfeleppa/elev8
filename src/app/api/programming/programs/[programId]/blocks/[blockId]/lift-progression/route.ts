@@ -41,7 +41,7 @@ export async function GET(_request: Request, context: RouteContext) {
     .order("week_number", { ascending: true });
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ progressions: data ?? [] });
@@ -124,7 +124,7 @@ export async function PUT(request: Request, context: RouteContext) {
     .select("id, block_id, week_number, progression_type, sets, reps, percent_of_max, rpe_target, weight_increment, starting_weight, notes, updated_at");
 
   if (upsertError) {
-    return NextResponse.json({ error: upsertError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ progressions: data ?? [] });

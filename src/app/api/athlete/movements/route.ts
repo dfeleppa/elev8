@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     .order("name", { ascending: true });
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ movements: data ?? [] });

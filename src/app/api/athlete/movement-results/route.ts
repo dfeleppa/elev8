@@ -70,7 +70,7 @@ export async function GET(request: Request) {
     ]);
 
     if (workoutRes.error) {
-      return NextResponse.json({ error: workoutRes.error.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     const workoutResults = (workoutRes.data ?? []).map((row) => {
@@ -135,7 +135,7 @@ export async function GET(request: Request) {
     .eq("member_id", userId);
 
   if (queryError) {
-    return NextResponse.json({ error: queryError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const movementMap = new Map<string, string>();

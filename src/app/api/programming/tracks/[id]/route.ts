@@ -127,14 +127,14 @@ export async function PATCH(
       .single();
 
     if (legacyError) {
-      return NextResponse.json({ error: legacyError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     return NextResponse.json({ track: withTrackDefaults(legacyData as LegacyTrackRow) });
   }
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ track: data });

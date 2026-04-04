@@ -54,7 +54,7 @@ export async function GET(request: Request, context: RouteContext) {
   const { data, error: fetchError } = await query;
 
   if (fetchError) {
-    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   return NextResponse.json({ days: data ?? [] });

@@ -11,7 +11,28 @@
       "Bash(for file:*)",
       "Bash(do grep:*)",
       "Bash(echo \"File: $file\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(grep -r \"create table.*organization_members\\\\|CREATE TABLE.*organization_members\" /c/Users/DFele/elev8 --include=*.sql)",
+      "Bash(find /c/Users/DFele/elev8/src -name *.css -o -name globals.css)",
+      "Bash(ls -la /c/Users/DFele/elev8/src/middleware*)",
+      "Bash(grep -r 'create table.*organization_members' /c/Users/DFele/elev8 --include=*.sql --include=*.ts)",
+      "Bash(grep -r \"invit\\\\|join\\\\|onboard\" /c/Users/DFele/elev8/src --include=*.ts --include=*.tsx -i)",
+      "Bash(find /c/Users/DFele/elev8 -type f \\\\\\(-name *.json -o -name seed* \\\\\\))",
+      "Bash(ls c:/Users/DFele/elev8/src/middleware*)",
+      "Bash(ls c:/Users/DFele/elev8/middleware*)",
+      "Bash(grep -r proxy c:/Users/DFele/elev8/src --include=*.ts -l)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(find /c/Users/DFele/elev8/src/app/organization/member -type f -name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx)",
+      "Bash(grep -r 'CREATE TABLE.*workout' /c/Users/DFele/elev8 --include=*.sql)",
+      "WebFetch(domain:lockeroomgym.com)",
+      "Bash(grep -l \"create table\\\\|alter table organization_schedule\" /c/Users/DFele/elev8/supabase/migrations/*.sql)",
+      "Bash(grep -i \"enrollment\\\\|booking\\\\|reservation\\\\|member_class\\\\|class_enrollment\" /c/Users/DFele/elev8/supabase/migrations/*.sql)",
+      "Bash(find /c/Users/DFele/elev8/supabase/migrations -type f -name \"*.sql\" -exec basename {} \\\\;)",
+      "Bash(grep -h \"references programming_tracks\\\\|references app_users\\\\|references organizations\" /c/Users/DFele/elev8/supabase/migrations/*.sql)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\DFele\\elev8\\src\\app\\api\\programming\\track-progressions\\[progressionId]"
     ]
   }
 }

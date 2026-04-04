@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       .from("athlete_lift_log_sets")
       .insert(setRows);
     if (setError) {
-      return NextResponse.json({ error: setError.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
   }
 

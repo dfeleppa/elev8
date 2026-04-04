@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (prError) {
-    return NextResponse.json({ error: prError.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
   const baseline =
