@@ -32,6 +32,7 @@ type TodayWorkout = {
 
 type StripeKpis = {
   mrr: number;
+  arr: number;
   activeSubscriptions: number;
   totalCustomers: number;
   totalRevenue: number;
@@ -159,13 +160,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
           </header>
 
           <div className="grid gap-4 lg:grid-cols-12">
-            <article className="lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Members</p>
-              <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">{metrics.totalMembers.toLocaleString()}</p>
-              <p className="mt-2 text-xs text-slate-500">Total active member records</p>
-            </article>
-
-            <article className="lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6">
+            <article className="lg:col-span-4 rounded-2xl border border-white/10 bg-white/5 p-6">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">MRR</p>
               <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">
                 {formatCurrency(dashboardData.stripeKpis?.mrr ?? 0)}
@@ -173,20 +168,20 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
               <p className="mt-2 text-xs text-slate-500">Stripe monthly recurring revenue</p>
             </article>
 
-            <article className="lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Stripe Members</p>
+            <article className="lg:col-span-4 rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">ARR</p>
+              <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">
+                {formatCurrency(dashboardData.stripeKpis?.arr ?? 0)}
+              </p>
+              <p className="mt-2 text-xs text-slate-500">Annual recurring revenue</p>
+            </article>
+
+            <article className="lg:col-span-4 rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Active Subs</p>
               <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">
                 {(dashboardData.stripeKpis?.activeSubscriptions ?? 0).toLocaleString()}
               </p>
               <p className="mt-2 text-xs text-slate-500">Active subscriptions</p>
-            </article>
-
-            <article className="lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Owner/Admin/Coach</p>
-              <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">
-                {metrics.totalOwners + metrics.totalAdmins + metrics.totalCoaches}
-              </p>
-              <p className="mt-2 text-xs text-slate-500">Operational seats</p>
             </article>
 
             <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">

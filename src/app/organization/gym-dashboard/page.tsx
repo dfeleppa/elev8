@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import SidebarShell from "../../../components/SidebarShell";
 import { hasRole, requireUserContext } from "../../../lib/member";
 import { supabaseAdmin } from "../../../lib/supabase-admin";
+import { getOrganizationBillingMetrics } from "../../../lib/billing-metrics";
 import GymDashboardClient from "./GymDashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -53,6 +54,7 @@ type TodayWorkout = {
 
 type StripeKpis = {
   mrr: number;
+  arr: number;
   activeSubscriptions: number;
   totalCustomers: number;
   totalRevenue: number;
@@ -207,21 +209,14 @@ async function getDashboardData(organizationId: string, members: GymMemberRow[])
   const todayAbbr = JS_DAY_TO_ABBR[now.getDay()];
   const thirtyDaysAgoIso = new Date(now.getTime() - 30 * 86_400_000).toISOString();
 
-  const [classesResult, tracksResult, stripeSubsResult, stripeCustomersResult, stripeTxResult, membershipsResult] = await Promise.all([
+  const [classesResult, tracksResult, stripeMetrics, stripeTxResult, membershipsResult] = await Promise.all([
     supabaseAdmin
       .from("organization_schedule_classes")
       .select("id, name, class_time, duration_minutes, class_days, start_date, end_date, track_id, default_coach_user_id, size_limit")
       .eq("organization_id", organizationId)
       .order("class_time", { ascending: true }),
     supabaseAdmin.from("programming_tracks").select("id, name").eq("organization_id", organizationId),
-    supabaseAdmin
-      .from("stripe_subscriptions")
-      .select("status, amount_per_billing_cycle")
-      .eq("organization_id", organizationId),
-    supabaseAdmin
-      .from("stripe_customers")
-      .select("stripe_customer_id")
-      .eq("organization_id", organizationId),
+    getOrganizationBillingMetrics(organizationId),
     supabaseAdmin
       .from("stripe_transactions")
       .select("id, type, amount, currency, status, description, created_at")
@@ -324,25 +319,13 @@ async function getDashboardData(organizationId: string, members: GymMemberRow[])
   }));
 
   let stripeKpis: StripeKpis | null = null;
-  if (!stripeSubsResult.error || !stripeCustomersResult.error || !stripeTxResult.error) {
-    const subscriptions = (stripeSubsResult.data ?? []) as any[];
-    const customers = (stripeCustomersResult.data ?? []) as any[];
-    const transactions = (stripeTxResult.data ?? []) as any[];
-
-    const activeSubs = subscriptions.filter((row) => row.status === "active" || row.status === "trialing");
-    const mrr = activeSubs.reduce((sum, row) => sum + Number(row.amount_per_billing_cycle ?? 0), 0);
-    const uniqueCustomers = new Set(customers.map((row) => row.stripe_customer_id).filter(Boolean));
-    const totalRevenue = transactions.reduce((sum, row) => {
-      if (row.type === "payment") return sum + Number(row.amount ?? 0);
-      if (row.type === "refund") return sum - Number(row.amount ?? 0);
-      return sum;
-    }, 0);
-
+  if (stripeMetrics) {
     stripeKpis = {
-      mrr,
-      activeSubscriptions: activeSubs.length,
-      totalCustomers: uniqueCustomers.size,
-      totalRevenue,
+      mrr: Number(stripeMetrics.mrr ?? 0),
+      arr: Number(stripeMetrics.arr ?? 0),
+      activeSubscriptions: Number(stripeMetrics.active_subscriptions ?? 0),
+      totalCustomers: Number(stripeMetrics.total_customers ?? 0),
+      totalRevenue: Number(stripeMetrics.total_revenue ?? 0),
     };
   }
 
