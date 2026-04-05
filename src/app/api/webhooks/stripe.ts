@@ -34,6 +34,7 @@ type StripeCharge = {
   customer?: string | { id: string; email?: string | null; name?: string | null } | null;
   invoice?: string | null;
   amount: number;
+  amount_refunded?: number | null;
   currency?: string;
   status: string;
   paid?: boolean;
@@ -342,16 +343,13 @@ export async function POST(request: NextRequest) {
           eventId: event.id,
         });
 
+        const expandedCustomer =
+          charge.customer && typeof charge.customer === "object" ? charge.customer : null;
+
         const customerForUpdate: StripeCustomer = {
           id: stripeCustomerId,
-          email:
-            typeof charge.customer === "object"
-              ? charge.customer.email ?? charge.billing_details?.email ?? null
-              : charge.billing_details?.email ?? null,
-          name:
-            typeof charge.customer === "object"
-              ? charge.customer.name ?? charge.billing_details?.name ?? null
-              : charge.billing_details?.name ?? null,
+          email: expandedCustomer?.email ?? charge.billing_details?.email ?? null,
+          name: expandedCustomer?.name ?? charge.billing_details?.name ?? null,
         };
 
         await upsertCustomer(organizationId, customerForUpdate, {
@@ -391,16 +389,13 @@ export async function POST(request: NextRequest) {
           eventId: event.id,
         });
 
+        const expandedCustomer =
+          charge.customer && typeof charge.customer === "object" ? charge.customer : null;
+
         const customerForUpdate: StripeCustomer = {
           id: stripeCustomerId,
-          email:
-            typeof charge.customer === "object"
-              ? charge.customer.email ?? charge.billing_details?.email ?? null
-              : charge.billing_details?.email ?? null,
-          name:
-            typeof charge.customer === "object"
-              ? charge.customer.name ?? charge.billing_details?.name ?? null
-              : charge.billing_details?.name ?? null,
+          email: expandedCustomer?.email ?? charge.billing_details?.email ?? null,
+          name: expandedCustomer?.name ?? charge.billing_details?.name ?? null,
         };
 
         await upsertCustomer(organizationId, customerForUpdate, {
@@ -433,16 +428,13 @@ export async function POST(request: NextRequest) {
             eventId: event.id,
           });
 
+          const expandedCustomer =
+            charge.customer && typeof charge.customer === "object" ? charge.customer : null;
+
           const customerForUpdate: StripeCustomer = {
             id: stripeCustomerId,
-            email:
-              typeof charge.customer === "object"
-                ? charge.customer.email ?? charge.billing_details?.email ?? null
-                : charge.billing_details?.email ?? null,
-            name:
-              typeof charge.customer === "object"
-                ? charge.customer.name ?? charge.billing_details?.name ?? null
-                : charge.billing_details?.name ?? null,
+            email: expandedCustomer?.email ?? charge.billing_details?.email ?? null,
+            name: expandedCustomer?.name ?? charge.billing_details?.name ?? null,
           };
 
           await upsertCustomer(organizationId, customerForUpdate, {
@@ -455,7 +447,7 @@ export async function POST(request: NextRequest) {
       case "invoice.paid": {
         const invoice = event.data.object as {
           id: string;
-          customer: string | { id: string } | null;
+          customer: string | { id: string; email?: string | null; name?: string | null } | null;
           amount_paid?: number;
           currency?: string;
           subscription?: string;
@@ -484,16 +476,13 @@ export async function POST(request: NextRequest) {
             eventId: event.id,
           });
 
+          const expandedInvoiceCustomer =
+            invoice.customer && typeof invoice.customer === "object" ? invoice.customer : null;
+
           const customerForUpdate: StripeCustomer = {
             id: stripeCustomerId,
-            email:
-              typeof invoice.customer === "object"
-                ? invoice.customer.email ?? invoice.billing_details?.email ?? null
-                : invoice.billing_details?.email ?? null,
-            name:
-              typeof invoice.customer === "object"
-                ? invoice.customer.name ?? invoice.billing_details?.name ?? null
-                : invoice.billing_details?.name ?? null,
+            email: expandedInvoiceCustomer?.email ?? invoice.billing_details?.email ?? null,
+            name: expandedInvoiceCustomer?.name ?? invoice.billing_details?.name ?? null,
           };
 
           await upsertCustomer(organizationId, customerForUpdate, {

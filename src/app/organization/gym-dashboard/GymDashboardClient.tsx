@@ -1,59 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { AlertTriangle, Bell, CalendarClock, Search, Settings, TrendingUp } from "lucide-react";
-
-import type { OwnerMemberRow } from "../owner/members/page";
-
-type TabId = "dashboard" | "membership" | "churn-risk" | "birthdays";
-
-const TABS: { id: TabId; label: string }[] = [
-  { id: "dashboard", label: "Dashboard" },
-  { id: "membership", label: "Membership" },
-  { id: "churn-risk", label: "Churn Risk" },
-  { id: "birthdays", label: "Birthdays" },
-];
-
-function resolveTab(raw: string): TabId {
-  const valid: TabId[] = ["dashboard", "membership", "churn-risk", "birthdays"];
-  return valid.includes(raw as TabId) ? (raw as TabId) : "dashboard";
-}
-
-function formatDate(value: string | null) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
-}
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
-}
-
-function getFullName(row: OwnerMemberRow) {
-  const first = row.first_name?.trim() ?? "";
-  const last = row.last_name?.trim() ?? "";
-  const full = `${first} ${last}`.trim();
-  return full || row.email?.split("@")[0] || "Unknown";
-}
-
-function daysSince(value: string | null): number | null {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return Math.floor((Date.now() - date.getTime()) / 86_400_000);
-}
-
-function upcomingBirthdayDays(birthDate: string | null): number | null {
-  if (!birthDate) return null;
-  const bd = new Date(birthDate);
-  if (Number.isNaN(bd.getTime())) return null;
-  const now = new Date();
-  const thisYear = new Date(now.getFullYear(), bd.getMonth(), bd.getDate());
-  if (thisYear < now) thisYear.setFullYear(now.getFullYear() + 1);
-  return Math.floor((thisYear.getTime() - now.getTime()) / 86_400_000);
-}
+import { Bell, CalendarClock, CreditCard, Settings, Users } from "lucide-react";
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 type DashboardMetrics = {
   totalMembers: number;
@@ -63,415 +11,395 @@ type DashboardMetrics = {
   totalMrr: number;
 };
 
-const attendanceByDay = [72, 94, 88, 110, 126, 101, 78];
-const attendanceLabels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-const recentBookings = [
-  { title: "Neon HIIT Session", coach: "Alex R.", minsAgo: 2 },
-  { title: "Zen Flow Yoga", coach: "Sarah L.", minsAgo: 15 },
-  { title: "Kickboxing Power", coach: "Leo T.", minsAgo: 45 },
-];
-const upcomingToday = [
-  { time: "16:00 PM", className: "Iron Paradise Lift", coach: "Marcus Vane", badge: "Full" },
-  { time: "18:30 PM", className: "Tropic Cardio Blast", coach: "Chloe Night", badge: "6 Slots Left" },
-];
+type TodayClass = {
+  id: string;
+  name: string;
+  classTime: string;
+  durationMinutes: number;
+  coachName: string | null;
+  trackName: string | null;
+  sizeLimit: number | null;
+};
+
+type TodayWorkout = {
+  id: string;
+  title: string;
+  notes: string | null;
+  dayDate: string;
+  trackName: string | null;
+  blockCount: number;
+};
+
+type StripeKpis = {
+  mrr: number;
+  activeSubscriptions: number;
+  totalCustomers: number;
+  totalRevenue: number;
+};
+
+type StripeIssue = {
+  id: string;
+  kind: "refund" | "failed_payment";
+  amount: number;
+  currency: string;
+  status: string;
+  description: string;
+  createdAt: string;
+};
+
+type StripeIssuesSummary = {
+  refunds30d: number;
+  failedPayments30d: number;
+  issues: StripeIssue[];
+  disputesSupported: boolean;
+};
+
+type BirthdayRow = {
+  memberName: string;
+  email: string | null;
+  birthDate: string;
+  daysUntil: number;
+  membership: string | null;
+};
+
+type MemberTrendPoint = {
+  monthKey: string;
+  monthLabel: string;
+  totalMembers: number;
+  newMembers: number;
+  cancelledMembers: number;
+};
+
+type DueTask = {
+  id: string;
+  title: string;
+  dueDate: string;
+  priority: string | null;
+  status: string | null;
+  assignee: string;
+};
+
+type DashboardData = {
+  todayClasses: TodayClass[];
+  todayWorkouts: TodayWorkout[];
+  stripeKpis: StripeKpis | null;
+  stripeIssues: StripeIssuesSummary;
+  upcomingBirthdays: BirthdayRow[];
+  memberTrend: MemberTrendPoint[];
+  dueTasksToday: DueTask[];
+  dueTasksTomorrow: DueTask[];
+};
 
 type Props = {
   initialTab: string;
   metrics: DashboardMetrics;
-  members: OwnerMemberRow[];
+  dashboardData: DashboardData;
 };
 
-export default function GymDashboardClient({ initialTab, metrics, members }: Props) {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabId>(resolveTab(initialTab));
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
-  function switchTab(tab: TabId) {
-    setActiveTab(tab);
-    router.replace(`?tab=${tab}`, { scroll: false });
-  }
+function formatTime(t: string) {
+  const [hStr, mStr] = t.split(":");
+  const h = parseInt(hStr, 10);
+  const m = mStr ?? "00";
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${m} ${ampm}`;
+}
 
-  const churnRisk = Math.max(2, Math.round(metrics.totalMembers * 0.011));
-  const monthlyDelta = 12.4;
+function formatBirthday(value: string) {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" }).format(date);
+}
 
-  // Membership breakdown
-  const membershipBreakdown = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const row of members) {
-      const key = row.membership?.trim() || "No Membership";
-      map.set(key, (map.get(key) ?? 0) + 1);
-    }
-    return Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, count]) => ({ name, count, pct: members.length ? Math.round((count / members.length) * 100) : 0 }));
-  }, [members]);
+function formatIssueDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
+}
 
-  // Churn risk
-  const churnRows = useMemo(() => {
-    return members
-      .map((row) => {
-        const lastSeen = row.last_check_in ?? row.last_active ?? row.updated_at ?? null;
-        const days = daysSince(lastSeen);
-        return { row, lastSeen, days };
-      })
-      .filter(({ days }) => days === null || days >= 30)
-      .sort((a, b) => {
-        if (a.days === null && b.days === null) return 0;
-        if (a.days === null) return -1;
-        if (b.days === null) return 1;
-        return b.days - a.days;
-      });
-  }, [members]);
+function UnderConstructionCard({ title }: { title: string }) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
+      <h3 className="text-xl font-semibold text-slate-100">{title}</h3>
+      <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-400">
+        under construction
+      </div>
+    </section>
+  );
+}
 
-  // Birthdays
-  const birthdayRows = useMemo(() => {
-    return members
-      .map((row) => ({ row, daysUntil: upcomingBirthdayDays(row.birth_date ?? null) }))
-      .filter(({ daysUntil }) => daysUntil !== null && daysUntil <= 30)
-      .sort((a, b) => (a.daysUntil ?? 0) - (b.daysUntil ?? 0));
-  }, [members]);
+export default function GymDashboardClient({ initialTab, metrics, dashboardData }: Props) {
+  void initialTab;
 
   return (
     <>
-      {/* Sub-header / tab strip */}
       <div className="w-full border-b border-white/10 bg-gradient-to-r from-pink-500/10 via-rose-500/5 to-transparent px-5 py-2">
-        <div className="flex gap-1">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => switchTab(tab.id)}
-              className={
-                activeTab === tab.id
-                  ? "rounded-xl border border-[#ffb1c4]/30 bg-[#ffb1c4]/15 px-4 py-2 text-sm font-semibold text-[#ffb1c4] transition-colors"
-                  : "rounded-xl px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200"
-              }
-            >
-              {tab.label}
-              {tab.id === "churn-risk" && churnRows.length > 0 && (
-                <span className="ml-1.5 rounded-full bg-[#ffb1c4]/20 px-1.5 py-0.5 text-[10px] font-bold text-[#ffb1c4]">
-                  {churnRows.length}
-                </span>
-              )}
-              {tab.id === "birthdays" && birthdayRows.length > 0 && (
-                <span className="ml-1.5 rounded-full bg-[#ffb1c4]/20 px-1.5 py-0.5 text-[10px] font-bold text-[#ffb1c4]">
-                  {birthdayRows.length}
-                </span>
-              )}
-            </button>
-          ))}
+        <div className="flex items-center justify-between">
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Gym Dashboard</p>
+          <div className="flex items-center gap-3">
+            <Bell className="h-4 w-4 text-pink-400" />
+            <Settings className="h-4 w-4 text-pink-300" />
+          </div>
         </div>
       </div>
 
       <div className="w-full px-4 py-8 lg:py-10">
+        <section className="rounded-[28px] border border-white/10 bg-white/5 p-4 md:p-6">
+          <header className="mb-6">
+            <h1 className="text-3xl font-semibold text-slate-100">HQ Overview</h1>
+            <p className="mt-1 text-sm text-slate-400">Live operational metrics for today and near-term risk signals.</p>
+          </header>
 
-        {/* Dashboard tab */}
-        {activeTab === "dashboard" && (
-          <section className="rounded-[28px] border border-white/10 bg-white/5 p-4 md:p-6">
-            <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Lyfe Fitness</p>
-                <h1 className="mt-1 text-3xl font-semibold text-slate-100">HQ Overview</h1>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="hidden items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-slate-400 md:flex">
-                  <Search className="h-4 w-4" />
-                  <span className="text-xs uppercase tracking-[0.14em]">Search members...</span>
+          <div className="grid gap-4 lg:grid-cols-12">
+            <article className="lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Members</p>
+              <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">{metrics.totalMembers.toLocaleString()}</p>
+              <p className="mt-2 text-xs text-slate-500">Total active member records</p>
+            </article>
+
+            <article className="lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">MRR</p>
+              <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">
+                {formatCurrency(dashboardData.stripeKpis?.mrr ?? 0)}
+              </p>
+              <p className="mt-2 text-xs text-slate-500">Stripe monthly recurring revenue</p>
+            </article>
+
+            <article className="lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Stripe Members</p>
+              <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">
+                {(dashboardData.stripeKpis?.activeSubscriptions ?? 0).toLocaleString()}
+              </p>
+              <p className="mt-2 text-xs text-slate-500">Active subscriptions</p>
+            </article>
+
+            <article className="lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Owner/Admin/Coach</p>
+              <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">
+                {metrics.totalOwners + metrics.totalAdmins + metrics.totalCoaches}
+              </p>
+              <p className="mt-2 text-xs text-slate-500">Operational seats</p>
+            </article>
+
+            <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+              <h3 className="text-xl font-semibold text-slate-100">Class Schedule Today</h3>
+              {dashboardData.todayClasses.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-500">
+                  No classes scheduled today.
                 </div>
-                <Bell className="h-4 w-4 text-pink-400" />
-                <Settings className="h-4 w-4 text-pink-300" />
-              </div>
-            </header>
-
-            <div className="grid gap-4 lg:grid-cols-12">
-              <article className="lg:col-span-7 rounded-2xl border border-white/10 bg-white/5 p-6">
-                <p className="text-xs uppercase tracking-[0.3em] text-pink-300">Monthly Recurring Revenue</p>
-                <p className="mt-4 text-5xl font-semibold leading-none text-slate-100">{formatCurrency(metrics.totalMrr)}</p>
-                <p className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-sky-300">
-                  <TrendingUp className="h-4 w-4" />
-                  +{monthlyDelta}% vs last month
-                </p>
-                <p className="mt-2 text-xs text-slate-500">Estimated from active members x $150 monthly.</p>
-              </article>
-
-              <article className="lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-6">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Active Members</p>
-                <p className="mt-4 text-5xl font-semibold leading-none text-slate-100">{metrics.totalMembers.toLocaleString()}</p>
-                <div className="mt-4 flex flex-wrap gap-2 text-xs uppercase tracking-[0.14em]">
-                  <span className="rounded-md border border-cyan-400/40 bg-cyan-500/10 px-2.5 py-1 text-cyan-300">85% Capacity</span>
-                  <span className="rounded-md border border-pink-400/40 bg-pink-500/10 px-2.5 py-1 text-pink-300">High Energy</span>
-                </div>
-              </article>
-
-              <article className="lg:col-span-2 rounded-2xl border border-pink-400/30 bg-pink-500/5 p-6">
-                <p className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-pink-300">
-                  Churn Risk
-                  <AlertTriangle className="h-4 w-4" />
-                </p>
-                <p className="mt-4 text-5xl font-semibold leading-none text-slate-100">{churnRisk}</p>
-                <p className="mt-4 text-xs text-pink-200/80">Members have not checked in for &gt; 10 days.</p>
-              </article>
-
-              <section className="lg:col-span-8 rounded-2xl border border-white/10 bg-white/5 p-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-3xl font-semibold text-slate-100">Attendance Trends</h2>
-                  <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.14em]">
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-400">Daily</span>
-                    <span className="rounded-full bg-pink-500/10 border border-pink-400/40 px-3 py-1 text-pink-300">Weekly</span>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <div className="flex h-56 items-end gap-3">
-                    {attendanceByDay.map((value, index) => (
-                      <div key={attendanceLabels[index]} className="flex flex-1 flex-col items-center gap-2">
-                        <div
-                          className="w-full rounded-t-md bg-gradient-to-t from-pink-400 to-pink-600"
-                          style={{ height: `${Math.max(12, Math.round((value / 130) * 190))}px` }}
-                        />
-                        <span className="text-[10px] uppercase tracking-[0.16em] text-slate-500">{attendanceLabels[index]}</span>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {dashboardData.todayClasses.map((cls) => (
+                    <article key={cls.id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-slate-200">{cls.name}</p>
+                        <span className="text-xs uppercase tracking-[0.14em] text-sky-300">{formatTime(cls.classTime)}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-
-              <aside className="lg:col-span-4 space-y-4">
-                <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <h3 className="text-3xl font-semibold text-slate-100">Recent Bookings</h3>
-                  <div className="mt-4 space-y-3">
-                    {recentBookings.map((item) => (
-                      <article key={item.title} className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
-                        <p className="text-sm font-semibold text-slate-200">{item.title}</p>
-                        <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-slate-500">Booked by {item.coach}</p>
-                        <p className="mt-1 text-xs text-pink-300">{item.minsAgo} mins ago</p>
-                      </article>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="rounded-2xl border border-pink-400/30 bg-pink-500/5 p-5 shadow-[0_0_0_1px_rgba(255,177,196,0.1),0_14px_36px_rgba(255,75,159,0.2)]">
-                  <h3 className="text-3xl font-semibold text-slate-100">Upcoming Today</h3>
-                  <div className="mt-4 space-y-3">
-                    {upcomingToday.map((item) => (
-                      <article key={item.className} className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
-                        <div className="mb-1 flex items-center justify-between">
-                          <span className="text-xs font-semibold tracking-[0.14em] text-sky-300">{item.time}</span>
-                          <span className="rounded-md border border-cyan-400/40 bg-cyan-500/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-cyan-300">{item.badge}</span>
-                        </div>
-                        <p className="text-sm font-semibold text-slate-200">{item.className}</p>
-                        <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-slate-500">Coach: {item.coach}</p>
-                      </article>
-                    ))}
-                  </div>
-                  <button
-                    type="button"
-                    className="mt-4 w-full rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-4 py-2.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[0_4px_20px_rgba(255,177,196,0.2)] transition hover:brightness-110"
-                  >
-                    Manage Schedule
-                  </button>
-                </section>
-              </aside>
-
-              <section className="lg:col-span-8 rounded-2xl border border-white/10 bg-white/5 p-5">
-                <h2 className="text-3xl font-semibold text-slate-100">Members At Risk</h2>
-                <div className="mt-4 overflow-hidden rounded-xl border border-white/10">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-white/5 text-left text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                        <th className="px-4 py-3">Member</th>
-                        <th className="px-4 py-3">Plan</th>
-                        <th className="px-4 py-3">Last Visit</th>
-                        <th className="px-4 py-3 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/10">
-                      {[
-                        { name: "Jaxon Draven", plan: "Yearly Performance", lastVisit: "12 Days Ago", tier: "Gold" },
-                        { name: "Mila Vance", plan: "Monthly Unlimited", lastVisit: "15 Days Ago", tier: "Elite" },
-                        { name: "Kai Sterling", plan: "3-Month Prep", lastVisit: "10 Days Ago", tier: "Standard" },
-                      ].map((member) => (
-                        <tr key={member.name} className="bg-white/5 text-slate-200">
-                          <td className="px-4 py-3">
-                            <p className="font-semibold">{member.name}</p>
-                            <p className="text-xs uppercase tracking-[0.12em] text-slate-500">{member.tier} Tier</p>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-slate-300">{member.plan}</td>
-                          <td className="px-4 py-3 text-sm text-pink-300">{member.lastVisit}</td>
-                          <td className="px-4 py-3 text-right">
-                            <button type="button" className="rounded-full border border-pink-400/40 bg-pink-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-pink-300 transition hover:border-pink-400">
-                              Nudge
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              <aside className="lg:col-span-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Gym Snapshot</h3>
-                <div className="mt-4 space-y-3 text-sm text-slate-300">
-                  <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                    <span>Coach Seats</span>
-                    <span className="font-semibold text-slate-100">{metrics.totalCoaches}</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                    <span>Admin Seats</span>
-                    <span className="font-semibold text-slate-100">{metrics.totalAdmins}</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                    <span>Owner Seats</span>
-                    <span className="font-semibold text-slate-100">{metrics.totalOwners}</span>
-                  </div>
-                </div>
-                <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-slate-400">
-                  <p className="flex items-center gap-2 font-semibold uppercase tracking-[0.12em] text-slate-300">
-                    <CalendarClock className="h-4 w-4 text-sky-300" />
-                    Next Sync
-                  </p>
-                  <p className="mt-2">Tonight at 11:30 PM. Data refresh includes attendance, bookings, and role metrics.</p>
-                </div>
-              </aside>
-            </div>
-          </section>
-        )}
-
-        {/* Membership tab */}
-        {activeTab === "membership" && (
-          <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {membershipBreakdown.map(({ name, count, pct }) => (
-                <div key={name} className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-                  <p className="truncate text-xs text-slate-400">{name}</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-100">{count}</p>
-                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                    <div className="h-full rounded-full bg-pink-500" style={{ width: `${pct}%` }} />
-                  </div>
-                  <p className="mt-1 text-right text-[11px] text-slate-500">{pct}%</p>
-                </div>
-              ))}
-            </div>
-            <div className="overflow-hidden rounded-2xl border border-white/10">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-white/10 bg-white/5">
-                    <th className="px-4 py-3 font-semibold text-slate-300">Membership</th>
-                    <th className="px-4 py-3 font-semibold text-slate-300">Members</th>
-                    <th className="px-4 py-3 font-semibold text-slate-300">Share</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {membershipBreakdown.map(({ name, count, pct }) => (
-                    <tr key={name} className="border-b border-white/5 last:border-0 hover:bg-white/5">
-                      <td className="px-4 py-3 text-slate-200">{name}</td>
-                      <td className="px-4 py-3 text-slate-300">{count}</td>
-                      <td className="px-4 py-3 text-slate-400">{pct}%</td>
-                    </tr>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {cls.trackName ?? "No track"} · {cls.durationMinutes} min · Coach: {cls.coachName ?? "Unassigned"}
+                      </p>
+                      {cls.sizeLimit && cls.sizeLimit > 0 && (
+                        <p className="mt-1 text-xs text-cyan-300">Capacity: {cls.sizeLimit}</p>
+                      )}
+                    </article>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+                </div>
+              )}
+            </section>
 
-        {/* Churn Risk tab */}
-        {activeTab === "churn-risk" && (
-          <div className="space-y-4">
-            <p className="text-sm text-slate-400">
-              {churnRows.length} member{churnRows.length !== 1 ? "s" : ""} with no check-in in 30+ days.
-            </p>
-            {churnRows.length === 0 ? (
-              <div className="rounded-2xl border border-pink-400/20 bg-pink-500/5 px-5 py-8 text-center text-sm text-pink-300">
-                No churn risk detected — all members have been active recently.
-              </div>
+            <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+              <h3 className="text-xl font-semibold text-slate-100">Workout Scheduled Today</h3>
+              {dashboardData.todayWorkouts.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-500">
+                  No workout published for today.
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {dashboardData.todayWorkouts.map((workout) => (
+                    <article key={workout.id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+                      <p className="text-sm font-semibold text-slate-200">{workout.title}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {workout.trackName ?? "No track"} · {workout.blockCount} blocks
+                      </p>
+                      {workout.notes && <p className="mt-1 text-xs text-slate-400">{workout.notes}</p>}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {dashboardData.stripeKpis ? (
+              <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+                <h3 className="text-xl font-semibold text-slate-100">Stripe Metrics</h3>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">MRR</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-100">{formatCurrency(dashboardData.stripeKpis.mrr)}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Active Subscriptions</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-100">{dashboardData.stripeKpis.activeSubscriptions}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Customers</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-100">{dashboardData.stripeKpis.totalCustomers}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Net Revenue</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-100">{formatCurrency(dashboardData.stripeKpis.totalRevenue)}</p>
+                  </div>
+                </div>
+              </section>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-white/10">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10 bg-white/5">
-                      <th className="px-4 py-3 font-semibold text-slate-300">Member</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Membership</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Last Seen</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Days Inactive</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {churnRows.map(({ row, lastSeen, days }, i) => (
-                      <tr key={`${row.email ?? i}`} className="border-b border-white/5 last:border-0 hover:bg-white/5">
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-slate-100">{getFullName(row)}</p>
-                          <p className="text-xs text-slate-500">{row.email ?? "-"}</p>
-                        </td>
-                        <td className="px-4 py-3 text-slate-300">{row.membership ?? "-"}</td>
-                        <td className="px-4 py-3 text-slate-400">{formatDate(lastSeen)}</td>
-                        <td className="px-4 py-3">
-                          {days === null ? (
-                            <span className="rounded-full border border-slate-400/30 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-400">Never</span>
-                          ) : (
-                            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${days >= 90 ? "border border-rose-500/30 bg-rose-500/10 text-rose-400" : "border border-amber-500/30 bg-amber-500/10 text-amber-400"}`}>
-                              {days}d
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="lg:col-span-6">
+                <UnderConstructionCard title="Stripe Metrics" />
               </div>
             )}
-          </div>
-        )}
 
-        {/* Birthdays tab */}
-        {activeTab === "birthdays" && (
-          <div className="space-y-4">
-            <p className="text-sm text-slate-400">
-              {birthdayRows.length} member{birthdayRows.length !== 1 ? "s" : ""} with a birthday in the next 30 days.
-            </p>
-            {birthdayRows.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-8 text-center text-sm text-slate-500">
-                No birthdays in the next 30 days.
+            <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-slate-100">Stripe Issues</h3>
+                <CreditCard className="h-4 w-4 text-pink-300" />
               </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Refunds (30d)</p>
+                  <p className="mt-1 text-lg font-semibold text-slate-100">{dashboardData.stripeIssues.refunds30d}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Failed Payments (30d)</p>
+                  <p className="mt-1 text-lg font-semibold text-slate-100">{dashboardData.stripeIssues.failedPayments30d}</p>
+                </div>
+              </div>
+              {dashboardData.stripeIssues.issues.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-500">
+                  No recent Stripe issues.
+                </div>
+              ) : (
+                <div className="mt-4 space-y-2">
+                  {dashboardData.stripeIssues.issues.map((issue) => (
+                    <article key={issue.id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                      <p className="text-sm text-slate-200">{issue.description}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {issue.kind === "refund" ? "Refund" : "Failed Payment"} · {formatCurrency(issue.amount)} · {issue.currency} · {formatIssueDate(issue.createdAt)}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              )}
+              {!dashboardData.stripeIssues.disputesSupported && (
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-400">
+                  Stripe disputes: under construction
+                </div>
+              )}
+            </section>
+
+            <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+              <h3 className="text-xl font-semibold text-slate-100">Upcoming Birthdays (Next 2 Weeks)</h3>
+              {dashboardData.upcomingBirthdays.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-500">
+                  No birthdays in the next 14 days.
+                </div>
+              ) : (
+                <div className="mt-4 space-y-2">
+                  {dashboardData.upcomingBirthdays.map((birthday) => (
+                    <article key={`${birthday.email ?? birthday.memberName}-${birthday.birthDate}`} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                      <p className="text-sm font-semibold text-slate-200">{birthday.memberName}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {formatBirthday(birthday.birthDate)} · {birthday.daysUntil === 0 ? "Today" : `${birthday.daysUntil}d`} · {birthday.membership ?? "No membership"}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {dashboardData.memberTrend.length > 0 ? (
+              <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+                <h3 className="text-xl font-semibold text-slate-100">Member Change Metrics (6 Months)</h3>
+                <div className="mt-4 h-72 rounded-xl border border-white/10 bg-[#0d1014] p-3">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={dashboardData.memberTrend}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
+                      <XAxis dataKey="monthLabel" stroke="#94a3b8" tick={{ fill: "#94a3b8", fontSize: 12 }} />
+                      <YAxis stroke="#94a3b8" tick={{ fill: "#94a3b8", fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{
+                          background: "#0b1117",
+                          border: "1px solid rgba(148,163,184,0.25)",
+                          borderRadius: 12,
+                          color: "#e2e8f0",
+                        }}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="totalMembers" stroke="#63f7ff" strokeWidth={3} dot={{ r: 3 }} name="Total" />
+                      <Line type="monotone" dataKey="newMembers" stroke="#22c55e" strokeWidth={2} dot={{ r: 2 }} name="New" />
+                      <Line type="monotone" dataKey="cancelledMembers" stroke="#f97316" strokeWidth={2} dot={{ r: 2 }} name="Cancelled" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-white/10">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10 bg-white/5">
-                      <th className="px-4 py-3 font-semibold text-slate-300">Member</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Birthday</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Days Away</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Membership</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {birthdayRows.map(({ row, daysUntil }, i) => (
-                      <tr key={`${row.email ?? i}`} className="border-b border-white/5 last:border-0 hover:bg-white/5">
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-slate-100">{getFullName(row)}</p>
-                          <p className="text-xs text-slate-500">{row.email ?? "-"}</p>
-                        </td>
-                        <td className="px-4 py-3 text-slate-300">
-                          {row.birth_date
-                            ? new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" }).format(new Date(row.birth_date))
-                            : "-"}
-                        </td>
-                        <td className="px-4 py-3">
-                          {daysUntil === 0 ? (
-                            <span className="rounded-full border border-[#ffb1c4]/40 bg-[#ffb1c4]/15 px-2.5 py-1 text-[11px] font-bold text-[#ffb1c4]">Today!</span>
-                          ) : (
-                            <span className="rounded-full border border-[#ffb1c4]/20 bg-[#ffb1c4]/10 px-2.5 py-1 text-[11px] font-semibold text-[#ffb1c4]">{daysUntil}d</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-slate-400">{row.membership ?? "-"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="lg:col-span-6">
+                <UnderConstructionCard title="Member Change Metrics" />
               </div>
             )}
-          </div>
-        )}
 
+            <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-slate-100">Tasks Due Today</h3>
+                <CalendarClock className="h-4 w-4 text-sky-300" />
+              </div>
+              {dashboardData.dueTasksToday.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-500">
+                  No tasks due today.
+                </div>
+              ) : (
+                <div className="mt-4 space-y-2">
+                  {dashboardData.dueTasksToday.map((task) => (
+                    <article key={task.id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                      <p className="text-sm font-semibold text-slate-200">{task.title}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {task.assignee} · {task.priority ?? "No priority"} · {task.status ?? "planned"}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-slate-100">Tasks Due Tomorrow</h3>
+                <Users className="h-4 w-4 text-sky-300" />
+              </div>
+              {dashboardData.dueTasksTomorrow.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-500">
+                  No tasks due tomorrow.
+                </div>
+              ) : (
+                <div className="mt-4 space-y-2">
+                  {dashboardData.dueTasksTomorrow.map((task) => (
+                    <article key={task.id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                      <p className="text-sm font-semibold text-slate-200">{task.title}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {task.assignee} · {task.priority ?? "No priority"} · {task.status ?? "planned"}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        </section>
       </div>
     </>
   );
