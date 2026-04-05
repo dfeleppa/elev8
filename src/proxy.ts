@@ -4,7 +4,6 @@ import type { NextRequest } from "next/server";
 
 const PUBLIC_FILE = /\.[^/]+$/;
 
-/** Routes that bypass auth entirely (no token check) */
 function isFullyPublic(pathname: string) {
   if (PUBLIC_FILE.test(pathname)) return true;
   if (pathname === "/favicon.ico") return true;
@@ -15,22 +14,19 @@ function isFullyPublic(pathname: string) {
   return false;
 }
 
-/** Routes that are accessible without auth but redirect to / if already authenticated */
 function isAuthPage(pathname: string) {
   return pathname === "/login" || pathname === "/register";
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Fully public — no auth check at all
   if (isFullyPublic(pathname)) {
     return NextResponse.next();
   }
 
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-  // Auth pages (login/register): allow if not authenticated, redirect if authenticated
   if (isAuthPage(pathname)) {
     if (token) {
       return NextResponse.redirect(new URL("/", request.url));
@@ -38,14 +34,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Not authenticated → redirect to login
   if (!token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", request.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check org membership — skip for /join and its API
   const orgIds = (token.organizationIds as string[] | undefined) ?? [];
   const isJoinRoute = pathname === "/join" || pathname.startsWith("/api/auth/join-organization");
 
