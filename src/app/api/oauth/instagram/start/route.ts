@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 
 export async function GET() {
   const { error, role, organizationIds } = await requireUserContext();
-  if (error || !hasRole("owner", role)) {
+  if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

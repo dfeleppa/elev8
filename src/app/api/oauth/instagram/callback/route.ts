@@ -24,7 +24,7 @@ function constantTimeEqual(left: string, right: string) {
 export async function GET(request: NextRequest) {
   try {
     const { error: userError, role, userId } = await requireUserContext();
-    if (userError || !userId || !hasRole("owner", role)) {
+    if (userError || !userId || !hasRole("admin", role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
-    const response = NextResponse.redirect(new URL("/content/meta", request.url));
+    const response = NextResponse.redirect(new URL("/organization/admin/content", request.url));
     response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
     return response;
   } catch (err) {

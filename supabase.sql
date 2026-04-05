@@ -1,27 +1,3 @@
-create table if not exists youtube_oauth_tokens (
-  id uuid primary key default gen_random_uuid(),
-  channel_id text not null unique,
-  refresh_token text not null,
-  access_token text,
-  expires_at timestamptz,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
-create table if not exists youtube_metrics (
-  id uuid primary key default gen_random_uuid(),
-  channel_id text not null,
-  period_start date not null,
-  period_end date not null,
-  views bigint,
-  watch_minutes bigint,
-  subscribers_gained bigint,
-  subscribers_total bigint,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  unique (channel_id, period_start, period_end)
-);
-
 create table if not exists training_events (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -126,24 +102,6 @@ alter table if exists organization_members
 
 create unique index if not exists organization_members_email_key
   on organization_members(email);
-
-alter table if exists youtube_oauth_tokens
-  add column if not exists member_id uuid;
-
-alter table if exists youtube_oauth_tokens
-  drop constraint if exists youtube_oauth_tokens_channel_id_key;
-
-create unique index if not exists youtube_oauth_tokens_member_channel_idx
-  on youtube_oauth_tokens(member_id, channel_id);
-
-alter table if exists youtube_metrics
-  add column if not exists member_id uuid;
-
-alter table if exists youtube_metrics
-  drop constraint if exists youtube_metrics_channel_id_period_start_period_end_key;
-
-create unique index if not exists youtube_metrics_member_period_idx
-  on youtube_metrics(member_id, channel_id, period_start, period_end);
 
 alter table if exists training_events
   add column if not exists member_id uuid;
@@ -311,8 +269,6 @@ alter table if exists organization_members
 create index if not exists organization_members_member_idx
   on organization_members(member_id);
 
-alter table if exists youtube_oauth_tokens enable row level security;
-alter table if exists youtube_metrics enable row level security;
 alter table if exists training_events enable row level security;
 alter table if exists training_sessions enable row level security;
 alter table if exists nutrition_days enable row level security;
@@ -326,22 +282,6 @@ alter table if exists organizations enable row level security;
 alter table if exists organization_memberships enable row level security;
 alter table if exists organization_members enable row level security;
 alter table if exists organization_schedule_classes enable row level security;
-
-drop policy if exists youtube_oauth_tokens_member_access on youtube_oauth_tokens;
-create policy youtube_oauth_tokens_member_access
-  on youtube_oauth_tokens
-  for all
-  to authenticated
-  using (member_id = auth.uid())
-  with check (member_id = auth.uid());
-
-drop policy if exists youtube_metrics_member_access on youtube_metrics;
-create policy youtube_metrics_member_access
-  on youtube_metrics
-  for all
-  to authenticated
-  using (member_id = auth.uid())
-  with check (member_id = auth.uid());
 
 drop policy if exists training_events_member_access on training_events;
 create policy training_events_member_access

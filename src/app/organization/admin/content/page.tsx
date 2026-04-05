@@ -1,15 +1,15 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../../components/SidebarShell";
-import { hasRole, requireUserContext } from "../../../lib/member";
-import { supabaseAdmin } from "../../../lib/supabase-admin";
+import SidebarShell from "../../../../components/SidebarShell";
+import { hasRole, requireUserContext } from "../../../../lib/member";
+import { supabaseAdmin } from "../../../../lib/supabase-admin";
 import InstagramQueueClient from "./InstagramQueueClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function ContentMetaPage() {
+export default async function AdminContentPage() {
   const { error, role, userId, organizationIds } = await requireUserContext();
-  if (error || !userId || !hasRole("owner", role)) {
+  if (error || !userId || !hasRole("admin", role)) {
     redirect("/organization");
   }
 
@@ -64,22 +64,22 @@ export default async function ContentMetaPage() {
       <section className="space-y-8">
         <header>
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Content</p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-100">Instagram Manager</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-100">Instagram and Facebook Manager</h1>
           <p className="mt-3 text-sm text-slate-400">
-            Connect your Instagram business account, then manage drafting, scheduling, and publishing from one workspace.
+            Manage Instagram publishing and Facebook-connected account access from one admin workspace.
           </p>
         </header>
 
         <section className="glass-panel rounded-[28px] border border-white/10 p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Account</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Instagram Account</p>
               <h2 className="mt-2 text-xl font-semibold text-slate-50">
                 {isConnected ? `Connected: @${accountRow?.username ?? "instagram"}` : "Not connected"}
               </h2>
               <p className="mt-2 text-sm text-slate-400">
                 {isConnected
-                  ? `IG User ID ${accountRow?.ig_user_id} · Page ID ${accountRow?.page_id}`
+                  ? `IG User ID ${accountRow?.ig_user_id} · Facebook Page ID ${accountRow?.page_id}`
                   : "OAuth connection is required before scheduling and publishing."}
               </p>
               {accountRow?.expires_at && (
@@ -112,25 +112,16 @@ export default async function ContentMetaPage() {
             </article>
 
             <article className="glass-panel rounded-2xl border border-white/10 p-5">
-              <h3 className="text-lg font-semibold text-slate-100">Publishing and Insights</h3>
+              <h3 className="text-lg font-semibold text-slate-100">Facebook Connection</h3>
               <p className="mt-2 text-sm text-slate-400">
-                Auto-publish with reminder fallback and track engagement performance.
+                Instagram publishing uses the Facebook Graph API and linked page identity.
               </p>
               <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-500">
-                under construction
+                Connect once to authorize both Instagram and Facebook resources.
               </div>
             </article>
           </section>
         )}
-
-        <div className="flex gap-3">
-          <a
-            href="/content"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/10"
-          >
-            Back to Content Hub
-          </a>
-        </div>
       </section>
     </SidebarShell>
   );

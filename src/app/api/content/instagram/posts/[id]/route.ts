@@ -44,7 +44,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   const { error, role, organizationIds } = await requireUserContext();
-  if (error || !hasRole("owner", role)) {
+  if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
@@ -161,7 +161,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   const { error, role, organizationIds } = await requireUserContext();
-  if (error || !hasRole("owner", role)) {
+  if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 

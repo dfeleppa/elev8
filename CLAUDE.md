@@ -45,7 +45,7 @@ Routes are organized by role:
 | `nutrition-calculations.ts` | Macro/calorie math |
 | `coach-plan.ts` | Coach nutrition plan logic |
 | `programming.ts` | Workout block utilities |
-| `youtube.ts` / `youtube-metrics.ts` | YouTube API + analytics |
+| `instagram.ts` | Instagram/Facebook Graph API + publishing |
 | `agent-auth.ts` | Token auth for external agent integrations |
 
 ### API Patterns
@@ -71,11 +71,11 @@ Required in `.env.local`:
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
-- `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `CRON_SECRET`
+- `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_REDIRECT_URI`, `CRON_SECRET`
 - `AGENT_MEMBER_ID`, `AGENT_NUTRITION_TOKEN`
 
 ### Deployment
-Vercel-native. Cron job defined in `vercel.json`: `/api/cron/youtube` runs daily at 9 AM UTC.
+Vercel-native. Cron job defined in `vercel.json`: `/api/cron/instagram-publish` runs every 15 minutes.
 
 ### Mobile
 `/elev8_mobile/` is a separate Flutter/Dart project — not part of the Next.js build.

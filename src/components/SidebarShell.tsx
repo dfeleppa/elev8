@@ -91,7 +91,7 @@ const navItems: NavItem[] = [
         minRole: "admin",
         children: [
           { label: "Management", href: "/management", minRole: "admin" },
-          { label: "Content", href: "/content", minRole: "admin" },
+          { label: "Content", href: "/organization/admin/content", minRole: "admin" },
           { label: "Business Analytics", href: "/organization/admin/analytics", minRole: "admin" },
           { label: "Programming", href: "/organization/admin/programming", minRole: "admin" },
         ],
@@ -166,7 +166,7 @@ function getNavIcon(href: string) {
       return <Briefcase {...iconProps} />;
     case "/organization/gym-dashboard":
       return <BarChart3 {...iconProps} />;
-    case "/content":
+    case "/organization/admin/content":
       return <FileText {...iconProps} />;
     case "/organization/admin/analytics":
       return <BarChart3 {...iconProps} />;
@@ -666,7 +666,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             </button>
 
             <Link
-              href="/content"
+              href="/organization/admin/content"
               className="inline-flex items-center text-slate-300 transition hover:text-white"
               aria-label="Messenger"
             >

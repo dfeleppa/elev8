@@ -60,7 +60,7 @@ async function resolveIgUserId(organizationId: string, explicitIgUserId?: string
 
 export async function GET(request: NextRequest) {
   const { error, role, organizationIds } = await requireUserContext();
-  if (error || !hasRole("owner", role)) {
+  if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const { error, role, userId, organizationIds } = await requireUserContext();
-  if (error || !userId || !hasRole("owner", role)) {
+  if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
