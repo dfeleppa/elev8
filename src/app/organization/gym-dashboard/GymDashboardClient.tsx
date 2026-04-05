@@ -165,7 +165,6 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
               <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">
                 {formatCurrency(dashboardData.stripeKpis?.mrr ?? 0)}
               </p>
-              <p className="mt-2 text-xs text-slate-500">Stripe monthly recurring revenue</p>
             </article>
 
             <article className="lg:col-span-4 rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -173,7 +172,6 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
               <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">
                 {formatCurrency(dashboardData.stripeKpis?.arr ?? 0)}
               </p>
-              <p className="mt-2 text-xs text-slate-500">Annual recurring revenue</p>
             </article>
 
             <article className="lg:col-span-4 rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -181,7 +179,6 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
               <p className="mt-4 text-4xl font-semibold leading-none text-slate-100">
                 {(dashboardData.stripeKpis?.activeSubscriptions ?? 0).toLocaleString()}
               </p>
-              <p className="mt-2 text-xs text-slate-500">Active subscriptions</p>
             </article>
 
             <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -230,34 +227,6 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
                 </div>
               )}
             </section>
-
-            {dashboardData.stripeKpis ? (
-              <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
-                <h3 className="text-xl font-semibold text-slate-100">Stripe Metrics</h3>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">MRR</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-100">{formatCurrency(dashboardData.stripeKpis.mrr)}</p>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Active Subscriptions</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-100">{dashboardData.stripeKpis.activeSubscriptions}</p>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Customers</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-100">{dashboardData.stripeKpis.totalCustomers}</p>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Net Revenue</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-100">{formatCurrency(dashboardData.stripeKpis.totalRevenue)}</p>
-                  </div>
-                </div>
-              </section>
-            ) : (
-              <div className="lg:col-span-6">
-                <UnderConstructionCard title="Stripe Metrics" />
-              </div>
-            )}
 
             <section className="lg:col-span-6 rounded-2xl border border-white/10 bg-white/5 p-5">
               <div className="flex items-center justify-between">

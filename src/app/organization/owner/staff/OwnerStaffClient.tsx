@@ -346,8 +346,8 @@ export default function OwnerStaffClient() {
               <h2 className="text-lg font-semibold text-slate-100">Promote Existing Member</h2>
               <p className="mt-1 text-sm text-slate-300">Select an existing member and assign staff role + pay rates.</p>
             </div>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white/5 px-3 py-1 text-xs text-slate-300" aria-hidden="true">
-              {promoteCardOpen ? "^" : "v"}
+            <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-400 transition-transform duration-200 ${promoteCardOpen ? "rotate-180" : ""}`} aria-hidden="true">
+              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6l4 4 4-4"/></svg>
             </span>
           </button>
 
@@ -447,8 +447,8 @@ export default function OwnerStaffClient() {
                 Create a person in the system and assign staff role in one step.
               </p>
             </div>
-            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white/5 px-3 py-1 text-xs text-slate-300" aria-hidden="true">
-              {addCardOpen ? "^" : "v"}
+            <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-400 transition-transform duration-200 ${addCardOpen ? "rotate-180" : ""}`} aria-hidden="true">
+              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6l4 4 4-4"/></svg>
             </span>
           </button>
 
