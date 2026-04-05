@@ -1,4 +1,4 @@
-create table public.payroll_entries (
+create table if not exists public.payroll_entries (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
   week_ending_date date not null,
@@ -12,5 +12,5 @@ create table public.payroll_entries (
   updated_at timestamptz not null default now()
 );
 
-create index payroll_entries_organization_id_idx on public.payroll_entries (organization_id);
-create index payroll_entries_week_ending_date_idx on public.payroll_entries (week_ending_date desc);
+create index if not exists payroll_entries_organization_id_idx on public.payroll_entries (organization_id);
+create index if not exists payroll_entries_week_ending_date_idx on public.payroll_entries (week_ending_date desc);

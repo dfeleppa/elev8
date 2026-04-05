@@ -41,69 +41,78 @@ export default function OwnerBillingClient() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+  const [customersLoading, setCustomersLoading] = useState(true);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
+  const fetchData = async (forceRefresh = false) => {
+    setLoading(true);
+    setError(null);
+    setMetricsLoading(true);
+    setCustomersLoading(true);
+    setTransactionsLoading(true);
 
-      try {
-        const [metricsRes, customersRes, transactionsRes] = await Promise.all([
-          fetch("/api/owner/billing/metrics", { cache: "default" }),
-          fetch("/api/owner/billing/customers?limit=10", { cache: "default" }),
-          fetch("/api/owner/billing/transactions?limit=50", { cache: "default" }),
-        ]);
+    const refreshSuffix = forceRefresh ? `fresh=1&t=${Date.now()}` : "";
+    const cacheOptions: RequestCache = forceRefresh ? "no-store" : "default";
 
-        if (!metricsRes.ok || !customersRes.ok || !transactionsRes.ok) {
-          throw new Error("Failed to fetch billing data");
+    const metricsPath = forceRefresh
+      ? `/api/owner/billing/metrics?${refreshSuffix}`
+      : "/api/owner/billing/metrics";
+    const customersPath = forceRefresh
+      ? `/api/owner/billing/customers?limit=10&${refreshSuffix}`
+      : "/api/owner/billing/customers?limit=10";
+    const transactionsPath = forceRefresh
+      ? `/api/owner/billing/transactions?limit=50&${refreshSuffix}`
+      : "/api/owner/billing/transactions?limit=50";
+
+    const results = await Promise.allSettled([
+      (async () => {
+        try {
+          const res = await fetch(metricsPath, { cache: cacheOptions });
+          if (!res.ok) throw new Error("Failed to fetch metrics");
+          const data = await res.json();
+          setMetrics(data);
+        } finally {
+          setMetricsLoading(false);
         }
+      })(),
+      (async () => {
+        try {
+          const res = await fetch(customersPath, { cache: cacheOptions });
+          if (!res.ok) throw new Error("Failed to fetch customers");
+          const data = await res.json();
+          setCustomers(data.customers || []);
+        } finally {
+          setCustomersLoading(false);
+        }
+      })(),
+      (async () => {
+        try {
+          const res = await fetch(transactionsPath, { cache: cacheOptions });
+          if (!res.ok) throw new Error("Failed to fetch transactions");
+          const data = await res.json();
+          setTransactions(data.transactions || []);
+        } finally {
+          setTransactionsLoading(false);
+        }
+      })(),
+    ]);
 
-        const metricsData = await metricsRes.json();
-        const customersData = await customersRes.json();
-        const transactionsData = await transactionsRes.json();
+    const failures = results.filter((result) => result.status === "rejected") as PromiseRejectedResult[];
+    if (failures.length > 0) {
+      setError(failures[0].reason?.message || "Failed to fetch some billing data");
+    }
 
-        setMetrics(metricsData);
-        setCustomers(customersData.customers || []);
-        setTransactions(transactionsData.transactions || []);
-      } catch (err: any) {
-        setError(err.message || "An error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(false);
+  };
 
-    fetchData();
+  useEffect(() => {
+    fetchData(false);
   }, []);
 
   const handleRefresh = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const refreshSuffix = `fresh=1&t=${Date.now()}`;
-      const [metricsRes, customersRes, transactionsRes] = await Promise.all([
-        fetch(`/api/owner/billing/metrics?${refreshSuffix}`, { cache: "no-store" }),
-        fetch(`/api/owner/billing/customers?limit=10&${refreshSuffix}`, { cache: "no-store" }),
-        fetch(`/api/owner/billing/transactions?limit=50&${refreshSuffix}`, { cache: "no-store" }),
-      ]);
-
-      if (!metricsRes.ok || !customersRes.ok || !transactionsRes.ok) {
-        throw new Error("Failed to refresh data");
-      }
-
-      const metricsData = await metricsRes.json();
-      const customersData = await customersRes.json();
-      const transactionsData = await transactionsRes.json();
-
-      setMetrics(metricsData);
-      setCustomers(customersData.customers || []);
-      setTransactions(transactionsData.transactions || []);
-    } catch (err: any) {
-      setError(err.message || "Failed to refresh");
-    } finally {
-      setLoading(false);
-    }
+    await fetchData(true);
   };
 
   return (
@@ -139,7 +148,7 @@ export default function OwnerBillingClient() {
       )}
 
       {/* Metrics Cards */}
-      {loading ? (
+      {metricsLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
@@ -197,7 +206,7 @@ export default function OwnerBillingClient() {
         <div className="px-6 py-4 border-b border-white/5">
           <h2 className="text-xl font-bold text-white">Recent Customers</h2>
         </div>
-        {loading ? (
+        {customersLoading ? (
           <div className="p-6 text-slate-400 text-sm">Loading customers...</div>
         ) : customers.length === 0 ? (
           <div className="p-6 text-slate-400 text-sm">No customers yet</div>
@@ -242,7 +251,7 @@ export default function OwnerBillingClient() {
         <div className="px-6 py-4 border-b border-white/5">
           <h2 className="text-xl font-bold text-white">Recent Transactions</h2>
         </div>
-        {loading ? (
+        {transactionsLoading ? (
           <div className="p-6 text-slate-400 text-sm">Loading transactions...</div>
         ) : transactions.length === 0 ? (
           <div className="p-6 text-slate-400 text-sm">No transactions yet</div>
