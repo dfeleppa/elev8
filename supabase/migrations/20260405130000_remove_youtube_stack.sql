@@ -2,8 +2,17 @@
 -- Safe to run in environments where objects may already be absent.
 
 -- Drop explicit RLS policies first for clarity in case tables still exist.
-drop policy if exists youtube_oauth_tokens_member_access on youtube_oauth_tokens;
-drop policy if exists youtube_metrics_member_access on youtube_metrics;
+do $$
+begin
+  if to_regclass('public.youtube_oauth_tokens') is not null then
+    execute 'drop policy if exists youtube_oauth_tokens_member_access on public.youtube_oauth_tokens';
+  end if;
+
+  if to_regclass('public.youtube_metrics') is not null then
+    execute 'drop policy if exists youtube_metrics_member_access on public.youtube_metrics';
+  end if;
+end
+$$;
 
 -- Drop legacy tables (indexes and constraints are removed automatically).
 drop table if exists youtube_metrics;

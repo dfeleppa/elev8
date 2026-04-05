@@ -5,7 +5,17 @@ const redirectUri =
   process.env.INSTAGRAM_OAUTH_REDIRECT_URI ??
   (appUrl ? `${appUrl}/api/oauth/instagram/callback` : undefined);
 
-const scopes = ["instagram_basic", "instagram_content_publish", "pages_show_list", "pages_read_engagement"];
+const scopes = [
+  "instagram_basic",
+  "instagram_content_publish",
+  "instagram_manage_comments",
+  "instagram_manage_messages",
+  "pages_show_list",
+  "pages_read_engagement",
+  "pages_manage_posts",
+  "pages_manage_metadata",
+  "pages_messaging",
+];
 
 type InstagramAsset = {
   mediaUrl: string;
