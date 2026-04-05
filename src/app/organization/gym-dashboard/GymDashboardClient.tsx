@@ -196,7 +196,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
                         <span className="text-xs uppercase tracking-[0.14em] text-sky-300">{formatTime(cls.classTime)}</span>
                       </div>
                       <p className="mt-1 text-xs text-slate-500">
-                        {cls.trackName ?? "No track"} · {cls.durationMinutes} min · Coach: {cls.coachName ?? "Unassigned"}
+                        {cls.trackName ?? "No track"} | {cls.durationMinutes} min | Coach: {cls.coachName ?? "Unassigned"}
                       </p>
                       {cls.sizeLimit && cls.sizeLimit > 0 && (
                         <p className="mt-1 text-xs text-cyan-300">Capacity: {cls.sizeLimit}</p>
@@ -219,7 +219,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
                     <article key={workout.id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
                       <p className="text-sm font-semibold text-slate-200">{workout.title}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {workout.trackName ?? "No track"} · {workout.blockCount} blocks
+                        {workout.trackName ?? "No track"} | {workout.blockCount} blocks
                       </p>
                       {workout.notes && <p className="mt-1 text-xs text-slate-400">{workout.notes}</p>}
                     </article>
@@ -253,7 +253,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
                     <article key={issue.id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                       <p className="text-sm text-slate-200">{issue.description}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {issue.kind === "refund" ? "Refund" : "Failed Payment"} · {formatCurrency(issue.amount)} · {issue.currency} · {formatIssueDate(issue.createdAt)}
+                        {issue.kind === "refund" ? "Refund" : "Failed Payment"} | {formatCurrency(issue.amount)} | {issue.currency} | {formatIssueDate(issue.createdAt)}
                       </p>
                     </article>
                   ))}
@@ -278,7 +278,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
                     <article key={`${birthday.email ?? birthday.memberName}-${birthday.birthDate}`} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                       <p className="text-sm font-semibold text-slate-200">{birthday.memberName}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {formatBirthday(birthday.birthDate)} · {birthday.daysUntil === 0 ? "Today" : `${birthday.daysUntil}d`} · {birthday.membership ?? "No membership"}
+                        {formatBirthday(birthday.birthDate)} | {birthday.daysUntil === 0 ? "Today" : `${birthday.daysUntil}d`} | {birthday.membership ?? "No membership"}
                       </p>
                     </article>
                   ))}
@@ -332,7 +332,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
                     <article key={task.id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                       <p className="text-sm font-semibold text-slate-200">{task.title}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {task.assignee} · {task.priority ?? "No priority"} · {task.status ?? "planned"}
+                        {task.assignee} | {task.priority ?? "No priority"} | {task.status ?? "planned"}
                       </p>
                     </article>
                   ))}
@@ -355,7 +355,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
                     <article key={task.id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                       <p className="text-sm font-semibold text-slate-200">{task.title}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {task.assignee} · {task.priority ?? "No priority"} · {task.status ?? "planned"}
+                        {task.assignee} | {task.priority ?? "No priority"} | {task.status ?? "planned"}
                       </p>
                     </article>
                   ))}

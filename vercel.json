@@ -2,15 +2,15 @@
   "crons": [
     {
       "path": "/api/cron/instagram-publish",
-      "schedule": "0 * * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/social-publish",
-      "schedule": "0 * * * *"
+      "schedule": "15 9 * * *"
     },
     {
       "path": "/api/cron/social-sync",
-      "schedule": "0 * * * *"
+      "schedule": "30 9 * * *"
     },
     {
       "path": "/api/cron/social-insights",
@@ -18,7 +18,7 @@
     },
     {
       "path": "/api/cron/social-inbox-sync",
-      "schedule": "0 * * * *"
+      "schedule": "45 9 * * *"
     }
   ]
 }
