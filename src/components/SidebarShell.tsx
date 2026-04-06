@@ -190,6 +190,7 @@ function getNavIcon(href: string) {
 export default function SidebarShell({ children, mainClassName }: SidebarShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [viewMode, setViewMode] = useState<ViewMode>("gym");
   const [userRole, setUserRole] = useState<UserRole>("member");
   const [userName, setUserName] = useState("User");
@@ -216,6 +217,17 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       />
     </svg>
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const storedTheme = window.localStorage.getItem("elev8-theme");
+    const nextTheme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    setTheme(nextTheme);
+  }, []);
 
   useEffect(() => {
     const storedMode = typeof window !== "undefined" ? window.localStorage.getItem("sidebar-view-mode") : null;
@@ -420,6 +432,27 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     router.push(nextMode === "gym" ? "/organization/gym-dashboard" : "/organization/member/athlete-dashboard");
   };
 
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("elev8-theme", nextTheme);
+      document.documentElement.setAttribute("data-theme", nextTheme);
+    }
+  };
+
+  const themeToggleLabel = theme === "dark" ? "Light mode" : "Dark mode";
+  const themeIcon = theme === "dark" ? (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.4" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.6 5.4l-1.7 1.7M7.1 16.9l-1.7 1.7M18.6 18.6l-1.7-1.7M7.1 7.1 5.4 5.4" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+      <path d="M20.2 14.3A8.5 8.5 0 0 1 9.7 3.8a8.9 8.9 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.8" />
+    </svg>
+  );
+
   return (
     <div className="relative z-10 min-h-screen">
       <div className="lg:hidden">
@@ -445,6 +478,15 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </div>
             </button>
           <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/10"
+                aria-label={themeToggleLabel}
+              >
+                {themeIcon}
+                <span>{theme === "dark" ? "Light" : "Dark"}</span>
+              </button>
               <button
                 type="button"
                 onClick={() => handleSwitchView("gym")}
@@ -641,6 +683,16 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 Athlete
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+              aria-label={themeToggleLabel}
+            >
+              {themeIcon}
+              <span className="text-xs font-semibold">{theme === "dark" ? "Light" : "Dark"}</span>
+            </button>
 
             <button
               type="button"
