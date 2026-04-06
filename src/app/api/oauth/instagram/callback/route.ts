@@ -137,25 +137,19 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (instagramAccountError || facebookAccountError || !instagramAccount || !facebookAccount) {
+      console.error("Social account provisioning failed:", instagramAccountError?.message, facebookAccountError?.message);
       return NextResponse.json({ error: "Failed to provision social accounts." }, { status: 500 });
     }
 
-    await supabaseAdmin.from("social_account_tokens").insert([
+    const { error: tokenInsertError } = await supabaseAdmin.from("social_account_tokens").insert([
       {
         social_account_id: instagramAccount.id,
         member_id: userId,
         access_token: account.pageAccessToken,
         token_type: token.tokenType,
         granted_scopes: [
-          "instagram_basic",
-          "instagram_content_publish",
-          "instagram_manage_comments",
-          "instagram_manage_messages",
           "pages_show_list",
           "pages_read_engagement",
-          "pages_manage_posts",
-          "pages_manage_metadata",
-          "pages_messaging",
         ],
         expires_at: expiresAt,
         status: "active",
@@ -167,21 +161,19 @@ export async function GET(request: NextRequest) {
         access_token: account.pageAccessToken,
         token_type: token.tokenType,
         granted_scopes: [
-          "instagram_basic",
-          "instagram_content_publish",
-          "instagram_manage_comments",
-          "instagram_manage_messages",
           "pages_show_list",
           "pages_read_engagement",
-          "pages_manage_posts",
-          "pages_manage_metadata",
-          "pages_messaging",
         ],
         expires_at: expiresAt,
         status: "active",
         updated_at: new Date().toISOString(),
       },
     ]);
+
+    if (tokenInsertError) {
+      console.error("Social token provisioning failed:", tokenInsertError.message);
+      return NextResponse.json({ error: "Failed to save account tokens." }, { status: 500 });
+    }
 
     const response = NextResponse.redirect(new URL("/organization/admin/content", request.url));
     response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
