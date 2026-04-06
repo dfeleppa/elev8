@@ -100,6 +100,22 @@ async function graphPost<T>(path: string, accessToken: string, body?: Record<str
   return payload as T;
 }
 
+async function describePermissionState(accessToken: string) {
+  try {
+    const payload = await graphFetch<{ data?: Array<{ permission?: string; status?: string }> }>(
+      "me/permissions",
+      accessToken
+    );
+
+    return (payload.data ?? [])
+      .filter((entry) => entry.permission)
+      .map((entry) => `${entry.permission}:${entry.status ?? "unknown"}`)
+      .join(", ");
+  } catch {
+    return "unavailable";
+  }
+}
+
 function supportsAutoPublish(postType: InstagramPublishInput["postType"]) {
   return postType !== "story";
 }
@@ -278,8 +294,9 @@ export async function fetchInstagramAccount(accessToken: string) {
   );
 
   if (pages.length === 0) {
+    const permissionState = await describePermissionState(accessToken);
     throw new Error(
-      "No Facebook page was returned for this Meta account. Make sure the Facebook user has page access and re-connect the account."
+      `No Facebook page was returned for this Meta account. Make sure the Facebook user has page access and re-connect the account. Permission state: ${permissionState}.`
     );
   }
 
