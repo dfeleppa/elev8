@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
@@ -9,6 +9,23 @@ import {
 } from "../../../../../lib/instagram";
 
 export const runtime = "nodejs";
+
+function createSignedState(organizationId: string) {
+  const secret = process.env.NEXTAUTH_SECRET?.trim();
+  if (!secret) {
+    throw new Error("NEXTAUTH_SECRET is required for OAuth state signing.");
+  }
+
+  const payload = {
+    nonce: randomBytes(24).toString("hex"),
+    organizationId,
+    issuedAt: Date.now(),
+  };
+
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const signature = createHmac("sha256", secret).update(encodedPayload).digest("base64url");
+  return `${encodedPayload}.${signature}`;
+}
 
 export async function GET(request: Request) {
   try {
@@ -22,7 +39,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Organization not found." }, { status: 400 });
     }
 
-    const stateValue = randomBytes(24).toString("hex");
+    const stateValue = createSignedState(organizationId);
     const statePayload = JSON.stringify({ state: stateValue, organizationId });
     const url = getInstagramAuthUrl(stateValue);
 

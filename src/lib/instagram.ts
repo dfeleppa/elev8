@@ -5,10 +5,15 @@ const redirectUri =
   process.env.INSTAGRAM_OAUTH_REDIRECT_URI ??
   (appUrl ? `${appUrl}/api/oauth/instagram/callback` : undefined);
 
-const scopes = [
+export const META_OAUTH_SCOPES = [
   "pages_show_list",
   "pages_read_engagement",
-];
+  "pages_manage_posts",
+  "instagram_basic",
+  "instagram_content_publish",
+  "instagram_manage_comments",
+  "instagram_manage_messages",
+] as const;
 
 type InstagramAsset = {
   mediaUrl: string;
@@ -49,7 +54,7 @@ export function getInstagramAuthUrl(state: string) {
   url.searchParams.set("client_id", appId);
   url.searchParams.set("redirect_uri", callback);
   url.searchParams.set("response_type", "code");
-  url.searchParams.set("scope", scopes.join(","));
+  url.searchParams.set("scope", META_OAUTH_SCOPES.join(","));
   url.searchParams.set("state", state);
   return url.toString();
 }
@@ -272,26 +277,36 @@ export async function fetchInstagramAccount(accessToken: string) {
     { fields: "id,name,access_token" }
   );
 
-  const firstPage = pagesResponse.data?.[0];
-  if (!firstPage?.id || !firstPage.access_token) {
-    throw new Error("No Facebook page is connected to this account.");
+  const pages = (pagesResponse.data ?? []).filter(
+    (page): page is { id: string; name?: string; access_token: string } =>
+      Boolean(page?.id && page?.access_token)
+  );
+
+  if (pages.length === 0) {
+    throw new Error(
+      "No Facebook page was returned for this Meta account. Make sure the Facebook user has page access and re-connect the account."
+    );
   }
 
-  const pageDetails = await graphFetch<{
-    instagram_business_account?: { id?: string; username?: string };
-  }>(firstPage.id, firstPage.access_token, {
-    fields: "instagram_business_account{id,username}",
-  });
+  for (const page of pages) {
+    const pageDetails = await graphFetch<{
+      instagram_business_account?: { id?: string; username?: string };
+    }>(page.id, page.access_token, {
+      fields: "instagram_business_account{id,username}",
+    });
 
-  const igAccount = pageDetails.instagram_business_account;
-  if (!igAccount?.id) {
-    throw new Error("No Instagram business account found on the selected page.");
+    const igAccount = pageDetails.instagram_business_account;
+    if (!igAccount?.id) {
+      continue;
+    }
+
+    return {
+      igUserId: String(igAccount.id),
+      username: igAccount.username ? String(igAccount.username) : null,
+      pageId: String(page.id),
+      pageAccessToken: String(page.access_token),
+    };
   }
 
-  return {
-    igUserId: String(igAccount.id),
-    username: igAccount.username ? String(igAccount.username) : null,
-    pageId: String(firstPage.id),
-    pageAccessToken: String(firstPage.access_token),
-  };
+  throw new Error("No Instagram business account was found on any connected Facebook page.");
 }

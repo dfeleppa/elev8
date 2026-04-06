@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,6 +8,7 @@ import {
   exchangeInstagramCode,
   fetchInstagramAccount,
   INSTAGRAM_OAUTH_STATE_COOKIE,
+  META_OAUTH_SCOPES,
 } from "../../../../../lib/instagram";
 
 export const runtime = "nodejs";
@@ -21,6 +22,40 @@ function constantTimeEqual(left: string, right: string) {
   return timingSafeEqual(leftBuffer, rightBuffer);
 }
 
+function parseSignedState(state: string) {
+  const secret = process.env.NEXTAUTH_SECRET?.trim();
+  if (!secret) {
+    throw new Error("NEXTAUTH_SECRET is required for OAuth state validation.");
+  }
+
+  const [encodedPayload, providedSignature] = state.split(".");
+  if (!encodedPayload || !providedSignature) {
+    throw new Error("Invalid OAuth state.");
+  }
+
+  const expectedSignature = createHmac("sha256", secret).update(encodedPayload).digest("base64url");
+  if (!constantTimeEqual(providedSignature, expectedSignature)) {
+    throw new Error("Invalid OAuth state.");
+  }
+
+  const decoded = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8")) as {
+    organizationId?: string;
+    issuedAt?: number;
+  };
+
+  const organizationId = decoded.organizationId?.trim() ?? "";
+  const issuedAt = typeof decoded.issuedAt === "number" ? decoded.issuedAt : 0;
+  if (!organizationId || !issuedAt) {
+    throw new Error("Invalid OAuth state.");
+  }
+
+  if (Date.now() - issuedAt > 10 * 60 * 1000) {
+    throw new Error("OAuth state expired. Please try connecting again.");
+  }
+
+  return { organizationId };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { error: userError, role, userId } = await requireUserContext();
@@ -32,26 +67,11 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get("code");
     const state = searchParams.get("state")?.trim() ?? "";
 
-    const storedRaw = request.cookies.get(INSTAGRAM_OAUTH_STATE_COOKIE)?.value?.trim() ?? "";
-    const parsed = storedRaw ? JSON.parse(storedRaw) as { state?: string; organizationId?: string } : {};
-    const storedState = parsed.state?.trim() ?? "";
-    const organizationId = parsed.organizationId?.trim() ?? "";
-
     if (!code) {
       return NextResponse.json({ error: "Missing code." }, { status: 400 });
     }
 
-    if (!state || !storedState || !constantTimeEqual(state, storedState)) {
-      const response = NextResponse.json({ error: "Invalid OAuth state." }, { status: 400 });
-      response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
-      return response;
-    }
-
-    if (!organizationId) {
-      const response = NextResponse.json({ error: "Organization context missing." }, { status: 400 });
-      response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
-      return response;
-    }
+    const { organizationId } = parseSignedState(state);
 
     const token = await exchangeInstagramCode(code);
     const account = await fetchInstagramAccount(token.accessToken);
@@ -153,10 +173,7 @@ export async function GET(request: NextRequest) {
         member_id: userId,
         access_token: account.pageAccessToken,
         token_type: token.tokenType,
-        granted_scopes: [
-          "pages_show_list",
-          "pages_read_engagement",
-        ],
+        granted_scopes: [...META_OAUTH_SCOPES],
         expires_at: expiresAt,
         status: "active",
         updated_at: new Date().toISOString(),
@@ -166,10 +183,7 @@ export async function GET(request: NextRequest) {
         member_id: userId,
         access_token: account.pageAccessToken,
         token_type: token.tokenType,
-        granted_scopes: [
-          "pages_show_list",
-          "pages_read_engagement",
-        ],
+        granted_scopes: [...META_OAUTH_SCOPES],
         expires_at: expiresAt,
         status: "active",
         updated_at: new Date().toISOString(),
