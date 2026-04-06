@@ -8,6 +8,9 @@ const redirectUri =
 export const META_OAUTH_SCOPES = [
   "pages_show_list",
   "pages_read_engagement",
+  "business_management",
+  "instagram_basic",
+  "instagram_manage_messages",
 ] as const;
 
 type InstagramAsset = {
