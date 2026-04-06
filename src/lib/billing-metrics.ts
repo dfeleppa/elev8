@@ -216,9 +216,10 @@ async function refreshMetrics(cacheKey: string, organizationId: string) {
 
 export async function getOrganizationBillingMetrics(
   organizationId: string,
-  options?: { forceRefresh?: boolean }
+  options?: { forceRefresh?: boolean; allowLiveStripeFallback?: boolean }
 ): Promise<BillingMetricsPayload> {
   const forceRefresh = options?.forceRefresh === true;
+  const allowLiveStripeFallback = options?.allowLiveStripeFallback !== false;
   const cacheKey = `org:${organizationId}`;
   const cached = metricsCache.get(cacheKey);
 
@@ -240,6 +241,24 @@ export async function getOrganizationBillingMetrics(
 
   if (refreshInFlight.has(cacheKey)) {
     return refreshInFlight.get(cacheKey) as Promise<BillingMetricsPayload>;
+  }
+
+  if (!allowLiveStripeFallback) {
+    const webhookMetrics = await loadFromWebhookCache(organizationId);
+    if (webhookMetrics) {
+      return cacheValue(cacheKey, webhookMetrics);
+    }
+
+    return {
+      mrr: 0,
+      arr: 0,
+      ltv: 0,
+      active_subscriptions: 0,
+      total_customers: 0,
+      churn_rate: 0,
+      total_revenue: 0,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   const refreshPromise = refreshMetrics(cacheKey, organizationId).finally(() => {

@@ -216,7 +216,7 @@ async function getDashboardData(organizationId: string, members: GymMemberRow[])
       .eq("organization_id", organizationId)
       .order("class_time", { ascending: true }),
     supabaseAdmin.from("programming_tracks").select("id, name").eq("organization_id", organizationId),
-    getOrganizationBillingMetrics(organizationId),
+    getOrganizationBillingMetrics(organizationId, { allowLiveStripeFallback: false }),
     supabaseAdmin
       .from("stripe_transactions")
       .select("id, type, amount, currency, status, description, created_at")
@@ -451,7 +451,7 @@ async function getDashboardData(organizationId: string, members: GymMemberRow[])
     assigneeById.set(user.id, user.full_name ?? user.email ?? "Unknown");
   }
 
-  const dueTasks = ((tasksResult.data ?? []) as any[])
+  const dueTasks = ((!tasksResult.error ? tasksResult.data : []) ?? [] as any[])
     .filter((row) => !row.is_complete)
     .map((row) => ({
       id: row.id,
