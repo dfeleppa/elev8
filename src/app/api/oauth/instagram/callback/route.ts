@@ -77,7 +77,10 @@ export async function GET(request: NextRequest) {
     );
 
     if (error) {
-      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+      console.error("Instagram token upsert failed:", error.message);
+      const response = NextResponse.redirect(new URL(`/organization/admin/content?socialError=${encodeURIComponent(`Legacy token save failed: ${error.message}`)}`, request.url));
+      response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
+      return response;
     }
 
     const capabilities = {
@@ -138,7 +141,10 @@ export async function GET(request: NextRequest) {
 
     if (instagramAccountError || facebookAccountError || !instagramAccount || !facebookAccount) {
       console.error("Social account provisioning failed:", instagramAccountError?.message, facebookAccountError?.message);
-      return NextResponse.json({ error: "Failed to provision social accounts." }, { status: 500 });
+      const message = instagramAccountError?.message || facebookAccountError?.message || "Failed to provision social accounts.";
+      const response = NextResponse.redirect(new URL(`/organization/admin/content?socialError=${encodeURIComponent(message)}`, request.url));
+      response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
+      return response;
     }
 
     const { error: tokenInsertError } = await supabaseAdmin.from("social_account_tokens").insert([
@@ -172,7 +178,9 @@ export async function GET(request: NextRequest) {
 
     if (tokenInsertError) {
       console.error("Social token provisioning failed:", tokenInsertError.message);
-      return NextResponse.json({ error: "Failed to save account tokens." }, { status: 500 });
+      const response = NextResponse.redirect(new URL(`/organization/admin/content?socialError=${encodeURIComponent(`Token save failed: ${tokenInsertError.message}`)}`, request.url));
+      response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
+      return response;
     }
 
     const response = NextResponse.redirect(new URL("/organization/admin/content", request.url));
@@ -181,7 +189,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error.";
     console.error("Instagram OAuth callback failed:", message);
-    const response = NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    const response = NextResponse.redirect(new URL(`/organization/admin/content?socialError=${encodeURIComponent(message)}`, request.url));
     response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
     return response;
   }

@@ -19,7 +19,11 @@ import SocialOsClient from "./SocialOsClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminContentPage() {
+export default async function AdminContentPage({
+  searchParams,
+}: {
+  searchParams?: { socialError?: string | string[] } | Promise<{ socialError?: string | string[] }>;
+}) {
   const { error, role, organizationIds } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     redirect("/organization");
@@ -30,6 +34,11 @@ export default async function AdminContentPage() {
     redirect("/organization");
   }
 
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const socialErrorParam = Array.isArray(resolvedSearchParams?.socialError)
+    ? resolvedSearchParams.socialError[0]
+    : resolvedSearchParams?.socialError;
+  const socialError = socialErrorParam?.trim() || null;
   const weekOf = toDateKey(startOfWeek(new Date()));
 
   const [accounts, settings, campaigns, pillars, posts, assets, inbox, overview, googlePhotos, membersResult] = await Promise.all([
@@ -64,6 +73,7 @@ export default async function AdminContentPage() {
       <SocialOsClient
         organizationId={organizationId}
         weekOf={weekOf}
+        initialSocialError={socialError}
         initialAccounts={accounts}
         initialSettings={settings}
         initialCampaigns={campaigns}

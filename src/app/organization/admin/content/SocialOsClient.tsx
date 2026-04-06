@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 type Props = {
   organizationId: string;
   weekOf: string;
+  initialSocialError: string | null;
   initialAccounts: any[];
   initialSettings: any;
   initialCampaigns: any[];
@@ -24,7 +25,7 @@ const dt = (v?: string | null) => (v ? new Date(v).toLocaleString() : "Not set")
 const card = (title: string, value: string | number, hint: string) => <article className="rounded-2xl border border-white/10 bg-white/5 p-4"><p className="text-xs uppercase tracking-[0.24em] text-slate-400">{title}</p><p className="mt-3 text-3xl font-semibold text-slate-100">{value}</p><p className="mt-2 text-xs text-slate-500">{hint}</p></article>;
 const panel = (title: string, copy: string, content: React.ReactNode) => <section className="rounded-[28px] border border-white/10 bg-white/5 p-5"><h2 className="text-xl font-semibold text-slate-100">{title}</h2><p className="mt-1 text-sm text-slate-400">{copy}</p><div className="mt-5">{content}</div></section>;
 
-export default function SocialOsClient({ organizationId, weekOf, initialAccounts, initialSettings, initialCampaigns, initialPillars, initialPosts, initialAssets, initialInbox, initialOverview, initialGooglePhotosSources, members }: Props) {
+export default function SocialOsClient({ organizationId, weekOf, initialSocialError, initialAccounts, initialSettings, initialCampaigns, initialPillars, initialPosts, initialAssets, initialInbox, initialOverview, initialGooglePhotosSources, members }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("planner");
   const [accounts] = useState(initialAccounts);
   const [settings, setSettings] = useState(initialSettings);
@@ -35,7 +36,7 @@ export default function SocialOsClient({ organizationId, weekOf, initialAccounts
   const [overview] = useState(initialOverview);
   const [googleSources, setGoogleSources] = useState(initialGooglePhotosSources);
   const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialSocialError);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [creator, setCreator] = useState({ title: "", brief: "", caption: "", firstComment: "", targetPublishAt: "", workflowState: "draft", campaignId: "", pillarId: "", assignedTo: "", tags: "", approvalRequired: false, useInstagram: true, useFacebook: true });
   const [pickedAssets, setPickedAssets] = useState<string[]>([]);
