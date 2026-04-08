@@ -136,9 +136,9 @@ const navItems: NavItem[] = [
 ];
 
 const mobileQuickLinks = [
-  { label: "Workout", href: "/organization/member/workout" },
-  { label: "Nutrition", href: "/organization/member/nutrition" },
-  { label: "Classes", href: "/organization/member/class-schedule" },
+  { label: "Workout", href: "/organization/member/workout", icon: <Dumbbell className="h-4 w-4" aria-hidden="true" /> },
+  { label: "Nutrition", href: "/organization/member/nutrition", icon: <HandPlatter className="h-4 w-4" aria-hidden="true" /> },
+  { label: "Classes", href: "/organization/member/class-schedule", icon: <CalendarDays className="h-4 w-4" aria-hidden="true" /> },
 ] as const;
 
 function getNavIcon(href: string) {
@@ -496,7 +496,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     <div className="relative z-10 min-h-screen">
       <div className="lg:hidden">
         <div className="app-shell-topbar px-5 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
@@ -513,7 +513,23 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 />
               </span>
             </button>
-            <div className="flex items-center gap-4">
+            <div className="flex min-w-0 items-center justify-end gap-2">
+              <div className="flex items-center gap-2">
+                {mobileQuickLinks.map((link) => {
+                  const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={isActive ? "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                      aria-label={link.label}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      {link.icon}
+                    </Link>
+                  );
+                })}
+              </div>
               {showViewToggle ? (
                 <div className="flex items-center gap-2">
                   <button
@@ -543,21 +559,6 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 {themeIcon}
               </button>
             </div>
-          </div>
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-            {mobileQuickLinks.map((link) => {
-              const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={isActive ? "shrink-0 rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 px-3 py-1.5 text-xs font-semibold text-[#ffdbe4] transition-colors" : "shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
           </div>
         </div>
       </div>
