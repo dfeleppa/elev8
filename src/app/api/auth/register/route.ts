@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
+import { isOrganizationMemberEmailReserved, normalizeEmail } from "../../../../lib/organization-member-email";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const fullName = (body.fullName ?? "").trim();
-    const email = (body.email ?? "").toLowerCase().trim();
+    const email = normalizeEmail(body.email);
     const password = body.password ?? "";
 
     // Validation
@@ -48,6 +49,16 @@ export async function POST(request: Request) {
         .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
         .eq("id", existing.id);
     } else {
+      if (await isOrganizationMemberEmailReserved(email)) {
+        return NextResponse.json(
+          {
+            error:
+              "This email already exists in an organization's member roster and cannot be used to create an app account.",
+          },
+          { status: 409 }
+        );
+      }
+
       // New user
       const { error: insertError } = await supabaseAdmin.from("app_users").insert({
         email,

@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 
+import { isOrganizationMemberEmailReserved, normalizeEmail } from "./organization-member-email";
 import { supabaseAdmin } from "./supabase-admin";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
@@ -81,18 +82,35 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "credentials") return true;
 
       // For OAuth providers, upsert the user record
-      const email = user.email?.toLowerCase();
+      const email = normalizeEmail(user.email);
       if (!email) return false;
 
       const { fullName } = splitName(user.name);
-      await supabaseAdmin.from("app_users").upsert(
-        {
+      const { data: existingUser } = await supabaseAdmin
+        .from("app_users")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (!existingUser && (await isOrganizationMemberEmailReserved(email))) {
+        return "/login?error=reserved_email";
+      }
+
+      if (existingUser) {
+        await supabaseAdmin
+          .from("app_users")
+          .update({
+            full_name: fullName,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingUser.id);
+      } else {
+        await supabaseAdmin.from("app_users").insert({
           email,
           full_name: fullName,
           updated_at: new Date().toISOString(),
-        },
-        { onConflict: "email" }
-      );
+        });
+      }
 
       return true;
     },

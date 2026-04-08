@@ -3,6 +3,15 @@ import { NextResponse } from "next/server";
 import { hasRole, requireUserContext } from "../../../../lib/member";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
 
+function normalizeInvitationCode(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim().toUpperCase();
+  return trimmed || null;
+}
+
 export async function GET() {
   const { error, role, organizationIds } = await requireUserContext();
   if (error || !hasRole("owner", role) || organizationIds.length === 0) {
@@ -46,7 +55,7 @@ export async function PATCH(request: Request) {
   if ("address" in body) updates.address = body.address ?? null;
   if ("phone" in body) updates.phone = body.phone ?? null;
   if ("email" in body) updates.email = body.email ?? null;
-  if ("invitationCode" in body) updates.invitation_code = body.invitationCode ?? null;
+  if ("invitationCode" in body) updates.invitation_code = normalizeInvitationCode(body.invitationCode);
   updates.updated_at = new Date().toISOString();
 
   const { data: org, error: updateError } = await supabaseAdmin

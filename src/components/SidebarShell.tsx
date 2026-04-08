@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +17,7 @@ import {
   Dumbbell,
   FileText,
   HandPlatter,
+  LogOut,
   PersonStanding,
   PlugZap,
   Settings,
@@ -132,6 +134,12 @@ const navItems: NavItem[] = [
     ),
   },
 ];
+
+const mobileQuickLinks = [
+  { label: "Workout", href: "/organization/member/workout" },
+  { label: "Nutrition", href: "/organization/member/nutrition" },
+  { label: "Classes", href: "/organization/member/class-schedule" },
+] as const;
 
 function getNavIcon(href: string) {
   const iconClass = "h-[18px] w-[18px]";
@@ -479,56 +487,77 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   );
   const gymViewIcon = <Briefcase className="h-4 w-4" aria-hidden="true" />;
   const athleteViewIcon = <PersonStanding className="h-4 w-4" aria-hidden="true" />;
+  const handleSignOut = () => {
+    setMenuOpen(false);
+    void signOut({ callbackUrl: "/login" });
+  };
 
   return (
     <div className="relative z-10 min-h-screen">
       <div className="lg:hidden">
-        <div className="app-shell-topbar flex items-center justify-between px-5 py-4">
-          <button
-            type="button"
-            onClick={() => setMobileSidebarOpen(true)}
-            className="flex items-center gap-3 text-left"
-            aria-label="Open menu"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
-              <Image
-                src={brandLogoSrc}
-                alt={brandLogoAlt}
-                width={28}
-                height={28}
-                className="h-7 w-7 object-contain"
-              />
-            </span>
-          </button>
-          <div className="flex items-center gap-4">
-            {showViewToggle ? (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleSwitchView("gym")}
-                  className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
-                  aria-label="Gym view"
-                >
-                  {gymViewIcon}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSwitchView("athlete")}
-                  className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
-                  aria-label="Athlete view"
-                >
-                  {athleteViewIcon}
-                </button>
-              </div>
-            ) : null}
+        <div className="app-shell-topbar px-5 py-4">
+          <div className="flex items-center justify-between">
             <button
               type="button"
-              onClick={toggleTheme}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-200 transition hover:border-white/30 hover:bg-white/10"
-              aria-label={themeToggleLabel}
+              onClick={() => setMobileSidebarOpen(true)}
+              className="flex items-center gap-3 text-left"
+              aria-label="Open menu"
             >
-              {themeIcon}
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
+                <Image
+                  src={brandLogoSrc}
+                  alt={brandLogoAlt}
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 object-contain"
+                />
+              </span>
             </button>
+            <div className="flex items-center gap-4">
+              {showViewToggle ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchView("gym")}
+                    className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                    aria-label="Gym view"
+                  >
+                    {gymViewIcon}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchView("athlete")}
+                    className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                    aria-label="Athlete view"
+                  >
+                    {athleteViewIcon}
+                  </button>
+                </div>
+              ) : null}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-200 transition hover:border-white/30 hover:bg-white/10"
+                aria-label={themeToggleLabel}
+              >
+                {themeIcon}
+              </button>
+            </div>
+          </div>
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+            {mobileQuickLinks.map((link) => {
+              const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={isActive ? "shrink-0 rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 px-3 py-1.5 text-xs font-semibold text-[#ffdbe4] transition-colors" : "shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -583,6 +612,16 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 })}
               </div>
             </nav>
+            <div className="mt-4 border-t border-white/10 px-2 pt-4">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                Sign out
+              </button>
+            </div>
           </aside>
         </div>
       )}
@@ -792,6 +831,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                       className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-white/10 disabled:opacity-60"
                     >
                       {isImportingResults ? "Importing workout results..." : "Import Workout Results (CSV)"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-white/10"
+                    >
+                      <LogOut className="h-4 w-4" aria-hidden="true" />
+                      Sign out
                     </button>
                   </div>
                 ) : null}

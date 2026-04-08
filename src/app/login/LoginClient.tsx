@@ -11,11 +11,16 @@ export default function LoginClient() {
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered") === "true";
   const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+  const authError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const externalError =
+    authError === "reserved_email"
+      ? "This email already exists in an organization's member roster and cannot be used to create an app account."
+      : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,9 +79,9 @@ export default function LoginClient() {
         )}
 
         {/* Error banner */}
-        {error && (
+        {(error || externalError) && (
           <div className="mb-6 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-center text-sm text-rose-300">
-            {error}
+            {error ?? externalError}
           </div>
         )}
 

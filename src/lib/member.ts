@@ -3,6 +3,7 @@ import "server-only";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "./auth";
+import { isOrganizationMemberEmailReserved, normalizeEmail } from "./organization-member-email";
 import { supabaseAdmin } from "./supabase-admin";
 
 export type UserRole = "member" | "coach" | "admin" | "owner";
@@ -104,7 +105,7 @@ export async function requireUserContextFromBearer(request: Request): Promise<Us
 
 export async function requireUserContext(): Promise<UserContext> {
   const session = await getServerSession(authOptions);
-  const email = session?.user?.email?.toLowerCase() ?? null;
+  const email = normalizeEmail(session?.user?.email);
 
   if (!email) {
     return { userId: null, role: "member", organizationIds: [], error: "Unauthorized" };
@@ -112,18 +113,62 @@ export async function requireUserContext(): Promise<UserContext> {
 
   const { fullName } = splitName(session?.user?.name);
 
-  const { data: userRow, error: userError } = await supabaseAdmin
+  const { data: existingUser, error: existingUserError } = await supabaseAdmin
     .from("app_users")
-    .upsert(
-      {
+    .select("id, role, full_name")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (existingUserError) {
+    return {
+      userId: null,
+      role: "member",
+      organizationIds: [],
+      error: existingUserError.message,
+    };
+  }
+
+  let userRow = existingUser ? { id: existingUser.id, role: existingUser.role } : null;
+  let userError: string | null = null;
+
+  if (existingUser) {
+    if ((existingUser.full_name ?? null) !== fullName) {
+      const { error: updateError } = await supabaseAdmin
+        .from("app_users")
+        .update({
+          full_name: fullName,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingUser.id);
+
+      if (updateError) {
+        userError = updateError.message;
+      }
+    }
+  } else {
+    if (await isOrganizationMemberEmailReserved(email)) {
+      return {
+        userId: null,
+        role: "member",
+        organizationIds: [],
+        error:
+          "This email already exists in an organization's member roster and cannot be used to create an app account.",
+      };
+    }
+
+    const { data: insertedUser, error: insertError } = await supabaseAdmin
+      .from("app_users")
+      .insert({
         email,
         full_name: fullName,
         updated_at: new Date().toISOString(),
-      },
-      { onConflict: "email" }
-    )
-    .select("id, role")
-    .single();
+      })
+      .select("id, role")
+      .single();
+
+    userRow = insertedUser;
+    userError = insertError?.message ?? null;
+  }
 
   if (userError || !userRow) {
     return {

@@ -1,7 +1,21 @@
 import { NextResponse } from "next/server";
 
 import { requireUserContext } from "../../../../lib/member";
+import { normalizeEmail } from "../../../../lib/organization-member-email";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
+
+function splitName(fullName: string | null | undefined) {
+  const trimmed = (fullName ?? "").trim();
+  if (!trimmed) {
+    return { firstName: null, lastName: null } as const;
+  }
+
+  const [firstName, ...rest] = trimmed.split(/\s+/);
+  return {
+    firstName: firstName?.trim() || null,
+    lastName: rest.join(" ").trim() || null,
+  } as const;
+}
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const invitationCode = (body.invitationCode ?? "").trim();
+    const invitationCode = String(body.invitationCode ?? "").trim().toUpperCase();
 
     if (!invitationCode) {
       return NextResponse.json({ error: "Invitation code is required." }, { status: 400 });
@@ -43,6 +57,60 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: user } = await supabaseAdmin
+      .from("app_users")
+      .select("email, full_name")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const email = normalizeEmail(user?.email);
+    if (!email) {
+      return NextResponse.json({ error: "User email is required." }, { status: 400 });
+    }
+
+    const { firstName, lastName } = splitName(user?.full_name);
+    const now = new Date().toISOString();
+
+    const { data: existingMember } = await supabaseAdmin
+      .from("organization_members")
+      .select("email")
+      .eq("organization_id", org.id)
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existingMember) {
+      const { error: memberUpdateError } = await supabaseAdmin
+        .from("organization_members")
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          role: "member",
+          updated_at: now,
+        })
+        .eq("organization_id", org.id)
+        .eq("email", email);
+
+      if (memberUpdateError) {
+        return NextResponse.json({ error: "Failed to attach organization member." }, { status: 500 });
+      }
+    } else {
+      const { error: memberInsertError } = await supabaseAdmin
+        .from("organization_members")
+        .insert({
+          organization_id: org.id,
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          role: "member",
+          created_at: now,
+          updated_at: now,
+        });
+
+      if (memberInsertError) {
+        return NextResponse.json({ error: "Failed to attach organization member." }, { status: 500 });
+      }
+    }
+
     // Create membership
     const { error: insertError } = await supabaseAdmin
       .from("organization_memberships")
@@ -50,6 +118,8 @@ export async function POST(request: Request) {
         organization_id: org.id,
         user_id: userId,
         role: "member",
+        created_at: now,
+        updated_at: now,
       });
 
     if (insertError) {
