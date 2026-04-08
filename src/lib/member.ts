@@ -175,7 +175,7 @@ export async function requireUserContext(): Promise<UserContext> {
       userId: null,
       role: "member",
       organizationIds: [],
-      error: userError?.message ?? "User not found.",
+      error: userError ?? "User not found.",
     };
   }
 
