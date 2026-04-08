@@ -293,7 +293,7 @@ export default function OwnerSettingsClient() {
                 src={settings.logoUrl}
                 alt="Organization logo"
                 fill
-                className="object-cover"
+                className="object-contain p-3"
               />
             ) : (
               <Camera size={32} className="text-white/25" />
@@ -306,10 +306,10 @@ export default function OwnerSettingsClient() {
           </div>
           <div className="flex flex-col gap-2">
             <p className="text-sm text-slate-300">
-              Upload your organization logo. Supports PNG, JPG, or WebP up to 2MB.
+              Upload a square organization logo to replace the top-left Elev8 mark across the app. Supports PNG, JPG, or WebP up to 2MB.
             </p>
             <p className="text-xs text-slate-500">
-              Click the preview or drag and drop an image file.
+              Click the preview or drag and drop an image file. Transparent backgrounds work well.
             </p>
             <input
               ref={fileInputRef}

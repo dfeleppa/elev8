@@ -22,7 +22,7 @@ export async function GET() {
   const { data: organizationRow } = organizationId
     ? await supabaseAdmin
         .from("organizations")
-        .select("name")
+        .select("name, logo_url")
         .eq("id", organizationId)
         .maybeSingle()
     : { data: null };
@@ -56,6 +56,7 @@ export async function GET() {
     organizationIds,
     userName: userRow?.full_name ?? userRow?.email ?? "User",
     organizationName: organizationRow?.name ?? "Organization",
+    organizationLogoUrl: organizationRow?.logo_url ?? null,
     trackId: latestTrackId,
     currentTrack: trackRow?.name ?? "Main",
   });

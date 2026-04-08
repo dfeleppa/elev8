@@ -16,6 +16,7 @@ import {
   Dumbbell,
   FileText,
   HandPlatter,
+  PersonStanding,
   PlugZap,
   Settings,
   ShieldCheck,
@@ -195,6 +196,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const [userRole, setUserRole] = useState<UserRole>("member");
   const [userName, setUserName] = useState("User");
   const [organizationName, setOrganizationName] = useState("Organization");
+  const [organizationLogoUrl, setOrganizationLogoUrl] = useState<string | null>(null);
   const [currentTrack, setCurrentTrack] = useState("Main");
   const [tracks, setTracks] = useState<{ id: string; name: string }[]>([]);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
@@ -277,6 +279,13 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         }
         if (isMounted && typeof payload.organizationName === "string" && payload.organizationName.trim()) {
           setOrganizationName(payload.organizationName.trim());
+        }
+        if (isMounted) {
+          setOrganizationLogoUrl(
+            typeof payload.organizationLogoUrl === "string" && payload.organizationLogoUrl.trim()
+              ? payload.organizationLogoUrl.trim()
+              : null
+          );
         }
         if (isMounted && typeof payload.currentTrack === "string" && payload.currentTrack.trim()) {
           setCurrentTrack(payload.currentTrack.trim());
@@ -456,6 +465,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   };
 
   const themeToggleLabel = theme === "dark" ? "Light mode" : "Dark mode";
+  const brandLogoSrc = organizationLogoUrl || "/Elev8rlogo (1).png";
+  const brandLogoAlt = organizationLogoUrl ? `${organizationName} logo` : "Elev8";
   const themeIcon = theme === "dark" ? (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
       <circle cx="12" cy="12" r="4.4" fill="none" stroke="currentColor" strokeWidth="1.8" />
@@ -467,7 +478,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     </svg>
   );
   const gymViewIcon = <Briefcase className="h-4 w-4" aria-hidden="true" />;
-  const athleteViewIcon = <Activity className="h-4 w-4" aria-hidden="true" />;
+  const athleteViewIcon = <PersonStanding className="h-4 w-4" aria-hidden="true" />;
 
   return (
     <div className="relative z-10 min-h-screen">
@@ -481,11 +492,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
               <Image
-                src="/Elev8rlogo (1).png"
-                alt="Elev8"
+                src={brandLogoSrc}
+                alt={brandLogoAlt}
                 width={28}
                 height={28}
-                className="h-7 w-7"
+                className="h-7 w-7 object-contain"
               />
             </span>
           </button>
@@ -534,11 +545,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             <div className="flex items-center justify-between gap-2 px-2">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
                 <Image
-                  src="/Elev8rlogo (1).png"
-                  alt="Elev8"
+                  src={brandLogoSrc}
+                  alt={brandLogoAlt}
                   width={28}
                   height={28}
-                  className="h-7 w-7"
+                  className="h-7 w-7 object-contain"
                 />
               </span>
               <button
@@ -591,11 +602,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
               <Image
-                src="/Elev8rlogo (1).png"
-                alt="Elev8"
+                src={brandLogoSrc}
+                alt={brandLogoAlt}
                 width={28}
                 height={28}
-                className="h-7 w-7"
+                className="h-7 w-7 object-contain"
               />
             </span>
             <div className={sidebarCollapsed ? "sr-only" : "block"}>
