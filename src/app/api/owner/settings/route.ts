@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { hasRole, requireUserContext } from "../../../../lib/member";
+import { normalizeInvitationCode } from "../../../../lib/invitation-code";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
-
-function normalizeInvitationCode(value: unknown) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim().toUpperCase();
-  return trimmed || null;
-}
 
 export async function GET() {
   const { error, role, organizationIds } = await requireUserContext();

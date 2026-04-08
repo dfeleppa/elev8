@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { normalizeInvitationCode } from "../../../../lib/invitation-code";
 import { requireUserContext } from "../../../../lib/member";
 import { normalizeEmail } from "../../../../lib/organization-member-email";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const invitationCode = String(body.invitationCode ?? "").trim().toUpperCase();
+    const invitationCode = normalizeInvitationCode(body.invitationCode);
 
     if (!invitationCode) {
       return NextResponse.json({ error: "Invitation code is required." }, { status: 400 });
@@ -35,26 +36,11 @@ export async function POST(request: Request) {
     const { data: org } = await supabaseAdmin
       .from("organizations")
       .select("id, name")
-      .eq("invitation_code", invitationCode)
+      .ilike("invitation_code", invitationCode)
       .maybeSingle();
 
     if (!org) {
       return NextResponse.json({ error: "Invalid invitation code." }, { status: 404 });
-    }
-
-    // Check if membership already exists
-    const { data: existing } = await supabaseAdmin
-      .from("organization_memberships")
-      .select("id")
-      .eq("organization_id", org.id)
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (existing) {
-      return NextResponse.json(
-        { error: "You are already a member of this organization." },
-        { status: 409 }
-      );
     }
 
     const { data: user } = await supabaseAdmin
@@ -71,58 +57,37 @@ export async function POST(request: Request) {
     const { firstName, lastName } = splitName(user?.full_name);
     const now = new Date().toISOString();
 
-    const { data: existingMember } = await supabaseAdmin
+    const { error: memberUpsertError } = await supabaseAdmin
       .from("organization_members")
-      .select("email")
-      .eq("organization_id", org.id)
-      .eq("email", email)
-      .maybeSingle();
-
-    if (existingMember) {
-      const { error: memberUpdateError } = await supabaseAdmin
-        .from("organization_members")
-        .update({
-          first_name: firstName,
-          last_name: lastName,
-          role: "member",
-          updated_at: now,
-        })
-        .eq("organization_id", org.id)
-        .eq("email", email);
-
-      if (memberUpdateError) {
-        return NextResponse.json({ error: "Failed to attach organization member." }, { status: 500 });
-      }
-    } else {
-      const { error: memberInsertError } = await supabaseAdmin
-        .from("organization_members")
-        .insert({
+      .upsert(
+        {
           organization_id: org.id,
           email,
           first_name: firstName,
           last_name: lastName,
           role: "member",
-          created_at: now,
           updated_at: now,
-        });
+        },
+        { onConflict: "organization_id,email" }
+      );
 
-      if (memberInsertError) {
-        return NextResponse.json({ error: "Failed to attach organization member." }, { status: 500 });
-      }
+    if (memberUpsertError) {
+      return NextResponse.json({ error: "Failed to attach organization member." }, { status: 500 });
     }
 
-    // Create membership
-    const { error: insertError } = await supabaseAdmin
+    const { error: membershipUpsertError } = await supabaseAdmin
       .from("organization_memberships")
-      .insert({
-        organization_id: org.id,
-        user_id: userId,
-        role: "member",
-        created_at: now,
-        updated_at: now,
-      });
+      .upsert(
+        {
+          organization_id: org.id,
+          user_id: userId,
+          role: "member",
+          updated_at: now,
+        },
+        { onConflict: "organization_id,user_id" }
+      );
 
-    if (insertError) {
+    if (membershipUpsertError) {
       return NextResponse.json({ error: "Failed to join organization." }, { status: 500 });
     }
 
