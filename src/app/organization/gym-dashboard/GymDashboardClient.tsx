@@ -139,6 +139,7 @@ function UnderConstructionCard({ title }: { title: string }) {
 
 export default function GymDashboardClient({ initialTab, metrics, dashboardData }: Props) {
   void initialTab;
+  void metrics;
 
   return (
     <>

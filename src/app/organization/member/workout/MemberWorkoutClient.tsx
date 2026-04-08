@@ -9,7 +9,6 @@ import {
   Snowflake,
   Trophy,
   Zap,
-  ChevronRight,
   X,
   Plus,
   Minus,

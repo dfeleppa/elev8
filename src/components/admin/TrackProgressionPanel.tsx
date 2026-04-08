@@ -126,6 +126,7 @@ export default function TrackProgressionPanel({
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
   const [applyResult, setApplyResult] = useState<string | null>(null);
+  void progressionId;
 
   // ---- Load existing progression on mount / blockId change ----
   const load = useCallback(async () => {

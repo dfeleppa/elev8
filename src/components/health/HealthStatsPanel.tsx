@@ -67,8 +67,6 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
   const [isLogging, setIsLogging] = useState(false);
   const [logSuccess, setLogSuccess] = useState(false);
 
-  const bodyCompKeys = new Set(["body_weight", "body_fat", "lean_body_mass"]);
-
   useEffect(() => {
     let isMounted = true;
 
@@ -125,12 +123,6 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
       isMounted = false;
     };
   }, []);
-
-  const openProfileEdit = () => {
-    setProfileSex(athleteProfile.sex ?? "");
-    setProfileBirthDate(athleteProfile.birthDate ?? "");
-    setIsEditingProfile(true);
-  };
 
   const cancelProfileEdit = () => {
     setIsEditingProfile(false);
@@ -256,9 +248,22 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                 <div className="mt-4 flex gap-3">
                   <div className="flex flex-1 items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                     <span className="text-sm font-semibold text-slate-200">Sex</span>
-                    <span className="text-sm font-semibold capitalize text-slate-100">
-                      {isLoading ? "..." : athleteProfile.sex ?? "--"}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold capitalize text-slate-100">
+                        {isLoading ? "..." : athleteProfile.sex ?? "--"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileSex(athleteProfile.sex ?? "");
+                          setProfileBirthDate(athleteProfile.birthDate ?? "");
+                          setIsEditingProfile(true);
+                        }}
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-300 transition hover:border-white/20 hover:text-white"
+                      >
+                        Edit
+                      </button>
+                    </div>
                   </div>
                   <div className="flex flex-1 items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                     <span className="text-sm font-semibold text-slate-200">Age</span>

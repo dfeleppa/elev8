@@ -8,15 +8,6 @@ import { Check, ChevronDown, Pencil, X } from "lucide-react";
 
 import SidebarShell from "../../../../components/SidebarShell";
 
-type NutritionDay = {
-  id: string;
-  day_date: string;
-  calorie_target: number | null;
-  protein_target: number | null;
-  carbs_target: number | null;
-  fat_target: number | null;
-};
-
 type NutritionEntry = {
   id: string;
   meal_type: MealKey;
@@ -33,11 +24,6 @@ type NutritionEntry = {
 };
 
 type MealKey = "breakfast" | "lunch" | "dinner" | "snack";
-
-type EntryDraft = {
-  name: string;
-  quantity: string;
-};
 
 type FoodSearchResult = {
   fdcId: number;
@@ -93,11 +79,6 @@ const meals: { key: MealKey; label: string }[] = [
   { key: "dinner", label: "Dinner" },
   { key: "snack", label: "Snack" },
 ];
-
-const emptyDraft: EntryDraft = {
-  name: "",
-  quantity: "1",
-};
 
 const FOOD_LIBRARY_TTL_MS = 2 * 60_000;
 
@@ -179,9 +160,7 @@ function formatGoalLabel(goalType: string | null | undefined) {
 
 export default function HealthNutritionPage() {
   const [selectedDate, setSelectedDate] = useState(() => toLocalDateInputValue(new Date()));
-  const [day, setDay] = useState<NutritionDay | null>(null);
   const [entries, setEntries] = useState<NutritionEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"consumed" | "remaining">("remaining");
   const [showSubMacros, setShowSubMacros] = useState(false);
@@ -189,7 +168,7 @@ export default function HealthNutritionPage() {
   const [searchResults, setSearchResults] = useState<FoodSearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [searchMeal, setSearchMeal] = useState<MealKey>("lunch");
+  const searchMeal: MealKey = "lunch";
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [coachPlanStatus, setCoachPlanStatus] = useState<"loading" | "has" | "none">("loading");
   const [coachPlanSummary, setCoachPlanSummary] = useState<CoachPlanSummary | null>(null);
@@ -242,12 +221,6 @@ export default function HealthNutritionPage() {
     sugar: "",
     fiber: "",
     saturatedFat: "",
-  });
-  const [drafts, setDrafts] = useState<Record<MealKey, EntryDraft>>({
-    breakfast: { ...emptyDraft },
-    lunch: { ...emptyDraft },
-    dinner: { ...emptyDraft },
-    snack: { ...emptyDraft },
   });
   const [targets, setTargets] = useState({
     calories: "",
@@ -314,7 +287,6 @@ export default function HealthNutritionPage() {
 
   useEffect(() => {
     let isActive = true;
-    setLoading(true);
     setError(null);
     fetch(`/api/nutrition-days?date=${selectedDate}`)
       .then(async (response) => {
@@ -325,7 +297,6 @@ export default function HealthNutritionPage() {
         if (!isActive) {
           return;
         }
-        setDay(payload.day);
         setEntries(payload.entries ?? []);
         setTargets({
           calories: payload.day?.calorie_target?.toString() ?? "",
@@ -339,11 +310,7 @@ export default function HealthNutritionPage() {
           setError(err instanceof Error ? err.message : "Unable to load nutrition day.");
         }
       })
-      .finally(() => {
-        if (isActive) {
-          setLoading(false);
-        }
-      });
+      .finally(() => undefined);
     return () => {
       isActive = false;
     };
@@ -418,10 +385,6 @@ export default function HealthNutritionPage() {
     carbs: targetNumbers.carbs - totals.carbs,
     fat: targetNumbers.fat - totals.fat,
   };
-
-  const calorieProgress = targetNumbers.calories
-    ? clampPercent((totals.calories / targetNumbers.calories) * 100)
-    : 0;
 
   const proteinProgress = targetNumbers.protein
     ? clampPercent((totals.protein / targetNumbers.protein) * 100)
@@ -589,82 +552,6 @@ export default function HealthNutritionPage() {
     }
   }
 
-  async function addEntry(mealKey: MealKey) {
-    const draft = drafts[mealKey];
-    const name = draft.name.trim();
-    if (!name) {
-      setError("Entry name is required.");
-      return;
-    }
-
-    const rawQuantity = Number(draft.quantity);
-    const quantity = toEntryQuantity(Number.isFinite(rawQuantity) ? rawQuantity : 1);
-
-    async function lookupFoodByName(foodName: string): Promise<LibraryFood | null> {
-      const lower = foodName.toLowerCase();
-      const exactFromLoaded = myFoods.find((food) => food.name.toLowerCase() === lower);
-      if (exactFromLoaded) {
-        return exactFromLoaded;
-      }
-
-      const { mine: foods } = await loadFoodLibraries({ includeRecent: false, includeMine: true });
-      const exact = foods.find((food) => food.name.toLowerCase() === lower);
-      if (exact) {
-        return exact;
-      }
-      const partial = foods.find((food) => food.name.toLowerCase().includes(lower));
-      if (partial) {
-        return partial;
-      }
-
-      const searchResponse = await fetch(`/api/foods/search?query=${encodeURIComponent(foodName)}`);
-      const searchPayload = await searchResponse.json().catch(() => ({ results: [] }));
-      if (searchResponse.ok && Array.isArray(searchPayload.results) && searchPayload.results.length > 0) {
-        const top = searchPayload.results[0] as FoodSearchResult;
-        return {
-          id: String(top.fdcId),
-          name: top.brandOwner ? `${top.description} (${top.brandOwner})` : top.description,
-          calories: top.calories,
-          protein: top.protein,
-          carbs: top.carbs,
-          fat: top.fat,
-          quantity: 1,
-        };
-      }
-
-      return null;
-    }
-
-    const matchedFood = await lookupFoodByName(name);
-
-    setError(null);
-    const response = await fetch("/api/nutrition-entries", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        dayDate: selectedDate,
-        mealType: mealKey,
-        name: matchedFood?.name ?? name,
-        quantity,
-        calories: matchedFood?.calories ?? null,
-        protein: matchedFood?.protein ?? null,
-        carbs: matchedFood?.carbs ?? null,
-        fat: matchedFood?.fat ?? null,
-      }),
-    });
-    const payload = await response.json();
-    if (!response.ok) {
-      setError(payload?.error ?? "Failed to add entry.");
-      return;
-    }
-
-    setEntries((prev) => [...prev, payload.entry]);
-    setDrafts((prev) => ({
-      ...prev,
-      [mealKey]: { ...emptyDraft },
-    }));
-  }
-
   async function deleteEntry(entryId: string) {
     setError(null);
     const response = await fetch(`/api/nutrition-entries/${entryId}`, {
@@ -784,7 +671,6 @@ export default function HealthNutritionPage() {
         const refresh = await fetch(`/api/nutrition-days?date=${selectedDate}`);
         const payload = await refresh.json();
         if (refresh.ok) {
-          setDay(payload.day);
           setEntries(payload.entries ?? []);
         }
       }
@@ -861,19 +747,6 @@ export default function HealthNutritionPage() {
     setFoodDialogOpen(true);
     setActiveMealDialog(mealKey);
     setDialogTab("recent");
-    setDialogSearch("");
-    setDialogLoading(true);
-    try {
-      await loadFoodLibraries({ includeRecent: true, includeMine: true });
-    } finally {
-      setDialogLoading(false);
-    }
-  }
-
-  async function openFoodManagerDialog() {
-    setFoodDialogOpen(true);
-    setActiveMealDialog(null);
-    setDialogTab("mine");
     setDialogSearch("");
     setDialogLoading(true);
     try {
@@ -1064,6 +937,12 @@ export default function HealthNutritionPage() {
             </button>
           </div>
         </header>
+
+        {error ? (
+          <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+            {error}
+          </div>
+        ) : null}
 
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="glass-panel rounded-3xl border border-white/10 p-6">

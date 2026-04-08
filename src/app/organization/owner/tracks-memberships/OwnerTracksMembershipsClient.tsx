@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   ownerButtonPrimaryClass,
@@ -149,7 +149,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
   const [activeMembersTrack, setActiveMembersTrack] = useState<TrackRow | null>(null);
   const [draft, setDraft] = useState<TrackDraft>(emptyDraft);
 
-  const loadTracks = async () => {
+  const loadTracks = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -167,7 +167,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
     } finally {
       setLoading(false);
     }
-  };
+  }, [organizationId]);
 
   const buildMemberCounts = (rows: MemberAssignmentRow[]) => {
     const counts: Record<string, number> = {};
@@ -179,7 +179,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
     return counts;
   };
 
-  const loadMemberCounts = async () => {
+  const loadMemberCounts = useCallback(async () => {
     try {
       const response = await fetch(`/api/owner/tracks-memberships/members?organizationId=${encodeURIComponent(organizationId)}`, {
         cache: "no-store",
@@ -192,12 +192,12 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
     } catch {
       // Keep existing counts if this background refresh fails.
     }
-  };
+  }, [organizationId]);
 
   useEffect(() => {
     loadTracks();
     loadMemberCounts();
-  }, []);
+  }, [loadMemberCounts, loadTracks]);
 
   const filteredTracks = useMemo(() => {
     const needle = query.trim().toLowerCase();

@@ -14,7 +14,6 @@ import MovementResultsSearch from "../../../../components/health/MovementResults
 import LogLiftCard from "../../../../components/health/LogLiftCard";
 import {
   STAT_GROUP_BY_SLUG,
-  STAT_GROUPS,
 } from "../../../../components/health/health-stats-config";
 
 type TabId = "dashboard" | "benchmarks" | "workouts" | "body-comp" | "movements";
@@ -199,7 +198,8 @@ export default function AthleteDashboardClient({ initialTab, totalWorkoutsLogged
     <>
       {/* Sub-header / tab strip — full-width, flush against top bar */}
       <div className="w-full border-b border-white/10 bg-gradient-to-r from-pink-500/10 via-rose-500/5 to-transparent px-5 py-2">
-        <div className="flex gap-1 px-0">
+        <div className="app-subheader-scroll">
+          <div className="app-subheader-track px-0">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -207,13 +207,14 @@ export default function AthleteDashboardClient({ initialTab, totalWorkoutsLogged
               onClick={() => switchTab(tab.id)}
               className={
                 activeTab === tab.id
-                  ? "rounded-xl border border-[#ffb1c4]/30 bg-[#ffb1c4]/15 px-4 py-2 text-sm font-semibold text-[#ffb1c4] transition-colors"
-                  : "rounded-xl px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200"
+                  ? "shrink-0 whitespace-nowrap rounded-xl border border-[#ffb1c4]/30 bg-[#ffb1c4]/15 px-4 py-2 text-sm font-semibold text-[#ffb1c4] transition-colors"
+                  : "shrink-0 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200"
               }
             >
               {tab.label}
             </button>
           ))}
+          </div>
         </div>
       </div>
 

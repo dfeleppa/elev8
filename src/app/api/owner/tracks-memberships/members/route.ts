@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
         })
         .filter((row): row is { email: string; fullName: string; tracks: string[] } => Boolean(row)),
     });
-  } catch (cause) {
+  } catch {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

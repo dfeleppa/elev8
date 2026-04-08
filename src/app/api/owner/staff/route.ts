@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
       })
       .filter((row): row is { email: string; fullName: string; membership: string | null; role: string } => Boolean(row))
       .filter((row) => !staffEmails.has(row.email));
-  } catch (memberError) {
+  } catch {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 

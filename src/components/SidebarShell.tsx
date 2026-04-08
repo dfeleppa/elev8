@@ -217,6 +217,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       />
     </svg>
   );
+  const canAccessGymView = roleRank[userRole] >= roleRank.coach;
+  const showViewToggle = canAccessGymView;
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -232,16 +234,24 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   useEffect(() => {
     const storedMode = typeof window !== "undefined" ? window.localStorage.getItem("sidebar-view-mode") : null;
     if (storedMode === "gym" || storedMode === "athlete") {
+      if (storedMode === "gym" && !canAccessGymView) {
+        setViewMode("athlete");
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("sidebar-view-mode", "athlete");
+        }
+        return;
+      }
+
       setViewMode(storedMode);
       return;
     }
 
-    if (pathname?.startsWith("/organization/member")) {
+    if (!canAccessGymView || pathname?.startsWith("/organization/member")) {
       setViewMode("athlete");
     } else {
       setViewMode("gym");
     }
-  }, [pathname]);
+  }, [canAccessGymView, pathname]);
 
   useEffect(() => {
     let isMounted = true;
@@ -425,6 +435,10 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const visibleEntries = viewMode === "athlete" ? athleteEntries : gymEntries;
 
   const handleSwitchView = (nextMode: ViewMode) => {
+    if (nextMode === "gym" && !canAccessGymView) {
+      return;
+    }
+
     setViewMode(nextMode);
     if (typeof window !== "undefined") {
       window.localStorage.setItem("sidebar-view-mode", nextMode);
@@ -452,6 +466,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       <path d="M20.2 14.3A8.5 8.5 0 0 1 9.7 3.8a8.9 8.9 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.8" />
     </svg>
   );
+  const gymViewIcon = <Briefcase className="h-4 w-4" aria-hidden="true" />;
+  const athleteViewIcon = <Activity className="h-4 w-4" aria-hidden="true" />;
 
   return (
     <div className="relative z-10 min-h-screen">
@@ -472,36 +488,37 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 className="h-7 w-7"
               />
             </span>
-            <div>
-                <p className="text-sm font-semibold text-slate-100">Elev8</p>
-                <p className="text-xs text-slate-400">Control Center</p>
-              </div>
-            </button>
+          </button>
           <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/10"
-                aria-label={themeToggleLabel}
-              >
-                {themeIcon}
-                <span>{theme === "dark" ? "Light" : "Dark"}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSwitchView("gym")}
-                className={viewMode === "gym" ? "text-[#ffb1c4] border-b-2 border-[#ffb1c4] pb-1 text-xs font-semibold tracking-tighter transition-colors" : "text-slate-400 hover:text-white transition-colors text-xs font-semibold tracking-tighter"}
-              >
-                Gym
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSwitchView("athlete")}
-                className={viewMode === "athlete" ? "text-[#ffb1c4] border-b-2 border-[#ffb1c4] pb-1 text-xs font-semibold tracking-tighter transition-colors" : "text-slate-400 hover:text-white transition-colors text-xs font-semibold tracking-tighter"}
-              >
-                Athlete
-              </button>
-            </div>
+            {showViewToggle ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchView("gym")}
+                  className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                  aria-label="Gym view"
+                >
+                  {gymViewIcon}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchView("athlete")}
+                  className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                  aria-label="Athlete view"
+                >
+                  {athleteViewIcon}
+                </button>
+              </div>
+            ) : null}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-200 transition hover:border-white/30 hover:bg-white/10"
+              aria-label={themeToggleLabel}
+            >
+              {themeIcon}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -515,21 +532,15 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           />
           <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-6">
             <div className="flex items-center justify-between gap-2 px-2">
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
-                  <Image
-                    src="/Elev8rlogo (1).png"
-                    alt="Elev8"
-                    width={28}
-                    height={28}
-                    className="h-7 w-7"
-                  />
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-slate-100">Elev8</p>
-                  <p className="text-xs text-slate-400">Control Center</p>
-                </div>
-              </div>
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
+                <Image
+                  src="/Elev8rlogo (1).png"
+                  alt="Elev8"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7"
+                />
+              </span>
               <button
                 type="button"
                 onClick={() => setMobileSidebarOpen(false)}
@@ -667,31 +678,34 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             )}
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-6">
-              <button
-                type="button"
-                onClick={() => handleSwitchView("gym")}
-                className={viewMode === "gym" ? "text-[#ffb1c4] border-b-2 border-[#ffb1c4] pb-1 font-semibold tracking-tighter transition-colors" : "text-slate-400 hover:text-white transition-colors font-semibold tracking-tighter"}
-              >
-                Gym
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSwitchView("athlete")}
-                className={viewMode === "athlete" ? "text-[#ffb1c4] border-b-2 border-[#ffb1c4] pb-1 font-semibold tracking-tighter transition-colors" : "text-slate-400 hover:text-white transition-colors font-semibold tracking-tighter"}
-              >
-                Athlete
-              </button>
-            </div>
+            {showViewToggle ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchView("gym")}
+                  className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                  aria-label="Gym view"
+                >
+                  {gymViewIcon}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchView("athlete")}
+                  className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                  aria-label="Athlete view"
+                >
+                  {athleteViewIcon}
+                </button>
+              </div>
+            ) : null}
 
             <button
               type="button"
               onClick={toggleTheme}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
               aria-label={themeToggleLabel}
             >
               {themeIcon}
-              <span className="text-xs font-semibold">{theme === "dark" ? "Light" : "Dark"}</span>
             </button>
 
             <button
@@ -717,15 +731,17 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </span>
             </button>
 
-            <Link
-              href="/organization/admin/content"
-              className="inline-flex items-center text-slate-300 transition hover:text-white"
-              aria-label="Messenger"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                <path d="M4 6h16v10H8l-4 3z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.7" />
-              </svg>
-            </Link>
+            {canAccessGymView ? (
+              <Link
+                href="/organization/admin/content"
+                className="inline-flex items-center text-slate-300 transition hover:text-white"
+                aria-label="Messenger"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                  <path d="M4 6h16v10H8l-4 3z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.7" />
+                </svg>
+              </Link>
+            ) : null}
 
             <button
               type="button"
@@ -738,36 +754,38 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </svg>
             </button>
 
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setMenuOpen((open) => !open)}
-                className="inline-flex items-center text-slate-300 transition hover:text-white"
-                aria-label="More options"
-                aria-expanded={menuOpen}
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                  <circle cx="12" cy="5" r="1.8" fill="currentColor" />
-                  <circle cx="12" cy="12" r="1.8" fill="currentColor" />
-                  <circle cx="12" cy="19" r="1.8" fill="currentColor" />
-                </svg>
-              </button>
-              {menuOpen ? (
-                <div className="absolute right-0 z-40 mt-2 w-56 rounded-xl border border-white/15 bg-[#161a20] p-2 shadow-2xl">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      importInputRef.current?.click();
-                    }}
-                    disabled={isImportingResults}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-white/10 disabled:opacity-60"
-                  >
-                    {isImportingResults ? "Importing workout results..." : "Import Workout Results (CSV)"}
-                  </button>
-                </div>
-              ) : null}
-            </div>
+            {canAccessGymView ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((open) => !open)}
+                  className="inline-flex items-center text-slate-300 transition hover:text-white"
+                  aria-label="More options"
+                  aria-expanded={menuOpen}
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                    <circle cx="12" cy="5" r="1.8" fill="currentColor" />
+                    <circle cx="12" cy="12" r="1.8" fill="currentColor" />
+                    <circle cx="12" cy="19" r="1.8" fill="currentColor" />
+                  </svg>
+                </button>
+                {menuOpen ? (
+                  <div className="absolute right-0 z-40 mt-2 w-56 rounded-xl border border-white/15 bg-[#161a20] p-2 shadow-2xl">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        importInputRef.current?.click();
+                      }}
+                      disabled={isImportingResults}
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-white/10 disabled:opacity-60"
+                    >
+                      {isImportingResults ? "Importing workout results..." : "Import Workout Results (CSV)"}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </header>
 

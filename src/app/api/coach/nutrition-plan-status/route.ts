@@ -85,8 +85,7 @@ export async function GET() {
           }
         : null,
     });
-  } catch (queryError) {
-    const message = queryError instanceof Error ? queryError.message : "Unable to check coach plan status.";
+  } catch {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

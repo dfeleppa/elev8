@@ -818,21 +818,23 @@ export default function OwnerScheduleClient() {
             </div>
           ) : null}
 
-          <div className="flex flex-wrap gap-2 border-b border-cyan-500/20 pb-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                className={`rounded-t-lg px-3 py-2 text-sm transition ${
-                  activeTab === tab.key
-                    ? "border-b-2 border-[#00c5ff] text-slate-100"
-                    : "text-slate-300 hover:text-slate-100"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="app-subheader-scroll border-b border-cyan-500/20 pb-2">
+            <div className="app-subheader-track gap-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`shrink-0 whitespace-nowrap rounded-t-lg px-3 py-2 text-sm transition ${
+                    activeTab === tab.key
+                      ? "border-b-2 border-[#00c5ff] text-slate-100"
+                      : "text-slate-300 hover:text-slate-100"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {view === "calendar" ? (

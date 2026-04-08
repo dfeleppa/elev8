@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Award, Calendar, Edit2, Save, Shield, User, X } from "lucide-react";
 
 type UserProfile = {
@@ -33,11 +33,7 @@ export default function AccountDashboardClient({ userId }: { userId: string }) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  useEffect(() => {
-    fetchAccountData();
-  }, [userId]);
-
-  async function fetchAccountData() {
+  const fetchAccountData = useCallback(async () => {
     try {
       const [profileRes, workoutsRes] = await Promise.all([
         fetch("/api/me"),
@@ -70,7 +66,11 @@ export default function AccountDashboardClient({ userId }: { userId: string }) {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchAccountData();
+  }, [fetchAccountData]);
 
   async function handleSaveName() {
     if (!editName.trim()) return;

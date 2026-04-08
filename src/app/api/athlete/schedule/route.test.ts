@@ -30,7 +30,7 @@ class MockQueryBuilder {
 
   constructor(private readonly table: keyof Database) {}
 
-  select(_columns: string) {
+  select() {
     this.action = "select";
     return this;
   }

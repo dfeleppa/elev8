@@ -10,8 +10,6 @@ import type { OwnerMemberRow } from "./page";
 type SortColumn = keyof OwnerMemberRow;
 type SortDirection = "asc" | "desc";
 
-const columns = ["member", "status", "membership", "tags", "tracks", "gender", "birth_date", "attendance_count", "last_check_in", "last_active"] as const;
-
 const externalIcon = (
   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
     <path d="M8 8h8v8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />

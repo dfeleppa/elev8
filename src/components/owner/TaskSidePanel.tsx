@@ -56,7 +56,6 @@ export default function TaskSidePanel({ task, projects, onClose }: TaskSidePanel
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, onClose]);
 
   const saveTask = useCallback(async () => {
@@ -92,7 +91,7 @@ export default function TaskSidePanel({ task, projects, onClose }: TaskSidePanel
       saveTask();
     }, 500);
     return () => clearTimeout(timeout);
-  }, [status, projectId, dueDate, priority, notes]);
+  }, [task, status, projectId, dueDate, priority, notes, saveTask]);
 
   if (!task) return null;
 

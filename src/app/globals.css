@@ -157,6 +157,26 @@ h6 {
   background: var(--app-bg-elevated);
 }
 
+.app-subheader-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.app-subheader-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.app-subheader-track {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+}
+
 .card-fade-in {
   animation: fadeInUp 0.9s ease forwards;
   opacity: 0;

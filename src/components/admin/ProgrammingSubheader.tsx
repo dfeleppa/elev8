@@ -13,7 +13,8 @@ export default function ProgrammingSubheader() {
 
   return (
     <div className="w-full border-b border-white/10 bg-gradient-to-r from-indigo-500/10 via-violet-500/5 to-transparent px-5 py-2">
-      <div className="flex gap-1 flex-wrap">
+      <div className="app-subheader-scroll">
+        <div className="app-subheader-track">
         {TABS.map((tab) => {
           const isActive =
             tab.href === "/organization/admin/programming"
@@ -25,14 +26,15 @@ export default function ProgrammingSubheader() {
               href={tab.href}
               className={
                 isActive
-                  ? "rounded-xl border border-indigo-400/30 bg-indigo-400/15 px-4 py-2 text-sm font-semibold text-indigo-300 transition-colors"
-                  : "rounded-xl px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200"
+                  ? "shrink-0 whitespace-nowrap rounded-xl border border-indigo-400/30 bg-indigo-400/15 px-4 py-2 text-sm font-semibold text-indigo-300 transition-colors"
+                  : "shrink-0 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200"
               }
             >
               {tab.label}
             </Link>
           );
         })}
+        </div>
       </div>
     </div>
   );

@@ -117,7 +117,8 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
             {error}
           </div>
         ) : null}
-        <div className="flex gap-1">
+        <div className="app-subheader-scroll">
+          <div className="app-subheader-track">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -125,8 +126,8 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
               onClick={() => switchTab(tab.id)}
               className={
                 activeTab === tab.id
-                  ? "rounded-xl border border-[#ffb1c4]/30 bg-[#ffb1c4]/15 px-4 py-2 text-sm font-semibold text-[#ffb1c4] transition-colors"
-                  : "rounded-xl px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200"
+                  ? "shrink-0 whitespace-nowrap rounded-xl border border-[#ffb1c4]/30 bg-[#ffb1c4]/15 px-4 py-2 text-sm font-semibold text-[#ffb1c4] transition-colors"
+                  : "shrink-0 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200"
               }
             >
               {tab.label}
@@ -142,6 +143,7 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
               )}
             </button>
           ))}
+          </div>
         </div>
       </div>
 

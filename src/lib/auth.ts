@@ -60,7 +60,6 @@ const providers: NextAuthOptions["providers"] = [
 // Only add Apple provider if credentials are configured
 if (appleClientId && appleClientSecret) {
   // Dynamic import not needed — next-auth/providers/apple is a lightweight module
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const AppleProvider = require("next-auth/providers/apple").default;
   providers.push(
     AppleProvider({
