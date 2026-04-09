@@ -216,7 +216,7 @@ async function getDashboardData(organizationId: string, members: GymMemberRow[])
       .eq("organization_id", organizationId)
       .order("class_time", { ascending: true }),
     supabaseAdmin.from("programming_tracks").select("id, name").eq("organization_id", organizationId),
-    getOrganizationBillingMetrics(organizationId, { allowLiveStripeFallback: false }),
+    getOrganizationBillingMetrics(organizationId),
     supabaseAdmin
       .from("stripe_transactions")
       .select("id, type, amount, currency, status, description, created_at")

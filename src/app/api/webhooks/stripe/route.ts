@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../lib/supabase-admin";
+import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import { stripe } from "../../../../lib/stripe";
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 type StripeCustomer = {
@@ -516,9 +516,7 @@ export async function POST(request: NextRequest) {
         if (session.subscription) {
           try {
             const remoteSubscription = await stripe.subscriptions.retrieve(session.subscription);
-            if (remoteSubscription && !remoteSubscription.deleted) {
-              await upsertSubscription(organizationId, remoteSubscription as StripeSubscription);
-            }
+            await upsertSubscription(organizationId, remoteSubscription as StripeSubscription);
           } catch {
             // Keep processing resilient even if subscription retrieval fails.
           }

@@ -100,8 +100,9 @@ create index if not exists health_stat_entries_member_idx
 alter table if exists organization_members
   add column if not exists email text;
 
-create unique index if not exists organization_members_email_key
-  on organization_members(email);
+create unique index if not exists organization_members_org_email_key
+  on organization_members(organization_id, email)
+  where email is not null;
 
 alter table if exists training_events
   add column if not exists member_id uuid;

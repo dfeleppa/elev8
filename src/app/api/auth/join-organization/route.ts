@@ -62,16 +62,33 @@ export async function POST(request: Request) {
       .upsert(
         {
           organization_id: org.id,
+          member_id: userId,
           email,
           first_name: firstName,
           last_name: lastName,
           role: "member",
+          created_at: now,
           updated_at: now,
         },
         { onConflict: "organization_id,email" }
       );
 
     if (memberUpsertError) {
+      console.error("join-organization organization_members upsert failed", {
+        userId,
+        organizationId: org.id,
+        email,
+        code: memberUpsertError.code,
+        message: memberUpsertError.message,
+      });
+
+      if (memberUpsertError.code === "23505") {
+        return NextResponse.json(
+          { error: "This email is already attached to another organization member record." },
+          { status: 409 }
+        );
+      }
+
       return NextResponse.json({ error: "Failed to attach organization member." }, { status: 500 });
     }
 
@@ -88,6 +105,13 @@ export async function POST(request: Request) {
       );
 
     if (membershipUpsertError) {
+      console.error("join-organization organization_memberships upsert failed", {
+        userId,
+        organizationId: org.id,
+        code: membershipUpsertError.code,
+        message: membershipUpsertError.message,
+      });
+
       return NextResponse.json({ error: "Failed to join organization." }, { status: 500 });
     }
 

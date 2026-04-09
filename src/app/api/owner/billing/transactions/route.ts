@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasRole, requireUserContext } from "../../../../../lib/member";
 import { supabaseAdmin } from "../../../../../lib/supabase-admin";
-
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const TRANSACTIONS_CACHE_TTL_MS = 30_000;
 
 type TransactionsPayload = {
@@ -47,7 +45,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Try Supabase cache first (populated by webhooks)
     const { data: cachedTransactions, error: cacheError } = await supabaseAdmin
       .from("stripe_transactions")
       .select("*")
@@ -55,77 +52,24 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(limit);
 
-    // If cache has data and we're not forcing refresh, use it
-    if (!cacheError && cachedTransactions && cachedTransactions.length > 0 && !forceRefresh) {
-      const formattedTransactions = cachedTransactions.map((tx: any) => ({
-        id: tx.id,
-        type: tx.type as "payment" | "refund",
-        amount: tx.amount,
-        currency: tx.currency || "usd",
-        status: tx.status,
-        customer_email: tx.stripe_customer_id, // Limited info in cache
-        customer_name: "N/A",
-        description: tx.description || (tx.type === "payment" ? "Payment" : "Refund"),
-        created_at: tx.created_at,
-      }));
-
-      const payload: TransactionsPayload = {
-        transactions: formattedTransactions,
-        total_count: formattedTransactions.length,
-      };
-
-      transactionsCache.set(cacheKey, {
-        value: payload,
-        expiresAt: Date.now() + TRANSACTIONS_CACHE_TTL_MS,
-      });
-
-      return NextResponse.json(payload, {
-        headers: {
-          "Cache-Control": "private, max-age=20, stale-while-revalidate=20",
-        },
-      });
+    if (cacheError) {
+      throw new Error(cacheError.message);
     }
 
-    // Fallback to Stripe API
-    const [charges, refunds] = await Promise.all([
-      stripe.charges.list({
-        limit,
-        expand: ["data.customer"]
-      }),
-      stripe.refunds.list({
-        limit: 20,
-        expand: ["data.charge"]
-      }),
-    ]);
-
-    // Combine and sort by date
-    const transactions = [
-      ...charges.data.map((charge: any) => ({
-        id: charge.id,
-        type: "payment",
-        amount: charge.amount / 100,
-        currency: charge.currency.toUpperCase(),
-        status: charge.status,
-        customer_email: charge.customer?.email || "Unknown",
-        customer_name: charge.customer?.name || "Unknown",
-        description: charge.description || "Payment",
-        created_at: new Date(charge.created * 1000).toISOString(),
-      })),
-      ...refunds.data.map((refund: any) => ({
-        id: refund.id,
-        type: "refund",
-        amount: refund.amount / 100,
-        currency: refund.currency?.toUpperCase() || "USD",
-        status: refund.status,
-        customer_email: refund.charge?.customer?.email || "Unknown",
-        customer_name: refund.charge?.customer?.name || "Unknown",
-        description: `Refund: ${refund.reason || "N/A"}`,
-        created_at: new Date(refund.created * 1000).toISOString(),
-      })),
-    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const transactions = (cachedTransactions ?? []).map((tx: any) => ({
+      id: tx.id,
+      type: tx.type as "payment" | "refund",
+      amount: tx.amount,
+      currency: tx.currency || "usd",
+      status: tx.status,
+      customer_email: tx.stripe_customer_id,
+      customer_name: "N/A",
+      description: tx.description || (tx.type === "payment" ? "Payment" : "Refund"),
+      created_at: tx.created_at,
+    }));
 
     const payload: TransactionsPayload = {
-      transactions: transactions.slice(0, limit),
+      transactions,
       total_count: transactions.length,
     };
 

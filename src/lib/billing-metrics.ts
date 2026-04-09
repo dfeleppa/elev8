@@ -1,7 +1,5 @@
 import { supabaseAdmin } from "./supabase-admin";
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
 const METRICS_CACHE_TTL_MS = 30 * 60_000;
 
 type BillingMetricsPayload = {
@@ -17,65 +15,6 @@ type BillingMetricsPayload = {
 
 const metricsCache = new Map<string, { value: BillingMetricsPayload; expiresAt: number }>();
 const refreshInFlight = new Map<string, Promise<BillingMetricsPayload>>();
-
-async function listAllSubscriptions() {
-  const subscriptions: any[] = [];
-  let hasMore = true;
-  let startingAfter: string | undefined;
-
-  while (hasMore) {
-    const page = await stripe.subscriptions.list({
-      status: "all",
-      limit: 100,
-      starting_after: startingAfter,
-    });
-
-    subscriptions.push(...page.data);
-    hasMore = page.has_more;
-    startingAfter = page.data.length ? page.data[page.data.length - 1].id : undefined;
-  }
-
-  return subscriptions;
-}
-
-async function listAllCharges() {
-  const charges: any[] = [];
-  let hasMore = true;
-  let startingAfter: string | undefined;
-
-  while (hasMore) {
-    const page = await stripe.charges.list({
-      limit: 100,
-      starting_after: startingAfter,
-    });
-
-    charges.push(...page.data);
-    hasMore = page.has_more;
-    startingAfter = page.data.length ? page.data[page.data.length - 1].id : undefined;
-  }
-
-  return charges;
-}
-
-function monthlyAmountForPriceItem(item: any) {
-  const unitAmount = item?.price?.unit_amount ?? 0;
-  const quantity = item?.quantity ?? 1;
-  const recurring = item?.price?.recurring;
-  if (!recurring) {
-    return 0;
-  }
-
-  const interval = recurring.interval;
-  const intervalCount = recurring.interval_count ?? 1;
-  const amount = unitAmount * quantity;
-
-  if (interval === "month") return amount / intervalCount;
-  if (interval === "year") return amount / (12 * intervalCount);
-  if (interval === "week") return (amount * 52) / (12 * intervalCount);
-  if (interval === "day") return (amount * 30) / intervalCount;
-
-  return 0;
-}
 
 function cacheValue(cacheKey: string, value: BillingMetricsPayload) {
   metricsCache.set(cacheKey, {
@@ -146,80 +85,29 @@ async function loadFromWebhookCache(organizationId: string): Promise<BillingMetr
   };
 }
 
-async function loadFromStripeApi(): Promise<BillingMetricsPayload> {
-  const [subscriptions, charges] = await Promise.all([listAllSubscriptions(), listAllCharges()]);
-
-  let mrrCents = 0;
-  let activeCount = 0;
-  const uniqueCustomers = new Set<string>();
-
-  for (const sub of subscriptions as any[]) {
-    if (sub.customer) uniqueCustomers.add(String(sub.customer));
-    if (sub.status === "active" || sub.status === "trialing") {
-      activeCount += 1;
-      const items = sub.items?.data ?? [];
-      for (const item of items) {
-        mrrCents += monthlyAmountForPriceItem(item);
-      }
-    }
-  }
-
-  let grossRevenueCents = 0;
-  let refundedCents = 0;
-  for (const charge of charges as any[]) {
-    if (charge.customer) uniqueCustomers.add(String(charge.customer));
-    if (charge.paid) {
-      grossRevenueCents += charge.amount ?? 0;
-      refundedCents += charge.amount_refunded ?? 0;
-    }
-  }
-
-  const totalRevenue = (grossRevenueCents - refundedCents) / 100;
-  const totalCustomers = uniqueCustomers.size;
-  const mrr = mrrCents / 100;
-  const arr = mrr * 12;
-  const ltv = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
-
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  let churnedThisMonth = 0;
-  for (const sub of subscriptions as any[]) {
-    if (sub.status === "canceled" && sub.canceled_at) {
-      const canceledDate = new Date(sub.canceled_at * 1000);
-      if (canceledDate >= monthStart) churnedThisMonth += 1;
-    }
-  }
-
-  const churnRate = totalCustomers > 0 ? (churnedThisMonth / totalCustomers) * 100 : 0;
-
-  return {
-    mrr: parseFloat(mrr.toFixed(2)),
-    arr: parseFloat(arr.toFixed(2)),
-    ltv: parseFloat(ltv.toFixed(2)),
-    active_subscriptions: activeCount,
-    total_customers: totalCustomers,
-    churn_rate: parseFloat(churnRate.toFixed(2)),
-    total_revenue: parseFloat(totalRevenue.toFixed(2)),
-    timestamp: new Date().toISOString(),
-  };
-}
-
 async function refreshMetrics(cacheKey: string, organizationId: string) {
   const webhookMetrics = await loadFromWebhookCache(organizationId);
   if (webhookMetrics) {
     return cacheValue(cacheKey, webhookMetrics);
   }
 
-  const stripeMetrics = await loadFromStripeApi();
-  return cacheValue(cacheKey, stripeMetrics);
+  return cacheValue(cacheKey, {
+    mrr: 0,
+    arr: 0,
+    ltv: 0,
+    active_subscriptions: 0,
+    total_customers: 0,
+    churn_rate: 0,
+    total_revenue: 0,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 export async function getOrganizationBillingMetrics(
   organizationId: string,
-  options?: { forceRefresh?: boolean; allowLiveStripeFallback?: boolean }
+  options?: { forceRefresh?: boolean }
 ): Promise<BillingMetricsPayload> {
   const forceRefresh = options?.forceRefresh === true;
-  const allowLiveStripeFallback = options?.allowLiveStripeFallback !== false;
   const cacheKey = `org:${organizationId}`;
   const cached = metricsCache.get(cacheKey);
 
@@ -241,24 +129,6 @@ export async function getOrganizationBillingMetrics(
 
   if (refreshInFlight.has(cacheKey)) {
     return refreshInFlight.get(cacheKey) as Promise<BillingMetricsPayload>;
-  }
-
-  if (!allowLiveStripeFallback) {
-    const webhookMetrics = await loadFromWebhookCache(organizationId);
-    if (webhookMetrics) {
-      return cacheValue(cacheKey, webhookMetrics);
-    }
-
-    return {
-      mrr: 0,
-      arr: 0,
-      ltv: 0,
-      active_subscriptions: 0,
-      total_customers: 0,
-      churn_rate: 0,
-      total_revenue: 0,
-      timestamp: new Date().toISOString(),
-    };
   }
 
   const refreshPromise = refreshMetrics(cacheKey, organizationId).finally(() => {
