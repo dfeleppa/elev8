@@ -85,7 +85,7 @@ export default function CoachSetupClient() {
       .then(async (response) => {
         const payload = await response.json().catch(() => null);
         if (!response.ok) {
-          throw new Error(payload?.error ?? "Failed to load coach setup data.");
+          throw new Error(payload?.error ?? "Failed to load nutrition coach data.");
         }
         if (!active) {
           return;
@@ -128,7 +128,7 @@ export default function CoachSetupClient() {
       })
       .catch((err) => {
         if (active) {
-          setError(err instanceof Error ? err.message : "Failed to load coach setup data.");
+          setError(err instanceof Error ? err.message : "Failed to load nutrition coach data.");
         }
       })
       .finally(() => {
@@ -224,13 +224,13 @@ export default function CoachSetupClient() {
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-400">Loading coach setup...</p>;
+    return <p className="text-sm text-slate-400">Loading nutrition coach...</p>;
   }
 
   return (
     <section className="space-y-6">
       <header>
-        <h1 className="text-3xl font-semibold text-slate-100">Coach Setup</h1>
+        <h1 className="text-3xl font-semibold text-slate-100">Nutrition Coach</h1>
         <p className="mt-3 text-sm text-slate-400">
           Build a nutrition plan in 5 steps, then apply today&apos;s targets.
         </p>

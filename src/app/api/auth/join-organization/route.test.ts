@@ -6,7 +6,9 @@ const normalizeEmailMock = vi.fn((value: unknown) => (typeof value === "string" 
 
 const organizationsMaybeSingleMock = vi.fn();
 const usersMaybeSingleMock = vi.fn();
-const organizationMembersUpsertMock = vi.fn();
+const organizationMembersMaybeSingleMock = vi.fn();
+const organizationMembersUpdateMock = vi.fn();
+const organizationMembersInsertMock = vi.fn();
 const organizationMembershipsUpsertMock = vi.fn();
 const fromMock = vi.fn((table: string) => {
   if (table === "organizations") {
@@ -31,7 +33,15 @@ const fromMock = vi.fn((table: string) => {
 
   if (table === "organization_members") {
     return {
-      upsert: organizationMembersUpsertMock,
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: organizationMembersMaybeSingleMock,
+          })),
+        })),
+      })),
+      update: organizationMembersUpdateMock,
+      insert: organizationMembersInsertMock,
     };
   }
 
@@ -81,7 +91,11 @@ describe("join organization route", () => {
       error: null,
     });
 
-    organizationMembersUpsertMock.mockResolvedValue({ error: null });
+    organizationMembersMaybeSingleMock.mockResolvedValue({ data: null, error: null });
+    organizationMembersUpdateMock.mockReturnValue({
+      eq: vi.fn(() => Promise.resolve({ error: null })),
+    });
+    organizationMembersInsertMock.mockResolvedValue({ error: null });
     organizationMembershipsUpsertMock.mockResolvedValue({ error: null });
   });
 
@@ -104,7 +118,7 @@ describe("join organization route", () => {
       organizationName: "Elev8 HQ",
     });
 
-    expect(organizationMembersUpsertMock).toHaveBeenCalledWith(
+    expect(organizationMembersInsertMock).toHaveBeenCalledWith(
       expect.objectContaining({
         organization_id: "org-1",
         member_id: "user-1",
@@ -113,7 +127,6 @@ describe("join organization route", () => {
         last_name: "Athlete",
         role: "member",
       }),
-      { onConflict: "organization_id,email" }
     );
 
     expect(organizationMembershipsUpsertMock).toHaveBeenCalledWith(
@@ -126,8 +139,40 @@ describe("join organization route", () => {
     );
   });
 
-  it("returns a conflict when a stale global email uniqueness rule blocks the member attach", async () => {
-    organizationMembersUpsertMock.mockResolvedValue({
+  it("updates an existing member row before creating the membership", async () => {
+    const updateEqMock = vi.fn(() => Promise.resolve({ error: null }));
+    organizationMembersMaybeSingleMock.mockResolvedValue({
+      data: { id: "member-row-1" },
+      error: null,
+    });
+    organizationMembersUpdateMock.mockReturnValue({
+      eq: updateEqMock,
+    });
+
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("http://localhost/api/auth/join-organization", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invitationCode: "elev8" }),
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(organizationMembersUpdateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organization_id: "org-1",
+        member_id: "user-1",
+        email: "alex@example.com",
+      })
+    );
+    expect(updateEqMock).toHaveBeenCalledWith("id", "member-row-1");
+    expect(organizationMembersInsertMock).not.toHaveBeenCalled();
+  });
+
+  it("returns a conflict when the member insert hits a uniqueness error", async () => {
+    organizationMembersInsertMock.mockResolvedValue({
       error: {
         code: "23505",
         message: "duplicate key value violates unique constraint organization_members_email_key",

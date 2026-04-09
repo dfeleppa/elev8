@@ -71,6 +71,8 @@ const navItems: NavItem[] = [
         minRole: "coach",
         children: [
           { label: "Gym Dashboard", href: "/organization/gym-dashboard", minRole: "coach" },
+          { label: "Nutrition Coach", href: "/organization/coach/nutrition-coach", minRole: "coach" },
+          { label: "Schedule", href: "/organization/coach/schedule", minRole: "coach" },
           { label: "Reports - Members", href: "/organization/coach/reports-members", minRole: "coach" },
         ],
       },
@@ -107,6 +109,7 @@ const navItems: NavItem[] = [
           { label: "Athlete Dashboard", href: "/organization/member/athlete-dashboard", minRole: "member" },
           { label: "Workout", href: "/organization/member/workout", minRole: "member" },
           { label: "Nutrition", href: "/organization/member/nutrition", minRole: "member" },
+          { label: "Nutrition Coach", href: "/organization/member/nutrition-coach", minRole: "member" },
           { label: "Class Schedule", href: "/organization/member/class-schedule", minRole: "member" },
           { label: "Account Dashboard", href: "/organization/member/account-dashboard", minRole: "member" },
           { label: "Store", href: "/organization/member/store", minRole: "member" },
@@ -183,6 +186,11 @@ function getNavIcon(href: string) {
     case "/organization/admin/programming/builder":
     case "/organization/member/workout":
       return <Dumbbell {...iconProps} />;
+    case "/organization/coach/nutrition-coach":
+    case "/organization/member/nutrition-coach":
+      return <HandPlatter {...iconProps} />;
+    case "/organization/coach/schedule":
+      return <CalendarDays {...iconProps} />;
     case "/organization/coach/reports-members":
       return <ClipboardList {...iconProps} />;
     case "/organization/member/athlete-dashboard":

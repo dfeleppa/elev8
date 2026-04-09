@@ -18,6 +18,7 @@ export default async function CoachSchedulePage() {
         description="Coordinate classes, assign coaching coverage, and keep athlete sessions balanced throughout the week."
         links={[
           { label: "Open Gym Dashboard", href: "/organization/gym-dashboard" },
+          { label: "Open Nutrition Coach", href: "/organization/coach/nutrition-coach" },
           { label: "Open Member Reports", href: "/organization/coach/reports-members" },
         ]}
       />

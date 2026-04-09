@@ -101,8 +101,7 @@ alter table if exists organization_members
   add column if not exists email text;
 
 create unique index if not exists organization_members_org_email_key
-  on organization_members(organization_id, email)
-  where email is not null;
+  on organization_members(organization_id, email);
 
 alter table if exists training_events
   add column if not exists member_id uuid;

@@ -18,6 +18,7 @@ export default async function CoachReportsMembersPage() {
         description="Review athlete adherence, attendance patterns, and progress trends to inform next coaching decisions."
         links={[
           { label: "Open Coach Schedule", href: "/organization/coach/schedule" },
+          { label: "Open Nutrition Coach", href: "/organization/coach/nutrition-coach" },
           { label: "Open Gym Dashboard", href: "/organization/gym-dashboard" },
         ]}
       />

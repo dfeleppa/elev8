@@ -20,6 +20,7 @@ export default async function OrganizationMemberPage() {
           { label: "Open Athlete Dashboard", href: "/organization/member/athlete-dashboard" },
           { label: "Open Workout", href: "/organization/member/workout" },
           { label: "Open Nutrition", href: "/organization/member/nutrition" },
+          { label: "Open Nutrition Coach", href: "/organization/member/nutrition-coach" },
         ]}
       />
     </SidebarShell>

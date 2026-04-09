@@ -57,32 +57,55 @@ export async function POST(request: Request) {
     const { firstName, lastName } = splitName(user?.full_name);
     const now = new Date().toISOString();
 
-    const { error: memberUpsertError } = await supabaseAdmin
-      .from("organization_members")
-      .upsert(
-        {
-          organization_id: org.id,
-          member_id: userId,
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          role: "member",
-          created_at: now,
-          updated_at: now,
-        },
-        { onConflict: "organization_id,email" }
-      );
+    const memberPayload = {
+      organization_id: org.id,
+      member_id: userId,
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      role: "member",
+      updated_at: now,
+    };
 
-    if (memberUpsertError) {
-      console.error("join-organization organization_members upsert failed", {
+    const { data: existingMember, error: existingMemberError } = await supabaseAdmin
+      .from("organization_members")
+      .select("id")
+      .eq("organization_id", org.id)
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existingMemberError) {
+      console.error("join-organization organization_members lookup failed", {
         userId,
         organizationId: org.id,
         email,
-        code: memberUpsertError.code,
-        message: memberUpsertError.message,
+        code: existingMemberError.code,
+        message: existingMemberError.message,
       });
 
-      if (memberUpsertError.code === "23505") {
+      return NextResponse.json({ error: "Failed to attach organization member." }, { status: 500 });
+    }
+
+    const memberWrite = existingMember?.id
+      ? await supabaseAdmin
+          .from("organization_members")
+          .update(memberPayload)
+          .eq("id", existingMember.id)
+      : await supabaseAdmin.from("organization_members").insert({
+          ...memberPayload,
+          created_at: now,
+        });
+
+    if (memberWrite.error) {
+      console.error("join-organization organization_members write failed", {
+        userId,
+        organizationId: org.id,
+        email,
+        code: memberWrite.error.code,
+        message: memberWrite.error.message,
+      });
+
+      if (memberWrite.error.code === "23505") {
         return NextResponse.json(
           { error: "This email is already attached to another organization member record." },
           { status: 409 }

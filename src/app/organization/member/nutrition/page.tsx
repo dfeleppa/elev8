@@ -1091,10 +1091,10 @@ export default function HealthNutritionPage() {
           {coachPlanStatus === "none" ? (
             <div className="relative flex h-full flex-col items-center justify-center glass-panel rounded-3xl border border-white/10 p-6">
               <Link
-                href="/organization/coach"
+                        href="/organization/member/nutrition-coach"
                 className="rounded-full bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] px-6 py-2.5 text-sm font-semibold text-[#031525] transition hover:brightness-110"
-              >
-                Coach Setup
+                      >
+                        Nutrition Coach
               </Link>
             </div>
           ) : coachPlanStatus === "loading" ? (
