@@ -73,6 +73,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>com.googleusercontent.apps.1040487190199-0bh5spcsn3k97h2cf1oog90ha691tmrf</string>
 				<string>io.supabase.flutter</string>
 			</array>
 		</dict>
