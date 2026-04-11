@@ -54,6 +54,7 @@ dev_dependencies:
 
 dependency_overrides:
   app_links: ^7.0.0
+  path_provider_foundation: 2.5.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
