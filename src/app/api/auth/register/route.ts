@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         );
       }
       return NextResponse.json(
-        { error: result.message ?? "Failed to create account." },
+        { error: result.code === "supabase_error" ? result.message : "Failed to create account." },
         { status: 500 }
       );
     }
