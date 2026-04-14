@@ -46,3 +46,4 @@ app.*.map.json
 
 # Dotenv
 .env
+.dart_tool/

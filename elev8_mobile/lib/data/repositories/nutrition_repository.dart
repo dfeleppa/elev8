@@ -2,10 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum NutritionGoal {
-  loseWeight('lose_weight', 'Lose weight'),
-  gainWeight('gain_weight', 'Gain weight'),
-  maintain('maintain', 'Maintain weight'),
-  bodyRecomp('body_recomp', 'Body recomp');
+  loseWeight('lose_weight', 'Lose Weight'),
+  gainWeight('gain_weight', 'Gain Weight'),
+  maintain('maintain_weight', 'Maintain'),
+  performanceReverse('performance_reverse_diet', 'Performance / Reverse');
 
   final String id;
   final String label;
@@ -48,14 +48,14 @@ final coachPlanStatusProvider = FutureProvider<CoachPlanStatus?>((ref) async {
 });
 
 class CoachPlanStatus {
-  static const double kgToLbsRatio = 2.20462;
-  static const int checkInDotsCount = 10; // 10-week visual indicator
+  static const double lbsPerKg = 2.20462;
+  static const int checkInDotsCount = 10;
 
   final bool hasPlan;
   final String? goalType;
-  final double? startWeight; // kg
-  final double? currentWeight; // kg
-  final double? targetWeight; // kg
+  final double? startWeight; // lbs
+  final double? currentWeight; // lbs
+  final double? targetWeight; // lbs
   final DateTime? effectiveDate;
   final DateTime? lastCheckInDate;
   final DateTime? nextCheckInDate;
@@ -71,61 +71,80 @@ class CoachPlanStatus {
     this.nextCheckInDate,
   });
 
-  double? _convertKgToLbs(double? kg) => kg != null ? kg * kgToLbsRatio : null;
-
-  double? get startWeightLbs => _convertKgToLbs(startWeight);
-  double? get currentWeightLbs => _convertKgToLbs(currentWeight);
-  double? get targetWeightLbs => _convertKgToLbs(targetWeight);
-
   String get goalLabel {
-    return NutritionGoal.fromString(goalType)?.label ?? goalType ?? 'Unknown';
+    return NutritionGoal.fromString(goalType)?.label ?? goalType ?? 'Plan Active';
   }
 
-  String get checkInLabel {
-    final last = lastCheckInDate;
-    if (last == null) return 'No check-ins yet';
-    final diff = DateTime.now().difference(last).inDays;
-    if (diff == 0) return 'Today';
-    if (diff == 1) return 'Yesterday';
-    return '$diff days ago';
+  double? get weightProgressPercent {
+    if (startWeight == null || targetWeight == null || currentWeight == null) return null;
+    final totalDelta = (startWeight! - targetWeight!).abs();
+    if (totalDelta == 0) return 100;
+    final progressed = (startWeight! - currentWeight!).abs();
+    return (progressed / totalDelta * 100).clamp(0, 100);
+  }
+
+  int get daysUntilCheckIn {
+    if (nextCheckInDate == null) return 7;
+    final diff = nextCheckInDate!.difference(DateTime.now()).inDays;
+    return diff.clamp(0, 10);
   }
 
   List<bool> get checkInDots {
-    if (lastCheckInDate == null) return List.filled(checkInDotsCount, false);
-    final daysSinceEffective = effectiveDate != null
-        ? DateTime.now().difference(effectiveDate!).inDays
-        : 0;
-    if (daysSinceEffective <= 0) return List.filled(checkInDotsCount, false);
-    final completed = (daysSinceEffective / 7).floor().clamp(0, checkInDotsCount);
+    if (effectiveDate == null) return List.filled(checkInDotsCount, false);
+    final daysSinceStart = DateTime.now().difference(effectiveDate!).inDays;
+    if (daysSinceStart <= 0) return List.filled(checkInDotsCount, false);
+    final completed = (daysSinceStart / 7).floor().clamp(0, checkInDotsCount);
     return List.generate(checkInDotsCount, (i) => i < completed);
   }
 }
 
 class NutritionRepository {
   final SupabaseClient _client;
+  String? _cachedAppUserId;
 
-  NutritionRepository(this._client);
-
-  String _formatDate(DateTime date) {
-    return date.toIso8601String().split('T').first;
+  NutritionRepository(this._client) {
+    // Clear the resolved ID on sign-out so re-login gets a fresh lookup.
+    _client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.signedOut) {
+        _cachedAppUserId = null;
+      }
+    });
   }
 
-  Future<Map<String, dynamic>?> fetchNutritionDay(DateTime date) async {
-    final user = _client.auth.currentUser;
-    if (user == null) return null;
-
-    final dateStr = _formatDate(date);
-
+  /// Resolves the internal app_users.id for the signed-in user.
+  ///
+  /// The web app creates app_users rows via NextAuth (no Supabase Auth), so
+  /// app_users.id is a plain UUID unrelated to auth.uid().  The mobile app
+  /// stamps supabase_auth_uid on every login so we can bridge the two systems.
+  Future<String?> _resolveAppUserId() async {
+    if (_cachedAppUserId != null) return _cachedAppUserId;
+    final authUser = _client.auth.currentUser;
+    if (authUser == null) return null;
     try {
-      final response = await _client
+      final result = await _client
+          .from('app_users')
+          .select('id')
+          .eq('supabase_auth_uid', authUser.id)
+          .maybeSingle();
+      _cachedAppUserId = result?['id'] as String?;
+    } catch (_) {}
+    return _cachedAppUserId;
+  }
+
+  String _formatDate(DateTime date) => date.toIso8601String().split('T').first;
+
+  Future<Map<String, dynamic>?> fetchNutritionDay(DateTime date) async {
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return null;
+    final dateStr = _formatDate(date);
+    try {
+      return await _client
           .from('nutrition_days')
           .select('*, nutrition_entries(*)')
-          .eq('member_id', user.id)
+          .eq('member_id', appUserId)
           .eq('day_date', dateStr)
           .maybeSingle();
-
-      return response;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
@@ -140,21 +159,17 @@ class NutritionRepository {
     required num? carbs,
     required num? fat,
   }) async {
-    final user = _client.auth.currentUser;
-    if (user == null) return;
-
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
     final dateStr = _formatDate(date);
-
-    final response = await _client.from('nutrition_days').upsert({
-      'member_id': user.id,
+    final dayResp = await _client.from('nutrition_days').upsert({
+      'member_id': appUserId,
       'day_date': dateStr,
       'updated_at': DateTime.now().toIso8601String(),
     }, onConflict: 'member_id,day_date').select('id').single();
-
-    final dayId = response['id'];
-
+    final dayId = dayResp['id'];
     await _client.from('nutrition_entries').insert({
-      'member_id': user.id,
+      'member_id': appUserId,
       'day_id': dayId,
       'meal_type': mealType,
       'entry_name': name,
@@ -179,41 +194,56 @@ class NutritionRepository {
     }).eq('id', entryId);
   }
 
-  Future<void> deleteMealEntries(DateTime date, String mealType) async {
-    final user = _client.auth.currentUser;
-    if (user == null) return;
-    
-    final dateStr = _formatDate(date);
-    
-    final dayResp = await _client.from('nutrition_days').select('id').eq('member_id', user.id).eq('day_date', dateStr).maybeSingle();
-    if (dayResp == null) return;
-    
-    await _client.from('nutrition_entries').delete().eq('day_id', dayResp['id']).eq('meal_type', mealType);
+  Future<void> updateNutritionEntry(String id, Map<String, dynamic> fields) async {
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    await _client.from('nutrition_entries').update({
+      ...fields,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', id).eq('member_id', appUserId);
   }
 
-  Future<void> copyMealToDate(DateTime sourceDate, String mealType, DateTime targetDate, String targetMeal) async {
-     final user = _client.auth.currentUser;
-     if (user == null) return;
+  Future<void> deleteMealEntries(DateTime date, String mealType) async {
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    final dateStr = _formatDate(date);
+    final dayResp = await _client.from('nutrition_days')
+        .select('id').eq('member_id', appUserId).eq('day_date', dateStr).maybeSingle();
+    if (dayResp == null) return;
+    await _client.from('nutrition_entries')
+        .delete().eq('day_id', dayResp['id']).eq('meal_type', mealType);
+  }
 
-     final sourceDateStr = _formatDate(sourceDate);
-     final targetDateStr = _formatDate(targetDate);
+  Future<void> copyMealToDate({
+    required DateTime sourceDate,
+    required String sourceMeal,
+    required DateTime targetDate,
+    required String targetMeal,
+  }) async {
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    final sourceStr = _formatDate(sourceDate);
+    final targetStr = _formatDate(targetDate);
 
-     final dayResp = await _client.from('nutrition_days').select('id, nutrition_entries(*)').eq('member_id', user.id).eq('day_date', sourceDateStr).maybeSingle();
-     if (dayResp == null) return;
+    final dayResp = await _client.from('nutrition_days')
+        .select('id, nutrition_entries(*)')
+        .eq('member_id', appUserId).eq('day_date', sourceStr).maybeSingle();
+    if (dayResp == null) return;
 
-     final entriesToCopy = (dayResp['nutrition_entries'] as List<dynamic>).where((e) => e['meal_type'] == mealType).toList();
-     if (entriesToCopy.isEmpty) return;
+    final entriesToCopy = (dayResp['nutrition_entries'] as List<dynamic>)
+        .where((e) => e['meal_type'] == sourceMeal).toList();
+    if (entriesToCopy.isEmpty) return;
 
-     final targetDayResp = await _client.from('nutrition_days').upsert({
-      'member_id': user.id,
-      'day_date': targetDateStr,
+    final targetDayResp = await _client.from('nutrition_days').upsert({
+      'member_id': appUserId,
+      'day_date': targetStr,
       'updated_at': DateTime.now().toIso8601String(),
-     }, onConflict: 'member_id,day_date').select('id').single();
+    }, onConflict: 'member_id,day_date').select('id').single();
 
-     final targetDayId = targetDayResp['id'];
-
-     final insertions = entriesToCopy.map((entry) => {
-        'member_id': user.id,
+    final targetDayId = targetDayResp['id'];
+    final insertions = entriesToCopy.map((entry) {
+      return <String, dynamic>{
+        'member_id': appUserId,
         'day_id': targetDayId,
         'meal_type': targetMeal,
         'entry_name': entry['entry_name'],
@@ -223,39 +253,35 @@ class NutritionRepository {
         'carbs': entry['carbs'],
         'fat': entry['fat'],
         'updated_at': DateTime.now().toIso8601String(),
-     }).toList();
+      };
+    }).toList();
 
-     await _client.from('nutrition_entries').insert(insertions);
+    await _client.from('nutrition_entries').insert(insertions);
   }
 
-  Future<List<Map<String, dynamic>>> fetchRecentFoods() async {
-    final user = _client.auth.currentUser;
-    if (user == null) return [];
+  // ---- Food Library ----
 
+  Future<List<Map<String, dynamic>>> fetchRecentFoods({int limit = 40}) async {
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return [];
     try {
       final response = await _client
           .from('nutrition_entries')
           .select('entry_name, calories, protein, carbs, fat, quantity')
-          .eq('member_id', user.id)
+          .eq('member_id', appUserId)
           .order('created_at', ascending: false)
           .limit(400);
-
       final seen = <String>{};
       final results = <Map<String, dynamic>>[];
-
       for (var row in response as List<dynamic>) {
         final name = (row['entry_name'] as String?)?.trim() ?? '';
         if (name.isEmpty) continue;
-        
         final key = name.toLowerCase();
         if (seen.contains(key)) continue;
-
         seen.add(key);
         results.add(row);
-        
-        if (results.length >= 30) break;
+        if (results.length >= limit) break;
       }
-
       return results;
     } catch (_) {
       return [];
@@ -263,81 +289,94 @@ class NutritionRepository {
   }
 
   Future<List<Map<String, dynamic>>> fetchMyFoods() async {
-    final user = _client.auth.currentUser;
-    if (user == null) return [];
-
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return [];
     try {
       final response = await _client
-        .from('nutrition_custom_foods')
-        .select('id, name, calories, protein, carbs, fat, created_at')
-        .eq('member_id', user.id)
-        .order('created_at', ascending: false);
-
+          .from('nutrition_custom_foods')
+          .select('id, name, calories, protein, carbs, fat, created_at')
+          .eq('member_id', appUserId)
+          .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
     } catch (_) {
       return [];
     }
   }
 
-  Future<void> addCustomFood({
+  Future<Map<String, dynamic>?> addCustomFood({
     required String name,
     required num? calories,
     required num? protein,
     required num? carbs,
     required num? fat,
   }) async {
-    final user = _client.auth.currentUser;
-    if (user == null) return;
-
-    await _client.from('nutrition_custom_foods').insert({
-      'member_id': user.id,
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return null;
+    final response = await _client.from('nutrition_custom_foods').insert({
+      'member_id': appUserId,
       'name': name,
       'calories': calories,
       'protein': protein,
       'carbs': carbs,
       'fat': fat,
       'updated_at': DateTime.now().toIso8601String(),
-    });
+    }).select().single();
+    return Map<String, dynamic>.from(response);
+  }
+
+  Future<void> updateCustomFood(String id, Map<String, dynamic> fields) async {
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    await _client.from('nutrition_custom_foods').update({
+      ...fields,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', id).eq('member_id', appUserId);
   }
 
   Future<void> deleteCustomFood(String id) async {
     await _client.from('nutrition_custom_foods').delete().eq('id', id);
   }
 
-  Future<void> _updateWithTimestamp(String tableName, String id, Map<String, dynamic> fields) async {
-    final user = _client.auth.currentUser;
-    if (user == null) return;
-    await _client.from(tableName).update({
-      ...fields,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', id).eq('member_id', user.id);
+  // ---- USDA Search ----
+
+  Future<List<Map<String, dynamic>>> searchUsdaFoods(String query) async {
+    if (query.trim().length < 2) return [];
+    if (_client.auth.currentUser == null) return [];
+    try {
+      final response = await _client.functions.invoke('usda-food-search', body: {'query': query.trim()});
+      if (response.data != null) {
+        final List<dynamic> results = response.data['results'] ?? [];
+        return results.map((r) => Map<String, dynamic>.from(r)).toList();
+      }
+    } catch (_) {}
+    try {
+      final session = _client.auth.currentSession;
+      if (session == null) return [];
+      final resp = await _client.rpc('search_usda_foods', params: {'query_text': query.trim(), 'limit_count': 12});
+      return List<Map<String, dynamic>>.from(resp ?? []);
+    } catch (_) {}
+    return [];
   }
 
-  Future<void> updateNutritionEntry(String id, Map<String, dynamic> fields) =>
-    _updateWithTimestamp('nutrition_entries', id, fields);
-
-  Future<void> updateCustomFood(String id, Map<String, dynamic> fields) =>
-    _updateWithTimestamp('nutrition_custom_foods', id, fields);
+  // ---- Coach Plan ----
 
   Future<CoachPlanStatus?> fetchCoachPlanStatus() async {
-    final user = _client.auth.currentUser;
-    if (user == null) return null;
-
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return null;
     try {
-      // Fetch plan, profile, and weight data in parallel
       final results = await Future.wait([
         _client
             .from('coach_nutrition_plans')
-            .select('goal_type, target_weight_kg, effective_date, last_check_in_date, next_check_in_date, plan_payload')
-            .eq('member_id', user.id)
+            .select('goal_type, target_weight_lbs, effective_date, last_check_in_date, next_check_in_date')
+            .eq('member_id', appUserId)
             .order('effective_date', ascending: false)
             .limit(1)
             .maybeSingle(),
-        _client.from('app_users').select('current_weight_kg').eq('id', user.id).maybeSingle(),
+        _client.from('app_users').select('current_weight_kg').eq('id', appUserId).maybeSingle(),
         _client
             .from('health_stat_entries')
             .select('value, entry_date')
-            .eq('member_id', user.id)
+            .eq('member_id', appUserId)
             .eq('stat_key', 'body_weight')
             .order('entry_date', ascending: false)
             .limit(1)
@@ -346,44 +385,69 @@ class NutritionRepository {
 
       final planResp = results[0] as Map<String, dynamic>?;
       final profileResp = results[1] as Map<String, dynamic>?;
-      final weightEntryResp = results[2] as Map<String, dynamic>?;
+      final weightEntry = results[2] as Map<String, dynamic>?;
 
-      if (planResp == null) {
-        return CoachPlanStatus(hasPlan: false);
-      }
+      if (planResp == null) return CoachPlanStatus(hasPlan: false);
 
-      final planPayload = (planResp['plan_payload'] as Map<String, dynamic>?) ?? {};
-      final startWeightKg = _numFrom(planPayload['weightKg']) ?? _numFrom(profileResp?['current_weight_kg']);
-      final currentWeightKg = _numFrom(weightEntryResp?['value']) ??
-          _numFrom(profileResp?['current_weight_kg']) ??
-          startWeightKg;
+      double? kgToLbs(double? kg) => kg != null ? kg * CoachPlanStatus.lbsPerKg : null;
+      double? parseNumeric(dynamic v) =>
+          v == null ? null : double.tryParse(v.toString());
+
+      final startKg = parseNumeric(profileResp?['current_weight_kg']);
+      final currentKg = parseNumeric(weightEntry?['value']) ?? parseNumeric(profileResp?['current_weight_kg']);
 
       return CoachPlanStatus(
         hasPlan: true,
         goalType: planResp['goal_type'] as String?,
-        startWeight: startWeightKg,
-        currentWeight: currentWeightKg,
-        targetWeight: _numFrom(planResp['target_weight_kg']),
+        startWeight: kgToLbs(startKg),
+        currentWeight: kgToLbs(currentKg),
+        targetWeight: parseNumeric(planResp['target_weight_lbs']),
         effectiveDate: planResp['effective_date'] != null
-            ? DateTime.tryParse(planResp['effective_date'] as String)
-            : null,
+            ? DateTime.tryParse(planResp['effective_date'] as String) : null,
         lastCheckInDate: planResp['last_check_in_date'] != null
-            ? DateTime.tryParse(planResp['last_check_in_date'] as String)
-            : null,
+            ? DateTime.tryParse(planResp['last_check_in_date'] as String) : null,
         nextCheckInDate: planResp['next_check_in_date'] != null
-            ? DateTime.tryParse(planResp['next_check_in_date'] as String)
-            : null,
+            ? DateTime.tryParse(planResp['next_check_in_date'] as String) : null,
       );
     } catch (_) {
       return null;
     }
   }
 
-  double? _numFrom(dynamic value) {
-    if (value == null) return null;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is num) return value.toDouble();
-    return null;
+  Future<void> updateCoachGoal(String goalType) async {
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    final plan = await _client.from('coach_nutrition_plans')
+        .select('id')
+        .eq('member_id', appUserId)
+        .order('effective_date', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    if (plan == null) return;
+    await _client.from('coach_nutrition_plans').update({
+      'goal_type': goalType,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', plan['id']);
+  }
+
+  Future<void> updateDayTargets({
+    required DateTime date,
+    required num? calorieTarget,
+    required num? proteinTarget,
+    required num? carbsTarget,
+    required num? fatTarget,
+  }) async {
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    final dateStr = _formatDate(date);
+    await _client.from('nutrition_days').upsert({
+      'member_id': appUserId,
+      'day_date': dateStr,
+      'calorie_target': calorieTarget,
+      'protein_target': proteinTarget,
+      'carbs_target': carbsTarget,
+      'fat_target': fatTarget,
+      'updated_at': DateTime.now().toIso8601String(),
+    }, onConflict: 'member_id,day_date');
   }
 }

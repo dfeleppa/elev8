@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:go_router/go_router.dart';
 
 import 'components/sidebar_shell.dart';
 import 'components/bottom_nav_bar.dart';
-import 'data/repositories/workout_repository.dart';
+import 'workout_repository.dart';
 
 final userNameProvider = FutureProvider<String?>((ref) async {
-  final user = Supabase.instance.client.auth.currentUser;
-  if (user == null) return "Guest";
-  
-  // Try to fetch full name from app_users table based on the schema
+  final client = Supabase.instance.client;
+  final authUser = client.auth.currentUser;
+  if (authUser == null) return 'Athlete';
+
+  // Prefer the name stored in app_users (kept in sync with Google on every login).
   try {
-    final response = await Supabase.instance.client
+    final response = await client
         .from('app_users')
         .select('full_name')
-        .eq('id', user.id)
+        .eq('supabase_auth_uid', authUser.id)
         .maybeSingle();
-    
-    return response?['full_name'] as String? ?? user.email?.split('@').first ?? 'Athlete';
-  } catch (e) {
-    return user.email?.split('@').first ?? 'Athlete';
-  }
+
+    final dbName = response?['full_name'] as String?;
+    if (dbName != null && dbName.trim().isNotEmpty) return dbName.trim();
+  } catch (_) {}
+
+  // Fall back to the name Google put in the auth token metadata.
+  final meta = authUser.userMetadata;
+  final metaName = (meta?['full_name'] ?? meta?['name']) as String?;
+  if (metaName != null && metaName.trim().isNotEmpty) return metaName.trim();
+
+  return 'Athlete';
 });
 
 class DashboardScreen extends ConsumerWidget {

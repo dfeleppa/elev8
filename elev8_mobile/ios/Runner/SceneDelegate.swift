@@ -20,19 +20,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func handleIncomingURL(_ url: URL) {
+        // Always forward the URL to the AppDelegate so Flutter plugins
+        // (app_links / supabase_flutter) can process OAuth callbacks.
         guard let appDelegate = UIApplication.shared.delegate as? FlutterAppDelegate else { return }
-        // iOS 26+: scene delegate lifecycle handles URL routing automatically
-        // iOS < 26: forward via the legacy app delegate method
-        if #available(iOS 26.0, *) {
-            // No-op: URL already routed through scene(_:openURLContexts:)
-        } else {
-            _openURLLegacy(appDelegate: appDelegate, url: url)
-        }
-    }
-
-    // Deprecated in iOS 26.0 — only called on older OS versions.
-    @available(iOS, deprecated: 26.0, message: "Use scene delegate URL context routing")
-    private func _openURLLegacy(appDelegate: FlutterAppDelegate, url: URL) {
         appDelegate.application(UIApplication.shared, open: url, options: [:])
     }
 

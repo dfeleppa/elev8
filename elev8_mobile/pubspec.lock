@@ -18,7 +18,7 @@ packages:
     source: hosted
     version: "10.0.1"
   app_links:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: app_links
       sha256: "3462d9defc61565fde4944858b59bec5be2b9d5b05f20aed190adb3ad08a7abc"
@@ -257,7 +257,7 @@ packages:
     source: hosted
     version: "2.1.0"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412"
@@ -911,4 +911,4 @@ packages:
     version: "2.1.0"
 sdks:
   dart: ">=3.11.1 <4.0.0"
-  flutter: ">=3.38.0"
+  flutter: ">=3.38.1"

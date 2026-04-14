@@ -59,13 +59,17 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>LSApplication​Queries​Schemes</key>
+	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>https</string>
 		<string>http</string>
 		<string>mailto</string>
 		<string>tel</string>
+		<string>io.supabase.flutter</string>
+		<string>com.googleusercontent.apps.1040487190199-0bh5spcsn3k97h2cf1oog90ha691tmrf</string>
 	</array>
+	<key>FlutterDeepLinkingEnabled</key>
+	<true/>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -78,9 +82,9 @@
 			</array>
 		</dict>
 	</array>
-	<key>NSApp​Transport​Security</key>
+	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllows​Arbitrary​Loads</key>
+		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
 	<key>UISupportedInterfaceOrientations~ipad</key>
