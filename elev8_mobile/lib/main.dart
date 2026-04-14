@@ -55,6 +55,19 @@ Future<void> main() async {
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
+    redirect: (context, state) {
+      final isAuthenticated =
+          Supabase.instance.client.auth.currentSession != null;
+      final isAuthRoute = state.matchedLocation == '/auth';
+
+      if (!isAuthenticated && !isAuthRoute) {
+        return '/auth';
+      }
+      if (isAuthenticated && isAuthRoute) {
+        return '/';
+      }
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/',

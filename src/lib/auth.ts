@@ -2,10 +2,9 @@ import type { NextAuthOptions } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import bcrypt from "bcryptjs";
 
-import { isOrganizationMemberEmailReserved, normalizeEmail } from "./organization-member-email";
 import { supabaseAdmin } from "./supabase-admin";
+import { loginWithEmailPassword, upsertSupabaseAuthOAuthUser } from "./supabase-auth-admin";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -15,14 +14,6 @@ if (!googleClientId || !googleClientSecret) {
 
 const appleClientId = process.env.APPLE_CLIENT_ID;
 const appleClientSecret = process.env.APPLE_CLIENT_SECRET;
-
-function splitName(fullName: string | null | undefined) {
-  const trimmed = (fullName ?? "").trim();
-  if (!trimmed) {
-    return { fullName: null } as const;
-  }
-  return { fullName: trimmed } as const;
-}
 
 // Build providers list
 const providers: NextAuthOptions["providers"] = [
@@ -41,19 +32,10 @@ const providers: NextAuthOptions["providers"] = [
       if (!credentials?.email || !credentials?.password) return null;
 
       const email = credentials.email.toLowerCase().trim();
+      const result = await loginWithEmailPassword(email, credentials.password);
 
-      const { data: user } = await supabaseAdmin
-        .from("app_users")
-        .select("id, email, full_name, password_hash")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (!user || !user.password_hash) return null;
-
-      const valid = await bcrypt.compare(credentials.password, user.password_hash);
-      if (!valid) return null;
-
-      return { id: user.id, email: user.email, name: user.full_name };
+      if (!result.ok) return null;
+      return { id: result.userId, email: result.email, name: result.fullName };
     },
   }),
 ];
@@ -81,37 +63,12 @@ export const authOptions: NextAuthOptions = {
       // For credentials, the user was already verified in authorize()
       if (account?.provider === "credentials") return true;
 
-      // For OAuth providers, upsert the user record
-      const email = normalizeEmail(user.email);
+      // For OAuth providers, upsert in Supabase Auth so iOS can also log in
+      const email = user.email;
       if (!email) return false;
 
-      const { fullName } = splitName(user.name);
-      const { data: existingUser } = await supabaseAdmin
-        .from("app_users")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (!existingUser && (await isOrganizationMemberEmailReserved(email))) {
-        return "/login?error=reserved_email";
-      }
-
-      if (existingUser) {
-        await supabaseAdmin
-          .from("app_users")
-          .update({
-            full_name: fullName,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", existingUser.id);
-      } else {
-        await supabaseAdmin.from("app_users").insert({
-          email,
-          full_name: fullName,
-          updated_at: new Date().toISOString(),
-        });
-      }
-
+      const result = await upsertSupabaseAuthOAuthUser(email, user.name ?? null);
+      if (!result.ok) return result.redirect;
       return true;
     },
 
