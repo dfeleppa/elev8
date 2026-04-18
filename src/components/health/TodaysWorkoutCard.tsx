@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Dumbbell, Flame, Snowflake, Zap } from "lucide-react";
+import { AccentCard, Micro } from "@/components/ui";
 
 type Block = {
   id: string;
@@ -53,11 +54,8 @@ function blockIcon(type: string) {
   return <Zap className="h-3.5 w-3.5 text-yellow-400" />;
 }
 
-function blockAccent(type: string) {
-  if (type === "warmup") return "border-orange-400/20 bg-orange-400/5";
-  if (type === "lift") return "border-blue-400/20 bg-blue-400/5";
-  if (type === "cooldown") return "border-cyan-400/20 bg-cyan-400/5";
-  return "border-yellow-400/20 bg-yellow-400/5";
+function blockAccent(_type: string) {
+  return "border-black/10 bg-black/10";
 }
 
 export default function TodaysWorkoutCard() {
@@ -140,14 +138,12 @@ export default function TodaysWorkoutCard() {
   }, [loadWorkout]);
 
   return (
-    <div className="glass-panel flex flex-col rounded-3xl border border-white/10 p-6">
+    <AccentCard tone="violet" className="flex flex-col">
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-          Today&apos;s Workout
-        </p>
+        <Micro onAccent as="p">Today&apos;s Workout</Micro>
         <Link
           href="/organization/member/workout"
-          className="flex items-center gap-1 text-xs font-medium text-[#ffb1c4] transition hover:text-pink-300"
+          className="flex items-center gap-1 text-xs font-medium opacity-70 transition hover:opacity-100"
         >
           View full
           <ArrowRight className="h-3.5 w-3.5" />
@@ -157,12 +153,12 @@ export default function TodaysWorkoutCard() {
       {loading ? (
         <div className="flex flex-1 flex-col gap-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-10 animate-pulse rounded-xl bg-white/5" />
+            <div key={i} className="h-10 animate-pulse rounded-xl bg-black/10" />
           ))}
         </div>
       ) : noWorkout ? (
         <div className="flex flex-1 items-center justify-center py-6">
-          <p className="text-sm text-slate-500">No workout scheduled for today.</p>
+          <p className="text-sm opacity-50">No workout scheduled for today.</p>
         </div>
       ) : (
         <div className="flex flex-1 flex-col gap-2">
@@ -175,11 +171,11 @@ export default function TodaysWorkoutCard() {
               >
                 <span className="mt-0.5 shrink-0">{blockIcon(block.block_type)}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-100">{block.title}</p>
+                  <p className="truncate text-sm font-semibold">{block.title}</p>
                   {plainDesc ? (
-                    <p className="mt-0.5 line-clamp-1 text-xs text-slate-400">{plainDesc}</p>
+                    <p className="mt-0.5 line-clamp-1 text-xs opacity-60">{plainDesc}</p>
                   ) : block.score_type && SCORE_LABEL[block.score_type] ? (
-                    <p className="mt-0.5 text-xs text-slate-500">{SCORE_LABEL[block.score_type]}</p>
+                    <p className="mt-0.5 text-xs opacity-50">{SCORE_LABEL[block.score_type]}</p>
                   ) : null}
                 </div>
               </div>
@@ -187,6 +183,6 @@ export default function TodaysWorkoutCard() {
           })}
         </div>
       )}
-    </div>
+    </AccentCard>
   );
 }
