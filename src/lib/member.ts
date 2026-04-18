@@ -94,34 +94,38 @@ export async function requireUserContextFromBearer(request: Request): Promise<Us
   let userRow: { id: string; role: string | null; full_name?: string | null } | null = null;
   let userError: { message: string } | null = null;
 
-  const lookups = [
-    supabaseAdmin
-      .from("app_users")
-      .select("id, role, full_name")
-      .eq("supabase_auth_uid", userId)
-      .maybeSingle(),
-    supabaseAdmin
+  // Try supabase_auth_uid first, then id, then email
+  const byUid = await supabaseAdmin
+    .from("app_users")
+    .select("id, role, full_name")
+    .eq("supabase_auth_uid", userId)
+    .maybeSingle();
+
+  if (!byUid.error && byUid.data) {
+    userRow = byUid.data;
+  } else {
+    const byId = await supabaseAdmin
       .from("app_users")
       .select("id, role, full_name")
       .eq("id", userId)
-      .maybeSingle(),
-    if (email)
-      supabaseAdmin
+      .maybeSingle();
+
+    if (!byId.error && byId.data) {
+      userRow = byId.data;
+    } else if (email) {
+      const byEmail = await supabaseAdmin
         .from("app_users")
         .select("id, role, full_name")
         .eq("email", email)
-        .maybeSingle(),
-  ];
+        .maybeSingle();
 
-  for (const lookup of lookups) {
-    const result = await lookup;
-    if (result.error) {
-      userError = result.error;
-      continue;
-    }
-    if (result.data) {
-      userRow = result.data;
-      break;
+      if (!byEmail.error && byEmail.data) {
+        userRow = byEmail.data;
+      } else {
+        userError = byEmail.error ?? byId.error ?? byUid.error;
+      }
+    } else {
+      userError = byId.error ?? byUid.error;
     }
   }
 
