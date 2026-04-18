@@ -93,18 +93,78 @@ class CoachPlanStatus {
   }
 
   int get daysUntilCheckIn {
-    if (nextCheckInDate == null) return 7;
-    final diff = nextCheckInDate!.difference(DateTime.now()).inDays;
-    return diff.clamp(0, 10);
+    final timeline = _checkInTimeline;
+    return timeline.daysUntilNext;
   }
 
   List<bool> get checkInDots {
-    if (effectiveDate == null) return List.filled(checkInDotsCount, false);
-    final daysSinceStart = DateTime.now().difference(effectiveDate!).inDays;
-    if (daysSinceStart <= 0) return List.filled(checkInDotsCount, false);
-    final completed = (daysSinceStart / 7).floor().clamp(0, checkInDotsCount);
-    return List.generate(checkInDotsCount, (i) => i < completed);
+    final timeline = _checkInTimeline;
+    return List.generate(checkInDotsCount, (i) => i < timeline.filledBars);
   }
+
+  _CheckInTimelineData get _checkInTimeline {
+    final current = DateTime.now();
+    final today = DateTime(current.year, current.month, current.day);
+    final dayInMs = const Duration(days: 1).inMilliseconds;
+    final baseLast = lastCheckInDate ?? effectiveDate;
+    final baseNext = nextCheckInDate;
+
+    DateTime? normalize(DateTime? value) {
+      if (value == null) return null;
+      return DateTime(value.year, value.month, value.day);
+    }
+
+    final parsedLast = normalize(baseLast);
+    final parsedNext =
+        normalize(baseNext) ??
+        (parsedLast != null ? parsedLast.add(const Duration(days: 10)) : null);
+
+    if (parsedLast != null && parsedNext != null) {
+      final totalDays =
+          ((parsedNext.millisecondsSinceEpoch -
+                      parsedLast.millisecondsSinceEpoch) /
+                  dayInMs)
+              .round()
+              .clamp(1, 10 * checkInDotsCount);
+      final elapsedDays =
+          ((today.millisecondsSinceEpoch - parsedLast.millisecondsSinceEpoch) /
+                  dayInMs)
+              .round()
+              .clamp(0, totalDays);
+      final filledBars = ((elapsedDays / totalDays) * checkInDotsCount)
+          .floor()
+          .clamp(0, checkInDotsCount);
+      final daysUntilNext =
+          ((parsedNext.millisecondsSinceEpoch - today.millisecondsSinceEpoch) /
+                  dayInMs)
+              .ceil()
+              .clamp(0, 10);
+
+      return _CheckInTimelineData(
+        filledBars: filledBars,
+        daysUntilNext: daysUntilNext,
+      );
+    }
+
+    final epochDays = (today.millisecondsSinceEpoch / dayInMs).floor();
+    final elapsedSinceLast = ((epochDays % 10) + 10) % 10;
+    final filledBars = (elapsedSinceLast + 1).clamp(0, checkInDotsCount);
+
+    return _CheckInTimelineData(
+      filledBars: filledBars,
+      daysUntilNext: (10 - filledBars).clamp(0, 10),
+    );
+  }
+}
+
+class _CheckInTimelineData {
+  final int filledBars;
+  final int daysUntilNext;
+
+  const _CheckInTimelineData({
+    required this.filledBars,
+    required this.daysUntilNext,
+  });
 }
 
 class NutritionRepository {
@@ -142,11 +202,111 @@ class NutritionRepository {
 
   String _formatDate(DateTime date) => date.toIso8601String().split('T').first;
 
+  double? _parseNumeric(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  bool _areTargetsUnset(Map<String, dynamic> day) {
+    return day['calorie_target'] == null &&
+        day['protein_target'] == null &&
+        day['carbs_target'] == null &&
+        day['fat_target'] == null;
+  }
+
+  Future<Map<String, dynamic>?> _getCoachPlanTargets(
+    String appUserId,
+    String dateStr,
+  ) async {
+    try {
+      final plan = await _client
+          .from('coach_nutrition_plans')
+          .select('target_calories, protein_grams, carbs_grams, fat_grams')
+          .eq('member_id', appUserId)
+          .lte('effective_date', dateStr)
+          .order('effective_date', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      if (plan == null) return null;
+
+      return {
+        'calorie_target': _parseNumeric(plan['target_calories']),
+        'protein_target': _parseNumeric(plan['protein_grams']),
+        'carbs_target': _parseNumeric(plan['carbs_grams']),
+        'fat_target': _parseNumeric(plan['fat_grams']),
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> _ensureNutritionDay({
+    required String appUserId,
+    required DateTime date,
+  }) async {
+    final dateStr = _formatDate(date);
+
+    try {
+      final day = await _client
+          .from('nutrition_days')
+          .select(
+            'id, day_date, calorie_target, protein_target, carbs_target, fat_target',
+          )
+          .eq('member_id', appUserId)
+          .eq('day_date', dateStr)
+          .maybeSingle();
+
+      if (day == null) {
+        final planTargets = await _getCoachPlanTargets(appUserId, dateStr);
+        if (planTargets == null) return null;
+
+        return await _client
+            .from('nutrition_days')
+            .upsert({
+              'member_id': appUserId,
+              'day_date': dateStr,
+              ...planTargets,
+              'updated_at': DateTime.now().toIso8601String(),
+            }, onConflict: 'member_id,day_date')
+            .select(
+              'id, day_date, calorie_target, protein_target, carbs_target, fat_target',
+            )
+            .single();
+      }
+
+      if (_areTargetsUnset(day)) {
+        final planTargets = await _getCoachPlanTargets(appUserId, dateStr);
+        if (planTargets != null) {
+          return await _client
+              .from('nutrition_days')
+              .update({
+                ...planTargets,
+                'updated_at': DateTime.now().toIso8601String(),
+              })
+              .eq('id', day['id'])
+              .eq('member_id', appUserId)
+              .select(
+                'id, day_date, calorie_target, protein_target, carbs_target, fat_target',
+              )
+              .single();
+        }
+      }
+
+      return Map<String, dynamic>.from(day);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> fetchNutritionDay(DateTime date) async {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return null;
-    final dateStr = _formatDate(date);
+
     try {
+      await _ensureNutritionDay(appUserId: appUserId, date: date);
+      final dateStr = _formatDate(date);
       return await _client
           .from('nutrition_days')
           .select('*, nutrition_entries(*)')
@@ -170,17 +330,21 @@ class NutritionRepository {
   }) async {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return;
-    final dateStr = _formatDate(date);
-    final dayResp = await _client
-        .from('nutrition_days')
-        .upsert({
-          'member_id': appUserId,
-          'day_date': dateStr,
-          'updated_at': DateTime.now().toIso8601String(),
-        }, onConflict: 'member_id,day_date')
-        .select('id')
-        .single();
+    final dayResp =
+        await _ensureNutritionDay(appUserId: appUserId, date: date) ??
+        await _client
+            .from('nutrition_days')
+            .upsert({
+              'member_id': appUserId,
+              'day_date': _formatDate(date),
+              'updated_at': DateTime.now().toIso8601String(),
+            }, onConflict: 'member_id,day_date')
+            .select(
+              'id, day_date, calorie_target, protein_target, carbs_target, fat_target',
+            )
+            .single();
     final dayId = dayResp['id'];
+
     await _client.from('nutrition_entries').insert({
       'member_id': appUserId,
       'day_id': dayId,
@@ -247,7 +411,6 @@ class NutritionRepository {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return;
     final sourceStr = _formatDate(sourceDate);
-    final targetStr = _formatDate(targetDate);
 
     final dayResp = await _client
         .from('nutrition_days')
@@ -262,15 +425,17 @@ class NutritionRepository {
         .toList();
     if (entriesToCopy.isEmpty) return;
 
-    final targetDayResp = await _client
-        .from('nutrition_days')
-        .upsert({
-          'member_id': appUserId,
-          'day_date': targetStr,
-          'updated_at': DateTime.now().toIso8601String(),
-        }, onConflict: 'member_id,day_date')
-        .select('id')
-        .single();
+    final targetDayResp =
+        await _ensureNutritionDay(appUserId: appUserId, date: targetDate) ??
+        await _client
+            .from('nutrition_days')
+            .upsert({
+              'member_id': appUserId,
+              'day_date': _formatDate(targetDate),
+              'updated_at': DateTime.now().toIso8601String(),
+            }, onConflict: 'member_id,day_date')
+            .select('id')
+            .single();
 
     final targetDayId = targetDayResp['id'];
     final insertions = entriesToCopy.map((entry) {
