@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Micro } from "@/components/ui";
 import {
   Calendar,
   Clock,
@@ -331,14 +332,14 @@ export default function MemberWorkoutClient() {
       {/* ── Track selector ── */}
       {tracks.length > 1 && (
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">Track</span>
+          <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Track</span>
           <select
             value={trackId ?? ""}
             onChange={(e) => handleTrackSelect(e.target.value)}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-300 outline-none transition hover:border-white/20 hover:text-slate-100"
+            className="rounded-lg border border-[var(--line)] bg-[var(--panel-2)] px-3 py-1.5 text-sm text-[var(--text-muted)] outline-none transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
           >
             {tracks.map((t) => (
-              <option key={t.id} value={t.id} className="bg-[#161a20] text-slate-100">
+              <option key={t.id} value={t.id} className="bg-[var(--panel)] text-[var(--text)]">
                 {t.name}
               </option>
             ))}
@@ -347,7 +348,7 @@ export default function MemberWorkoutClient() {
       )}
 
       {/* ── Date strip ── */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+      <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-3">
         <div className="flex items-center gap-2">
           <div className="flex flex-1 overflow-x-auto gap-1 pb-0.5 scrollbar-none">
             {stripDays.map((d) => {
@@ -361,14 +362,14 @@ export default function MemberWorkoutClient() {
                   onClick={() => setSelectedDay(d)}
                   className={`flex min-w-[40px] flex-col items-center rounded-xl px-2 py-1.5 text-center transition ${
                     isSelected
-                      ? "bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-500/40"
-                      : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                      ? "bg-[var(--cyan)]/15 text-[var(--cyan)] ring-1 ring-[var(--cyan)]/30"
+                      : "text-[var(--text-muted)] hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
                   }`}
                 >
                   <span className="text-[10px] font-semibold uppercase tracking-widest">{dow}</span>
                   <span
                     className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                      isToday && !isSelected ? "bg-slate-600 text-white" : ""
+                      isToday && !isSelected ? "bg-[var(--panel-2)] text-[var(--text)]" : ""
                     }`}
                   >
                     {num}
@@ -382,7 +383,7 @@ export default function MemberWorkoutClient() {
           <button
             type="button"
             onClick={() => datePickerRef.current?.showPicker?.() ?? datePickerRef.current?.click()}
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400 transition hover:border-white/20 hover:text-slate-200"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
             aria-label="Pick date"
           >
             <Calendar className="h-4 w-4" />
@@ -399,13 +400,13 @@ export default function MemberWorkoutClient() {
 
       {/* ── Day heading ── */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-100">{fullDayLabel(selectedDay)}</h1>
-        {weekLoading && <span className="text-xs text-slate-500">Loading…</span>}
+        <h1 className="text-xl font-bold text-[var(--text)]">{fullDayLabel(selectedDay)}</h1>
+        {weekLoading && <span className="text-xs text-[var(--text-soft)]">Loading…</span>}
       </div>
 
       {/* ── Blocks ── */}
       {blocks.length === 0 && !weekLoading ? (
-        <div className="rounded-2xl border border-dashed border-white/10 px-6 py-12 text-center text-sm text-slate-500">
+        <div className="rounded-2xl border border-dashed border-[var(--line)] px-6 py-12 text-center text-sm text-[var(--text-soft)]">
           Rest day — no programming scheduled.
         </div>
       ) : (
@@ -488,15 +489,15 @@ function BlockCard({
   const showLeaderboard = block.leaderboard_enabled;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#1a1d26]">
+    <div className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel-2)]">
       {/* Header */}
       <div className="flex items-start gap-3 px-4 pt-4 pb-3">
         <div className="mt-0.5">{blockIcon(block.block_type)}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-base font-bold text-slate-100">{block.title}</h2>
+            <h2 className="text-base font-bold text-[var(--text)]">{block.title}</h2>
             {scoreLabel && (
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+              <span className="rounded-full border border-[var(--line)] bg-[var(--panel-2)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
                 {scoreLabel}
               </span>
             )}
@@ -512,7 +513,7 @@ function BlockCard({
             type="button"
             onClick={onHistory}
             title="View history"
-            className="flex-shrink-0 rounded-lg border border-white/10 bg-white/5 p-1.5 text-slate-400 transition hover:border-white/20 hover:text-slate-200"
+            className="flex-shrink-0 rounded-lg border border-[var(--line)] bg-[var(--panel-2)] p-1.5 text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
           >
             <Clock className="h-3.5 w-3.5" />
           </button>
@@ -521,7 +522,7 @@ function BlockCard({
 
       {/* Description */}
       {block.description && (
-        <p className="px-4 pb-3 text-sm leading-relaxed text-slate-300 whitespace-pre-wrap">
+        <p className="px-4 pb-3 text-sm leading-relaxed text-[var(--text-muted)] whitespace-pre-wrap">
           {block.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()}
         </p>
       )}
@@ -530,10 +531,10 @@ function BlockCard({
       {block.levels.length > 0 && (
         <div className="mx-4 mb-3 space-y-1">
           {block.levels.map((lv) => (
-            <div key={lv.id} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-              <p className="text-xs font-semibold text-slate-300">{lv.title}</p>
+            <div key={lv.id} className="rounded-lg border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2">
+              <p className="text-xs font-semibold text-[var(--text-muted)]">{lv.title}</p>
               {lv.instructions && (
-                <p className="mt-0.5 text-xs text-slate-500">{lv.instructions}</p>
+                <p className="mt-0.5 text-xs text-[var(--text-soft)]">{lv.instructions}</p>
               )}
             </div>
           ))}
@@ -542,7 +543,7 @@ function BlockCard({
 
       {/* Actions */}
       {(showRecord || showLeaderboard) && (
-        <div className="flex items-center gap-2 border-t border-white/10 px-4 py-2.5">
+        <div className="flex items-center gap-2 border-t border-[var(--line)] px-4 py-2.5">
           {showLeaderboard && (
             <button
               type="button"
@@ -550,7 +551,7 @@ function BlockCard({
               className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
                 leaderboardOpen
                   ? "border-yellow-500/40 bg-yellow-500/10 text-yellow-300"
-                  : "border-white/10 bg-white/5 text-slate-400 hover:border-white/20 hover:text-slate-200"
+                  : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:border-[var(--line-strong)] hover:text-[var(--text)]"
               }`}
             >
               <Trophy className="h-3.5 w-3.5" />
@@ -561,7 +562,7 @@ function BlockCard({
             <button
               type="button"
               onClick={onRecord}
-              className="ml-auto flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_4px_12px_rgba(2,132,199,0.25)] transition hover:from-sky-400 hover:to-blue-500"
+              className="ml-auto accent-pink flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
             >
               <Plus className="h-3.5 w-3.5" />
               {myResult ? "Re-Record" : "Record"}
@@ -572,9 +573,9 @@ function BlockCard({
 
       {/* Leaderboard */}
       {showLeaderboard && leaderboardOpen && leaderboard !== null && (
-        <div className="border-t border-white/10 px-4 py-3">
+        <div className="border-t border-[var(--line)] px-4 py-3">
           {leaderboard.length === 0 ? (
-            <p className="text-xs text-slate-500">No results yet — be the first!</p>
+            <p className="text-xs text-[var(--text-soft)]">No results yet — be the first!</p>
           ) : (
             <div className="space-y-1">
               {leaderboard.map((entry) => {
@@ -586,13 +587,13 @@ function BlockCard({
                       isMe ? "border border-cyan-500/20 bg-cyan-500/5" : ""
                     }`}
                   >
-                    <span className="w-5 text-center text-xs font-bold text-slate-500">
+                    <span className="w-5 text-center text-xs font-bold text-[var(--text-soft)]">
                       {entry.rank}
                     </span>
-                    <span className="flex-1 truncate text-xs text-slate-300">
+                    <span className="flex-1 truncate text-xs text-[var(--text-muted)]">
                       {isMe ? "You" : entry.memberName}
                     </span>
-                    <span className="text-xs font-semibold text-slate-200">
+                    <span className="text-xs font-semibold text-[var(--text)]">
                       {entry.score_text ?? "—"}
                     </span>
                     {entry.is_rx && (
@@ -738,16 +739,16 @@ function RecordModal({ block, organizationId, trackId, dayDate, userId, onClose,
   }
 
   const inputCls =
-    "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none";
-  const labelCls = "text-xs uppercase tracking-widest text-slate-500";
+    "w-full rounded-xl border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] focus:border-[var(--pink)] focus:outline-none";
+  const labelCls = "text-xs uppercase tracking-widest text-[var(--text-soft)]";
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#12151c] p-5 shadow-2xl">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-[var(--line)] bg-[var(--bg)] p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-slate-100">Record — {block.title}</h2>
-          <button type="button" onClick={onClose} className="rounded-full border border-white/10 bg-white/5 p-1.5 text-slate-400 hover:text-slate-200">
+          <h2 className="text-base font-bold text-[var(--text)]">Record — {block.title}</h2>
+          <button type="button" onClick={onClose} className="rounded-full border border-[var(--line)] bg-[var(--panel-2)] p-1.5 text-[var(--text-muted)] hover:text-[var(--text)]">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -766,7 +767,7 @@ function RecordModal({ block, organizationId, trackId, dayDate, userId, onClose,
                     className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
                       level === lv.level
                         ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-300"
-                        : "border-white/10 bg-white/5 text-slate-400 hover:border-white/20"
+                        : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:border-[var(--line-strong)]"
                     }`}
                   >
                     {lv.title}
@@ -783,7 +784,7 @@ function RecordModal({ block, organizationId, trackId, dayDate, userId, onClose,
               <div className="mt-1.5 space-y-2">
                 {liftSets.map((s, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <span className="w-5 text-center text-xs text-slate-600">{i + 1}</span>
+                    <span className="w-5 text-center text-xs text-[var(--text-soft)]">{i + 1}</span>
                     <input
                       type="number"
                       placeholder="Reps"
@@ -799,7 +800,7 @@ function RecordModal({ block, organizationId, trackId, dayDate, userId, onClose,
                       className={`${inputCls} flex-1`}
                     />
                     {liftSets.length > 1 && (
-                      <button type="button" onClick={() => removeSet(i)} className="text-slate-600 hover:text-red-400">
+                      <button type="button" onClick={() => removeSet(i)} className="text-[var(--text-soft)] hover:text-red-400">
                         <Minus className="h-3.5 w-3.5" />
                       </button>
                     )}
@@ -808,7 +809,7 @@ function RecordModal({ block, organizationId, trackId, dayDate, userId, onClose,
                 <button
                   type="button"
                   onClick={addSet}
-                  className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300"
+                  className="flex items-center gap-1 text-xs text-[var(--text-soft)] hover:text-[var(--text-muted)]"
                 >
                   <Plus className="h-3 w-3" /> Add set
                 </button>
@@ -822,7 +823,7 @@ function RecordModal({ block, organizationId, trackId, dayDate, userId, onClose,
               <p className={labelCls}>Time</p>
               <div className="mt-1.5 flex gap-2 items-center">
                 <input type="number" min={0} placeholder="Min" value={mins} onChange={(e) => setMins(e.target.value)} className={`${inputCls} flex-1`} />
-                <span className="text-slate-500">:</span>
+                <span className="text-[var(--text-soft)]">:</span>
                 <input type="number" min={0} max={59} placeholder="Sec" value={secs} onChange={(e) => setSecs(e.target.value)} className={`${inputCls} flex-1`} />
               </div>
             </div>
@@ -838,7 +839,7 @@ function RecordModal({ block, organizationId, trackId, dayDate, userId, onClose,
               <p className={labelCls}>Rounds + Reps</p>
               <div className="mt-1.5 flex gap-2 items-center">
                 <input type="number" min={0} placeholder="Rounds" value={rounds} onChange={(e) => setRounds(e.target.value)} className={`${inputCls} flex-1`} />
-                <span className="text-slate-500">+</span>
+                <span className="text-[var(--text-soft)]">+</span>
                 <input type="number" min={0} placeholder="Extra reps" value={extraReps} onChange={(e) => setExtraReps(e.target.value)} className={`${inputCls} flex-1`} />
               </div>
             </div>
@@ -864,7 +865,7 @@ function RecordModal({ block, organizationId, trackId, dayDate, userId, onClose,
               onChange={(e) => setIsRx(e.target.checked)}
               className="h-4 w-4 rounded border-slate-600 accent-cyan-500"
             />
-            <span className="text-sm text-slate-300">RX</span>
+            <span className="text-sm text-[var(--text-muted)]">RX</span>
           </label>
 
           {/* Notes */}
@@ -886,7 +887,7 @@ function RecordModal({ block, organizationId, trackId, dayDate, userId, onClose,
           type="button"
           disabled={saving}
           onClick={handleSave}
-          className="mt-4 w-full rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(2,132,199,0.3)] transition hover:from-sky-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-4 w-full accent-pink rounded-2xl py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving ? "Saving…" : "Save Result"}
         </button>
@@ -927,15 +928,15 @@ function HistoryPanel({ block, entries, loading, onClose }: HistoryPanelProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={onClose} />
-      <aside className="relative z-10 flex h-full w-full max-w-sm flex-col border-l border-white/10 bg-[#12151c] shadow-2xl">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <aside className="relative z-10 flex h-full w-full max-w-sm flex-col border-l border-[var(--line)] bg-[var(--bg)] shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-4">
           <div>
-            <p className="text-xs uppercase tracking-widest text-slate-500">History</p>
-            <h2 className="mt-0.5 text-base font-bold text-slate-100">{block.title}</h2>
+            <p className="text-xs uppercase tracking-widest text-[var(--text-soft)]">History</p>
+            <h2 className="mt-0.5 text-base font-bold text-[var(--text)]">{block.title}</h2>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full border border-white/10 bg-white/5 p-1.5 text-slate-400 hover:text-slate-200">
+          <button type="button" onClick={onClose} className="rounded-full border border-[var(--line)] bg-[var(--panel-2)] p-1.5 text-[var(--text-muted)] hover:text-[var(--text)]">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -944,34 +945,34 @@ function HistoryPanel({ block, entries, loading, onClose }: HistoryPanelProps) {
           {loading && (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 animate-pulse rounded-xl bg-white/5" />
+                <div key={i} className="h-12 animate-pulse rounded-xl bg-[var(--panel-2)]" />
               ))}
             </div>
           )}
 
           {!loading && entries.length === 0 && (
-            <p className="text-sm text-slate-500">No history found for this movement.</p>
+            <p className="text-sm text-[var(--text-soft)]">No history found for this movement.</p>
           )}
 
           {/* Estimated 1RM */}
           {estimatedMax != null && (
-            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-widest text-slate-500">Estimated 1RM</p>
-              <p className="mt-1 text-2xl font-bold text-slate-100">{estimatedMax} lbs</p>
+            <div className="rounded-xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3">
+              <p className="text-[10px] uppercase tracking-widest text-[var(--text-soft)]">Estimated 1RM</p>
+              <p className="mt-1 text-2xl font-bold text-[var(--text)]">{estimatedMax} lbs</p>
             </div>
           )}
 
           {/* % Calculator */}
           {estimatedMax != null && (
             <div>
-              <p className="text-xs uppercase tracking-widest text-slate-500 mb-2">% Calculator</p>
+              <p className="text-xs uppercase tracking-widest text-[var(--text-soft)] mb-2">% Calculator</p>
               <div className="flex items-center gap-2 mb-3">
                 <input
                   type="number"
                   placeholder="Enter weight (lbs)"
                   value={calcWeight}
                   onChange={(e) => setCalcWeight(e.target.value)}
-                  className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
+                  className="flex-1 rounded-xl border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] focus:border-[var(--pink)] focus:outline-none"
                 />
                 {inputPctResult != null && (
                   <span className="text-sm font-bold text-cyan-300 whitespace-nowrap">= {inputPctResult}%</span>
@@ -979,9 +980,9 @@ function HistoryPanel({ block, entries, loading, onClose }: HistoryPanelProps) {
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 {pctRows.map(({ pct, weight }) => (
-                  <div key={pct} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5">
-                    <span className="text-xs text-slate-500">{pct}%</span>
-                    <span className="text-xs font-semibold text-slate-200">{weight} lbs</span>
+                  <div key={pct} className="flex items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--panel-2)] px-2.5 py-1.5">
+                    <span className="text-xs text-[var(--text-soft)]">{pct}%</span>
+                    <span className="text-xs font-semibold text-[var(--text)]">{weight} lbs</span>
                   </div>
                 ))}
               </div>
@@ -991,11 +992,11 @@ function HistoryPanel({ block, entries, loading, onClose }: HistoryPanelProps) {
           {/* Past sessions */}
           {entries.length > 0 && (
             <div>
-              <p className="text-xs uppercase tracking-widest text-slate-500 mb-2">Past Sessions</p>
+              <p className="text-xs uppercase tracking-widest text-[var(--text-soft)] mb-2">Past Sessions</p>
               <div className="space-y-2">
                 {entries.map((entry) => (
-                  <div key={entry.id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
-                    <p className="text-xs font-semibold text-slate-400">
+                  <div key={entry.id} className="rounded-xl border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2.5">
+                    <p className="text-xs font-semibold text-[var(--text-muted)]">
                       {new Date(`${entry.day_date}T00:00:00`).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -1005,13 +1006,13 @@ function HistoryPanel({ block, entries, loading, onClose }: HistoryPanelProps) {
                     {entry.sets.length > 0 ? (
                       <div className="mt-1.5 space-y-0.5">
                         {entry.sets.map((s) => (
-                          <p key={s.set_order} className="text-xs text-slate-300">
+                          <p key={s.set_order} className="text-xs text-[var(--text-muted)]">
                             {s.reps} × {s.weight} lbs
                           </p>
                         ))}
                       </div>
                     ) : (
-                      <p className="mt-1 text-xs text-slate-300">{entry.score_text ?? "—"}</p>
+                      <p className="mt-1 text-xs text-[var(--text-muted)]">{entry.score_text ?? "—"}</p>
                     )}
                   </div>
                 ))}

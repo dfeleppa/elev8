@@ -264,20 +264,20 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
       <div className="space-y-3">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-white">Class Schedule</h1>
-            <p className="mt-1 text-sm text-white/45">
+            <h1 className="text-3xl font-semibold text-[var(--text)]">Class Schedule</h1>
+            <p className="mt-1 text-sm text-[var(--text-soft)]">
               {loading ? "Loading daily schedule..." : `${formatLongDate(selectedDate)} · ${sessionsLabel}`}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start rounded-2xl border border-white/10 bg-white/5 px-2 py-2 shadow-[0_18px_48px_rgba(0,0,0,0.24)]">
+          <div className="flex items-center gap-2 self-start rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-2 py-2 shadow-[0_18px_48px_rgba(0,0,0,0.24)]">
             <button
               type="button"
               onClick={() => setSelectedDate(todayKey)}
               className={`rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition ${
                 selectedDate === todayKey
-                  ? "bg-pink-500/25 text-pink-100"
-                  : "text-white/55 hover:bg-white/10 hover:text-white"
+                  ? "bg-[var(--pink)]/20 text-[var(--pink)]"
+                  : "text-[var(--text-muted)] hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
               }`}
             >
               Today
@@ -285,7 +285,7 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
             <button
               type="button"
               onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/65 transition hover:border-cyan-300/40 hover:text-cyan-100"
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-[var(--text-muted)] transition hover:border-cyan-300/40 hover:text-cyan-100"
               aria-label="Choose a date"
             >
               <CalendarDays size={18} />
@@ -316,13 +316,13 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
                   onClick={() => setSelectedDate(dateKey)}
                   className={`group flex min-w-[88px] flex-col items-center rounded-2xl border px-3 py-3 text-center transition ${
                     isSelected
-                      ? "border-pink-300/60 bg-white/12 text-white shadow-[0_10px_28px_rgba(255,177,196,0.16)]"
+                      ? "border-[var(--pink)]/40 bg-[var(--pink)]/10 text-[var(--text)] shadow-[0_10px_28px_rgba(255,74,141,0.12)]"
                       : isToday
-                        ? "border-cyan-300/35 bg-cyan-400/10 text-white/90"
-                        : "border-white/10 bg-white/5 text-white/55 hover:border-white/20 hover:bg-white/8 hover:text-white"
+                        ? "border-[var(--cyan)]/30 bg-[var(--cyan)]/8 text-[var(--text)]"
+                        : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
                   }`}
                 >
-                  <span className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${isToday && !isSelected ? "text-cyan-100" : ""}`}>
+                  <span className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${isToday && !isSelected ? "text-[var(--cyan)]" : ""}`}>
                     {isToday ? "Today" : label.weekday}
                   </span>
                   <span className="mt-1 text-sm font-medium">{label.monthDay}</span>
@@ -346,16 +346,16 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
       ) : null}
 
       {loading ? (
-        <div className="flex min-h-[320px] items-center justify-center rounded-[28px] border border-white/10 bg-white/5 text-sm text-white/55">
+        <div className="flex min-h-[320px] items-center justify-center rounded-[28px] border border-[var(--line)] bg-[var(--panel-2)] text-sm text-[var(--text-muted)]">
           Loading classes...
         </div>
       ) : sessions.length === 0 ? (
-        <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/8 to-white/[0.03] p-8 text-center shadow-[0_26px_70px_rgba(0,0,0,0.25)]">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/8 text-white/45">
+        <div className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-2)] p-8 text-center shadow-[0_26px_70px_rgba(0,0,0,0.25)]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-soft)]">
             <CalendarDays size={28} />
           </div>
-          <h2 className="mt-5 text-xl font-semibold text-white">No classes on this day</h2>
-          <p className="mt-2 text-sm text-white/45">
+          <h2 className="mt-5 text-xl font-semibold text-[var(--text)]">No classes on this day</h2>
+          <p className="mt-2 text-sm text-[var(--text-soft)]">
             Pick another date from the bar above or use the calendar picker to jump somewhere else.
           </p>
         </div>
@@ -370,7 +370,7 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
             return (
               <article
                 key={`${session.id}-${session.classDate}`}
-                className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] p-5 shadow-[0_28px_70px_rgba(0,0,0,0.28)]"
+                className="relative overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--panel-2)] p-5 shadow-[0_28px_70px_rgba(0,0,0,0.28)]"
               >
                 <div
                   className="absolute inset-y-0 left-0 w-1.5 rounded-full"
@@ -380,7 +380,7 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
                 <div className="flex flex-col gap-5 pl-3 lg:flex-row lg:items-center lg:justify-between">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-xl font-semibold text-white">{session.name}</h2>
+                      <h2 className="text-xl font-semibold text-[var(--text)]">{session.name}</h2>
                       {session.track ? (
                         <span
                           className="rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
@@ -394,7 +394,7 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
                       ) : null}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/55">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-muted)]">
                       <span className="inline-flex items-center gap-2">
                         <Clock3 size={15} />
                         {formatTime(session.class_time)} · {formatDuration(session.duration_minutes)}
@@ -408,7 +408,7 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
                       <button
                         type="button"
                         onClick={() => setRosterSession(session)}
-                        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/70 transition hover:border-white/20 hover:text-white"
+                        className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--panel-2)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
                       >
                         <Users size={14} />
                         {session.size_limit > 0
@@ -419,7 +419,7 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
 
                     <div className={`text-sm ${status.tone}`}>
                       <p className="font-semibold">{status.title}</p>
-                      <p className="mt-1 text-white/45">{status.body}</p>
+                      <p className="mt-1 text-[var(--text-soft)]">{status.body}</p>
                     </div>
                   </div>
 
@@ -442,7 +442,7 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
                         className={`inline-flex min-w-[180px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
                           reserveEnabled
                             ? "bg-[linear-gradient(135deg,rgba(255,177,196,0.95),rgba(99,247,255,0.88))] text-slate-950 shadow-[0_18px_45px_rgba(99,247,255,0.18)] hover:brightness-105"
-                            : "border border-white/10 bg-white/5 text-white/40"
+                            : "border border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-soft)]"
                         }`}
                       >
                         {isPending ? <LoaderCircle size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
@@ -454,7 +454,7 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
                       </button>
                     )}
 
-                    <p className="max-w-[220px] text-right text-xs text-white/35">
+                    <p className="max-w-[220px] text-right text-xs text-[var(--text-soft)]">
                       {session.reservationCutoffAt
                         ? `Reserve before ${formatCutoff(session.reservationCutoffAt)}`
                         : "Reservations available until class starts"}
@@ -469,41 +469,41 @@ export default function MemberScheduleClient({ organizationId }: { organizationI
 
       {rosterSession ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#11161d]/95 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+          <div className="w-full max-w-md rounded-[28px] border border-[var(--line)] bg-[var(--bg)] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Reserved Members</p>
-                <h3 className="mt-2 text-xl font-semibold text-white">{rosterSession.name}</h3>
-                <p className="mt-1 text-sm text-white/45">{formatLongDate(rosterSession.classDate)}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-soft)]">Reserved Members</p>
+                <h3 className="mt-2 text-xl font-semibold text-[var(--text)]">{rosterSession.name}</h3>
+                <p className="mt-1 text-sm text-[var(--text-soft)]">{formatLongDate(rosterSession.classDate)}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setRosterSession(null)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:text-white"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
                 aria-label="Close reserved members list"
               >
                 <XCircle size={18} />
               </button>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-white/8 bg-black/20 p-4">
-              <p className="text-sm text-white/55">
+            <div className="mt-5 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
+              <p className="text-sm text-[var(--text-muted)]">
                 {rosterSession.size_limit > 0
                   ? `${rosterSession.reservedCount} of ${rosterSession.size_limit} spots reserved`
                   : `${rosterSession.reservedCount} members reserved`}
               </p>
 
               {rosterSession.reservedMembers.length === 0 ? (
-                <p className="mt-4 text-sm text-white/35">No one has reserved this class yet.</p>
+                <p className="mt-4 text-sm text-[var(--text-soft)]">No one has reserved this class yet.</p>
               ) : (
                 <div className="mt-4 space-y-2">
                   {rosterSession.reservedMembers.map((member, index) => (
                     <div
                       key={`${member.id}-${index}`}
-                      className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/5 px-3 py-3"
+                      className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-3 py-3"
                     >
-                      <span className="text-sm font-medium text-white">{member.name}</span>
-                      <span className="text-xs text-white/35">
+                      <span className="text-sm font-medium text-[var(--text)]">{member.name}</span>
+                      <span className="text-xs text-[var(--text-soft)]">
                         {member.reservedAt ? new Date(member.reservedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : ""}
                       </span>
                     </div>

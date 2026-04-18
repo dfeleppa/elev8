@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Pencil, X, Check, User } from "lucide-react";
+import { Micro, Panel } from "@/components/ui";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -84,7 +85,7 @@ const roleBadgeClass: Record<string, string> = {
   owner: "border-amber-400/40 bg-amber-400/10 text-amber-300",
   admin: "border-violet-400/40 bg-violet-400/10 text-violet-300",
   coach: "border-sky-400/40 bg-sky-400/10 text-sky-300",
-  member: "border-[#ffb1c4]/40 bg-[#ffb1c4]/10 text-[#ffb1c4]",
+  member: "border-[var(--pink-soft)]/40 bg-[var(--pink-soft)]/10 text-[var(--pink-soft)]",
 };
 
 function RoleBadge({ role }: { role: string | null }) {
@@ -120,16 +121,16 @@ function EditableCard({
   form: React.ReactNode;
 }) {
   return (
-    <div className="glass-panel rounded-3xl border border-white/10 p-6">
+    <div className="rounded-3xl border border-[var(--line)] bg-[var(--panel)] p-6">
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{title}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">{title}</p>
         {isEditing ? (
           <div className="flex gap-2">
             <button
               type="button"
               onClick={onCancel}
               disabled={saving}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)] disabled:opacity-40"
             >
               <X className="h-4 w-4" />
             </button>
@@ -146,7 +147,7 @@ function EditableCard({
           <button
             type="button"
             onClick={onEdit}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400 transition hover:border-white/20 hover:text-slate-200"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
@@ -164,9 +165,9 @@ function EditableCard({
 
 function StatRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-      <span className="text-sm font-medium text-slate-400">{label}</span>
-      <span className="text-sm font-semibold text-slate-100">{value}</span>
+    <div className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3">
+      <span className="text-sm font-medium text-[var(--text-muted)]">{label}</span>
+      <span className="text-sm font-semibold text-[var(--text)]">{value}</span>
     </div>
   );
 }
@@ -192,7 +193,7 @@ function InputField({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+      <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
         {label}
       </label>
       <input
@@ -203,7 +204,7 @@ function InputField({
         min={min}
         max={max}
         step={step}
-        className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-[#ffb1c4]/50"
+        className="w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] outline-none focus:border-[var(--pink)]/50"
       />
     </div>
   );
@@ -334,7 +335,7 @@ export default function AccountDashboardClient() {
     return (
       <div className="mx-auto w-full max-w-4xl space-y-6 px-5 py-10">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-40 animate-pulse rounded-3xl border border-white/10 bg-white/5" />
+          <div key={i} className="h-40 animate-pulse rounded-3xl border border-[var(--line)] bg-[var(--panel-2)]" />
         ))}
       </div>
     );
@@ -358,18 +359,18 @@ export default function AccountDashboardClient() {
     <div className="mx-auto w-full max-w-4xl space-y-6 px-5 py-10">
 
       {/* ── Profile Header ── */}
-      <div className="glass-panel rounded-3xl border border-white/10 p-6">
+      <Panel padding="lg" className="rounded-3xl">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           {/* Avatar */}
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#ffb1c4]/30 to-pink-600/20 text-2xl font-bold text-[#ffb1c4] ring-2 ring-[#ffb1c4]/20">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--pink-soft)]/30 to-[var(--pink)]/20 text-2xl font-bold text-[var(--pink-soft)] ring-2 ring-[var(--pink-soft)]/20">
             {profile.fullName ? initials(profile.fullName) : <User className="h-8 w-8" />}
           </div>
 
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold text-slate-100">
+            <h1 className="text-2xl font-semibold text-[var(--text)]">
               {profile.fullName ?? "—"}
             </h1>
-            <p className="mt-1 text-sm text-slate-400">{profile.email ?? "—"}</p>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">{profile.email ?? "—"}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {profile.memberships.length > 0 ? (
                 profile.memberships.map((m, i) => (
@@ -382,8 +383,8 @@ export default function AccountDashboardClient() {
           </div>
 
           <div className="shrink-0 text-right">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Member Since</p>
-            <p className="mt-1 text-sm font-semibold text-slate-300">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-soft)]">Member Since</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--text-muted)]">
               {profile.memberships[0]?.memberSince
                 ? formatDate(profile.memberships[0].memberSince)
                 : profile.createdAt
@@ -392,7 +393,7 @@ export default function AccountDashboardClient() {
             </p>
           </div>
         </div>
-      </div>
+      </Panel>
 
       <div className="grid gap-6 lg:grid-cols-2">
 
@@ -422,13 +423,13 @@ export default function AccountDashboardClient() {
                 placeholder="Your full name"
               />
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
                   Sex
                 </label>
                 <select
                   value={personalSex}
                   onChange={(e) => setPersonalSex(e.target.value)}
-                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-[#ffb1c4]/50"
+                  className="w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--pink)]/50"
                 >
                   <option value="">Not set</option>
                   <option value="male">Male</option>
@@ -467,7 +468,7 @@ export default function AccountDashboardClient() {
           form={
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
                   Height
                 </label>
                 <div className="flex gap-2">
@@ -479,7 +480,7 @@ export default function AccountDashboardClient() {
                       placeholder="ft"
                       value={physicalFt}
                       onChange={(e) => setPhysicalFt(e.target.value)}
-                      className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-[#ffb1c4]/50"
+                      className="w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] outline-none focus:border-[var(--pink)]/50"
                     />
                   </div>
                   <div className="flex-1">
@@ -490,7 +491,7 @@ export default function AccountDashboardClient() {
                       placeholder="in"
                       value={physicalIn}
                       onChange={(e) => setPhysicalIn(e.target.value)}
-                      className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-[#ffb1c4]/50"
+                      className="w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] outline-none focus:border-[var(--pink)]/50"
                     />
                   </div>
                 </div>
@@ -522,21 +523,21 @@ export default function AccountDashboardClient() {
 
       {/* ── Memberships ── */}
       {profile.memberships.length > 0 && (
-        <div className="glass-panel rounded-3xl border border-white/10 p-6">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+        <Panel padding="lg" className="rounded-3xl">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
             Organization Memberships
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {profile.memberships.map((m, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
+                className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-4"
               >
                 <div>
-                  <p className="text-sm font-semibold text-slate-100">
+                  <p className="text-sm font-semibold text-[var(--text)]">
                     {m.organizationName ?? "Unknown Organization"}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-500">
+                  <p className="mt-0.5 text-xs text-[var(--text-soft)]">
                     Since {m.memberSince ? formatDate(m.memberSince) : "—"}
                   </p>
                 </div>
@@ -544,19 +545,19 @@ export default function AccountDashboardClient() {
               </div>
             ))}
           </div>
-        </div>
+        </Panel>
       )}
 
       {/* ── Account Details ── */}
-      <div className="glass-panel rounded-3xl border border-white/10 p-6">
-        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+      <Panel padding="lg" className="rounded-3xl">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
           Account
         </p>
         <div className="space-y-3">
           <StatRow label="Email" value={profile.email ?? "—"} />
           <StatRow label="Account Created" value={profile.createdAt ? formatDate(profile.createdAt) : "—"} />
         </div>
-      </div>
+      </Panel>
 
     </div>
   );
