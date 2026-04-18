@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../services/coach_api_service.dart';
+
 enum NutritionGoal {
   loseWeight('lose_weight', 'Lose Weight'),
   gainWeight('gain_weight', 'Gain Weight'),
@@ -12,7 +14,7 @@ enum NutritionGoal {
   const NutritionGoal(this.id, this.label);
 
   static NutritionGoal? fromString(String? value) =>
-    values.firstWhereOrNull((e) => e.id == value);
+      values.firstWhereOrNull((e) => e.id == value);
 }
 
 extension on List<NutritionGoal> {
@@ -31,16 +33,19 @@ class SelectedDateNotifier extends Notifier<DateTime> {
   void setDate(DateTime date) => state = date;
 }
 
-final selectedDateProvider = NotifierProvider<SelectedDateNotifier, DateTime>(SelectedDateNotifier.new);
+final selectedDateProvider = NotifierProvider<SelectedDateNotifier, DateTime>(
+  SelectedDateNotifier.new,
+);
 
 final nutritionRepositoryProvider = Provider<NutritionRepository>((ref) {
   return NutritionRepository(Supabase.instance.client);
 });
 
-final nutritionDayProvider = FutureProvider.family<Map<String, dynamic>?, DateTime>((ref, date) async {
-  final repo = ref.watch(nutritionRepositoryProvider);
-  return repo.fetchNutritionDay(date);
-});
+final nutritionDayProvider =
+    FutureProvider.family<Map<String, dynamic>?, DateTime>((ref, date) async {
+      final repo = ref.watch(nutritionRepositoryProvider);
+      return repo.fetchNutritionDay(date);
+    });
 
 final coachPlanStatusProvider = FutureProvider<CoachPlanStatus?>((ref) async {
   final repo = ref.watch(nutritionRepositoryProvider);
@@ -72,11 +77,15 @@ class CoachPlanStatus {
   });
 
   String get goalLabel {
-    return NutritionGoal.fromString(goalType)?.label ?? goalType ?? 'Plan Active';
+    return NutritionGoal.fromString(goalType)?.label ??
+        goalType ??
+        'Plan Active';
   }
 
   double? get weightProgressPercent {
-    if (startWeight == null || targetWeight == null || currentWeight == null) return null;
+    if (startWeight == null || targetWeight == null || currentWeight == null) {
+      return null;
+    }
     final totalDelta = (startWeight! - targetWeight!).abs();
     if (totalDelta == 0) return 100;
     final progressed = (startWeight! - currentWeight!).abs();
@@ -162,11 +171,15 @@ class NutritionRepository {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return;
     final dateStr = _formatDate(date);
-    final dayResp = await _client.from('nutrition_days').upsert({
-      'member_id': appUserId,
-      'day_date': dateStr,
-      'updated_at': DateTime.now().toIso8601String(),
-    }, onConflict: 'member_id,day_date').select('id').single();
+    final dayResp = await _client
+        .from('nutrition_days')
+        .upsert({
+          'member_id': appUserId,
+          'day_date': dateStr,
+          'updated_at': DateTime.now().toIso8601String(),
+        }, onConflict: 'member_id,day_date')
+        .select('id')
+        .single();
     final dayId = dayResp['id'];
     await _client.from('nutrition_entries').insert({
       'member_id': appUserId,
@@ -188,30 +201,41 @@ class NutritionRepository {
 
   Future<void> updateEntryQuantity(String entryId, double newQuantity) async {
     final q = newQuantity < 0.01 ? 0.01 : newQuantity;
-    await _client.from('nutrition_entries').update({
-      'quantity': q,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', entryId);
+    await _client
+        .from('nutrition_entries')
+        .update({'quantity': q, 'updated_at': DateTime.now().toIso8601String()})
+        .eq('id', entryId);
   }
 
-  Future<void> updateNutritionEntry(String id, Map<String, dynamic> fields) async {
+  Future<void> updateNutritionEntry(
+    String id,
+    Map<String, dynamic> fields,
+  ) async {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return;
-    await _client.from('nutrition_entries').update({
-      ...fields,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', id).eq('member_id', appUserId);
+    await _client
+        .from('nutrition_entries')
+        .update({...fields, 'updated_at': DateTime.now().toIso8601String()})
+        .eq('id', id)
+        .eq('member_id', appUserId);
   }
 
   Future<void> deleteMealEntries(DateTime date, String mealType) async {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return;
     final dateStr = _formatDate(date);
-    final dayResp = await _client.from('nutrition_days')
-        .select('id').eq('member_id', appUserId).eq('day_date', dateStr).maybeSingle();
+    final dayResp = await _client
+        .from('nutrition_days')
+        .select('id')
+        .eq('member_id', appUserId)
+        .eq('day_date', dateStr)
+        .maybeSingle();
     if (dayResp == null) return;
-    await _client.from('nutrition_entries')
-        .delete().eq('day_id', dayResp['id']).eq('meal_type', mealType);
+    await _client
+        .from('nutrition_entries')
+        .delete()
+        .eq('day_id', dayResp['id'])
+        .eq('meal_type', mealType);
   }
 
   Future<void> copyMealToDate({
@@ -225,20 +249,28 @@ class NutritionRepository {
     final sourceStr = _formatDate(sourceDate);
     final targetStr = _formatDate(targetDate);
 
-    final dayResp = await _client.from('nutrition_days')
+    final dayResp = await _client
+        .from('nutrition_days')
         .select('id, nutrition_entries(*)')
-        .eq('member_id', appUserId).eq('day_date', sourceStr).maybeSingle();
+        .eq('member_id', appUserId)
+        .eq('day_date', sourceStr)
+        .maybeSingle();
     if (dayResp == null) return;
 
     final entriesToCopy = (dayResp['nutrition_entries'] as List<dynamic>)
-        .where((e) => e['meal_type'] == sourceMeal).toList();
+        .where((e) => e['meal_type'] == sourceMeal)
+        .toList();
     if (entriesToCopy.isEmpty) return;
 
-    final targetDayResp = await _client.from('nutrition_days').upsert({
-      'member_id': appUserId,
-      'day_date': targetStr,
-      'updated_at': DateTime.now().toIso8601String(),
-    }, onConflict: 'member_id,day_date').select('id').single();
+    final targetDayResp = await _client
+        .from('nutrition_days')
+        .upsert({
+          'member_id': appUserId,
+          'day_date': targetStr,
+          'updated_at': DateTime.now().toIso8601String(),
+        }, onConflict: 'member_id,day_date')
+        .select('id')
+        .single();
 
     final targetDayId = targetDayResp['id'];
     final insertions = entriesToCopy.map((entry) {
@@ -312,25 +344,30 @@ class NutritionRepository {
   }) async {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return null;
-    final response = await _client.from('nutrition_custom_foods').insert({
-      'member_id': appUserId,
-      'name': name,
-      'calories': calories,
-      'protein': protein,
-      'carbs': carbs,
-      'fat': fat,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).select().single();
+    final response = await _client
+        .from('nutrition_custom_foods')
+        .insert({
+          'member_id': appUserId,
+          'name': name,
+          'calories': calories,
+          'protein': protein,
+          'carbs': carbs,
+          'fat': fat,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .select()
+        .single();
     return Map<String, dynamic>.from(response);
   }
 
   Future<void> updateCustomFood(String id, Map<String, dynamic> fields) async {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return;
-    await _client.from('nutrition_custom_foods').update({
-      ...fields,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', id).eq('member_id', appUserId);
+    await _client
+        .from('nutrition_custom_foods')
+        .update({...fields, 'updated_at': DateTime.now().toIso8601String()})
+        .eq('id', id)
+        .eq('member_id', appUserId);
   }
 
   Future<void> deleteCustomFood(String id) async {
@@ -343,7 +380,10 @@ class NutritionRepository {
     if (query.trim().length < 2) return [];
     if (_client.auth.currentUser == null) return [];
     try {
-      final response = await _client.functions.invoke('usda-food-search', body: {'query': query.trim()});
+      final response = await _client.functions.invoke(
+        'usda-food-search',
+        body: {'query': query.trim()},
+      );
       if (response.data != null) {
         final List<dynamic> results = response.data['results'] ?? [];
         return results.map((r) => Map<String, dynamic>.from(r)).toList();
@@ -352,7 +392,10 @@ class NutritionRepository {
     try {
       final session = _client.auth.currentSession;
       if (session == null) return [];
-      final resp = await _client.rpc('search_usda_foods', params: {'query_text': query.trim(), 'limit_count': 12});
+      final resp = await _client.rpc(
+        'search_usda_foods',
+        params: {'query_text': query.trim(), 'limit_count': 12},
+      );
       return List<Map<String, dynamic>>.from(resp ?? []);
     } catch (_) {}
     return [];
@@ -361,53 +404,31 @@ class NutritionRepository {
   // ---- Coach Plan ----
 
   Future<CoachPlanStatus?> fetchCoachPlanStatus() async {
-    final appUserId = await _resolveAppUserId();
-    if (appUserId == null) return null;
     try {
-      final results = await Future.wait([
-        _client
-            .from('coach_nutrition_plans')
-            .select('goal_type, target_weight_lbs, effective_date, last_check_in_date, next_check_in_date')
-            .eq('member_id', appUserId)
-            .order('effective_date', ascending: false)
-            .limit(1)
-            .maybeSingle(),
-        _client.from('app_users').select('current_weight_kg').eq('id', appUserId).maybeSingle(),
-        _client
-            .from('health_stat_entries')
-            .select('value, entry_date')
-            .eq('member_id', appUserId)
-            .eq('stat_key', 'body_weight')
-            .order('entry_date', ascending: false)
-            .limit(1)
-            .maybeSingle(),
-      ]);
+      final response = await CoachApiService.fetchCoachPlanStatus();
+      final summary = response.summary;
+      if (!response.hasPlan || summary == null) {
+        return CoachPlanStatus(hasPlan: false);
+      }
 
-      final planResp = results[0] as Map<String, dynamic>?;
-      final profileResp = results[1] as Map<String, dynamic>?;
-      final weightEntry = results[2] as Map<String, dynamic>?;
-
-      if (planResp == null) return CoachPlanStatus(hasPlan: false);
-
-      double? kgToLbs(double? kg) => kg != null ? kg * CoachPlanStatus.lbsPerKg : null;
       double? parseNumeric(dynamic v) =>
           v == null ? null : double.tryParse(v.toString());
 
-      final startKg = parseNumeric(profileResp?['current_weight_kg']);
-      final currentKg = parseNumeric(weightEntry?['value']) ?? parseNumeric(profileResp?['current_weight_kg']);
-
       return CoachPlanStatus(
         hasPlan: true,
-        goalType: planResp['goal_type'] as String?,
-        startWeight: kgToLbs(startKg),
-        currentWeight: kgToLbs(currentKg),
-        targetWeight: parseNumeric(planResp['target_weight_lbs']),
-        effectiveDate: planResp['effective_date'] != null
-            ? DateTime.tryParse(planResp['effective_date'] as String) : null,
-        lastCheckInDate: planResp['last_check_in_date'] != null
-            ? DateTime.tryParse(planResp['last_check_in_date'] as String) : null,
-        nextCheckInDate: planResp['next_check_in_date'] != null
-            ? DateTime.tryParse(planResp['next_check_in_date'] as String) : null,
+        goalType: summary['goalType'] as String?,
+        startWeight: parseNumeric(summary['startWeight']),
+        currentWeight: parseNumeric(summary['currentWeight']),
+        targetWeight: parseNumeric(summary['targetWeight']),
+        effectiveDate: summary['effectiveDate'] != null
+            ? DateTime.tryParse(summary['effectiveDate'] as String)
+            : null,
+        lastCheckInDate: summary['lastCheckInDate'] != null
+            ? DateTime.tryParse(summary['lastCheckInDate'] as String)
+            : null,
+        nextCheckInDate: summary['nextCheckInDate'] != null
+            ? DateTime.tryParse(summary['nextCheckInDate'] as String)
+            : null,
       );
     } catch (_) {
       return null;
@@ -415,19 +436,7 @@ class NutritionRepository {
   }
 
   Future<void> updateCoachGoal(String goalType) async {
-    final appUserId = await _resolveAppUserId();
-    if (appUserId == null) return;
-    final plan = await _client.from('coach_nutrition_plans')
-        .select('id')
-        .eq('member_id', appUserId)
-        .order('effective_date', ascending: false)
-        .limit(1)
-        .maybeSingle();
-    if (plan == null) return;
-    await _client.from('coach_nutrition_plans').update({
-      'goal_type': goalType,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', plan['id']);
+    await CoachApiService.updateCoachGoal(goalType);
   }
 
   Future<void> updateDayTargets({

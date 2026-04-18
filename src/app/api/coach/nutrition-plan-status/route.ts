@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
 
 import { hasCoachNutritionPlan } from "@/lib/coach-plan";
-import { requireUserContext } from "@/lib/member";
+import { requireUserContext, requireUserContextFromBearer } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const { error, userId } = await requireUserContext();
+async function requireRequestUserContext(request: Request) {
+  const authHeader = request.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    return requireUserContextFromBearer(request);
+  }
+  return requireUserContext();
+}
+
+export async function GET(request: Request) {
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

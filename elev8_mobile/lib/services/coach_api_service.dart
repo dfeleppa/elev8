@@ -33,7 +33,8 @@ class CoachPlanPreview {
       fatGrams: (json['fatGrams'] as num).toDouble(),
       weeklyRatePercent: (json['weeklyRatePercent'] as num).toDouble(),
       formulaUsed: json['formulaUsed'] as String? ?? '',
-      activityMultiplier: (json['activityMultiplier'] as num?)?.toDouble() ?? 1.0,
+      activityMultiplier:
+          (json['activityMultiplier'] as num?)?.toDouble() ?? 1.0,
     );
   }
 }
@@ -50,6 +51,13 @@ class ExistingPlanData {
   });
 }
 
+class CoachPlanStatusResponse {
+  final bool hasPlan;
+  final Map<String, dynamic>? summary;
+
+  CoachPlanStatusResponse({required this.hasPlan, required this.summary});
+}
+
 class CoachApiService {
   static String get _baseUrl =>
       dotenv.env['WEB_APP_URL'] ?? 'https://www.daneff.com';
@@ -58,9 +66,9 @@ class CoachApiService {
       Supabase.instance.client.auth.currentSession?.accessToken;
 
   static Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
-      };
+    'Content-Type': 'application/json',
+    if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+  };
 
   /// Fetches existing plan data + member profile to pre-fill the setup wizard.
   static Future<ExistingPlanData> fetchExistingPlan() async {
@@ -77,8 +85,35 @@ class CoachApiService {
     );
   }
 
+  static Future<CoachPlanStatusResponse> fetchCoachPlanStatus() async {
+    final uri = Uri.parse('$_baseUrl/api/coach/nutrition-plan-status');
+    final resp = await http.get(uri, headers: _headers);
+    if (resp.statusCode != 200) {
+      throw Exception('Failed to load coach plan status: ${resp.body}');
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    return CoachPlanStatusResponse(
+      hasPlan: body['hasPlan'] == true,
+      summary: body['summary'] as Map<String, dynamic>?,
+    );
+  }
+
+  static Future<void> updateCoachGoal(String goalType) async {
+    final uri = Uri.parse('$_baseUrl/api/athlete/coach-plan-settings');
+    final resp = await http.patch(
+      uri,
+      headers: _headers,
+      body: jsonEncode({'goalType': goalType}),
+    );
+    if (resp.statusCode != 200) {
+      throw Exception('Failed to update coach goal: ${resp.body}');
+    }
+  }
+
   /// Generates a plan preview without saving anything.
-  static Future<CoachPlanPreview> previewPlan(Map<String, dynamic> inputs) async {
+  static Future<CoachPlanPreview> previewPlan(
+    Map<String, dynamic> inputs,
+  ) async {
     final uri = Uri.parse('$_baseUrl/api/coach/nutrition-plan');
     final resp = await http.post(
       uri,

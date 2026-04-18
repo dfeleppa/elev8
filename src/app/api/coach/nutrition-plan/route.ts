@@ -7,7 +7,7 @@ import {
   type IntensityPreset,
 } from "@/lib/nutrition-calculations";
 import { hasCoachNutritionPlan } from "@/lib/coach-plan";
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireUserContext, requireUserContextFromBearer } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -97,8 +97,16 @@ function canManageMember(role: string, currentUserId: string, memberId: string) 
   return role === "admin" || role === "owner";
 }
 
+async function requireRequestUserContext(request: Request) {
+  const authHeader = request.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    return requireUserContextFromBearer(request);
+  }
+  return requireUserContext();
+}
+
 export async function GET(request: Request) {
-  const { error, userId, role } = await requireUserContext();
+  const { error, userId, role } = await requireRequestUserContext(request);
   if (error || !userId || !hasRole("coach", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
@@ -150,7 +158,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { error, userId, role } = await requireUserContext();
+  const { error, userId, role } = await requireRequestUserContext(request);
   if (error || !userId || !hasRole("coach", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
