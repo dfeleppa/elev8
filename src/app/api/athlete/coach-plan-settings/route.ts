@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getCoachNutritionPlan } from "@/lib/coach-plan";
 import { requireUserContext, requireUserContextFromBearer } from "../../../../lib/member";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
 
@@ -28,15 +29,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid goal type." }, { status: 400 });
   }
 
-  const { data: latest, error: fetchError } = await supabaseAdmin
-    .from("coach_nutrition_plans")
-    .select("id")
-    .eq("member_id", userId)
-    .order("effective_date", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (fetchError) {
+  let latest: { id: string } | null = null;
+  try {
+    latest = await getCoachNutritionPlan<{ id: string }>(userId, "id");
+  } catch {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 

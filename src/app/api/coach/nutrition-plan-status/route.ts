@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasCoachNutritionPlan } from "@/lib/coach-plan";
+import { getCoachNutritionPlan, hasCoachNutritionPlan } from "@/lib/coach-plan";
 import { requireUserContext, requireUserContextFromBearer } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -26,24 +26,24 @@ export async function GET(request: Request) {
       return NextResponse.json({ hasPlan, summary: null });
     }
 
-    const [{ data: latestPlan, error: planError }, { data: profile, error: profileError }] = await Promise.all([
-      supabaseAdmin
-        .from("coach_nutrition_plans")
-        .select("goal_type, target_weight_lbs, effective_date, last_check_in_date, next_check_in_date, plan_payload")
-        .eq("member_id", userId)
-        .order("effective_date", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+    const [latestPlan, { data: profile, error: profileError }] = await Promise.all([
+      getCoachNutritionPlan<{
+        goal_type: string | null;
+        target_weight_lbs: number | null;
+        effective_date: string | null;
+        last_check_in_date: string | null;
+        next_check_in_date: string | null;
+        plan_payload: { weightLbs?: number | null; weightKg?: number | null } | null;
+      }>(
+        userId,
+        "goal_type, target_weight_lbs, effective_date, last_check_in_date, next_check_in_date, plan_payload"
+      ),
       supabaseAdmin
         .from("app_users")
         .select("current_weight_kg")
         .eq("id", userId)
         .maybeSingle(),
     ]);
-
-    if (planError) {
-      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-    }
     if (profileError) {
       return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }

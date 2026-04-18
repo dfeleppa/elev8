@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TrendingUp, Users, DollarSign, ArrowUpRight } from "lucide-react";
-import { Panel, Micro } from "@/components/ui";
+import { Panel } from "@/components/ui";
 
 type Metrics = {
   mrr: number;

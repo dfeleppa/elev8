@@ -6,7 +6,7 @@ import {
   type GoalType,
   type IntensityPreset,
 } from "@/lib/nutrition-calculations";
-import { hasCoachNutritionPlan } from "@/lib/coach-plan";
+import { getCoachNutritionPlan, hasCoachNutritionPlan } from "@/lib/coach-plan";
 import { hasRole, requireUserContext, requireUserContextFromBearer } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -131,14 +131,32 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
-  const { data: plans, error: planError } = await supabaseAdmin
-    .from("coach_nutrition_plans")
-    .select("id, goal_type, intensity_preset, weekly_rate_percent, reverse_diet_weekly_kcal, target_weight_lbs, maintenance_calories, target_calories, protein_grams, carbs_grams, fat_grams, formula_used, sessions_per_week, effective_date, last_check_in_date, next_check_in_date, plan_payload")
-    .eq("member_id", requestedMemberId)
-    .order("effective_date", { ascending: false })
-    .limit(1);
+  let latestPlan: {
+    id: string;
+    goal_type: GoalType | null;
+    intensity_preset: IntensityPreset | null;
+    weekly_rate_percent: number | null;
+    reverse_diet_weekly_kcal: number | null;
+    target_weight_lbs: number | null;
+    maintenance_calories: number | null;
+    target_calories: number | null;
+    protein_grams: number | null;
+    carbs_grams: number | null;
+    fat_grams: number | null;
+    formula_used: "katch_mcardle" | "mifflin_st_jeor" | null;
+    sessions_per_week: number | null;
+    effective_date: string | null;
+    last_check_in_date: string | null;
+    next_check_in_date: string | null;
+    plan_payload: Record<string, unknown> | null;
+  } | null = null;
 
-  if (planError) {
+  try {
+    latestPlan = await getCoachNutritionPlan(
+      requestedMemberId,
+      "id, goal_type, intensity_preset, weekly_rate_percent, reverse_diet_weekly_kcal, target_weight_lbs, maintenance_calories, target_calories, protein_grams, carbs_grams, fat_grams, formula_used, sessions_per_week, effective_date, last_check_in_date, next_check_in_date, plan_payload"
+    );
+  } catch {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
@@ -146,14 +164,14 @@ export async function GET(request: Request) {
   try {
     hasPlan = await hasCoachNutritionPlan(requestedMemberId);
   } catch {
-    hasPlan = Boolean(plans && plans.length > 0);
+    hasPlan = Boolean(latestPlan);
   }
 
   return NextResponse.json({
     memberId: requestedMemberId,
     profile: profile ?? null,
     hasPlan,
-    latestPlan: plans?.[0] ?? null,
+    latestPlan,
   });
 }
 

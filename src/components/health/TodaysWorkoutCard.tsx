@@ -54,7 +54,7 @@ function blockIcon(type: string) {
   return <Zap className="h-3.5 w-3.5 text-yellow-400" />;
 }
 
-function blockAccent(_type: string) {
+function blockAccent() {
   return "border-black/10 bg-black/10";
 }
 
@@ -167,7 +167,7 @@ export default function TodaysWorkoutCard() {
             return (
               <div
                 key={block.id}
-                className={`flex items-start gap-2.5 rounded-xl border px-3 py-2.5 ${blockAccent(block.block_type)}`}
+                className={`flex items-start gap-2.5 rounded-xl border px-3 py-2.5 ${blockAccent()}`}
               >
                 <span className="mt-0.5 shrink-0">{blockIcon(block.block_type)}</span>
                 <div className="min-w-0 flex-1">

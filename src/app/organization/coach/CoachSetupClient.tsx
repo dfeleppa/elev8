@@ -17,6 +17,29 @@ type PlanPreview = {
   reverseDietWeeklyKcal: number;
 };
 
+type LatestPlanPayload = {
+  weeklyRatePercentOverride?: number | null;
+  reverseDietWeeklyKcalOverride?: number | null;
+};
+
+type LatestPlan = {
+  goal_type?: GoalType | null;
+  intensity_preset?: IntensityPreset | null;
+  weekly_rate_percent?: number | null;
+  reverse_diet_weekly_kcal?: number | null;
+  target_weight_lbs?: number | null;
+  maintenance_calories?: number | null;
+  target_calories?: number | null;
+  protein_grams?: number | null;
+  carbs_grams?: number | null;
+  fat_grams?: number | null;
+  formula_used?: PlanPreview["formulaUsed"] | null;
+  activity_multiplier?: number | null;
+  sessions_per_week?: number | null;
+  effective_date?: string | null;
+  plan_payload?: LatestPlanPayload | null;
+};
+
 const GOAL_OPTIONS: Array<{ value: GoalType; label: string; description: string }> = [
   {
     value: "lose_weight",
@@ -92,7 +115,7 @@ export default function CoachSetupClient() {
         }
 
         const profile = payload?.profile;
-        const latestPlan = payload?.latestPlan;
+        const latestPlan = (payload?.latestPlan ?? null) as LatestPlan | null;
 
         if (profile?.sex === "male" || profile?.sex === "female") {
           setSex(profile.sex);
@@ -124,6 +147,46 @@ export default function CoachSetupClient() {
         }
         if (typeof latestPlan?.effective_date === "string") {
           setEffectiveDate(latestPlan.effective_date);
+        }
+        if (
+          typeof latestPlan?.target_calories === "number" &&
+          typeof latestPlan?.protein_grams === "number" &&
+          typeof latestPlan?.carbs_grams === "number" &&
+          typeof latestPlan?.fat_grams === "number" &&
+          typeof latestPlan?.maintenance_calories === "number" &&
+          typeof latestPlan?.activity_multiplier === "number" &&
+          (latestPlan?.formula_used === "katch_mcardle" ||
+            latestPlan?.formula_used === "mifflin_st_jeor")
+        ) {
+          setPlanPreview({
+            formulaUsed: latestPlan.formula_used,
+            bmr:
+              latestPlan.activity_multiplier > 0
+                ? Math.round(latestPlan.maintenance_calories / latestPlan.activity_multiplier)
+                : 0,
+            activityMultiplier: latestPlan.activity_multiplier,
+            maintenanceCalories: latestPlan.maintenance_calories,
+            targetCalories: latestPlan.target_calories,
+            proteinGrams: latestPlan.protein_grams,
+            carbsGrams: latestPlan.carbs_grams,
+            fatGrams: latestPlan.fat_grams,
+            weeklyRatePercent: latestPlan.weekly_rate_percent ?? 0,
+            reverseDietWeeklyKcal: latestPlan.reverse_diet_weekly_kcal ?? 0,
+          });
+          setStep(5);
+          setMessage(
+            latestPlan.effective_date
+              ? `Loaded your active plan from ${latestPlan.effective_date}.`
+              : "Loaded your active nutrition plan."
+          );
+        }
+        if (typeof latestPlan?.plan_payload?.weeklyRatePercentOverride === "number") {
+          setUseAdvancedOverride(true);
+          setWeeklyRatePercentOverride(String(latestPlan.plan_payload.weeklyRatePercentOverride));
+        }
+        if (typeof latestPlan?.plan_payload?.reverseDietWeeklyKcalOverride === "number") {
+          setUseAdvancedOverride(true);
+          setReverseDietWeeklyKcalOverride(String(latestPlan.plan_payload.reverseDietWeeklyKcalOverride));
         }
       })
       .catch((err) => {

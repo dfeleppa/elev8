@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Pencil, X, Check, User } from "lucide-react";
-import { Micro, Panel } from "@/components/ui";
+import { Panel } from "@/components/ui";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

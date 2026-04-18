@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Micro } from "@/components/ui";
 import {
   Calendar,
   Clock,
