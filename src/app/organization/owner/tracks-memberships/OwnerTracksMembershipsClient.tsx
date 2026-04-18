@@ -419,29 +419,29 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
   return (
     <section className="space-y-8">
       <header>
-        <h1 className="text-3xl font-semibold text-slate-100">Tracks</h1>
-        <p className="mt-3 text-sm text-slate-400">Manage recurring training tracks and visibility rules.</p>
+        <h1 className="text-3xl font-semibold text-[var(--text)]">Tracks</h1>
+        <p className="mt-3 text-sm text-[var(--text-muted)]">Manage recurring training tracks and visibility rules.</p>
       </header>
 
       {error ? <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
       {message ? <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
 
-      <section className="app-card overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-[0_18px_44px_rgba(5,9,20,0.25)]">
+      <section className="app-card overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--panel-2)] shadow-[0_18px_44px_rgba(5,9,20,0.25)]">
         <div className="flex items-center justify-between bg-[#e11d8a] px-6 py-4">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Track Setup</p>
           <button
             type="button"
             onClick={openCreate}
-            className="rounded-lg border border-white/50 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
+            className="rounded-lg border border-white/50 bg-[var(--panel)] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[var(--panel)]"
           >
             + New Track
           </button>
         </div>
 
         <div className="space-y-4 px-4 py-5 md:px-6 md:py-6">
-          <div className="app-table-shell overflow-hidden rounded-xl border border-white/10">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#4a4a4a] px-3 py-2">
-              <div className="flex items-center gap-4 text-sm text-white">
+          <div className="app-table-shell overflow-hidden rounded-xl border border-[var(--line)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] bg-[var(--panel-2)] px-3 py-2">
+              <div className="flex items-center gap-4 text-sm text-[var(--text)]">
                 <div className="relative">
                   <button
                     type="button"
@@ -450,21 +450,21 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                       setFiltersOpen(false);
                     }}
                     className={`inline-flex items-center gap-1.5 px-1 py-1 text-sm font-medium transition ${
-                      columnsOpen ? "text-cyan-200" : "text-white hover:text-cyan-200"
+                      columnsOpen ? "text-cyan-200" : "text-[var(--text)] hover:text-cyan-200"
                     }`}
                   >
                     {columnsIcon}
                     Columns
                   </button>
                   {columnsOpen ? (
-                    <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-white/10 bg-[#0f172a] p-2 shadow-xl backdrop-blur">
+                    <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-2 shadow-xl backdrop-blur">
                       {trackColumnDefs.map((column) => (
-                        <label key={column.key} className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-slate-300 hover:bg-white/10">
+                        <label key={column.key} className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--panel)]">
                           <input
                             type="checkbox"
                             checked={visibleColumns[column.key]}
                             onChange={() => toggleColumn(column.key)}
-                            className="h-3.5 w-3.5 rounded border-white/20 bg-white/5 text-cyan-400 focus:ring-cyan-400"
+                            className="h-3.5 w-3.5 rounded border-white/20 bg-[var(--panel-2)] text-cyan-400 focus:ring-cyan-400"
                           />
                           {column.label}
                         </label>
@@ -481,14 +481,14 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                       setColumnsOpen(false);
                     }}
                     className={`inline-flex items-center gap-1.5 px-1 py-1 text-sm font-medium transition ${
-                      filtersOpen || privacyFilter !== "all" ? "text-cyan-200" : "text-white hover:text-cyan-200"
+                      filtersOpen || privacyFilter !== "all" ? "text-cyan-200" : "text-[var(--text)] hover:text-cyan-200"
                     }`}
                   >
                     {filtersIcon}
                     Filters
                   </button>
                   {filtersOpen ? (
-                    <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-white/10 bg-[#0f172a] p-2 shadow-xl backdrop-blur">
+                    <div className="absolute left-0 z-20 mt-2 w-44 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-2 shadow-xl backdrop-blur">
                       <button
                         type="button"
                         onClick={() => {
@@ -496,7 +496,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                           setFiltersOpen(false);
                         }}
                         className={`w-full rounded-md px-2 py-1 text-left text-xs transition ${
-                          privacyFilter === "all" ? "bg-sky-500/10 text-sky-300" : "text-slate-300 hover:bg-white/10"
+                          privacyFilter === "all" ? "bg-sky-500/10 text-sky-300" : "text-[var(--text-muted)] hover:bg-[var(--panel)]"
                         }`}
                       >
                         All Tracks
@@ -508,7 +508,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                           setFiltersOpen(false);
                         }}
                         className={`mt-1 w-full rounded-md px-2 py-1 text-left text-xs transition ${
-                          privacyFilter === "Y" ? "bg-sky-500/10 text-sky-300" : "text-slate-300 hover:bg-white/10"
+                          privacyFilter === "Y" ? "bg-sky-500/10 text-sky-300" : "text-[var(--text-muted)] hover:bg-[var(--panel)]"
                         }`}
                       >
                         Private Only
@@ -520,7 +520,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                           setFiltersOpen(false);
                         }}
                         className={`mt-1 w-full rounded-md px-2 py-1 text-left text-xs transition ${
-                          privacyFilter === "N" ? "bg-sky-500/10 text-sky-300" : "text-slate-300 hover:bg-white/10"
+                          privacyFilter === "N" ? "bg-sky-500/10 text-sky-300" : "text-[var(--text-muted)] hover:bg-[var(--panel)]"
                         }`}
                       >
                         Public Only
@@ -542,7 +542,7 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search..."
-                className="w-full max-w-xs rounded-lg border border-white/10 bg-[#2f2f2f] px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none"
+                className="w-full max-w-xs rounded-lg border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:border-cyan-400 focus:outline-none"
               />
             </div>
 
@@ -560,15 +560,15 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                 <tbody>
                   {filteredTracks.length === 0 ? (
                     <tr className="app-table-empty">
-                      <td colSpan={Math.max(trackColumnDefs.filter((column) => visibleColumns[column.key]).length, 1)} className="h-14 px-3 py-6 text-center text-sm text-slate-500">
+                      <td colSpan={Math.max(trackColumnDefs.filter((column) => visibleColumns[column.key]).length, 1)} className="h-14 px-3 py-6 text-center text-sm text-[var(--text-soft)]">
                         {loading ? "Loading tracks..." : "No tracks found."}
                       </td>
                     </tr>
                   ) : (
                     filteredTracks.map((track) => (
                       <tr key={track.id}>
-                        {visibleColumns.trackName ? <td className="px-3 py-3 text-slate-200">{track.name}</td> : null}
-                        {visibleColumns.private ? <td className="px-3 py-3 text-slate-400">{track.is_private ? "Y" : "N"}</td> : null}
+                        {visibleColumns.trackName ? <td className="px-3 py-3 text-[var(--text)]">{track.name}</td> : null}
+                        {visibleColumns.private ? <td className="px-3 py-3 text-[var(--text-muted)]">{track.is_private ? "Y" : "N"}</td> : null}
                         {visibleColumns.settings ? <td className="px-3 py-3 text-center">
                           <button
                             type="button"
@@ -613,19 +613,19 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
             </div>
           </div>
 
-          <div className="text-right text-xs text-slate-500">{loading ? "Loading..." : `Total Rows: ${filteredTracks.length}`}</div>
+          <div className="text-right text-xs text-[var(--text-soft)]">{loading ? "Loading..." : `Total Rows: ${filteredTracks.length}`}</div>
         </div>
       </section>
 
       {dialogOpen ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/45 p-6">
-          <div className="w-full max-w-6xl rounded-2xl border border-white/10 bg-[#0f172a] shadow-2xl backdrop-blur">
-            <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-              <h2 className="text-3xl font-semibold text-slate-200">{editingTrackId ? "Track Settings" : "New Track Settings"}</h2>
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-[var(--bg)]/80 p-6">
+          <div className="w-full max-w-6xl rounded-2xl border border-[var(--line)] bg-[var(--panel)] shadow-2xl backdrop-blur">
+            <div className="flex items-center justify-between border-b border-[var(--line)] px-6 py-5">
+              <h2 className="text-3xl font-semibold text-[var(--text)]">{editingTrackId ? "Track Settings" : "New Track Settings"}</h2>
               <button
                 type="button"
                 onClick={() => setDialogOpen(false)}
-                className="text-3xl leading-none text-slate-400 transition hover:text-slate-200"
+                className="text-3xl leading-none text-[var(--text-muted)] transition hover:text-[var(--text)]"
                 aria-label="Close"
               >
                 ×
@@ -633,29 +633,29 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
             </div>
 
             <div className="px-6 py-5">
-              <div className="mb-5 grid grid-cols-4 text-center text-sm text-slate-400">
-                <span className="border-b border-cyan-400 pb-3 text-slate-200">Track Info</span>
-                <span className="border-b border-white/10 pb-3">Members</span>
-                <span className="border-b border-white/10 pb-3">Content</span>
-                <span className="border-b border-white/10 pb-3">Import/Export Data</span>
+              <div className="mb-5 grid grid-cols-4 text-center text-sm text-[var(--text-muted)]">
+                <span className="border-b border-cyan-400 pb-3 text-[var(--text)]">Track Info</span>
+                <span className="border-b border-[var(--line)] pb-3">Members</span>
+                <span className="border-b border-[var(--line)] pb-3">Content</span>
+                <span className="border-b border-[var(--line)] pb-3">Import/Export Data</span>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <label className="space-y-1">
-                  <span className="text-xs uppercase tracking-[0.12em] text-slate-500">Track Name *</span>
+                  <span className="text-xs uppercase tracking-[0.12em] text-[var(--text-soft)]">Track Name *</span>
                   <input
                     value={draft.name}
                     onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] focus:border-cyan-400 focus:outline-none"
                   />
                 </label>
 
                 <label className="space-y-1">
-                  <span className="text-xs uppercase tracking-[0.12em] text-slate-500">Private Track *</span>
+                  <span className="text-xs uppercase tracking-[0.12em] text-[var(--text-soft)]">Private Track *</span>
                   <select
                     value={draft.isPrivate}
                     onChange={(event) => setDraft((prev) => ({ ...prev, isPrivate: event.target.value as "Y" | "N" }))}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] focus:border-cyan-400 focus:outline-none"
                   >
                     <option value="Y">Y</option>
                     <option value="N">N</option>
@@ -663,11 +663,11 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                 </label>
 
                 <label className="space-y-1">
-                  <span className="text-xs uppercase tracking-[0.12em] text-slate-500">Number of Levels</span>
+                  <span className="text-xs uppercase tracking-[0.12em] text-[var(--text-soft)]">Number of Levels</span>
                   <select
                     value={draft.numberOfLevels}
                     onChange={(event) => setDraft((prev) => ({ ...prev, numberOfLevels: event.target.value as TrackDraft["numberOfLevels"] }))}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] focus:border-cyan-400 focus:outline-none"
                   >
                     {numberOfLevelsOptions.map((level) => (
                       <option key={level} value={level}>
@@ -679,23 +679,23 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
               </div>
 
               <div className="mt-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">Keep Workouts Hidden Until (Optional)</p>
-                <div className="mt-3 flex flex-wrap items-end gap-4 rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Keep Workouts Hidden Until (Optional)</p>
+                <div className="mt-3 flex flex-wrap items-end gap-4 rounded-xl border border-[var(--line)] bg-[var(--panel-2)] p-3">
                   <label className="space-y-1">
-                    <span className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Day(s) Prior</span>
+                    <span className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-soft)]">Day(s) Prior</span>
                     <input
                       type="number"
                       min="0"
                       value={draft.hideWorkoutsDaysPrior}
                       onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsDaysPrior: event.target.value }))}
                       placeholder="7"
-                      className="w-32 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
+                      className="w-32 rounded-md border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] focus:border-cyan-400 focus:outline-none"
                     />
                   </label>
-                  <div className="pb-2 text-sm font-medium text-slate-400">at</div>
-                  <div className="flex items-end gap-2 rounded-md border border-white/10 bg-white/5 px-2 py-2">
+                  <div className="pb-2 text-sm font-medium text-[var(--text-muted)]">at</div>
+                  <div className="flex items-end gap-2 rounded-md border border-[var(--line)] bg-[var(--panel-2)] px-2 py-2">
                     <label className="space-y-1">
-                      <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">HH</span>
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-soft)]">HH</span>
                       <input
                         type="number"
                         min="0"
@@ -703,12 +703,12 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                         value={draft.hideWorkoutsHour}
                         onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsHour: event.target.value }))}
                         placeholder="00"
-                        className="w-16 rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-center text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
+                        className="w-16 rounded-md border border-[var(--line)] bg-[var(--panel-2)] px-2 py-1.5 text-center text-sm text-[var(--text)] focus:border-cyan-400 focus:outline-none"
                       />
                     </label>
-                    <div className="pb-2 text-base font-semibold text-slate-400">:</div>
+                    <div className="pb-2 text-base font-semibold text-[var(--text-muted)]">:</div>
                     <label className="space-y-1">
-                      <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">MM</span>
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-soft)]">MM</span>
                       <input
                         type="number"
                         min="0"
@@ -716,11 +716,11 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
                         value={draft.hideWorkoutsMinute}
                         onChange={(event) => setDraft((prev) => ({ ...prev, hideWorkoutsMinute: event.target.value }))}
                         placeholder="00"
-                        className="w-16 rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-center text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
+                        className="w-16 rounded-md border border-[var(--line)] bg-[var(--panel-2)] px-2 py-1.5 text-center text-sm text-[var(--text)] focus:border-cyan-400 focus:outline-none"
                       />
                     </label>
                   </div>
-                  <p className="pb-2 text-xs font-medium text-slate-500">24-hour time</p>
+                  <p className="pb-2 text-xs font-medium text-[var(--text-soft)]">24-hour time</p>
                 </div>
               </div>
 
@@ -747,14 +747,14 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
       ) : null}
 
       {membersDialogOpen && activeMembersTrack ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/45 p-6">
-          <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0f172a] shadow-2xl backdrop-blur">
-            <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-              <h2 className="text-2xl font-semibold text-slate-200">Track Members: {activeMembersTrack.name}</h2>
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-[var(--bg)]/80 p-6">
+          <div className="w-full max-w-3xl rounded-2xl border border-[var(--line)] bg-[var(--panel)] shadow-2xl backdrop-blur">
+            <div className="flex items-center justify-between border-b border-[var(--line)] px-6 py-5">
+              <h2 className="text-2xl font-semibold text-[var(--text)]">Track Members: {activeMembersTrack.name}</h2>
               <button
                 type="button"
                 onClick={() => setMembersDialogOpen(false)}
-                className="text-3xl leading-none text-slate-400 transition hover:text-slate-200"
+                className="text-3xl leading-none text-[var(--text-muted)] transition hover:text-[var(--text)]"
                 aria-label="Close"
               >
                 ×
@@ -762,26 +762,26 @@ export default function OwnerTracksMembershipsClient({ organizationId }: { organ
             </div>
             <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
               {membersLoading ? (
-                <p className="text-sm text-slate-500">Loading members...</p>
+                <p className="text-sm text-[var(--text-soft)]">Loading members...</p>
               ) : members.length === 0 ? (
-                <p className="text-sm text-slate-500">No members found.</p>
+                <p className="text-sm text-[var(--text-soft)]">No members found.</p>
               ) : (
                 <div className="space-y-2">
                   {members.map((member) => {
                     const assigned = member.tracks.includes(activeMembersTrack.name);
                     const disabled = membersSavingEmail === member.email;
                     return (
-                      <label key={member.email} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                      <label key={member.email} className="flex items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2">
                         <div>
-                          <p className="text-sm font-medium text-slate-200">{member.fullName}</p>
-                          <p className="text-xs text-slate-500">{member.email}</p>
+                          <p className="text-sm font-medium text-[var(--text)]">{member.fullName}</p>
+                          <p className="text-xs text-[var(--text-soft)]">{member.email}</p>
                         </div>
                         <input
                           type="checkbox"
                           checked={assigned}
                           disabled={disabled}
                           onChange={(event) => setMemberAssigned(member, event.target.checked)}
-                          className="h-4 w-4 rounded border-white/20 bg-white/5 text-cyan-400 focus:ring-cyan-400"
+                          className="h-4 w-4 rounded border-white/20 bg-[var(--panel-2)] text-cyan-400 focus:ring-cyan-400"
                         />
                       </label>
                     );
