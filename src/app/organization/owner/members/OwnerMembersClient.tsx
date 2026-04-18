@@ -111,7 +111,7 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
   return (
     <>
       {/* Sub-header / tab strip */}
-      <div className="w-full border-b border-white/10 bg-gradient-to-r from-pink-500/10 via-rose-500/5 to-transparent px-5 py-2">
+      <div className="w-full border-b border-[var(--line)] bg-gradient-to-r from-[var(--pink)]/8 via-[var(--pink)]/4 to-transparent px-5 py-2">
         {error ? (
           <div className="mb-2 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">
             {error}
@@ -126,18 +126,18 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
               onClick={() => switchTab(tab.id)}
               className={
                 activeTab === tab.id
-                  ? "shrink-0 whitespace-nowrap rounded-xl border border-[#ffb1c4]/30 bg-[#ffb1c4]/15 px-4 py-2 text-sm font-semibold text-[#ffb1c4] transition-colors"
-                  : "shrink-0 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200"
+                  ? "shrink-0 whitespace-nowrap rounded-xl border border-[var(--pink-soft)]/30 bg-[var(--pink-soft)]/15 px-4 py-2 text-sm font-semibold text-[var(--pink-soft)] transition-colors"
+                  : "shrink-0 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
               }
             >
               {tab.label}
               {tab.id === "churn-risk" && churnRows.length > 0 && (
-                <span className="ml-1.5 rounded-full bg-[#ffb1c4]/20 px-1.5 py-0.5 text-[10px] font-bold text-[#ffb1c4]">
+                <span className="ml-1.5 rounded-full bg-[var(--pink-soft)]/20 px-1.5 py-0.5 text-[10px] font-bold text-[var(--pink-soft)]">
                   {churnRows.length}
                 </span>
               )}
               {tab.id === "birthdays" && birthdayRows.length > 0 && (
-                <span className="ml-1.5 rounded-full bg-[#ffb1c4]/20 px-1.5 py-0.5 text-[10px] font-bold text-[#ffb1c4]">
+                <span className="ml-1.5 rounded-full bg-[var(--pink-soft)]/20 px-1.5 py-0.5 text-[10px] font-bold text-[var(--pink-soft)]">
                   {birthdayRows.length}
                 </span>
               )}
@@ -153,7 +153,7 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
         {activeTab === "dashboard" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-400">{members.length} members</p>
+              <p className="text-sm text-[var(--text-muted)]">{members.length} members</p>
               <MemberImportButton organizationId={organizationId} />
             </div>
             <OwnerMembersTable rows={members} />
@@ -165,35 +165,35 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
           <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {membershipBreakdown.map(({ name, count, pct }) => (
-                <div key={name} className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-                  <p className="truncate text-xs text-slate-400">{name}</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-100">{count}</p>
-                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                <div key={name} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-5 py-4">
+                  <p className="truncate text-xs text-[var(--text-muted)]">{name}</p>
+                  <p className="mt-1 text-2xl font-semibold text-[var(--text)]">{count}</p>
+                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[var(--line-strong)]">
                     <div
                       className="h-full rounded-full bg-emerald-500"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <p className="mt-1 text-right text-[11px] text-slate-500">{pct}%</p>
+                  <p className="mt-1 text-right text-[11px] text-[var(--text-soft)]">{pct}%</p>
                 </div>
               ))}
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-white/10">
+            <div className="overflow-hidden rounded-2xl border border-[var(--line)]">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-white/10 bg-white/5">
-                    <th className="px-4 py-3 font-semibold text-slate-300">Membership</th>
-                    <th className="px-4 py-3 font-semibold text-slate-300">Members</th>
-                    <th className="px-4 py-3 font-semibold text-slate-300">Share</th>
+                  <tr className="border-b border-[var(--line)] bg-[var(--panel-2)]">
+                    <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Membership</th>
+                    <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Members</th>
+                    <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Share</th>
                   </tr>
                 </thead>
                 <tbody>
                   {membershipBreakdown.map(({ name, count, pct }) => (
-                    <tr key={name} className="border-b border-white/5 last:border-0 hover:bg-white/5">
-                      <td className="px-4 py-3 text-slate-200">{name}</td>
-                      <td className="px-4 py-3 text-slate-300">{count}</td>
-                      <td className="px-4 py-3 text-slate-400">{pct}%</td>
+                    <tr key={name} className="border-b border-[var(--line)] last:border-0 hover:bg-[var(--panel-2)]">
+                      <td className="px-4 py-3 text-[var(--text)]">{name}</td>
+                      <td className="px-4 py-3 text-[var(--text-muted)]">{count}</td>
+                      <td className="px-4 py-3 text-[var(--text-soft)]">{pct}%</td>
                     </tr>
                   ))}
                 </tbody>
@@ -205,7 +205,7 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
         {/* Churn Risk tab */}
         {activeTab === "churn-risk" && (
           <div className="space-y-4">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[var(--text-muted)]">
               {churnRows.length} member{churnRows.length !== 1 ? "s" : ""} with no check-in in 30+ days.
             </p>
             {churnRows.length === 0 ? (
@@ -213,28 +213,28 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
                 No churn risk detected — all members have been active recently.
               </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-white/10">
+              <div className="overflow-hidden rounded-2xl border border-[var(--line)]">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-white/10 bg-white/5">
-                      <th className="px-4 py-3 font-semibold text-slate-300">Member</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Membership</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Last Seen</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Days Inactive</th>
+                    <tr className="border-b border-[var(--line)] bg-[var(--panel-2)]">
+                      <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Member</th>
+                      <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Membership</th>
+                      <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Last Seen</th>
+                      <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Days Inactive</th>
                     </tr>
                   </thead>
                   <tbody>
                     {churnRows.map(({ row, lastSeen, days }, i) => (
-                      <tr key={`${row.email ?? i}`} className="border-b border-white/5 last:border-0 hover:bg-white/5">
+                      <tr key={`${row.email ?? i}`} className="border-b border-[var(--line)] last:border-0 hover:bg-[var(--panel-2)]">
                         <td className="px-4 py-3">
-                          <p className="font-medium text-slate-100">{getFullName(row)}</p>
-                          <p className="text-xs text-slate-500">{row.email ?? "-"}</p>
+                          <p className="font-medium text-[var(--text)]">{getFullName(row)}</p>
+                          <p className="text-xs text-[var(--text-soft)]">{row.email ?? "-"}</p>
                         </td>
-                        <td className="px-4 py-3 text-slate-300">{row.membership ?? "-"}</td>
-                        <td className="px-4 py-3 text-slate-400">{formatDate(lastSeen)}</td>
+                        <td className="px-4 py-3 text-[var(--text-muted)]">{row.membership ?? "-"}</td>
+                        <td className="px-4 py-3 text-[var(--text-muted)]">{formatDate(lastSeen)}</td>
                         <td className="px-4 py-3">
                           {days === null ? (
-                            <span className="rounded-full border border-slate-400/30 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-400">
+                            <span className="rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-muted)]">
                               Never
                             </span>
                           ) : (
@@ -255,32 +255,32 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
         {/* Birthdays tab */}
         {activeTab === "birthdays" && (
           <div className="space-y-4">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[var(--text-muted)]">
               {birthdayRows.length} member{birthdayRows.length !== 1 ? "s" : ""} with a birthday in the next 30 days.
             </p>
             {birthdayRows.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-8 text-center text-sm text-slate-500">
+              <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-5 py-8 text-center text-sm text-[var(--text-soft)]">
                 No birthdays in the next 30 days.
               </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-white/10">
+              <div className="overflow-hidden rounded-2xl border border-[var(--line)]">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-white/10 bg-white/5">
-                      <th className="px-4 py-3 font-semibold text-slate-300">Member</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Birthday</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Days Away</th>
-                      <th className="px-4 py-3 font-semibold text-slate-300">Membership</th>
+                    <tr className="border-b border-[var(--line)] bg-[var(--panel-2)]">
+                      <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Member</th>
+                      <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Birthday</th>
+                      <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Days Away</th>
+                      <th className="px-4 py-3 font-semibold text-[var(--text-muted)]">Membership</th>
                     </tr>
                   </thead>
                   <tbody>
                     {birthdayRows.map(({ row, daysUntil }, i) => (
-                      <tr key={`${row.email ?? i}`} className="border-b border-white/5 last:border-0 hover:bg-white/5">
+                      <tr key={`${row.email ?? i}`} className="border-b border-[var(--line)] last:border-0 hover:bg-[var(--panel-2)]">
                         <td className="px-4 py-3">
-                          <p className="font-medium text-slate-100">{getFullName(row)}</p>
-                          <p className="text-xs text-slate-500">{row.email ?? "-"}</p>
+                          <p className="font-medium text-[var(--text)]">{getFullName(row)}</p>
+                          <p className="text-xs text-[var(--text-soft)]">{row.email ?? "-"}</p>
                         </td>
-                        <td className="px-4 py-3 text-slate-300">
+                        <td className="px-4 py-3 text-[var(--text-muted)]">
                           {row.birth_date
                             ? new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" }).format(new Date(row.birth_date))
                             : "-"}
@@ -296,7 +296,7 @@ export default function OwnerMembersClient({ initialTab, members, organizationId
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-slate-400">{row.membership ?? "-"}</td>
+                        <td className="px-4 py-3 text-[var(--text-soft)]">{row.membership ?? "-"}</td>
                       </tr>
                     ))}
                   </tbody>

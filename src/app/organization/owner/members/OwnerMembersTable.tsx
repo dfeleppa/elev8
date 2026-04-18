@@ -240,7 +240,7 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
 
   const headingClass = (column: SortColumn) => {
     const active = sortColumn === column;
-    return `font-semibold transition ${active ? "text-white" : "text-white/90 hover:text-white"}`;
+    return `font-semibold transition ${active ? "text-[var(--text)]" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`;
   };
 
   return (
@@ -283,13 +283,13 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
       <OwnerDataTable minWidthClassName="min-w-[1600px]">
           <thead>
             <tr>
-              <th className="border-b border-white/10 px-3 py-3 font-semibold">Member</th>
-              <th className="border-b border-white/10 px-3 py-3 font-semibold">Status</th>
-              <th className="border-b border-white/10 px-3 py-3 font-semibold">Membership</th>
-              <th className="border-b border-white/10 px-3 py-3 font-semibold">Tags</th>
-              <th className="border-b border-white/10 px-3 py-3 font-semibold">Tracks</th>
-              <th className="border-b border-white/10 px-3 py-3 font-semibold">Gender</th>
-              <th className="border-b border-white/10 px-3 py-3 font-semibold">
+              <th className="border-b border-[var(--line)] px-3 py-3 font-semibold">Member</th>
+              <th className="border-b border-[var(--line)] px-3 py-3 font-semibold">Status</th>
+              <th className="border-b border-[var(--line)] px-3 py-3 font-semibold">Membership</th>
+              <th className="border-b border-[var(--line)] px-3 py-3 font-semibold">Tags</th>
+              <th className="border-b border-[var(--line)] px-3 py-3 font-semibold">Tracks</th>
+              <th className="border-b border-[var(--line)] px-3 py-3 font-semibold">Gender</th>
+              <th className="border-b border-[var(--line)] px-3 py-3 font-semibold">
                 <button
                   type="button"
                   onClick={() => onSort("birth_date")}
@@ -298,7 +298,7 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
                   Birth Date{sortColumn === "birth_date" ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
                 </button>
               </th>
-              <th className="border-b border-white/10 px-3 py-3 font-semibold">
+              <th className="border-b border-[var(--line)] px-3 py-3 font-semibold">
                 <button
                   type="button"
                   onClick={() => onSort("attendance_count")}
@@ -307,7 +307,7 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
                   Attendance{sortColumn === "attendance_count" ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
                 </button>
               </th>
-              <th className="border-b border-white/10 px-3 py-3 font-semibold">
+              <th className="border-b border-[var(--line)] px-3 py-3 font-semibold">
                 <button
                   type="button"
                   onClick={() => onSort("last_check_in")}
@@ -316,7 +316,7 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
                   Last Check-In{sortColumn === "last_check_in" ? (sortDirection === "asc" ? " ▲" : " ▼") : ""}
                 </button>
               </th>
-              <th className="border-b border-white/10 px-3 py-3 font-semibold">
+              <th className="border-b border-[var(--line)] px-3 py-3 font-semibold">
                 <button
                   type="button"
                   onClick={() => onSort("last_active")}
@@ -332,7 +332,7 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
               <tr>
                 <td
                   colSpan={10}
-                  className="px-4 py-8 text-sm text-slate-500"
+                  className="px-4 py-8 text-sm text-[var(--text-soft)]"
                 >
                   No members match the current filters.
                 </td>
@@ -342,16 +342,16 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
                 const status = getStatus(row);
                 return (
                 <tr key={`${row.email ?? "member"}-${index}`}>
-                  <td className="rounded-l-2xl border-y border-white/10 px-4 py-4 align-top">
+                  <td className="rounded-l-2xl border-y border-[var(--line)] px-4 py-4 align-top">
                     <div className="flex items-start gap-3">
                       <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-emerald-400/50 bg-emerald-500/12 text-xs font-semibold text-emerald-700">
                         {getInitials(row)}
                       </div>
                       <div>
-                        <p className="text-sm font-medium leading-tight text-slate-100">{getFullName(row)}</p>
-                        <p className="mt-1 text-xs text-slate-500">{row.email ?? "-"}</p>
-                        {row.phone ? <p className="mt-0.5 text-xs text-slate-500">{row.phone}</p> : null}
-                        <div className="mt-2 flex items-center gap-2 text-slate-500">
+                        <p className="text-sm font-medium leading-tight text-[var(--text)]">{getFullName(row)}</p>
+                        <p className="mt-1 text-xs text-[var(--text-soft)]">{row.email ?? "-"}</p>
+                        {row.phone ? <p className="mt-0.5 text-xs text-[var(--text-soft)]">{row.phone}</p> : null}
+                        <div className="mt-2 flex items-center gap-2 text-[var(--text-soft)]">
                           <button type="button" className={ownerIconButtonCompactClass}>{externalIcon}</button>
                           <button type="button" className={ownerIconButtonCompactClass}>{phoneIcon}</button>
                           <button type="button" className={ownerIconButtonCompactClass}>{messageIcon}</button>
@@ -360,30 +360,30 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
                       </div>
                     </div>
                   </td>
-                  <td className="border-y border-white/10 px-4 py-4 align-top">
+                  <td className="border-y border-[var(--line)] px-4 py-4 align-top">
                     <div className="flex flex-wrap gap-1.5">
                       <span className="rounded-full border border-emerald-600/35 bg-emerald-500/12 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
                         {status}
                       </span>
                       {!row.last_check_in && !row.status ? (
-                        <span className="rounded-full border border-slate-400/40 bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                        <span className="rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-soft)]">
                           Pending
                         </span>
                       ) : null}
                     </div>
                     {row.status_notes ? (
-                      <p className="mt-1.5 text-xs text-slate-500 italic">{row.status_notes}</p>
+                      <p className="mt-1.5 text-xs text-[var(--text-soft)] italic">{row.status_notes}</p>
                     ) : null}
                   </td>
-                  <td className="border-y border-white/10 px-4 py-4 align-top">
-                    <p className="text-sm text-slate-300">{row.membership ?? "-"}</p>
+                  <td className="border-y border-[var(--line)] px-4 py-4 align-top">
+                    <p className="text-sm text-[var(--text-muted)]">{row.membership ?? "-"}</p>
                     {getMembershipTag(row.membership) ? (
-                      <span className="mt-2 inline-block rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-white">
+                      <span className="mt-2 inline-block rounded-md bg-[var(--violet)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-white">
                         {getMembershipTag(row.membership)}
                       </span>
                     ) : null}
                   </td>
-                  <td className="border-y border-white/10 px-4 py-4 align-top">
+                  <td className="border-y border-[var(--line)] px-4 py-4 align-top">
                     {row.tags ? (
                       <div className="flex flex-wrap gap-1">
                         {row.tags.split(",").map((tag) => tag.trim()).filter(Boolean).map((tag) => (
@@ -392,14 +392,14 @@ export default function OwnerMembersTable({ rows }: { rows: OwnerMemberRow[] }) 
                           </span>
                         ))}
                       </div>
-                    ) : <span className="text-sm text-slate-500">-</span>}
+                    ) : <span className="text-sm text-[var(--text-soft)]">-</span>}
                   </td>
-                  <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{getTracks(row)}</td>
-                  <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{row.gender ?? "-"}</td>
-                  <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{formatDate(row.birth_date ?? null)}</td>
-                  <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{row.attendance_count != null ? row.attendance_count : "-"}</td>
-                  <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{formatDate(row.last_check_in)}</td>
-                  <td className="rounded-r-2xl border-y border-white/10 px-4 py-4 align-top text-sm text-slate-300">{formatDate(getLastActive(row))}</td>
+                  <td className="border-y border-[var(--line)] px-4 py-4 align-top text-sm text-[var(--text-muted)]">{getTracks(row)}</td>
+                  <td className="border-y border-[var(--line)] px-4 py-4 align-top text-sm text-[var(--text-muted)]">{row.gender ?? "-"}</td>
+                  <td className="border-y border-[var(--line)] px-4 py-4 align-top text-sm text-[var(--text-muted)]">{formatDate(row.birth_date ?? null)}</td>
+                  <td className="border-y border-[var(--line)] px-4 py-4 align-top text-sm text-[var(--text-muted)]">{row.attendance_count != null ? row.attendance_count : "-"}</td>
+                  <td className="border-y border-[var(--line)] px-4 py-4 align-top text-sm text-[var(--text-muted)]">{formatDate(row.last_check_in)}</td>
+                  <td className="rounded-r-2xl border-y border-[var(--line)] px-4 py-4 align-top text-sm text-[var(--text-muted)]">{formatDate(getLastActive(row))}</td>
                 </tr>
                 );
               })
