@@ -1,0 +1,169 @@
+/* ============================================================
+   Elev8 — app-ds.css
+   Design-system helper classes consumed by the primitives in
+   src/components/ui/*. Keep pure CSS here; no @apply required.
+   ============================================================ */
+
+/* ---------- Primitives ---------- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.panel-muted {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.hairline { border-color: var(--line); }
+.hairline-strong { border-color: var(--line-strong); }
+
+/* Uppercase mono label used everywhere ("micro") */
+.micro {
+  font-family: var(--font-brand-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Subtle dot texture for accent cards */
+.dotgrid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+:root[data-theme="light"] .dotgrid {
+  background-image: radial-gradient(rgba(20, 17, 15, 0.08) 1px, transparent 1px);
+}
+
+/* ---------- Accent cards (dual-tone) ----------
+   Use on hero/insight panels. Text color is baked in for contrast. */
+.accent-pink {
+  background: linear-gradient(135deg, #ff4a8d 0%, #ff79a5 60%, #ffb1c4 100%);
+  color: #230012;
+}
+.accent-violet {
+  background: linear-gradient(135deg, #6d3dd4 0%, #8b5cf6 55%, #b794f6 100%);
+  color: #140a2e;
+}
+.accent-lime {
+  background: linear-gradient(135deg, #8ee03c 0%, #b6ff4a 55%, #dcff85 100%);
+  color: #14220a;
+}
+.accent-ink {
+  background: #101216;
+  color: #f2f2f5;
+}
+:root[data-theme="light"] .accent-ink { background: #17181c; color: #f6f4ee; }
+
+/* ---------- Motion ---------- */
+.hover-lift {
+  transition: transform 280ms cubic-bezier(.2,.7,.2,1),
+              border-color 200ms, background 200ms;
+}
+.hover-lift:hover { transform: translateY(-2px); }
+
+.fade-in { animation: ds-fadeIn 500ms cubic-bezier(.2,.7,.2,1) both; }
+@keyframes ds-fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.bar-grow { transform-origin: bottom; animation: ds-grow 700ms cubic-bezier(.2,.7,.2,1) forwards; transform: scaleY(0); }
+@keyframes ds-grow { to { transform: scaleY(1); } }
+
+.arc-anim {
+  stroke-dasharray: var(--dash);
+  stroke-dashoffset: var(--dash);
+  animation: ds-arc 1.2s 150ms cubic-bezier(.2,.7,.2,1) forwards;
+}
+@keyframes ds-arc { to { stroke-dashoffset: var(--offset); } }
+
+.spark-draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: ds-draw 1.4s 120ms cubic-bezier(.2,.7,.2,1) forwards;
+}
+@keyframes ds-draw { to { stroke-dashoffset: 0; } }
+
+/* ---------- Chips / pills ---------- */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600;
+  padding: 4px 8px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--line);
+  color: var(--text-muted);
+}
+.pill-pink   { background: rgba(255,74,141,0.12); color: #ff79a5; border: 1px solid rgba(255,74,141,0.25); }
+.pill-violet { background: rgba(139,92,246,0.14); color: #b294f7; border: 1px solid rgba(139,92,246,0.28); }
+.pill-lime   { background: rgba(182,255,74,0.14); color: #c8ff6a; border: 1px solid rgba(182,255,74,0.28); }
+
+:root[data-theme="light"] .pill-pink   { color: #c62066; background: rgba(225,48,108,0.10); border-color: rgba(225,48,108,0.30); }
+:root[data-theme="light"] .pill-violet { color: #5a2fcc; background: rgba(109,61,212,0.10); border-color: rgba(109,61,212,0.30); }
+:root[data-theme="light"] .pill-lime   { color: #548a0f; background: rgba(142,224,60,0.15); border-color: rgba(142,224,60,0.40); }
+
+/* ---------- Nav (used by SidebarShell) ---------- */
+.app-nav-link {
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  transition: background 160ms, color 160ms, border-color 160ms;
+}
+.app-nav-link:hover {
+  color: var(--text);
+  background: var(--panel-2);
+}
+.app-nav-link-active {
+  color: var(--text);
+  background: linear-gradient(90deg, rgba(255,74,141,0.18), rgba(139,92,246,0.14) 60%, transparent 100%);
+  border-left: 2px solid var(--pink);
+  border-radius: 0 6px 6px 0;
+}
+
+.app-shell-sidebar {
+  background: var(--bg-2);
+  border-right: 1px solid var(--line);
+}
+
+.app-shell-topbar {
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(8px);
+}
+
+/* ---------- Tables ---------- */
+.app-table-shell {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+.app-table { width: 100%; border-collapse: collapse; }
+.app-table thead th {
+  padding: 12px 24px;
+  text-align: left;
+  font-family: var(--font-brand-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--panel-2);
+}
+.app-table tbody td {
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  padding: 12px 24px;
+  color: var(--text);
+}
+.app-table tbody tr:nth-child(even) td { background: var(--panel-2); }
+
+/* ---------- Legacy .glass-panel shim ----------
+   Old pages still reference .glass-panel / .app-card.
+   Remap them to the new flat panels so nothing visually breaks. */
+.glass-panel, .app-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: none;
+  backdrop-filter: none;
+}

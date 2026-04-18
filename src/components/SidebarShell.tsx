@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import { Micro } from "@/components/ui";
 import {
   Activity,
   BarChart3,
@@ -142,6 +143,15 @@ const mobileQuickLinks = [
   { label: "Workout", href: "/organization/member/workout", icon: <Dumbbell className="h-4 w-4" aria-hidden="true" /> },
   { label: "Nutrition", href: "/organization/member/nutrition", icon: <HandPlatter className="h-4 w-4" aria-hidden="true" /> },
   { label: "Classes", href: "/organization/member/class-schedule", icon: <CalendarDays className="h-4 w-4" aria-hidden="true" /> },
+] as const;
+
+/** Static section groupings for the athlete view nav */
+const ATHLETE_SECTIONS = [
+  { label: "Today",    hrefs: ["/organization/member/athlete-dashboard"] },
+  { label: "Train",    hrefs: ["/organization/member/workout"] },
+  { label: "Schedule", hrefs: ["/organization/member/class-schedule"] },
+  { label: "Nutrition",hrefs: ["/organization/member/nutrition", "/organization/member/nutrition-coach"] },
+  { label: "Account",  hrefs: ["/organization/member/account-dashboard", "/organization/member/store"] },
 ] as const;
 
 function getNavIcon(href: string) {
@@ -459,6 +469,34 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const athleteEntries = sectionByLabel.get("member")?.children ?? [];
   const visibleEntries = viewMode === "athlete" ? athleteEntries : gymEntries;
 
+  /** Grouped nav sections used to render <Micro> headers in expanded sidebar */
+  const navSections: { label: string; entries: NavChild[] }[] =
+    viewMode === "athlete"
+      ? ATHLETE_SECTIONS.map(({ label, hrefs }) => ({
+          label,
+          entries: athleteEntries.filter((e) => (hrefs as readonly string[]).includes(e.href)),
+        })).filter((s) => s.entries.length > 0)
+      : (() => {
+          const sections: { label: string; entries: NavChild[] }[] = [];
+          if (gymDashboardEntry) {
+            sections.push({ label: "Overview", entries: [gymDashboardEntry] });
+          }
+          const GYM_LABELS: Record<string, string> = {
+            owner: "Management",
+            admin: "Operations",
+            coach: "Coaching",
+          };
+          for (const key of gymSectionOrder) {
+            const entries = (sectionByLabel.get(key)?.children ?? []).filter(
+              (e) => e.href !== "/organization/gym-dashboard"
+            );
+            if (entries.length > 0) {
+              sections.push({ label: GYM_LABELS[key] ?? key, entries });
+            }
+          }
+          return sections;
+        })();
+
   const handleSwitchView = (nextMode: ViewMode) => {
     if (nextMode === "gym" && !canAccessGymView) {
       return;
@@ -511,7 +549,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               className="flex items-center gap-3 text-left"
               aria-label="Open menu"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
                 <Image
                   src={brandLogoSrc}
                   alt={brandLogoAlt}
@@ -529,7 +567,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={isActive ? "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                      className={isActive ? "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink-soft)] transition-colors" : "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
                       aria-label={link.label}
                       aria-current={isActive ? "page" : undefined}
                     >
@@ -543,7 +581,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                   <button
                     type="button"
                     onClick={() => handleSwitchView("gym")}
-                    className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                    className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink-soft)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
                     aria-label="Gym view"
                   >
                     {gymViewIcon}
@@ -551,7 +589,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                   <button
                     type="button"
                     onClick={() => handleSwitchView("athlete")}
-                    className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                    className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink-soft)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
                     aria-label="Athlete view"
                   >
                     {athleteViewIcon}
@@ -561,7 +599,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-200 transition hover:border-white/30 hover:bg-white/10"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
                 aria-label={themeToggleLabel}
               >
                 {themeIcon}
@@ -581,7 +619,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           />
           <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-6">
             <div className="flex items-center justify-between gap-2 px-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
                 <Image
                   src={brandLogoSrc}
                   alt={brandLogoAlt}
@@ -593,7 +631,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <button
                 type="button"
                 onClick={() => setMobileSidebarOpen(false)}
-                className="rounded-full border border-white/15 p-2 text-slate-300 transition hover:border-white/35 hover:text-slate-100"
+                className="rounded-full border border-[var(--line-strong)] p-2 text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
                 aria-label="Close menu"
               >
                 {hamburgerIcon}
@@ -601,31 +639,38 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             </div>
 
             <nav className="mt-6 flex-1 space-y-5 overflow-y-auto overscroll-contain pb-4 text-sm">
-              <div className="space-y-1">
-                {visibleEntries.map((entry) => {
-                  const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
-                  return (
-                    <Link
-                      key={entry.href}
-                      href={entry.href}
-                      className={`app-nav-link flex items-center rounded-lg px-3 py-2 text-xs ${
-                        isActive ? "app-nav-link-active" : ""
-                      }`}
-                      onClick={() => setMobileSidebarOpen(false)}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      <span className="mr-2 text-slate-400">{getNavIcon(entry.href)}</span>
-                      {entry.label}
-                    </Link>
-                  );
-                })}
-              </div>
+              {navSections.map((section) => (
+                <div key={section.label}>
+                  <div className="mb-1 px-3">
+                    <Micro>{section.label}</Micro>
+                  </div>
+                  <div className="space-y-0.5">
+                    {section.entries.map((entry) => {
+                      const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
+                      return (
+                        <Link
+                          key={entry.href}
+                          href={entry.href}
+                          className={`app-nav-link flex items-center rounded-lg px-3 py-2 text-xs ${
+                            isActive ? "app-nav-link-active" : ""
+                          }`}
+                          onClick={() => setMobileSidebarOpen(false)}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <span className="mr-2 text-[var(--text-soft)]">{getNavIcon(entry.href)}</span>
+                          {entry.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
-            <div className="mt-4 border-t border-white/10 px-2 pt-4">
+            <div className="mt-4 border-t border-[var(--line)] px-2 pt-4">
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="flex w-full items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm font-medium text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+                className="flex w-full items-center gap-2 rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
                 Sign out
@@ -648,7 +693,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             className={`flex items-center gap-3 ${sidebarCollapsed ? "justify-center" : ""}`}
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Sidebar logo"}
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
               <Image
                 src={brandLogoSrc}
                 alt={brandLogoAlt}
@@ -658,8 +703,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               />
             </span>
             <div className={sidebarCollapsed ? "sr-only" : "block"}>
-              <p className="text-sm font-semibold text-slate-100">Elev8</p>
-              <p className="text-xs text-slate-400">Control Center</p>
+              <p className="text-sm font-semibold text-[var(--text)]">Elev8</p>
+              <p className="text-xs text-[var(--text-soft)]">Control Center</p>
             </div>
           </button>
           <button
@@ -680,10 +725,10 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 <Link
                   key={entry.href}
                   href={entry.href}
-                  className={`group flex h-10 w-10 items-center justify-center rounded-xl border text-slate-300 transition ${
+                  className={`group flex h-10 w-10 items-center justify-center rounded-xl border text-[var(--text-muted)] transition ${
                     isActive
-                      ? "border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4]"
-                      : "border-transparent hover:border-white/10 hover:bg-white/5 hover:text-white"
+                      ? "border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink-soft)]"
+                      : "border-transparent hover:border-[var(--line)] hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
                   }`}
                   aria-label={entry.label}
                   title={entry.label}
@@ -695,45 +740,54 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             })}
           </nav>
         ) : (
-          <nav className="mt-6 space-y-1 text-sm">
-            {visibleEntries.map((entry) => {
-              const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
-              return (
-                <Link
-                  key={entry.href}
-                  href={entry.href}
-                  className={`app-nav-link flex items-center rounded-lg px-3 py-2 text-xs ${
-                    isActive ? "app-nav-link-active" : ""
-                  }`}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <span className="mr-2 text-slate-400">{getNavIcon(entry.href)}</span>
-                  {entry.label}
-                </Link>
-              );
-            })}
+          <nav className="mt-6 space-y-5 overflow-y-auto text-sm">
+            {navSections.map((section) => (
+              <div key={section.label}>
+                <div className="mb-1 px-3">
+                  <Micro>{section.label}</Micro>
+                </div>
+                <div className="space-y-0.5">
+                  {section.entries.map((entry) => {
+                    const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
+                    return (
+                      <Link
+                        key={entry.href}
+                        href={entry.href}
+                        className={`app-nav-link flex items-center rounded-lg px-3 py-2 text-xs ${
+                          isActive ? "app-nav-link-active" : ""
+                        }`}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <span className="mr-2 text-[var(--text-soft)]">{getNavIcon(entry.href)}</span>
+                        {entry.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         )}
       </aside>
 
       <div className={`${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
-        <header className="app-shell-topbar hidden h-14 w-full items-center justify-between px-5 text-slate-100 lg:flex">
+        <header className="app-shell-topbar hidden h-14 w-full items-center justify-between px-5 text-[var(--text)] lg:flex">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{organizationName}</p>
             {tracks.length > 1 ? (
               <select
                 value={selectedTrackId ?? ""}
                 onChange={(e) => handleTrackChange(e.target.value)}
-                className="mt-0.5 max-w-[200px] cursor-pointer bg-transparent text-xs text-slate-400 outline-none transition hover:text-slate-200"
+                className="mt-0.5 max-w-[200px] cursor-pointer bg-transparent text-xs text-[var(--text-muted)] outline-none transition hover:text-[var(--text)]"
               >
                 {tracks.map((t) => (
-                  <option key={t.id} value={t.id} className="bg-[#161a20] text-slate-100">
+                  <option key={t.id} value={t.id} className="bg-[var(--panel-2)] text-[var(--text)]">
                     {t.name}
                   </option>
                 ))}
               </select>
             ) : (
-              <p className="truncate text-xs text-slate-400">Track: {currentTrack}</p>
+              <p className="truncate text-xs text-[var(--text-muted)]">Track: {currentTrack}</p>
             )}
           </div>
           <div className="flex items-center gap-4 text-sm">
@@ -761,7 +815,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             <button
               type="button"
               onClick={toggleTheme}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
               aria-label={themeToggleLabel}
             >
               {themeIcon}
@@ -769,7 +823,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             <button
               type="button"
-              className="inline-flex items-center gap-2 text-slate-300 transition hover:text-white"
+              className="inline-flex items-center gap-2 text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="TV display mode"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -781,11 +835,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             <button
               type="button"
-              className="inline-flex items-center gap-2 text-slate-300 transition hover:text-white"
+              className="inline-flex items-center gap-2 text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="User account"
             >
               <span className="truncate max-w-[160px]">{userName}</span>
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-semibold text-white">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--panel-2)] text-xs font-semibold text-[var(--text)]">
                 {userInitial}
               </span>
             </button>
@@ -793,7 +847,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             {canAccessGymView ? (
               <Link
                 href="/organization/admin/content"
-                className="inline-flex items-center text-slate-300 transition hover:text-white"
+                className="inline-flex items-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
                 aria-label="Messenger"
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -804,7 +858,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             <button
               type="button"
-              className="inline-flex items-center text-slate-300 transition hover:text-white"
+              className="inline-flex items-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="Notifications"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -818,7 +872,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 <button
                   type="button"
                   onClick={() => setMenuOpen((open) => !open)}
-                  className="inline-flex items-center text-slate-300 transition hover:text-white"
+                  className="inline-flex items-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
                   aria-label="More options"
                   aria-expanded={menuOpen}
                 >
@@ -829,7 +883,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                   </svg>
                 </button>
                 {menuOpen ? (
-                  <div className="absolute right-0 z-40 mt-2 w-56 rounded-xl border border-white/15 bg-[#161a20] p-2 shadow-2xl">
+                  <div className="absolute right-0 z-40 mt-2 w-56 rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] p-2 shadow-2xl">
                     <button
                       type="button"
                       onClick={() => {
@@ -837,14 +891,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                         importInputRef.current?.click();
                       }}
                       disabled={isImportingResults}
-                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-white/10 disabled:opacity-60"
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-[var(--text)] transition hover:bg-[var(--panel)] disabled:opacity-60"
                     >
                       {isImportingResults ? "Importing workout results..." : "Import Workout Results (CSV)"}
                     </button>
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-100 transition hover:bg-white/10"
+                      className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--text)] transition hover:bg-[var(--panel)]"
                     >
                       <LogOut className="h-4 w-4" aria-hidden="true" />
                       Sign out
@@ -865,7 +919,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         />
 
         {topBarNotice ? (
-          <div className="hidden border-b border-[#ffb1c4]/30 bg-[#2a1720] px-5 py-2 text-sm text-[#ffdbe6] lg:block">
+          <div className="hidden border-b border-[var(--pink)]/30 bg-[var(--panel)] px-5 py-2 text-sm text-[var(--pink-soft)] lg:block">
             {topBarNotice}
           </div>
         ) : null}
