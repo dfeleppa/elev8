@@ -31,9 +31,9 @@ function generateCode(): string {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm text-slate-100 placeholder:text-white/25 focus:border-[#ffb1c4]/60 focus:outline-none";
+  "w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--pink)]/60 focus:outline-none";
 const labelClass =
-  "mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/50";
+  "mb-1.5 block text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]";
 
 export default function OwnerSettingsClient() {
   const [settings, setSettings] = useState<OrgSettings | null>(null);
@@ -168,8 +168,8 @@ export default function OwnerSettingsClient() {
       <>
         <OwnerSettingsSubheader />
         <section className="space-y-8 px-5 py-10 lg:px-8 lg:py-16">
-          <h1 className="text-3xl font-semibold text-slate-100">General Settings</h1>
-          <p className="text-sm text-slate-500">Loading...</p>
+          <h1 className="text-3xl font-semibold text-[var(--text)]">General Settings</h1>
+          <p className="text-sm text-[var(--text-soft)]">Loading...</p>
         </section>
       </>
     );
@@ -180,8 +180,8 @@ export default function OwnerSettingsClient() {
       <OwnerSettingsSubheader />
       <section className="space-y-8 px-5 py-10 lg:px-8 lg:py-16">
       <header>
-        <h1 className="text-3xl font-semibold text-slate-100">General Settings</h1>
-        <p className="mt-3 text-sm text-slate-400">
+        <h1 className="text-3xl font-semibold text-[var(--text)]">General Settings</h1>
+        <p className="mt-3 text-sm text-[var(--text-muted)]">
           Manage your organization profile, branding, and invitation code.
         </p>
       </header>
@@ -283,7 +283,7 @@ export default function OwnerSettingsClient() {
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
           {/* Logo preview */}
           <div
-            className="group relative flex h-32 w-32 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-white/20 bg-black/20 transition hover:border-[#ffb1c4]/40"
+            className="group relative flex h-32 w-32 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-[var(--line-strong)] bg-[var(--panel)] transition hover:border-[var(--pink-soft)]/40"
             onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
@@ -296,7 +296,7 @@ export default function OwnerSettingsClient() {
                 className="object-contain p-3"
               />
             ) : (
-              <Camera size={32} className="text-white/25" />
+              <Camera size={32} className="text-[var(--text-soft)]" />
             )}
             <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
               <p className="text-xs font-medium text-white">
@@ -305,10 +305,10 @@ export default function OwnerSettingsClient() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-[var(--text-muted)]">
               Upload a square organization logo to replace the top-left Elev8 mark across the app. Supports PNG, JPG, or WebP up to 2MB.
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-soft)]">
               Click the preview or drag and drop an image file. Transparent backgrounds work well.
             </p>
             <input
@@ -325,7 +325,7 @@ export default function OwnerSettingsClient() {
       {/* Invitation Code */}
       <OwnerSectionCard title="Invitation Code" meta="">
         <form onSubmit={handleSaveCode} className="space-y-4">
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-[var(--text-muted)]">
             New members must enter this code to join your organization. Share it
             with people you&apos;d like to invite.
           </p>

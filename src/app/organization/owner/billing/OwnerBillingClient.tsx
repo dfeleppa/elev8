@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TrendingUp, Users, DollarSign, ArrowUpRight } from "lucide-react";
+import { Panel, Micro } from "@/components/ui";
 
 type Metrics = {
   mrr: number;
@@ -120,10 +121,10 @@ export default function OwnerBillingClient() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Billing</h1>
-          <p className="text-slate-400 mt-2">Revenue, customers, and transaction management</p>
+          <h1 className="text-3xl font-bold text-[var(--text)]">Billing</h1>
+          <p className="text-[var(--text-muted)] mt-2">Revenue, customers, and transaction management</p>
           {metrics?.timestamp && (
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-[var(--text-soft)] mt-1">
               Last updated: {new Date(metrics.timestamp).toLocaleString()}
             </p>
           )}
@@ -131,7 +132,7 @@ export default function OwnerBillingClient() {
         <button
           onClick={handleRefresh}
           disabled={loading}
-          className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-sm text-slate-200 disabled:opacity-50 transition"
+          className="px-4 py-2 rounded-lg bg-[var(--panel-2)] border border-[var(--line)] hover:bg-[var(--panel)] text-sm text-[var(--text-muted)] disabled:opacity-50 transition"
         >
           {loading ? "Loading..." : "Refresh"}
         </button>
@@ -153,80 +154,80 @@ export default function OwnerBillingClient() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="glass-panel p-6 rounded-xl animate-pulse h-32 bg-white/5"
+              className="p-6 rounded-xl animate-pulse h-32 bg-[var(--panel-2)]"
             />
           ))}
         </div>
       ) : metrics ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* MRR Card */}
-          <div className="glass-panel p-6 rounded-xl border border-white/10">
+          <Panel padding="lg" className="rounded-xl">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-slate-300 text-sm font-semibold">MRR</p>
-              <DollarSign className="w-5 h-5 text-[#ffb1c4]" />
+              <p className="text-[var(--text-muted)] text-sm font-semibold">MRR</p>
+              <DollarSign className="w-5 h-5 text-[var(--pink-soft)]" />
             </div>
-            <p className="text-2xl font-bold text-white">${metrics.mrr.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p>
-            <p className="text-xs text-slate-400 mt-2">Monthly Recurring Revenue</p>
-          </div>
+            <p className="text-2xl font-bold text-[var(--text)]">${metrics.mrr.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p>
+            <p className="text-xs text-[var(--text-soft)] mt-2">Monthly Recurring Revenue</p>
+          </Panel>
 
           {/* ARR Card */}
-          <div className="glass-panel p-6 rounded-xl border border-white/10">
+          <Panel padding="lg" className="rounded-xl">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-slate-300 text-sm font-semibold">ARR</p>
+              <p className="text-[var(--text-muted)] text-sm font-semibold">ARR</p>
               <TrendingUp className="w-5 h-5 text-[#63f7ff]" />
             </div>
-            <p className="text-2xl font-bold text-white">${metrics.arr.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p>
-            <p className="text-xs text-slate-400 mt-2">Annual Recurring Revenue</p>
-          </div>
+            <p className="text-2xl font-bold text-[var(--text)]">${metrics.arr.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p>
+            <p className="text-xs text-[var(--text-soft)] mt-2">Annual Recurring Revenue</p>
+          </Panel>
 
           {/* Total Revenue Card */}
-          <div className="glass-panel p-6 rounded-xl border border-white/10">
+          <Panel padding="lg" className="rounded-xl">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-slate-300 text-sm font-semibold">Total Revenue</p>
+              <p className="text-[var(--text-muted)] text-sm font-semibold">Total Revenue</p>
               <ArrowUpRight className="w-5 h-5 text-green-400" />
             </div>
-            <p className="text-2xl font-bold text-white">${metrics.total_revenue.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p>
-            <p className="text-xs text-slate-400 mt-2">Lifetime total</p>
-          </div>
+            <p className="text-2xl font-bold text-[var(--text)]">${metrics.total_revenue.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p>
+            <p className="text-xs text-[var(--text-soft)] mt-2">Lifetime total</p>
+          </Panel>
 
           {/* Active Subscriptions Card */}
-          <div className="glass-panel p-6 rounded-xl border border-white/10">
+          <Panel padding="lg" className="rounded-xl">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-slate-300 text-sm font-semibold">Active Subs</p>
+              <p className="text-[var(--text-muted)] text-sm font-semibold">Active Subs</p>
               <Users className="w-5 h-5 text-blue-400" />
             </div>
-            <p className="text-2xl font-bold text-white">{metrics.active_subscriptions}</p>
-            <p className="text-xs text-slate-400 mt-2">{metrics.churn_rate.toFixed(1)}% churn rate</p>
-          </div>
+            <p className="text-2xl font-bold text-[var(--text)]">{metrics.active_subscriptions}</p>
+            <p className="text-xs text-[var(--text-soft)] mt-2">{metrics.churn_rate.toFixed(1)}% churn rate</p>
+          </Panel>
         </div>
       ) : null}
 
       {/* Customers Section */}
-      <div className="glass-panel rounded-xl border border-white/10 overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/5">
-          <h2 className="text-xl font-bold text-white">Recent Customers</h2>
+      <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--panel-2)]">
+        <div className="px-6 py-4 border-b border-[var(--line)]">
+          <h2 className="text-xl font-bold text-[var(--text)]">Recent Customers</h2>
         </div>
         {customersLoading ? (
-          <div className="p-6 text-slate-400 text-sm">Loading customers...</div>
+          <div className="p-6 text-[var(--text-muted)] text-sm">Loading customers...</div>
         ) : customers.length === 0 ? (
-          <div className="p-6 text-slate-400 text-sm">No customers yet</div>
+          <div className="p-6 text-[var(--text-muted)] text-sm">No customers yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-white/5 border-b border-white/10">
+              <thead className="bg-[var(--panel)] border-b border-[var(--line)]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300">Total Spent</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[var(--text-muted)]">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[var(--text-muted)]">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[var(--text-muted)]">Total Spent</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[var(--text-muted)]">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {customers.map((cust) => (
-                  <tr key={cust.id} className="border-b border-white/5 hover:bg-white/5 transition">
-                    <td className="px-6 py-4 text-sm text-slate-400">{cust.email}</td>
-                    <td className="px-6 py-4 text-sm text-white">{cust.name}</td>
-                    <td className="px-6 py-4 text-sm text-slate-300">${cust.total_spent.toLocaleString("en-US", { maximumFractionDigits: 2 })}</td>
+                  <tr key={cust.id} className="border-b border-[var(--line)] hover:bg-[var(--panel)] transition">
+                    <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{cust.email}</td>
+                    <td className="px-6 py-4 text-sm text-[var(--text)]">{cust.name}</td>
+                    <td className="px-6 py-4 text-sm text-[var(--text-muted)]">${cust.total_spent.toLocaleString("en-US", { maximumFractionDigits: 2 })}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         cust.subscription_status === "active"
@@ -247,30 +248,30 @@ export default function OwnerBillingClient() {
       </div>
 
       {/* Transactions Section */}
-      <div className="glass-panel rounded-xl border border-white/10 overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/5">
-          <h2 className="text-xl font-bold text-white">Recent Transactions</h2>
+      <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--panel-2)]">
+        <div className="px-6 py-4 border-b border-[var(--line)]">
+          <h2 className="text-xl font-bold text-[var(--text)]">Recent Transactions</h2>
         </div>
         {transactionsLoading ? (
-          <div className="p-6 text-slate-400 text-sm">Loading transactions...</div>
+          <div className="p-6 text-[var(--text-muted)] text-sm">Loading transactions...</div>
         ) : transactions.length === 0 ? (
-          <div className="p-6 text-slate-400 text-sm">No transactions yet</div>
+          <div className="p-6 text-[var(--text-muted)] text-sm">No transactions yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-white/5 border-b border-white/10">
+              <thead className="bg-[var(--panel)] border-b border-[var(--line)]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-300">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[var(--text-muted)]">Customer</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[var(--text-muted)]">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[var(--text-muted)]">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[var(--text-muted)]">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[var(--text-muted)]">Date</th>
                 </tr>
               </thead>
               <tbody>
                 {transactions.map((tx) => (
-                  <tr key={tx.id} className="border-b border-white/5 hover:bg-white/5 transition">
-                    <td className="px-6 py-4 text-sm text-slate-400">{tx.customer_email}</td>
+                  <tr key={tx.id} className="border-b border-[var(--line)] hover:bg-[var(--panel)] transition">
+                    <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{tx.customer_email}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         tx.type === "payment"
@@ -280,7 +281,7 @@ export default function OwnerBillingClient() {
                         {tx.type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-white">${tx.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-[var(--text)]">${tx.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         tx.status === "succeeded"
@@ -292,7 +293,7 @@ export default function OwnerBillingClient() {
                         {tx.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-400">{new Date(tx.created_at).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{new Date(tx.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>

@@ -97,9 +97,9 @@ function formatDate(value: string) {
 }
 
 const cellInputClass =
-  "w-full rounded-lg border border-white/15 bg-black/30 px-2 py-1.5 text-sm text-slate-100 focus:border-[#ffb1c4]/60 focus:outline-none [color-scheme:dark]";
+  "w-full rounded-lg border border-[var(--line-strong)] bg-[var(--panel)] px-2 py-1.5 text-sm text-[var(--text)] focus:border-[var(--pink)]/60 focus:outline-none [color-scheme:dark]";
 const cellSelectClass =
-  "w-full rounded-lg border border-white/15 bg-[#171c22] px-2 py-1.5 text-sm text-slate-100 focus:border-[#ffb1c4]/60 focus:outline-none";
+  "w-full rounded-lg border border-[var(--line-strong)] bg-[var(--panel)] px-2 py-1.5 text-sm text-[var(--text)] focus:border-[var(--pink)]/60 focus:outline-none";
 const cellPayClass =
   "w-full rounded-lg border border-emerald-400/30 bg-emerald-400/5 px-2 py-1.5 text-sm font-semibold text-emerald-300 focus:border-emerald-400/60 focus:outline-none";
 
@@ -337,27 +337,27 @@ export default function OwnerPayrollClient({
   };
 
   const thClass =
-    "px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white/60";
+    "px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]";
   const thSortClass =
-    "px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white/60 cursor-pointer select-none hover:text-white/90 transition-colors";
+    "px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer select-none hover:text-[var(--text)] transition-colors";
 
   function SortIcon({ col }: { col: SortColumn }) {
     if (sortColumn !== col) return <ChevronsUpDown size={12} className="ml-1 inline opacity-40" />;
     return sortDir === "asc"
-      ? <ChevronUp size={12} className="ml-1 inline text-[#ffb1c4]" />
-      : <ChevronDown size={12} className="ml-1 inline text-[#ffb1c4]" />;
+      ? <ChevronUp size={12} className="ml-1 inline text-[var(--pink-soft)]" />
+      : <ChevronDown size={12} className="ml-1 inline text-[var(--pink-soft)]" />;
   }
 
   // Shared td class helpers
-  const tdDisplay = "border-y border-white/10 px-3 py-3 cursor-pointer transition-colors hover:bg-white/[0.04]";
-  const tdEditing = "border-y border-white/10 px-2 py-2 bg-white/[0.025]";
+  const tdDisplay = "border-y border-[var(--line)] px-3 py-3 cursor-pointer transition-colors hover:bg-[var(--panel-2)]";
+  const tdEditing = "border-y border-[var(--line)] px-2 py-2 bg-[var(--panel-2)]";
 
   return (
     <section className="space-y-8">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-100">Payroll</h1>
-          <p className="mt-3 text-sm text-slate-400">
+          <h1 className="text-3xl font-semibold text-[var(--text)]">Payroll</h1>
+          <p className="mt-3 text-sm text-[var(--text-muted)]">
             Track weekly payroll by staff, pay period, and payout details.
           </p>
         </div>
@@ -413,13 +413,13 @@ export default function OwnerPayrollClient({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-sm text-slate-500">
+                <td colSpan={8} className="px-4 py-8 text-sm text-[var(--text-soft)]">
                   Loading payroll entries...
                 </td>
               </tr>
             ) : entries.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-sm text-slate-500">
+                <td colSpan={8} className="px-4 py-8 text-sm text-[var(--text-soft)]">
                   No payroll entries yet. Use the row below to add the first one.
                 </td>
               </tr>
@@ -463,7 +463,7 @@ export default function OwnerPayrollClient({
                           className={cellInputClass}
                         />
                       ) : (
-                        <span className="text-sm text-slate-300">{formatDate(draft.weekEndingDate)}</span>
+                        <span className="text-sm text-[var(--text-muted)]">{formatDate(draft.weekEndingDate)}</span>
                       )}
                     </td>
 
@@ -483,7 +483,7 @@ export default function OwnerPayrollClient({
                           ))}
                         </select>
                       ) : (
-                        <span className="text-sm font-medium text-slate-100">{draft.staffName || "—"}</span>
+                        <span className="text-sm font-medium text-[var(--text)]">{draft.staffName || "—"}</span>
                       )}
                     </td>
 
@@ -501,7 +501,7 @@ export default function OwnerPayrollClient({
                           className={cellInputClass}
                         />
                       ) : (
-                        <span className="text-sm text-slate-300">{draft.coachingHours || "0"}</span>
+                        <span className="text-sm text-[var(--text-muted)]">{draft.coachingHours || "0"}</span>
                       )}
                     </td>
 
@@ -519,7 +519,7 @@ export default function OwnerPayrollClient({
                           className={cellInputClass}
                         />
                       ) : (
-                        <span className="text-sm text-slate-300">{draft.officeHours || "0"}</span>
+                        <span className="text-sm text-[var(--text-muted)]">{draft.officeHours || "0"}</span>
                       )}
                     </td>
 
@@ -555,7 +555,7 @@ export default function OwnerPayrollClient({
                           className={cellInputClass}
                         />
                       ) : (
-                        <span className="text-sm text-slate-300">{formatDate(draft.payDate)}</span>
+                        <span className="text-sm text-[var(--text-muted)]">{formatDate(draft.payDate)}</span>
                       )}
                     </td>
 
@@ -572,12 +572,12 @@ export default function OwnerPayrollClient({
                           className={cellInputClass}
                         />
                       ) : (
-                        <span className="text-sm text-slate-300">{draft.notes || "—"}</span>
+                        <span className="text-sm text-[var(--text-muted)]">{draft.notes || "—"}</span>
                       )}
                     </td>
 
                     {/* Actions */}
-                    <td className="rounded-r-2xl border-y border-white/10 px-3 py-3">
+                    <td className="rounded-r-2xl border-y border-[var(--line)] px-3 py-3">
                       <div className="flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
                         <button
                           type="button"
@@ -599,11 +599,11 @@ export default function OwnerPayrollClient({
             <tr>
               <td colSpan={8} className="px-3 pb-1 pt-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-px flex-1 bg-white/10" />
-                  <span className="text-xs font-medium uppercase tracking-widest text-white/30">
+                  <div className="h-px flex-1 bg-[var(--line)]" />
+                  <span className="text-xs font-medium uppercase tracking-widest text-[var(--text-soft)]">
                     New Entry
                   </span>
-                  <div className="h-px flex-1 bg-white/10" />
+                  <div className="h-px flex-1 bg-[var(--line)]" />
                 </div>
               </td>
             </tr>

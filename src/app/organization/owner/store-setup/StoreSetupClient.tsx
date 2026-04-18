@@ -71,11 +71,11 @@ const EMPTY_PREORDER_DRAFT = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm text-slate-100 placeholder:text-white/25 focus:border-[#ffb1c4]/60 focus:outline-none";
+  "w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--pink)] focus:outline-none";
 const labelClass =
-  "mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/50";
+  "mb-1.5 block text-xs font-medium uppercase tracking-wider text-[var(--text-soft)]";
 const checkboxRowClass =
-  "flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3";
+  "flex items-start gap-3 rounded-xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3";
 
 export default function StoreSetupClient() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -240,8 +240,8 @@ export default function StoreSetupClient() {
       <div className="space-y-8 px-5 py-10 lg:px-8 lg:py-16 mx-auto max-w-6xl">
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-3xl font-semibold text-slate-100">Store Setup</h1>
-            <p className="mt-2 text-sm text-slate-400">
+            <h1 className="text-3xl font-semibold text-[var(--text)]">Store Setup</h1>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
               Manage your products, pricing, and preorder campaigns.
             </p>
           </div>
@@ -292,8 +292,8 @@ export default function StoreSetupClient() {
                     onClick={() => setActiveCategory(cat)}
                     className={
                       activeCategory === cat
-                        ? "rounded-full border border-white/40 bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold text-white"
-                        : "rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] text-white/60 hover:bg-white/10"
+                        ? "rounded-full border border-white/40 bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--text)]"
+                        : "rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] text-[var(--text-muted)] hover:bg-[var(--panel)]"
                     }
                   >
                     {cat}
@@ -304,28 +304,28 @@ export default function StoreSetupClient() {
           }
         >
           {loading ? (
-            <p className="text-sm text-slate-500">Loading...</p>
+            <p className="text-sm text-[var(--text-soft)]">Loading...</p>
           ) : filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12 text-center">
-              <Package size={40} className="text-white/20" />
-              <p className="text-sm text-slate-400">No products yet. Click <strong>Add Product</strong> to get started.</p>
+              <Package size={40} className="text-[var(--text-soft)]" />
+              <p className="text-sm text-[var(--text-muted)]">No products yet. Click <strong>Add Product</strong> to get started.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[700px] border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-white/40">Product</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-white/40">Category</th>
-                    <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-white/40">Price</th>
-                    <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-white/40">Inventory</th>
-                    <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-white/40">Visible</th>
+                  <tr className="border-b border-[var(--line)]">
+                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-soft)]">Product</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-soft)]">Category</th>
+                    <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-soft)]">Price</th>
+                    <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-[var(--text-soft)]">Inventory</th>
+                    <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-[var(--text-soft)]">Visible</th>
                     <th className="px-3 py-2" />
                   </tr>
                 </thead>
                 <tbody>
                   {filteredProducts.map((p) => (
-                    <tr key={p.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                    <tr key={p.id} className="border-b border-[var(--line)] hover:bg-[var(--panel-2)] transition-colors">
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-3">
                           {p.image_url ? (
@@ -337,39 +337,39 @@ export default function StoreSetupClient() {
                               className="h-10 w-10 rounded-lg object-cover"
                             />
                           ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10">
-                              <Package size={16} className="text-white/30" />
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--panel)]">
+                              <Package size={16} className="text-[var(--text-soft)]" />
                             </div>
                           )}
                           <div>
-                            <p className="font-medium text-slate-100">{p.name}</p>
+                            <p className="font-medium text-[var(--text)]">{p.name}</p>
                             {p.description && (
-                              <p className="text-xs text-slate-500 line-clamp-1">{p.description}</p>
+                              <p className="text-xs text-[var(--text-soft)] line-clamp-1">{p.description}</p>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-slate-400">
+                      <td className="px-3 py-3 text-[var(--text-muted)]">
                         {p.category ? (
-                          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs">
+                          <span className="rounded-full border border-[var(--line)] bg-[var(--panel-2)] px-2 py-0.5 text-xs">
                             {p.category}
                           </span>
                         ) : (
-                          <span className="text-white/20">—</span>
+                          <span className="text-[var(--text-soft)]">—</span>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-right text-slate-200">
+                      <td className="px-3 py-3 text-right text-[var(--text)]">
                         ${Number(p.price).toFixed(2)}
                         {p.coaches_price != null && (
-                          <p className="text-xs text-slate-500">Coach: ${Number(p.coaches_price).toFixed(2)}</p>
+                          <p className="text-xs text-[var(--text-soft)]">Coach: ${Number(p.coaches_price).toFixed(2)}</p>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-center text-slate-300">
-                        {p.inventory_count ?? <span className="text-white/20">∞</span>}
+                      <td className="px-3 py-3 text-center text-[var(--text-muted)]">
+                        {p.inventory_count ?? <span className="text-[var(--text-soft)]">∞</span>}
                       </td>
                       <td className="px-3 py-3 text-center">
                         {p.hidden_in_store ? (
-                          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/40">Hidden</span>
+                          <span className="rounded-full border border-[var(--line)] bg-[var(--panel-2)] px-2 py-0.5 text-[10px] text-[var(--text-soft)]">Hidden</span>
                         ) : (
                           <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] text-emerald-300">Visible</span>
                         )}
@@ -396,22 +396,22 @@ export default function StoreSetupClient() {
         <OwnerSectionCard title="Preorder Campaigns" meta={`${preorders.length} active`}>
           {preorders.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-10 text-center">
-              <p className="text-sm text-slate-400">No preorder campaigns yet. Use <strong>New Preorder</strong> to create one.</p>
+              <p className="text-sm text-[var(--text-muted)]">No preorder campaigns yet. Use <strong>New Preorder</strong> to create one.</p>
             </div>
           ) : (
             <div className="space-y-4">
               {preorders.map((pr) => (
-                <div key={pr.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div key={pr.id} className="rounded-xl border border-[var(--line)] bg-[var(--panel-2)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-slate-100">{pr.name}</p>
-                      {pr.description && <p className="mt-1 text-xs text-slate-400">{pr.description}</p>}
-                      <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
+                      <p className="font-semibold text-[var(--text)]">{pr.name}</p>
+                      {pr.description && <p className="mt-1 text-xs text-[var(--text-muted)]">{pr.description}</p>}
+                      <div className="mt-2 flex flex-wrap gap-3 text-xs text-[var(--text-soft)]">
                         {pr.order_deadline && (
-                          <span>Order deadline: <span className="text-slate-300">{pr.order_deadline}</span></span>
+                          <span>Order deadline: <span className="text-[var(--text-muted)]">{pr.order_deadline}</span></span>
                         )}
                         {pr.estimated_delivery_date && (
-                          <span>Est. delivery: <span className="text-slate-300">{pr.estimated_delivery_date}</span></span>
+                          <span>Est. delivery: <span className="text-[var(--text-muted)]">{pr.estimated_delivery_date}</span></span>
                         )}
                         <span>
                           {pr.store_preorder_items?.length ?? 0} product{(pr.store_preorder_items?.length ?? 0) !== 1 ? "s" : ""}
@@ -420,7 +420,7 @@ export default function StoreSetupClient() {
                     </div>
                     <span className={pr.is_active
                       ? "rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
-                      : "rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/40"
+                      : "rounded-full border border-[var(--line)] bg-[var(--panel-2)] px-2 py-0.5 text-[10px] text-[var(--text-soft)]"
                     }>
                       {pr.is_active ? "Active" : "Closed"}
                     </span>
@@ -441,13 +441,13 @@ export default function StoreSetupClient() {
             onClick={() => setShowModal(false)}
             aria-label="Close modal"
           />
-          <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-white/15 bg-[#111418] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 bg-[#e11d8a] px-6 py-4">
+          <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-[var(--line-strong)] bg-[var(--panel)] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[var(--line)] bg-[#e11d8a] px-6 py-4">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Add Product</p>
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="rounded-full border border-white/20 p-1.5 text-white/80 hover:text-white"
+                className="rounded-full border border-white/20 p-1.5 text-[var(--text)] hover:text-[var(--text)]"
               >
                 <X size={14} />
               </button>
@@ -457,7 +457,7 @@ export default function StoreSetupClient() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* ── Left: Product Info & Price ── */}
                 <div className="lg:col-span-2 space-y-4">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-white/40">Product Info and Price</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-soft)]">Product Info and Price</p>
 
                   {/* Category + image thumb */}
                   <div className="flex gap-3 items-start">
@@ -483,12 +483,12 @@ export default function StoreSetupClient() {
                       <button
                         type="button"
                         onClick={() => imageInputRef.current?.click()}
-                        className="group relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-white/20 bg-black/20 transition hover:border-[#ffb1c4]/40"
+                        className="group relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-white/20 bg-[var(--panel)] transition hover:border-[var(--pink-soft)]/40"
                       >
                         {draftImageUrl ? (
                           <Image src={draftImageUrl} alt="Product" fill className="object-cover" />
                         ) : (
-                          <Camera size={18} className="text-white/30" />
+                          <Camera size={18} className="text-[var(--text-soft)]" />
                         )}
                         {uploadingImage && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-[10px] text-white">...</div>
@@ -536,7 +536,7 @@ export default function StoreSetupClient() {
                     <div>
                       <label className={labelClass}>Price *</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/40">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-soft)]">$</span>
                         <input
                           type="number"
                           required
@@ -552,7 +552,7 @@ export default function StoreSetupClient() {
                     <div>
                       <label className={labelClass}>Coaches Price (optional)</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/40">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-soft)]">$</span>
                         <input
                           type="number"
                           min="0"
@@ -602,7 +602,7 @@ export default function StoreSetupClient() {
                 <div className="space-y-4">
                   {/* Product/Inventory Options */}
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-3">Product / Inventory Options</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-soft)] mb-3">Product / Inventory Options</p>
                     <label className={checkboxRowClass}>
                       <input
                         type="checkbox"
@@ -610,7 +610,7 @@ export default function StoreSetupClient() {
                         onChange={(e) => setDraft((p) => ({ ...p, hasOptions: e.target.checked }))}
                         className="mt-0.5 h-4 w-4 rounded border-white/20"
                       />
-                      <span className="text-sm text-slate-300">Define Product Options (i.e. sizes, colors, flavors...)</span>
+                      <span className="text-sm text-[var(--text-muted)]">Define Product Options (i.e. sizes, colors, flavors...)</span>
                     </label>
 
                     {draft.hasOptions && (
@@ -644,7 +644,7 @@ export default function StoreSetupClient() {
                         <button
                           type="button"
                           onClick={() => setDraft((p) => ({ ...p, options: [...p.options, { optionName: "", optionValues: "" }] }))}
-                          className="text-xs text-[#ffb1c4] hover:underline"
+                          className="text-xs text-[var(--pink-soft)] hover:underline"
                         >
                           + Add another option
                         </button>
@@ -666,7 +666,7 @@ export default function StoreSetupClient() {
 
                   {/* Payment / Notification Options */}
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-3">Payment / Notification Options</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-soft)] mb-3">Payment / Notification Options</p>
                     <div className="space-y-2">
                       <label className={checkboxRowClass}>
                         <input
@@ -675,7 +675,7 @@ export default function StoreSetupClient() {
                           onChange={(e) => setDraft((p) => ({ ...p, deferToInvoice: e.target.checked }))}
                           className="mt-0.5 h-4 w-4 rounded border-white/20"
                         />
-                        <span className="text-xs text-slate-300">Defer purchases to customer&apos;s next Invoice (Recommended to avoid transaction fees on small purchases)</span>
+                        <span className="text-xs text-[var(--text-muted)]">Defer purchases to customer&apos;s next Invoice (Recommended to avoid transaction fees on small purchases)</span>
                       </label>
                       <label className={checkboxRowClass}>
                         <input
@@ -684,7 +684,7 @@ export default function StoreSetupClient() {
                           onChange={(e) => setDraft((p) => ({ ...p, notifyAdminsOnPurchase: e.target.checked }))}
                           className="mt-0.5 h-4 w-4 rounded border-white/20"
                         />
-                        <span className="text-xs text-slate-300">Send in-app notification to Admins when purchased</span>
+                        <span className="text-xs text-[var(--text-muted)]">Send in-app notification to Admins when purchased</span>
                       </label>
                       <label className={checkboxRowClass}>
                         <input
@@ -693,14 +693,14 @@ export default function StoreSetupClient() {
                           onChange={(e) => setDraft((p) => ({ ...p, hiddenInStore: e.target.checked }))}
                           className="mt-0.5 h-4 w-4 rounded border-white/20"
                         />
-                        <span className="text-xs text-slate-300">Hidden in Store</span>
+                        <span className="text-xs text-[var(--text-muted)]">Hidden in Store</span>
                       </label>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 border-t border-white/10 pt-4">
+              <div className="flex justify-end gap-3 border-t border-[var(--line)] pt-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
@@ -730,13 +730,13 @@ export default function StoreSetupClient() {
             onClick={() => setShowPreorderModal(false)}
             aria-label="Close modal"
           />
-          <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[28px] border border-white/15 bg-[#111418] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 bg-[#e11d8a] px-6 py-4">
+          <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[28px] border border-[var(--line-strong)] bg-[var(--panel)] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[var(--line)] bg-[#e11d8a] px-6 py-4">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">New Preorder Campaign</p>
               <button
                 type="button"
                 onClick={() => setShowPreorderModal(false)}
-                className="rounded-full border border-white/20 p-1.5 text-white/80 hover:text-white"
+                className="rounded-full border border-white/20 p-1.5 text-[var(--text)] hover:text-[var(--text)]"
               >
                 <X size={14} />
               </button>
@@ -789,9 +789,9 @@ export default function StoreSetupClient() {
 
               <div>
                 <label className={labelClass}>Link Products (optional)</label>
-                <div className="max-h-40 overflow-y-auto space-y-1 rounded-xl border border-white/10 bg-black/20 p-3">
+                <div className="max-h-40 overflow-y-auto space-y-1 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-3">
                   {products.length === 0 ? (
-                    <p className="text-xs text-slate-500">No products yet.</p>
+                    <p className="text-xs text-[var(--text-soft)]">No products yet.</p>
                   ) : (
                     products.map((p) => (
                       <label key={p.id} className="flex items-center gap-2 cursor-pointer">
@@ -806,8 +806,8 @@ export default function StoreSetupClient() {
                           }))}
                           className="h-4 w-4 rounded border-white/20"
                         />
-                        <span className="text-sm text-slate-300">{p.name}</span>
-                        {p.category && <span className="text-xs text-slate-500">({p.category})</span>}
+                        <span className="text-sm text-[var(--text-muted)]">{p.name}</span>
+                        {p.category && <span className="text-xs text-[var(--text-soft)]">({p.category})</span>}
                       </label>
                     ))
                   )}
@@ -821,10 +821,10 @@ export default function StoreSetupClient() {
                   onChange={(e) => setPreorderDraft((p) => ({ ...p, isActive: e.target.checked }))}
                   className="mt-0.5 h-4 w-4 rounded border-white/20"
                 />
-                <span className="text-sm text-slate-300">Active (visible to members)</span>
+                <span className="text-sm text-[var(--text-muted)]">Active (visible to members)</span>
               </label>
 
-              <div className="flex justify-end gap-3 border-t border-white/10 pt-4">
+              <div className="flex justify-end gap-3 border-t border-[var(--line)] pt-4">
                 <button
                   type="button"
                   onClick={() => setShowPreorderModal(false)}
