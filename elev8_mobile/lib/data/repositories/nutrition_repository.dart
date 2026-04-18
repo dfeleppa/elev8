@@ -116,8 +116,7 @@ class CoachPlanStatus {
 
     final parsedLast = normalize(baseLast);
     final parsedNext =
-        normalize(baseNext) ??
-        (parsedLast != null ? parsedLast.add(const Duration(days: 10)) : null);
+        normalize(baseNext) ?? parsedLast?.add(const Duration(days: 10));
 
     if (parsedLast != null && parsedNext != null) {
       final totalDays =
@@ -190,12 +189,26 @@ class NutritionRepository {
     final authUser = _client.auth.currentUser;
     if (authUser == null) return null;
     try {
-      final result = await _client
+      final byAuthUid = await _client
           .from('app_users')
           .select('id')
           .eq('supabase_auth_uid', authUser.id)
           .maybeSingle();
-      _cachedAppUserId = result?['id'] as String?;
+
+      _cachedAppUserId = byAuthUid?['id'] as String?;
+      if (_cachedAppUserId != null) {
+        return _cachedAppUserId;
+      }
+
+      final email = authUser.email;
+      if (email != null && email.isNotEmpty) {
+        final byEmail = await _client
+            .from('app_users')
+            .select('id')
+            .eq('email', email)
+            .maybeSingle();
+        _cachedAppUserId = byEmail?['id'] as String?;
+      }
     } catch (_) {}
     return _cachedAppUserId;
   }
@@ -568,6 +581,106 @@ class NutritionRepository {
 
   // ---- Coach Plan ----
 
+  Future<CoachPlanStatus?> _fetchCoachPlanStatusFromSupabase() async {
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return null;
+
+    try {
+      final plan = await _client
+          .from('coach_nutrition_plans')
+          .select(
+            'goal_type, target_weight_lbs, effective_date, last_check_in_date, next_check_in_date, plan_payload',
+          )
+          .eq('member_id', appUserId)
+          .lte('effective_date', _formatDate(DateTime.now()))
+          .order('effective_date', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      final fallbackPlan =
+          plan ??
+          await _client
+              .from('coach_nutrition_plans')
+              .select(
+                'goal_type, target_weight_lbs, effective_date, last_check_in_date, next_check_in_date, plan_payload',
+              )
+              .eq('member_id', appUserId)
+              .order('effective_date', ascending: false)
+              .limit(1)
+              .maybeSingle();
+
+      if (fallbackPlan == null) {
+        return CoachPlanStatus(hasPlan: false);
+      }
+
+      final profile = await _client
+          .from('app_users')
+          .select('current_weight_kg')
+          .eq('id', appUserId)
+          .maybeSingle();
+
+      final currentWeightEntry = await _client
+          .from('health_stat_entries')
+          .select('value, entry_date')
+          .eq('member_id', appUserId)
+          .eq('stat_key', 'body_weight')
+          .order('entry_date', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      double? parseNumeric(dynamic v) =>
+          v == null ? null : double.tryParse(v.toString());
+
+      final planPayload = Map<String, dynamic>.from(
+        fallbackPlan['plan_payload'] as Map? ?? {},
+      );
+
+      final startWeight =
+          parseNumeric(planPayload['weightLbs']) ??
+          (() {
+            final weightKg = parseNumeric(planPayload['weightKg']);
+            return weightKg == null
+                ? null
+                : weightKg * CoachPlanStatus.lbsPerKg;
+          })() ??
+          (() {
+            final weightKg = parseNumeric(profile?['current_weight_kg']);
+            return weightKg == null
+                ? null
+                : weightKg * CoachPlanStatus.lbsPerKg;
+          })();
+
+      final currentWeight =
+          parseNumeric(currentWeightEntry?['value']) ??
+          (() {
+            final weightKg = parseNumeric(profile?['current_weight_kg']);
+            return weightKg == null
+                ? null
+                : weightKg * CoachPlanStatus.lbsPerKg;
+          })() ??
+          startWeight;
+
+      return CoachPlanStatus(
+        hasPlan: true,
+        goalType: fallbackPlan['goal_type'] as String?,
+        startWeight: startWeight,
+        currentWeight: currentWeight,
+        targetWeight: parseNumeric(fallbackPlan['target_weight_lbs']),
+        effectiveDate: fallbackPlan['effective_date'] != null
+            ? DateTime.tryParse(fallbackPlan['effective_date'] as String)
+            : null,
+        lastCheckInDate: fallbackPlan['last_check_in_date'] != null
+            ? DateTime.tryParse(fallbackPlan['last_check_in_date'] as String)
+            : null,
+        nextCheckInDate: fallbackPlan['next_check_in_date'] != null
+            ? DateTime.tryParse(fallbackPlan['next_check_in_date'] as String)
+            : null,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<CoachPlanStatus?> fetchCoachPlanStatus() async {
     try {
       final response = await CoachApiService.fetchCoachPlanStatus();
@@ -596,7 +709,7 @@ class NutritionRepository {
             : null,
       );
     } catch (_) {
-      return null;
+      return _fetchCoachPlanStatusFromSupabase();
     }
   }
 

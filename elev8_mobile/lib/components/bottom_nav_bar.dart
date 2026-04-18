@@ -10,12 +10,25 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   if (user == null) return null;
 
   try {
-    final response = await Supabase.instance.client
+    final byAuthUid = await Supabase.instance.client
         .from('app_users')
         .select('full_name, avatar_url')
-        .eq('id', user.id)
+        .eq('supabase_auth_uid', user.id)
         .maybeSingle();
-    return response;
+
+    if (byAuthUid != null) {
+      return byAuthUid;
+    }
+
+    final email = user.email;
+    if (email == null || email.isEmpty) return null;
+
+    final byEmail = await Supabase.instance.client
+        .from('app_users')
+        .select('full_name, avatar_url')
+        .eq('email', email)
+        .maybeSingle();
+    return byEmail;
   } catch (_) {
     return null;
   }
@@ -29,13 +42,12 @@ class Elev8BottomNavBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
-    final coachPlanStatusAsync = ref.watch(coachPlanStatusProvider);
 
     return NavigationBar(
       backgroundColor: const Color(0xFF0F172A),
       indicatorColor: Colors.white12,
       selectedIndex: selectedIndex,
-      onDestinationSelected: (index) {
+      onDestinationSelected: (index) async {
         switch (index) {
           case 0:
             context.go('/');
@@ -50,11 +62,16 @@ class Elev8BottomNavBar extends ConsumerWidget {
             context.go('/nutrition');
             break;
           case 4:
-            final hasPlan = coachPlanStatusAsync.maybeWhen(
-              data: (status) => status?.hasPlan == true,
-              orElse: () => false,
-            );
-            context.go(hasPlan ? '/nutrition' : '/coach-setup');
+            try {
+              final status = await ref.read(coachPlanStatusProvider.future);
+              if (!context.mounted) return;
+              context.go(
+                status?.hasPlan == true ? '/nutrition' : '/coach-setup',
+              );
+            } catch (_) {
+              if (!context.mounted) return;
+              context.go('/coach-setup');
+            }
             break;
         }
       },

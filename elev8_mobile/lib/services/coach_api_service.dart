@@ -70,19 +70,96 @@ class CoachApiService {
     if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
   };
 
+  static Future<String?> _resolveAppUserId() async {
+    final authUser = Supabase.instance.client.auth.currentUser;
+    if (authUser == null) return null;
+
+    try {
+      final byAuthUid = await Supabase.instance.client
+          .from('app_users')
+          .select('id')
+          .eq('supabase_auth_uid', authUser.id)
+          .maybeSingle();
+      final authUidId = byAuthUid?['id'] as String?;
+      if (authUidId != null) return authUidId;
+
+      final email = authUser.email;
+      if (email == null || email.isEmpty) return null;
+
+      final byEmail = await Supabase.instance.client
+          .from('app_users')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle();
+      return byEmail?['id'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Fetches existing plan data + member profile to pre-fill the setup wizard.
   static Future<ExistingPlanData> fetchExistingPlan() async {
     final uri = Uri.parse('$_baseUrl/api/coach/nutrition-plan');
-    final resp = await http.get(uri, headers: _headers);
-    if (resp.statusCode != 200) {
+    try {
+      final resp = await http.get(uri, headers: _headers);
+      if (resp.statusCode == 200) {
+        final body = jsonDecode(resp.body) as Map<String, dynamic>;
+        return ExistingPlanData(
+          profile: body['profile'] as Map<String, dynamic>?,
+          latestPlan: body['latestPlan'] as Map<String, dynamic>?,
+          hasPlan: body['hasPlan'] == true,
+        );
+      }
+    } catch (_) {}
+
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) {
       return ExistingPlanData(profile: null, latestPlan: null, hasPlan: false);
     }
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
-    return ExistingPlanData(
-      profile: body['profile'] as Map<String, dynamic>?,
-      latestPlan: body['latestPlan'] as Map<String, dynamic>?,
-      hasPlan: body['hasPlan'] == true,
-    );
+
+    try {
+      final profile = await Supabase.instance.client
+          .from('app_users')
+          .select(
+            'id, full_name, sex, birth_date, height_cm, current_weight_kg, body_fat_percent',
+          )
+          .eq('id', appUserId)
+          .maybeSingle();
+
+      final activePlan = await Supabase.instance.client
+          .from('coach_nutrition_plans')
+          .select(
+            'id, goal_type, intensity_preset, weekly_rate_percent, reverse_diet_weekly_kcal, target_weight_lbs, maintenance_calories, target_calories, protein_grams, carbs_grams, fat_grams, formula_used, sessions_per_week, effective_date, last_check_in_date, next_check_in_date, plan_payload',
+          )
+          .eq('member_id', appUserId)
+          .lte(
+            'effective_date',
+            DateTime.now().toIso8601String().split('T').first,
+          )
+          .order('effective_date', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      final latestPlan =
+          activePlan ??
+          await Supabase.instance.client
+              .from('coach_nutrition_plans')
+              .select(
+                'id, goal_type, intensity_preset, weekly_rate_percent, reverse_diet_weekly_kcal, target_weight_lbs, maintenance_calories, target_calories, protein_grams, carbs_grams, fat_grams, formula_used, sessions_per_week, effective_date, last_check_in_date, next_check_in_date, plan_payload',
+              )
+              .eq('member_id', appUserId)
+              .order('effective_date', ascending: false)
+              .limit(1)
+              .maybeSingle();
+
+      return ExistingPlanData(
+        profile: profile,
+        latestPlan: latestPlan,
+        hasPlan: latestPlan != null,
+      );
+    } catch (_) {
+      return ExistingPlanData(profile: null, latestPlan: null, hasPlan: false);
+    }
   }
 
   static Future<CoachPlanStatusResponse> fetchCoachPlanStatus() async {
