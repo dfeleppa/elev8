@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Pencil, X } from "lucide-react";
 
 import SidebarShell from "../../../../components/SidebarShell";
+import { AccentCard, Panel, Micro } from "@/components/ui";
 
 type NutritionEntry = {
   id: string;
@@ -898,8 +899,8 @@ export default function HealthNutritionPage() {
       <section className="space-y-8">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold text-slate-100">Nutrition</h1>
-            <p className="mt-3 text-sm text-slate-400">
+            <h1 className="text-3xl font-semibold text-[var(--text)]">Nutrition</h1>
+            <p className="mt-3 text-sm text-[var(--text-muted)]">
               Plan meals, track macros, and stay on target.
             </p>
           </div>
@@ -907,7 +908,7 @@ export default function HealthNutritionPage() {
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
-              className="grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/5 text-sm font-semibold text-slate-200 transition hover:border-white/25 hover:text-white"
+              className="grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="Previous day"
             >
               &lt;
@@ -918,19 +919,19 @@ export default function HealthNutritionPage() {
               type="date"
               value={selectedDate}
               onChange={(event) => setSelectedDate(event.target.value)}
-              className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 shadow-inner focus:border-white/30 focus:outline-none"
+              className="rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] shadow-inner focus:border-white/30 focus:outline-none"
             />
             <button
               type="button"
               onClick={() => setSelectedDate(toLocalDateInputValue(new Date()))}
-              className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-white/25 hover:text-white"
+              className="rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)] transition hover:text-[var(--text)]"
             >
               Today
             </button>
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, 1))}
-              className="grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/5 text-sm font-semibold text-slate-200 transition hover:border-white/25 hover:text-white"
+              className="grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="Next day"
             >
               &gt;
@@ -945,10 +946,10 @@ export default function HealthNutritionPage() {
         ) : null}
 
         <section className="grid gap-6 lg:grid-cols-2">
-          <div className="glass-panel rounded-3xl border border-white/10 p-6">
+          <AccentCard tone="pink">
             <div className="mb-5 flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Macros</p>
-              <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
+              <Micro onAccent as="p">Macros</Micro>
+              <div className="inline-flex rounded-full border border-black/10 bg-black/10 p-1">
                 {(["consumed", "remaining"] as const).map((mode) => (
                   <button
                     key={mode}
@@ -956,8 +957,8 @@ export default function HealthNutritionPage() {
                     onClick={() => setViewMode(mode)}
                     className={`rounded-full px-4 py-1 text-xs font-semibold transition ${
                       viewMode === mode
-                        ? "bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] text-[#031525]"
-                        : "bg-white/5 text-slate-400 hover:text-slate-100"
+                        ? "bg-black/20 text-current"
+                        : "text-current opacity-50"
                     }`}
                   >
                     {mode === "consumed" ? "Consumed" : "Remaining"}
@@ -985,7 +986,7 @@ export default function HealthNutritionPage() {
                     </defs>
 
                     <g transform="rotate(-90 96 96)">
-                      <circle cx="96" cy="96" r="84" fill="none" stroke="rgba(186, 208, 236, 0.45)" strokeWidth="8" />
+                      <circle cx="96" cy="96" r="84" fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="8" />
                       <circle
                         cx="96"
                         cy="96"
@@ -997,7 +998,7 @@ export default function HealthNutritionPage() {
                         strokeDasharray={ringDashArray(macroRows[0].progress, 84)}
                       />
 
-                      <circle cx="96" cy="96" r="68" fill="none" stroke="rgba(186, 208, 236, 0.45)" strokeWidth="8" />
+                      <circle cx="96" cy="96" r="68" fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="8" />
                       <circle
                         cx="96"
                         cy="96"
@@ -1009,7 +1010,7 @@ export default function HealthNutritionPage() {
                         strokeDasharray={ringDashArray(macroRows[1].progress, 68)}
                       />
 
-                      <circle cx="96" cy="96" r="52" fill="none" stroke="rgba(186, 208, 236, 0.45)" strokeWidth="8" />
+                      <circle cx="96" cy="96" r="52" fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="8" />
                       <circle
                         cx="96"
                         cy="96"
@@ -1024,14 +1025,14 @@ export default function HealthNutritionPage() {
                   </svg>
 
                   <div
-                    className="relative z-10 grid h-[86px] w-[86px] place-items-center rounded-full border border-white/10 bg-white/5 text-center"
+                    className="relative z-10 grid h-[86px] w-[86px] place-items-center rounded-full border border-black/10 bg-black/10 text-center"
                   >
-                    <div className="grid h-[74px] w-[74px] place-items-center rounded-full bg-white/5 text-center">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cal</p>
-                      <p className="text-2xl font-semibold text-slate-100">
+                    <div className="grid h-[74px] w-[74px] place-items-center rounded-full bg-black/10 text-center">
+                      <p className="text-xs uppercase tracking-[0.3em] opacity-60">Cal</p>
+                      <p className="text-2xl font-semibold">
                         {roundToWhole(viewMode === "consumed" ? totals.calories : remaining.calories)}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs opacity-40">
                         {roundToWhole(targetNumbers.calories || 0)}
                       </p>
                     </div>
@@ -1046,13 +1047,13 @@ export default function HealthNutritionPage() {
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <span className={`h-2.5 w-2.5 rounded-full ${macro.dotClass}`} />
-                          <p className="text-sm text-slate-100">{macro.label}</p>
+                          <p className="text-sm">{macro.label}</p>
                         </div>
                         <p
                           className={`text-sm ${
                             viewMode === "remaining" && macro.remaining < 0
                               ? "font-semibold text-rose-400"
-                              : "text-slate-400"
+                              : "opacity-70"
                           }`}
                         >
                           {roundToWhole(viewMode === "consumed" ? macro.value : macro.remaining)} / {roundToWhole(macro.target)}
@@ -1062,8 +1063,8 @@ export default function HealthNutritionPage() {
                         <div className="pl-6">
                           {macro.subRows.map((sub) => (
                             <div key={`${macro.label}-${sub.label}`} className="flex items-center justify-between">
-                              <p className="text-xs text-slate-500">{sub.label}</p>
-                              <p className="text-xs text-slate-500">{sub.value}</p>
+                              <p className="text-xs opacity-50">{sub.label}</p>
+                              <p className="text-xs opacity-50">{sub.value}</p>
                             </div>
                           ))}
                         </div>
@@ -1074,7 +1075,7 @@ export default function HealthNutritionPage() {
                 <button
                   type="button"
                   onClick={() => setShowSubMacros((current) => !current)}
-                  className="inline-flex items-center gap-1 self-start rounded-md px-1 py-0.5 text-xs font-semibold text-slate-400 transition hover:bg-white/5 hover:text-slate-100"
+                  className="inline-flex items-center gap-1 self-start rounded-md px-1 py-0.5 text-xs font-semibold opacity-60 transition hover:bg-black/10 hover:opacity-100"
                   aria-pressed={showSubMacros}
                   aria-label="Toggle nutrients"
                 >
@@ -1086,33 +1087,33 @@ export default function HealthNutritionPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </AccentCard>
 
           {coachPlanStatus === "none" ? (
-            <div className="relative flex h-full flex-col items-center justify-center glass-panel rounded-3xl border border-white/10 p-6">
+            <Panel padding="lg" className="flex h-full flex-col items-center justify-center">
               <Link
                         href="/organization/member/nutrition-coach"
-                className="rounded-full bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] px-6 py-2.5 text-sm font-semibold text-[#031525] transition hover:brightness-110"
+                className="accent-pink rounded-full px-6 py-2.5 text-sm font-semibold transition hover:brightness-110"
                       >
                         Nutrition Coach
               </Link>
-            </div>
+            </Panel>
           ) : coachPlanStatus === "loading" ? (
-            <div className="relative flex h-full flex-col items-center justify-center glass-panel rounded-3xl border border-white/10 p-6">
-              <p className="text-sm text-slate-400">Loading coach plan...</p>
-            </div>
+            <Panel padding="lg" className="flex h-full flex-col items-center justify-center">
+              <p className="text-sm text-[var(--text-muted)]">Loading coach plan...</p>
+            </Panel>
           ) : (
-            <div className="relative flex h-full flex-col glass-panel rounded-3xl border border-white/10 p-6">
+            <AccentCard tone="lime" className="flex h-full flex-col">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Coach</p>
-                <p className="mt-1 text-sm text-slate-200">{coachGoalLabel}</p>
+                <Micro onAccent as="p">Coach</Micro>
+                <p className="mt-1 text-sm">{coachGoalLabel}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setCoachCardExpanded((expanded) => !expanded)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-black/10 opacity-70 transition hover:opacity-100"
                   aria-expanded={coachCardExpanded}
                   aria-label={coachCardExpanded ? "Collapse coach card" : "Expand coach card"}
                 >
@@ -1125,7 +1126,7 @@ export default function HealthNutritionPage() {
                   <button
                     type="button"
                     onClick={() => setCoachMenuOpen((open) => !open)}
-                    className="grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
+                    className="grid h-9 w-9 place-items-center rounded-full border border-black/10 bg-black/10 opacity-70 transition hover:opacity-100"
                     aria-label="Coach card menu"
                     aria-expanded={coachMenuOpen}
                   >
@@ -1136,14 +1137,14 @@ export default function HealthNutritionPage() {
                     </svg>
                   </button>
                   {coachMenuOpen ? (
-                    <div className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-white/10 bg-[#12171d] p-2 shadow-lg">
+                    <div className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-black/10 bg-black/25 p-2 shadow-lg backdrop-blur">
                       <button
                         type="button"
                         onClick={() => {
                           setCoachMenuOpen(false);
                           setCoachSettingsOpen(true);
                         }}
-                        className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 transition hover:bg-white/5"
+                        className="block w-full rounded-lg px-3 py-2 text-left text-sm text-current transition hover:bg-black/10"
                       >
                         Coach settings
                       </button>
@@ -1155,66 +1156,58 @@ export default function HealthNutritionPage() {
 
             {coachCardExpanded ? (
               <>
-                <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="mt-6 rounded-2xl border border-black/10 bg-black/10 p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Weight Progress</p>
-                    <p className="text-xs font-semibold text-slate-200">{Math.round(weightProgressPercent)}% to goal</p>
+                    <p className="text-xs uppercase tracking-[0.2em] opacity-60">Weight Progress</p>
+                    <p className="text-xs font-semibold">{Math.round(weightProgressPercent)}% to goal</p>
                   </div>
 
                   <div className="flex items-center">
                     <div className="grid w-full grid-cols-[auto_1fr_auto_1fr_auto] items-center">
                       <div className="flex min-w-[52px] flex-col items-center sm:min-w-[64px]">
-                        <span className="grid h-8 w-8 place-items-center rounded-full border-2 border-sky-300/60 bg-white/5 text-[10px] font-semibold text-slate-100 sm:h-10 sm:w-10 sm:text-xs">
+                        <span className="grid h-8 w-8 place-items-center rounded-full border-2 border-black/20 bg-black/10 text-[10px] font-semibold sm:h-10 sm:w-10 sm:text-xs">
                           {formatDecimal(coachWeights.start)}
                         </span>
-                        <span className="mt-1 text-[10px] text-slate-500 sm:text-[11px]">Start</span>
+                        <span className="mt-1 text-[10px] opacity-40 sm:text-[11px]">Start</span>
                       </div>
 
-                      <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-white/10 sm:mx-2">
+                      <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-black/15 sm:mx-2">
                         <span
-                          className="block h-full rounded-full bg-gradient-to-r from-sky-300 to-cyan-500"
+                          className="block h-full rounded-full bg-black/30"
                           style={{ width: `${Math.min(100, weightProgressPercent * 2)}%` }}
                         />
                       </div>
 
                       <div className="flex min-w-[52px] flex-col items-center sm:min-w-[64px]">
                         <span
-                          className={`grid h-8 w-8 place-items-center rounded-full border-2 text-[10px] font-semibold sm:h-10 sm:w-10 sm:text-xs ${
-                            weightProgressPercent > 0
-                              ? "border-cyan-400/60 bg-white/5 text-cyan-300"
-                              : "border-white/20 bg-white/5 text-slate-500"
-                          }`}
+                          className="grid h-8 w-8 place-items-center rounded-full border-2 border-black/20 bg-black/10 text-[10px] font-semibold sm:h-10 sm:w-10 sm:text-xs"
                         >
                           {formatDecimal(coachWeights.trend)}
                         </span>
-                        <span className="mt-1 text-[10px] text-slate-500 sm:text-[11px]">Current</span>
+                        <span className="mt-1 text-[10px] opacity-40 sm:text-[11px]">Current</span>
                       </div>
 
-                      <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-white/10 sm:mx-2">
+                      <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-black/15 sm:mx-2">
                         <span
-                          className="block h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-500"
+                          className="block h-full rounded-full bg-black/30"
                           style={{ width: `${Math.max(0, (weightProgressPercent - 50) * 2)}%` }}
                         />
                       </div>
 
                       <div className="flex min-w-[52px] flex-col items-center sm:min-w-[64px]">
                         <span
-                          className={`grid h-8 w-8 place-items-center rounded-full border-2 text-[10px] font-semibold sm:h-10 sm:w-10 sm:text-xs ${
-                            weightProgressPercent >= 100
-                              ? "border-emerald-400/60 bg-white/5 text-emerald-300"
-                              : "border-white/20 bg-white/5 text-slate-500"
-                          }`}
+                          className="grid h-8 w-8 place-items-center rounded-full border-2 border-black/20 bg-black/10 text-[10px] font-semibold sm:h-10 sm:w-10 sm:text-xs"
                         >
                           {formatDecimal(coachWeights.goal)}
                         </span>
-                        <span className="mt-1 text-[10px] text-slate-500 sm:text-[11px]">Goal</span>
+                        <span className="mt-1 text-[10px] opacity-40 sm:text-[11px]">Goal</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <div className="mb-2 flex flex-col gap-1 text-xs font-medium text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mt-4 rounded-2xl border border-black/10 bg-black/10 p-4">
+                  <div className="mb-2 flex flex-col gap-1 text-xs font-medium opacity-60 sm:flex-row sm:items-center sm:justify-between">
                     <p>Last check-in: {checkInTimeline.lastDateLabel}</p>
                     <p>Next check-in: {checkInTimeline.nextDateLabel}</p>
                   </div>
@@ -1225,14 +1218,14 @@ export default function HealthNutritionPage() {
                         key={`check-bar-${index}`}
                         className={`h-2 rounded-full ${
                           index < checkInTimeline.filledBars
-                            ? "bg-gradient-to-r from-sky-400 to-cyan-500"
-                            : "bg-white/10"
+                            ? "bg-black/30"
+                            : "bg-black/10"
                         }`}
                       />
                     ))}
                   </div>
 
-                  <p className="mt-2 text-xs text-slate-400">
+                  <p className="mt-2 text-xs opacity-60">
                     {checkInTimeline.daysUntilNext === 0
                       ? "Check-in due today"
                       : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until next check-in`}
@@ -1240,7 +1233,7 @@ export default function HealthNutritionPage() {
                 </div>
               </>
             ) : null}
-          </div>
+          </AccentCard>
           )}
         </section>
 
@@ -1260,11 +1253,11 @@ export default function HealthNutritionPage() {
             );
 
             return (
-              <div key={meal.key} className="glass-panel rounded-3xl border border-white/10 p-4">
+              <Panel key={meal.key} padding="none" className="p-4">
                 <div className="relative flex items-center justify-between">
                   <div>
-                    <h3 className="text-xs uppercase tracking-[0.3em] text-slate-400">{meal.label}</h3>
-                    <p className="mt-2 text-sm text-slate-200">
+                    <Micro as="p">{meal.label}</Micro>
+                    <p className="mt-2 text-sm text-[var(--text)]">
                       {Math.round(mealTotals.calories)} Cal, {Math.round(mealTotals.protein)}p, {Math.round(mealTotals.carbs)}c, {Math.round(mealTotals.fat)}f
                     </p>
                   </div>
@@ -1272,7 +1265,7 @@ export default function HealthNutritionPage() {
                     <button
                       type="button"
                       onClick={() => setMealMenuOpen((current) => (current === meal.key ? null : meal.key))}
-                      className="grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
+                      className="grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
                       aria-label={`Meal actions for ${meal.label}`}
                     >
                       <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -1287,14 +1280,14 @@ export default function HealthNutritionPage() {
                         setMealMenuOpen(null);
                         openMealDialog(meal.key);
                       }}
-                      className="rounded-full bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] px-5 py-2 text-sm font-semibold text-[#031525] transition hover:brightness-110"
+                      className="accent-pink rounded-full px-5 py-2 text-sm font-semibold transition hover:brightness-110"
                     >
                       Add
                     </button>
                   </div>
 
                   {mealMenuOpen === meal.key ? (
-                    <div className="absolute right-0 top-11 z-20 w-44 overflow-hidden rounded-xl border border-white/10 bg-[#12171d] shadow-lg">
+                    <div className="absolute right-0 top-11 z-20 w-44 overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--panel-2)] shadow-lg">
                       <button
                         type="button"
                         onClick={() => void deleteMealEntries(meal.key)}
@@ -1311,7 +1304,7 @@ export default function HealthNutritionPage() {
                         setCopyTargetMeal(meal.key);
                       }}
                       disabled={copyingMeal === meal.key}
-                      className="block w-full px-4 py-3 text-left text-base text-slate-200 transition hover:bg-white/5 disabled:opacity-60"
+                      className="block w-full px-4 py-3 text-left text-base text-[var(--text)] transition hover:bg-[var(--panel)] disabled:opacity-60"
                     >
                       {copyingMeal === meal.key ? "Copying..." : "Copy meal"}
                     </button>
@@ -1321,22 +1314,22 @@ export default function HealthNutritionPage() {
 
                 <div className="mt-4 space-y-3">
                   {mealEntries.length === 0 ? (
-                    <p className="text-sm text-slate-400">No entries yet.</p>
+                    <p className="text-sm text-[var(--text-muted)]">No entries yet.</p>
                   ) : (
                     mealEntries.map((entry) => (
                       <div
                         key={entry.id}
-                        className="flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
+                        className="flex items-start justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-4"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-slate-100">{entry.entry_name}</p>
-                          <p className="mt-1 text-xs text-slate-400">
+                          <p className="text-sm font-semibold text-[var(--text)]">{entry.entry_name}</p>
+                          <p className="mt-1 text-xs text-[var(--text-muted)]">
                             {roundToWhole((entry.calories ?? 0) * toEntryQuantity(entry.quantity))} cal · {roundToWhole((entry.protein ?? 0) * toEntryQuantity(entry.quantity))}p · {roundToWhole((entry.carbs ?? 0) * toEntryQuantity(entry.quantity))}c · {roundToWhole((entry.fat ?? 0) * toEntryQuantity(entry.quantity))}f
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-2 py-1">
-                            <span className="text-[11px] text-slate-400">Serving</span>
+                          <div className="flex items-center gap-1 rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-1">
+                            <span className="text-[11px] text-[var(--text-soft)]">Serving</span>
                             {editingEntryId === entry.id ? (
                               <>
                                 <input
@@ -1351,14 +1344,14 @@ export default function HealthNutritionPage() {
                                       setEditServingDraft("");
                                     }
                                   }}
-                                  className="w-14 rounded border border-white/15 bg-white/5 px-1.5 py-0.5 text-xs text-slate-100 focus:border-white/30 focus:outline-none"
+                                  className="w-14 rounded border border-[var(--line-strong)] bg-[var(--panel-2)] px-1.5 py-0.5 text-xs text-[var(--text)] focus:border-white/30 focus:outline-none"
                                   inputMode="decimal"
                                   aria-label="Edit serving size"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => void saveServingSize(entry.id)}
-                                  className="rounded-full p-1 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                                  className="rounded-full p-1 text-[var(--text-muted)] transition hover:bg-[var(--panel)]"
                                   aria-label="Save serving size"
                                 >
                                   <Check className="h-3.5 w-3.5" aria-hidden="true" />
@@ -1366,13 +1359,13 @@ export default function HealthNutritionPage() {
                               </>
                             ) : (
                               <>
-                                <span className="text-xs font-medium text-slate-200">
+                                <span className="text-xs font-medium text-[var(--text)]">
                                   {formatServingSize(toEntryQuantity(entry.quantity))}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => openServingSizeEditor(entry.id, entry.quantity)}
-                                  className="rounded-full p-1 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                                  className="rounded-full p-1 text-[var(--text-muted)] transition hover:bg-[var(--panel)]"
                                   aria-label="Edit serving size"
                                 >
                                   <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
@@ -1383,7 +1376,7 @@ export default function HealthNutritionPage() {
                           <button
                             type="button"
                             onClick={() => deleteEntry(entry.id)}
-                            className="text-xs text-slate-500 transition hover:text-rose-400"
+                            className="text-xs text-[var(--text-soft)] transition hover:text-rose-400"
                           >
                             Remove
                           </button>
@@ -1392,20 +1385,20 @@ export default function HealthNutritionPage() {
                     ))
                   )}
                 </div>
-              </div>
+              </Panel>
             );
           })}
         </section>
 
         {foodDialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/55 px-4 py-4 sm:items-center sm:py-6">
-            <div className="glass-panel my-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl border border-white/10 p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-4 sm:items-center sm:py-6">
+            <div className="panel my-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-slate-300">
+                  <p className="text-sm font-medium text-[var(--text-muted)]">
                     {activeMealDialog ? `Add To ${meals.find((meal) => meal.key === activeMealDialog)?.label}` : "Manage Foods"}
                   </p>
-                  <h3 className="mt-1 text-3xl font-semibold leading-tight text-slate-100">Search foods</h3>
+                  <h3 className="mt-1 text-3xl font-semibold leading-tight text-[var(--text)]">Search foods</h3>
                 </div>
                 <button
                   type="button"
@@ -1414,7 +1407,7 @@ export default function HealthNutritionPage() {
                     setActiveMealDialog(null);
                     setEditingFoodId(null);
                   }}
-                  className="grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/5 text-lg text-slate-300 transition hover:border-white/25 hover:text-white"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-lg text-[var(--text-muted)] transition hover:text-[var(--text)]"
                   aria-label="Close food dialog"
                 >
                   ×
@@ -1433,8 +1426,8 @@ export default function HealthNutritionPage() {
                     onClick={() => setDialogTab(tab)}
                     className={`rounded-full border px-4 py-1 text-sm font-semibold transition ${
                       dialogTab === tab
-                        ? "border-[#2fa8e8] bg-[#2fa8e8]/20 text-[#6deaff]"
-                        : "border-white/15 bg-white/5 text-slate-400 hover:border-white/25 hover:text-slate-200"
+                        ? "border-[var(--cyan)]/40 bg-[var(--cyan)]/12 text-[var(--cyan)]"
+                        : "border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:text-[var(--text)]"
                     }`}
                   >
                     {tab === "recent"
@@ -1451,89 +1444,89 @@ export default function HealthNutritionPage() {
               {dialogTab === "create" ? (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <label className="space-y-1 sm:col-span-2">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Food Name</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Food Name</span>
                     <input
                       value={createFoodDraft.name}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, name: event.target.value }))}
                       placeholder="Food name"
-                      className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Calories</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Calories</span>
                     <input
                       value={createFoodDraft.calories}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, calories: event.target.value }))}
                       placeholder="Calories"
                       inputMode="numeric"
-                      className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Protein</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Protein</span>
                     <input
                       value={createFoodDraft.protein}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, protein: event.target.value }))}
                       placeholder="Protein"
                       inputMode="numeric"
-                      className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Carbs</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Carbs</span>
                     <input
                       value={createFoodDraft.carbs}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, carbs: event.target.value }))}
                       placeholder="Carbs"
                       inputMode="numeric"
-                      className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Fat</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Fat</span>
                     <input
                       value={createFoodDraft.fat}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, fat: event.target.value }))}
                       placeholder="Fat"
                       inputMode="numeric"
-                      className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Sugar</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Sugar</span>
                     <input
                       value={createFoodDraft.sugar}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, sugar: event.target.value }))}
                       placeholder="Sugar"
                       inputMode="numeric"
-                      className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Fiber</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Fiber</span>
                     <input
                       value={createFoodDraft.fiber}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, fiber: event.target.value }))}
                       placeholder="Fiber"
                       inputMode="numeric"
-                      className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1 sm:col-span-2">
-                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Saturated Fat</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Saturated Fat</span>
                     <input
                       value={createFoodDraft.saturatedFat}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, saturatedFat: event.target.value }))}
                       placeholder="Saturated fat"
                       inputMode="numeric"
-                      className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                     />
                   </label>
                   <button
                     type="button"
                     onClick={createCustomFood}
                     disabled={creatingFood}
-                    className="rounded-2xl bg-gradient-to-r from-[#2fa8e8] to-[#0b3da8] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60 sm:col-span-2"
+                    className="accent-violet rounded-2xl px-4 py-2 text-sm font-semibold transition hover:brightness-110 disabled:opacity-60 sm:col-span-2"
                   >
                     {creatingFood ? "Saving" : "Save Food"}
                   </button>
@@ -1547,13 +1540,13 @@ export default function HealthNutritionPage() {
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
                       onKeyDown={(event) => { if (event.key === "Enter") handleFoodSearch(); }}
-                      className="min-w-[220px] flex-1 rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                      className="min-w-[220px] flex-1 rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       placeholder="Search foods"
                     />
                     <button
                       type="button"
                       onClick={handleFoodSearch}
-                      className="rounded-2xl bg-gradient-to-r from-[#2fa8e8] to-[#0b3da8] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+                      className="accent-violet rounded-2xl px-4 py-2 text-sm font-semibold transition hover:brightness-110"
                     >
                       {searchLoading ? "Searching" : "Search"}
                     </button>
@@ -1567,28 +1560,28 @@ export default function HealthNutritionPage() {
 
                   <div className="mt-6 grid gap-3 md:grid-cols-2">
                     {searchResults.length === 0 ? (
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-[var(--text-muted)]">
                         {searchPerformed ? `No results for "${searchQuery.trim()}".` : "Search for foods to add."}
                       </p>
                     ) : (
                       searchResults.map((result) => (
                         <div
                           key={result.fdcId}
-                          className="flex flex-col justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
+                          className="flex flex-col justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-4"
                         >
                           <div>
-                            <p className="text-sm font-semibold text-slate-100">{result.description}</p>
+                            <p className="text-sm font-semibold text-[var(--text)]">{result.description}</p>
                             {result.brandOwner ? (
-                              <p className="mt-1 text-xs text-slate-400">{result.brandOwner}</p>
+                              <p className="mt-1 text-xs text-[var(--text-muted)]">{result.brandOwner}</p>
                             ) : null}
-                            <p className="mt-2 text-xs text-slate-400">
+                            <p className="mt-2 text-xs text-[var(--text-muted)]">
                               {roundToWhole(result.calories)} cal · {roundToWhole(result.protein)}p · {roundToWhole(result.carbs)}c · {roundToWhole(result.fat)}f
                             </p>
                           </div>
                           <button
                             type="button"
                             onClick={() => addFoodResult(result)}
-                            className="rounded-xl bg-gradient-to-r from-[#2fa8e8] to-[#0b3da8] px-3 py-2 text-xs font-semibold text-white transition hover:brightness-110"
+                            className="accent-violet rounded-xl px-3 py-2 text-xs font-semibold transition hover:brightness-110"
                           >
                             Add to {meals.find((meal) => meal.key === (activeMealDialog ?? searchMeal))?.label}
                           </button>
@@ -1604,23 +1597,23 @@ export default function HealthNutritionPage() {
                       value={dialogSearch}
                       onChange={(event) => setDialogSearch(event.target.value)}
                       placeholder={dialogTab === "recent" ? "Search recent foods" : "Search my foods"}
-                      className="w-full rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-base text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2.5 text-base text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                     />
                   </div>
                   <div className="mt-4 max-h-80 space-y-2 overflow-y-auto pr-1">
                     {dialogLoading ? (
-                      <p className="text-sm text-slate-400">Loading foods...</p>
+                      <p className="text-sm text-[var(--text-muted)]">Loading foods...</p>
                     ) : dialogFoods.length === 0 ? (
-                      <p className="rounded-lg border border-white/10 px-4 py-4 text-sm text-slate-400">No foods found. Try a different search.</p>
+                      <p className="rounded-lg border border-[var(--line)] px-4 py-4 text-sm text-[var(--text-muted)]">No foods found. Try a different search.</p>
                     ) : (
                       dialogFoods.map((food) => (
                         <div
                           key={`${dialogTab}-${food.id}`}
-                          className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                          className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3"
                         >
                           <span>
-                            <span className="block text-sm font-semibold text-slate-100">{food.name}</span>
-                            <span className="mt-1 block text-xs text-slate-400">
+                            <span className="block text-sm font-semibold text-[var(--text)]">{food.name}</span>
+                            <span className="mt-1 block text-xs text-[var(--text-muted)]">
                               {roundToWhole(food.calories)} cal · {roundToWhole(food.protein)}p · {roundToWhole(food.carbs)}c · {roundToWhole(food.fat)}f
                             </span>
                           </span>
@@ -1629,7 +1622,7 @@ export default function HealthNutritionPage() {
                               <button
                                 type="button"
                                 onClick={() => addLibraryFood(food, activeMealDialog)}
-                                className="rounded-full bg-gradient-to-r from-[#2fa8e8] to-[#0b3da8] px-3 py-1 text-xs font-semibold text-white transition hover:brightness-110"
+                                className="accent-violet rounded-full px-3 py-1 text-xs font-semibold transition hover:brightness-110"
                               >
                                 Add
                               </button>
@@ -1639,7 +1632,7 @@ export default function HealthNutritionPage() {
                                 <button
                                   type="button"
                                   onClick={() => beginEditFood(food)}
-                                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-slate-300 transition hover:border-white/30 hover:text-white"
+                                  className="rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-1 text-xs text-[var(--text-muted)] transition hover:text-[var(--text)]"
                                 >
                                   Edit
                                 </button>
@@ -1662,86 +1655,86 @@ export default function HealthNutritionPage() {
               )}
 
               {editingFoodId ? (
-                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Edit Food</p>
+                <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Edit Food</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <label className="space-y-1 sm:col-span-2">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Food Name</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Food Name</span>
                       <input
                         value={editFoodDraft.name}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, name: event.target.value }))}
                         placeholder="Food name"
-                        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Calories</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Calories</span>
                       <input
                         value={editFoodDraft.calories}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, calories: event.target.value }))}
                         placeholder="Calories"
                         inputMode="numeric"
-                        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Protein</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Protein</span>
                       <input
                         value={editFoodDraft.protein}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, protein: event.target.value }))}
                         placeholder="Protein"
                         inputMode="numeric"
-                        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Carbs</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Carbs</span>
                       <input
                         value={editFoodDraft.carbs}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, carbs: event.target.value }))}
                         placeholder="Carbs"
                         inputMode="numeric"
-                        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Fat</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Fat</span>
                       <input
                         value={editFoodDraft.fat}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, fat: event.target.value }))}
                         placeholder="Fat"
                         inputMode="numeric"
-                        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Sugar</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Sugar</span>
                       <input
                         value={editFoodDraft.sugar}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, sugar: event.target.value }))}
                         placeholder="Sugar"
                         inputMode="numeric"
-                        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Fiber</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Fiber</span>
                       <input
                         value={editFoodDraft.fiber}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, fiber: event.target.value }))}
                         placeholder="Fiber"
                         inputMode="numeric"
-                        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1 sm:col-span-2">
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Saturated Fat</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Saturated Fat</span>
                       <input
                         value={editFoodDraft.saturatedFat}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, saturatedFat: event.target.value }))}
                         placeholder="Saturated fat"
                         inputMode="numeric"
-                        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       />
                     </label>
                     <div className="sm:col-span-2 flex items-center gap-2">
@@ -1749,14 +1742,14 @@ export default function HealthNutritionPage() {
                         type="button"
                         disabled={dialogSaving}
                         onClick={() => saveEditedFood(editingFoodId)}
-                        className="rounded-2xl bg-gradient-to-r from-[#2fa8e8] to-[#0b3da8] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60"
+                        className="accent-violet rounded-2xl px-4 py-2 text-sm font-semibold transition hover:brightness-110 disabled:opacity-60"
                       >
                         Save Changes
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingFoodId(null)}
-                        className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-300 transition hover:border-white/30 hover:text-white"
+                        className="rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text-muted)] transition hover:text-[var(--text)]"
                       >
                         Cancel
                       </button>
@@ -1769,21 +1762,21 @@ export default function HealthNutritionPage() {
         )}
 
         {coachSettingsOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60">
-            <div className="glass-panel w-full max-w-sm rounded-2xl border border-white/10 p-6 shadow-xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <Panel padding="lg" className="w-full max-w-sm shadow-[var(--shadow-lg)]">
               <div className="mb-5 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-slate-100">Coach Settings</h3>
+                <h3 className="text-base font-semibold text-[var(--text)]">Coach Settings</h3>
                 <button
                   type="button"
                   onClick={() => setCoachSettingsOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Goal</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Goal</p>
                 {GOAL_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -1791,13 +1784,13 @@ export default function HealthNutritionPage() {
                     onClick={() => setCoachSettingsGoal(opt.value)}
                     className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition ${
                       coachSettingsGoal === opt.value
-                        ? "border-sky-400/40 bg-sky-400/10 text-sky-300"
-                        : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:text-white"
+                        ? "border-[var(--pink)]/40 bg-[var(--pink)]/10 text-[var(--pink)]"
+                        : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:text-[var(--text)]"
                     }`}
                   >
                     <span
                       className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                        coachSettingsGoal === opt.value ? "bg-sky-400" : "bg-white/20"
+                        coachSettingsGoal === opt.value ? "bg-[var(--pink)]" : "bg-[var(--line-strong)]"
                       }`}
                     />
                     {opt.label}
@@ -1806,7 +1799,7 @@ export default function HealthNutritionPage() {
               </div>
 
               {coachSettingsError && (
-                <p className="mt-3 text-sm text-rose-300">{coachSettingsError}</p>
+                <p className="mt-3 text-sm text-rose-400">{coachSettingsError}</p>
               )}
 
               <div className="mt-5 flex gap-2">
@@ -1814,7 +1807,7 @@ export default function HealthNutritionPage() {
                   type="button"
                   onClick={saveCoachSettings}
                   disabled={coachSettingsSaving}
-                  className="flex-1 rounded-xl bg-gradient-to-br from-sky-400 to-cyan-500 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white shadow-[0_4px_20px_rgba(56,189,248,0.2)] transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="accent-pink flex-1 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {coachSettingsSaving ? "Saving..." : "Save"}
                 </button>
@@ -1822,51 +1815,51 @@ export default function HealthNutritionPage() {
                   type="button"
                   onClick={() => setCoachSettingsOpen(false)}
                   disabled={coachSettingsSaving}
-                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white disabled:opacity-60"
+                  className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-60"
                 >
                   Cancel
                 </button>
               </div>
-            </div>
+            </Panel>
           </div>
         )}
 
         {copyDialogMeal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4">
-            <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+            <Panel padding="lg" className="w-full max-w-md shadow-[var(--shadow-lg)]">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Copy Meal</p>
-                  <h3 className="mt-2 text-lg font-semibold text-slate-100">
+                  <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">Copy Meal</p>
+                  <h3 className="mt-2 text-lg font-semibold text-[var(--text)]">
                     Copy {meals.find((meal) => meal.key === copyDialogMeal)?.label}
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setCopyDialogMeal(null)}
-                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-white/30 hover:text-slate-100"
+                  className="rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-1 text-xs text-[var(--text-muted)] transition hover:text-[var(--text)]"
                 >
                   Close
                 </button>
               </div>
 
               <div className="mt-4 space-y-3">
-                <label className="block space-y-2 text-xs uppercase tracking-[0.2em] text-slate-400">
+                <label className="block space-y-2 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
                   Target Date
                   <input
                     type="date"
                     value={copyTargetDate}
                     onChange={(event) => setCopyTargetDate(event.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+                    className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-white/30 focus:outline-none"
                   />
                 </label>
 
-                <label className="block space-y-2 text-xs uppercase tracking-[0.2em] text-slate-400">
+                <label className="block space-y-2 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
                   Target Meal
                   <select
                     value={copyTargetMeal}
                     onChange={(event) => setCopyTargetMeal(event.target.value as MealKey)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-100 focus:border-white/30 focus:outline-none"
+                    className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-white/30 focus:outline-none"
                   >
                     {meals.map((meal) => (
                       <option key={`copy-target-${meal.key}`} value={meal.key}>
@@ -1881,7 +1874,7 @@ export default function HealthNutritionPage() {
                 <button
                   type="button"
                   onClick={() => setCopyDialogMeal(null)}
-                  className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-white/30 hover:text-slate-100"
+                  className="rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text-muted)] transition hover:text-[var(--text)]"
                 >
                   Cancel
                 </button>
@@ -1889,12 +1882,12 @@ export default function HealthNutritionPage() {
                   type="button"
                   onClick={() => void submitCopyMeal()}
                   disabled={copyingMeal === copyDialogMeal}
-                  className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-white/30 hover:bg-white/20 disabled:opacity-60"
+                  className="accent-pink rounded-2xl px-4 py-2 text-sm font-semibold transition hover:brightness-110 disabled:opacity-60"
                 >
                   {copyingMeal === copyDialogMeal ? "Copying" : "Copy Meal"}
                 </button>
               </div>
-            </div>
+            </Panel>
           </div>
         )}
       </section>
