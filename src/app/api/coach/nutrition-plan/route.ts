@@ -107,7 +107,7 @@ async function requireRequestUserContext(request: Request) {
 
 export async function GET(request: Request) {
   const { error, userId, role } = await requireRequestUserContext(request);
-  if (error || !userId || !hasRole("coach", role)) {
+  if (error || !userId || !hasRole("member", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
 
@@ -159,7 +159,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const { error, userId, role } = await requireRequestUserContext(request);
-  if (error || !userId || !hasRole("coach", role)) {
+  if (error || !userId || !hasRole("member", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
 

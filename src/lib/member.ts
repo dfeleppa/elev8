@@ -89,15 +89,54 @@ export async function requireUserContextFromBearer(request: Request): Promise<Us
   }
 
   const userId = jwtUser.user.id;
+  const email = normalizeEmail(jwtUser.user.email);
 
-  const { data: userRow, error: userError } = await supabaseAdmin
-    .from("app_users")
-    .select("id, role, full_name")
-    .eq("id", userId)
-    .maybeSingle();
+  let userRow: { id: string; role: string | null; full_name?: string | null } | null = null;
+  let userError: { message: string } | null = null;
+
+  const lookups = [
+    supabaseAdmin
+      .from("app_users")
+      .select("id, role, full_name")
+      .eq("supabase_auth_uid", userId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("app_users")
+      .select("id, role, full_name")
+      .eq("id", userId)
+      .maybeSingle(),
+    if (email)
+      supabaseAdmin
+        .from("app_users")
+        .select("id, role, full_name")
+        .eq("email", email)
+        .maybeSingle(),
+  ];
+
+  for (const lookup of lookups) {
+    const result = await lookup;
+    if (result.error) {
+      userError = result.error;
+      continue;
+    }
+    if (result.data) {
+      userRow = result.data;
+      break;
+    }
+  }
 
   if (userError || !userRow) {
     return { userId, role: "member", organizationIds: [], error: userError?.message ?? "User not found." };
+  }
+
+  if (userRow.id) {
+    await supabaseAdmin
+      .from("app_users")
+      .update({
+        supabase_auth_uid: userId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userRow.id);
   }
 
   return resolveUserContext(userRow);
