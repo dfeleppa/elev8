@@ -7,7 +7,7 @@ import CoachSetupClient from "../../coach/CoachSetupClient";
 export default async function MemberNutritionCoachPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("member", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   return (

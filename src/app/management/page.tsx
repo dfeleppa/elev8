@@ -75,7 +75,7 @@ export default async function ManagementPage({
 }) {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("owner", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   const resolvedSearchParams = await Promise.resolve(searchParams);

@@ -32,23 +32,27 @@
   background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
   background-size: 18px 18px;
 }
-:root[data-theme="light"] .dotgrid {
+:root[data-theme="light"] .dotgrid:not(.accent-pink):not(.accent-violet):not(.accent-lime):not(.accent-ink) {
   background-image: radial-gradient(rgba(20, 17, 15, 0.08) 1px, transparent 1px);
 }
 
 /* ---------- Accent cards (dual-tone) ----------
-   Use on hero/insight panels. Text color is baked in for contrast. */
-.accent-pink {
-  background: linear-gradient(135deg, #ff4a8d 0%, #ff79a5 60%, #ffb1c4 100%);
-  color: #230012;
+   Use on hero/insight panels. Text color is baked in for contrast.
+   These gradients are identical in dark and light mode — do not theme. */
+.accent-pink,
+:root[data-theme="light"] .accent-pink {
+  background: linear-gradient(135deg, #ff4a8d 0%, #ff79a5 60%, #ffb1c4 100%) !important;
+  color: #230012 !important;
 }
-.accent-violet {
-  background: linear-gradient(135deg, #6d3dd4 0%, #8b5cf6 55%, #b794f6 100%);
-  color: #140a2e;
+.accent-violet,
+:root[data-theme="light"] .accent-violet {
+  background: linear-gradient(135deg, #6d3dd4 0%, #8b5cf6 55%, #b794f6 100%) !important;
+  color: #140a2e !important;
 }
-.accent-lime {
-  background: linear-gradient(135deg, #8ee03c 0%, #b6ff4a 55%, #dcff85 100%);
-  color: #14220a;
+.accent-lime,
+:root[data-theme="light"] .accent-lime {
+  background: linear-gradient(135deg, #8ee03c 0%, #b6ff4a 55%, #dcff85 100%) !important;
+  color: #14220a !important;
 }
 .accent-ink {
   background: #101216;

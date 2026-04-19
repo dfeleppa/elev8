@@ -7,7 +7,7 @@ import { hasRole, requireUserContext } from "@/lib/member";
 export default async function CoachSchedulePage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("coach", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   return (

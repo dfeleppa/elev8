@@ -7,7 +7,7 @@ import { hasRole, requireUserContext } from "@/lib/member";
 export default async function AdminAnalyticsPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   return (
@@ -18,7 +18,7 @@ export default async function AdminAnalyticsPage() {
         description="Track KPIs, monitor revenue movement, and align operating decisions across coaching and membership funnels."
         links={[
           { label: "Open Programming", href: "/admin/programming" },
-          { label: "Open Organization Hub", href: "/organization" },
+          { label: "Open Owner Hub", href: "/owner" },
         ]}
       />
     </SidebarShell>

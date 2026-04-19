@@ -7,7 +7,7 @@ import { hasRole, requireUserContext } from "@/lib/member";
 export default async function OrganizationAdminPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   return (

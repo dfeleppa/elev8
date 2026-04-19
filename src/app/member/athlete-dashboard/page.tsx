@@ -25,7 +25,7 @@ export default async function MemberAthleteDashboardPage({
 }) {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("member", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   const resolvedSearchParams = await Promise.resolve(searchParams);

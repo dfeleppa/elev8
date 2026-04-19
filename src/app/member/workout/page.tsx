@@ -7,7 +7,7 @@ import MemberWorkoutClient from "./MemberWorkoutClient";
 export default async function MemberWorkoutPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("member", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   return (

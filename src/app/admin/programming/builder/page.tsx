@@ -7,7 +7,7 @@ import ProgrammingBuilderClient from "./ProgrammingBuilderClient";
 export default async function ProgrammingBuilderPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   return (
