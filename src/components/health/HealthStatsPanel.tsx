@@ -228,28 +228,28 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
     <section>
       {!hideHeader && (
         <header>
-          <h1 className="text-3xl font-semibold text-slate-100">{title}</h1>
-          <p className="mt-3 text-sm text-slate-400">{description}</p>
-          {errorMessage ? <p className="mt-3 text-sm text-rose-300">{errorMessage}</p> : null}
+          <h1 className="text-3xl font-semibold text-[var(--text)]">{title}</h1>
+          <p className="mt-3 text-sm text-[var(--text-muted)]">{description}</p>
+          {errorMessage ? <p className="mt-3 text-sm text-rose-400">{errorMessage}</p> : null}
         </header>
       )}
-      {hideHeader && errorMessage && <p className="mb-4 text-sm text-rose-300">{errorMessage}</p>}
+      {hideHeader && errorMessage && <p className="mb-4 text-sm text-rose-400">{errorMessage}</p>}
 
       <section className="mt-8 grid gap-6 lg:grid-cols-3">
         {groups.map((group) => (
           <div
             key={group.title}
-            className="glass-panel rounded-3xl border border-white/10 p-6"
+            className="panel rounded-3xl p-6"
           >
-            <h2 className="text-lg font-semibold text-slate-100">{group.title}</h2>
+            <h2 className="text-lg font-semibold text-[var(--text)]">{group.title}</h2>
 
             {group.slug === "body-comp" ? (
               <>
                 <div className="mt-4 flex gap-3">
-                  <div className="flex flex-1 items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                    <span className="text-sm font-semibold text-slate-200">Sex</span>
+                  <div className="flex flex-1 items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3">
+                    <span className="text-sm font-semibold text-[var(--text)]">Sex</span>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold capitalize text-slate-100">
+                      <span className="text-sm font-semibold capitalize text-[var(--text)]">
                         {isLoading ? "..." : athleteProfile.sex ?? "--"}
                       </span>
                       <button
@@ -259,15 +259,15 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                           setProfileBirthDate(athleteProfile.birthDate ?? "");
                           setIsEditingProfile(true);
                         }}
-                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-300 transition hover:border-white/20 hover:text-white"
+                        className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
                       >
                         Edit
                       </button>
                     </div>
                   </div>
-                  <div className="flex flex-1 items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                    <span className="text-sm font-semibold text-slate-200">Age</span>
-                    <span className="text-sm font-semibold text-slate-100">
+                  <div className="flex flex-1 items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3">
+                    <span className="text-sm font-semibold text-[var(--text)]">Age</span>
+                    <span className="text-sm font-semibold text-[var(--text)]">
                       {isLoading ? "..." : athleteProfile.age ?? "--"}
                     </span>
                   </div>
@@ -277,19 +277,19 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                   {group.stats.map((stat) => (
                     <div
                       key={stat.key}
-                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                      className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3"
                     >
-                      <span className="text-sm font-semibold text-slate-200">{stat.label}</span>
+                      <span className="text-sm font-semibold text-[var(--text)]">{stat.label}</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-slate-100">{statDisplayValue(stat.key)}</span>
-                        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">{statDisplayUnit(stat.key)}</span>
+                        <span className="text-sm font-semibold text-[var(--text)]">{statDisplayValue(stat.key)}</span>
+                        <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">{statDisplayUnit(stat.key)}</span>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Log Today&apos;s Weight</p>
+                <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Log Today&apos;s Weight</p>
                   <form onSubmit={handleLogBodyComp} className="mt-3 flex items-center gap-2">
                     <input
                       type="number"
@@ -308,7 +308,7 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                           setLogBodyWeight("");
                         }
                       }}
-                      className="w-20 min-w-0 rounded-lg border border-white/15 bg-white/5 px-2 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-emerald-400/60"
+                      className="w-20 min-w-0 rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] outline-none focus:border-emerald-400/60"
                       required
                     />
                     <input
@@ -328,7 +328,7 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                           setLogBodyFat("");
                         }
                       }}
-                      className="w-16 min-w-0 rounded-lg border border-white/15 bg-white/5 px-2 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-emerald-400/60"
+                      className="w-16 min-w-0 rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] outline-none focus:border-emerald-400/60"
                     />
                     <button
                       type="submit"
@@ -338,7 +338,7 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                       {isLogging ? "..." : "Add"}
                     </button>
                     {logSuccess && (
-                      <span className="shrink-0 text-xs text-emerald-400 font-medium">Saved!</span>
+                      <span className="shrink-0 text-xs text-emerald-500 font-medium">Saved!</span>
                     )}
                   </form>
                 </div>
@@ -348,14 +348,14 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                 {group.stats.map((stat) => (
                   <div
                     key={stat.key}
-                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                    className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3"
                   >
-                    <span className="text-sm font-semibold text-slate-200">{stat.label}</span>
+                    <span className="text-sm font-semibold text-[var(--text)]">{stat.label}</span>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-slate-100">
+                      <span className="text-sm font-semibold text-[var(--text)]">
                         {isLoading ? "..." : values[stat.key]?.value ? values[stat.key].value : "-"}
                       </span>
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">{stat.unit}</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">{stat.unit}</span>
                     </div>
                   </div>
                 ))}
@@ -363,7 +363,7 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                   <button
                     type="button"
                     onClick={onLogLift}
-                    className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:text-white"
+                    className="mt-2 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2.5 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--pink)]/30 hover:text-[var(--text)]"
                   >
                     Log Lift
                   </button>
@@ -371,7 +371,7 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                 {group.slug === "conditioning" && (
                   <button
                     type="button"
-                    className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:text-white"
+                    className="mt-2 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2.5 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--pink)]/30 hover:text-[var(--text)]"
                   >
                     Log Benchmark
                   </button>
@@ -383,25 +383,25 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
       </section>
 
       {isEditingProfile ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55">
-          <div className="glass-panel w-full max-w-sm rounded-2xl border border-white/10 p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="panel w-full max-w-sm rounded-2xl p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-100">Edit Athlete Info</h3>
+              <h3 className="text-lg font-semibold text-[var(--text)]">Edit Athlete Info</h3>
               <button
                 type="button"
                 onClick={cancelProfileEdit}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">Sex</label>
+                <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] mb-1">Sex</label>
                 <select
                   value={profileSex}
                   onChange={(e) => setProfileSex(e.target.value)}
-                  className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
+                  className="w-full rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)]"
                 >
                   <option value="">Not set</option>
                   <option value="male">Male</option>
@@ -409,12 +409,12 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1">Birth Date</label>
+                <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] mb-1">Birth Date</label>
                 <input
                   type="date"
                   value={profileBirthDate}
                   onChange={(e) => setProfileBirthDate(e.target.value)}
-                  className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
+                  className="w-full rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)]"
                 />
               </div>
               <div className="flex gap-2 pt-2">
@@ -429,7 +429,7 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                 <button
                   type="button"
                   onClick={cancelProfileEdit}
-                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
+                  className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:text-[var(--text)]"
                 >
                   Cancel
                 </button>

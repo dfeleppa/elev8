@@ -201,16 +201,16 @@ export default function NutritionCoachCard() {
 
   if (status === "loading") {
     return (
-      <div className="flex flex-col items-center justify-center glass-panel rounded-3xl border border-white/10 p-6 min-h-[120px]">
-        <p className="text-sm text-slate-400">Loading coach plan...</p>
+      <div className="flex flex-col items-center justify-center panel rounded-3xl p-6 min-h-[120px]">
+        <p className="text-sm text-[var(--text-muted)]">Loading coach plan...</p>
       </div>
     );
   }
 
   if (status === "none") {
     return (
-      <div className="flex flex-col items-center justify-center glass-panel rounded-3xl border border-white/10 p-6 min-h-[120px] gap-3">
-        <p className="text-sm text-slate-400">No coach plan active.</p>
+      <div className="flex flex-col items-center justify-center panel rounded-3xl p-6 min-h-[120px] gap-3">
+        <p className="text-sm text-[var(--text-muted)]">No coach plan active.</p>
         <Link
           href="/member/nutrition-coach"
           className="rounded-full bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] px-6 py-2.5 text-sm font-semibold text-[#031525] transition hover:brightness-110"
@@ -222,17 +222,17 @@ export default function NutritionCoachCard() {
   }
 
   return (
-    <div className="relative flex flex-col glass-panel rounded-3xl border border-white/10 p-6">
+    <div className="relative flex flex-col panel rounded-3xl p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Coach</p>
-          <p className="mt-1 text-sm text-slate-200">{goalLabel}</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">Coach</p>
+          <p className="mt-1 text-sm text-[var(--text)]">{goalLabel}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
             aria-expanded={expanded}
             aria-label={expanded ? "Collapse coach card" : "Expand coach card"}
           >
@@ -245,7 +245,7 @@ export default function NutritionCoachCard() {
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
+              className="grid h-9 w-9 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="Coach card menu"
               aria-expanded={menuOpen}
             >
@@ -256,14 +256,14 @@ export default function NutritionCoachCard() {
               </svg>
             </button>
             {menuOpen && (
-              <div className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-white/10 bg-[#12171d] p-2 shadow-lg">
+              <div className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-[var(--line-strong)] bg-[var(--panel)] p-2 shadow-[var(--shadow-md)]">
                 <button
                   type="button"
                   onClick={() => {
                     setMenuOpen(false);
                     setSettingsOpen(true);
                   }}
-                  className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 transition hover:bg-white/5"
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm text-[var(--text)] transition hover:bg-[var(--panel-2)]"
                 >
                   Coach settings
                 </button>
@@ -275,22 +275,22 @@ export default function NutritionCoachCard() {
 
       {expanded ? (
         <>
-          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="mt-6 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Weight Progress</p>
-              <p className="text-xs font-semibold text-slate-200">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Weight Progress</p>
+              <p className="text-xs font-semibold text-[var(--text)]">
                 {Math.round(weightProgressPercent)}% to goal
               </p>
             </div>
             <div className="flex items-center">
               <div className="grid w-full grid-cols-[auto_1fr_auto_1fr_auto] items-center">
                 <div className="flex min-w-[52px] flex-col items-center sm:min-w-[64px]">
-                  <span className="grid h-8 w-8 place-items-center rounded-full border-2 border-sky-300/60 bg-white/5 text-[10px] font-semibold text-slate-100 sm:h-10 sm:w-10 sm:text-xs">
+                  <span className="grid h-8 w-8 place-items-center rounded-full border-2 border-sky-300/60 bg-[var(--panel-2)] text-[10px] font-semibold text-[var(--text)] sm:h-10 sm:w-10 sm:text-xs">
                     {formatDecimal(startWeight)}
                   </span>
-                  <span className="mt-1 text-[10px] text-slate-500 sm:text-[11px]">Start</span>
+                  <span className="mt-1 text-[10px] text-[var(--text-soft)] sm:text-[11px]">Start</span>
                 </div>
-                <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-white/10 sm:mx-2">
+                <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-[var(--line-strong)] sm:mx-2">
                   <span
                     className="block h-full rounded-full bg-gradient-to-r from-sky-300 to-cyan-500"
                     style={{ width: `${Math.min(100, weightProgressPercent * 2)}%` }}
@@ -300,15 +300,15 @@ export default function NutritionCoachCard() {
                   <span
                     className={`grid h-8 w-8 place-items-center rounded-full border-2 text-[10px] font-semibold sm:h-10 sm:w-10 sm:text-xs ${
                       weightProgressPercent > 0
-                        ? "border-cyan-400/60 bg-white/5 text-cyan-300"
-                        : "border-white/20 bg-white/5 text-slate-500"
+                        ? "border-cyan-400/60 bg-[var(--panel-2)] text-cyan-500"
+                        : "border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-soft)]"
                     }`}
                   >
                     {formatDecimal(trendWeight)}
                   </span>
-                  <span className="mt-1 text-[10px] text-slate-500 sm:text-[11px]">Current</span>
+                  <span className="mt-1 text-[10px] text-[var(--text-soft)] sm:text-[11px]">Current</span>
                 </div>
-                <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-white/10 sm:mx-2">
+                <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-[var(--line-strong)] sm:mx-2">
                   <span
                     className="block h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-500"
                     style={{ width: `${Math.max(0, (weightProgressPercent - 50) * 2)}%` }}
@@ -318,20 +318,20 @@ export default function NutritionCoachCard() {
                   <span
                     className={`grid h-8 w-8 place-items-center rounded-full border-2 text-[10px] font-semibold sm:h-10 sm:w-10 sm:text-xs ${
                       weightProgressPercent >= 100
-                        ? "border-emerald-400/60 bg-white/5 text-emerald-300"
-                        : "border-white/20 bg-white/5 text-slate-500"
+                        ? "border-emerald-400/60 bg-[var(--panel-2)] text-emerald-500"
+                        : "border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-soft)]"
                     }`}
                   >
                     {formatDecimal(goalWeight)}
                   </span>
-                  <span className="mt-1 text-[10px] text-slate-500 sm:text-[11px]">Goal</span>
+                  <span className="mt-1 text-[10px] text-[var(--text-soft)] sm:text-[11px]">Goal</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="mb-2 flex flex-col gap-1 text-xs font-medium text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-4">
+            <div className="mb-2 flex flex-col gap-1 text-xs font-medium text-[var(--text-muted)] sm:flex-row sm:items-center sm:justify-between">
               <p>Last check-in: {checkInTimeline.lastDateLabel}</p>
               <p>Next check-in: {checkInTimeline.nextDateLabel}</p>
             </div>
@@ -342,12 +342,12 @@ export default function NutritionCoachCard() {
                   className={`h-2 rounded-full ${
                     i < checkInTimeline.filledBars
                       ? "bg-gradient-to-r from-sky-400 to-cyan-500"
-                      : "bg-white/10"
+                      : "bg-[var(--line-strong)]"
                   }`}
                 />
               ))}
             </div>
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-[var(--text-muted)]">
               {checkInTimeline.daysUntilNext === 0
                 ? "Check-in due today"
                 : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until next check-in`}
@@ -358,21 +358,21 @@ export default function NutritionCoachCard() {
 
       {/* Coach Settings Modal */}
       {settingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60">
-          <div className="glass-panel w-full max-w-sm rounded-2xl border border-white/10 p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="panel w-full max-w-sm rounded-2xl p-6 shadow-[var(--shadow-lg)]">
             <div className="mb-5 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-slate-100">Coach Settings</h3>
+              <h3 className="text-base font-semibold text-[var(--text)]">Coach Settings</h3>
               <button
                 type="button"
                 onClick={() => setSettingsOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/25 hover:text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Goal</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Goal</p>
               {GOAL_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -380,13 +380,13 @@ export default function NutritionCoachCard() {
                   onClick={() => setSettingsGoal(opt.value)}
                   className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition ${
                     settingsGoal === opt.value
-                      ? "border-sky-400/40 bg-sky-400/10 text-sky-300"
-                      : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:text-white"
+                      ? "border-sky-400/40 bg-sky-400/10 text-sky-500"
+                      : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:border-[var(--line-strong)] hover:text-[var(--text)]"
                   }`}
                 >
                   <span
                     className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                      settingsGoal === opt.value ? "bg-sky-400" : "bg-white/20"
+                      settingsGoal === opt.value ? "bg-sky-400" : "bg-[var(--line-strong)]"
                     }`}
                   />
                   {opt.label}
@@ -395,7 +395,7 @@ export default function NutritionCoachCard() {
             </div>
 
             {settingsError && (
-              <p className="mt-3 text-sm text-rose-300">{settingsError}</p>
+              <p className="mt-3 text-sm text-rose-400">{settingsError}</p>
             )}
 
             <div className="mt-5 flex gap-2">
@@ -411,7 +411,7 @@ export default function NutritionCoachCard() {
                 type="button"
                 onClick={() => setSettingsOpen(false)}
                 disabled={settingsSaving}
-                className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white disabled:opacity-60"
+                className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-60"
               >
                 Cancel
               </button>

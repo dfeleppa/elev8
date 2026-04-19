@@ -100,6 +100,26 @@ export default function BodyCompTrendChart() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Theme-aware chart colors
+  const [chartTheme, setChartTheme] = useState<"dark" | "light">("dark");
+  useEffect(() => {
+    const check = () => {
+      const t = document.documentElement.getAttribute("data-theme");
+      setChartTheme(t === "light" ? "light" : "dark");
+    };
+    check();
+    const obs = new MutationObserver(check);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => obs.disconnect();
+  }, []);
+
+  const tickColor = chartTheme === "light" ? "#5a6271" : "#94a3b8";
+  const gridColor = chartTheme === "light" ? "rgba(20,17,15,0.08)" : "rgba(255,255,255,0.06)";
+  const tooltipBg = chartTheme === "light" ? "#ffffff" : "#0f172a";
+  const tooltipText = chartTheme === "light" ? "#17181c" : "#e2e8f0";
+  const tooltipLabel = chartTheme === "light" ? "#5a6271" : "#94a3b8";
+  const tooltipBorder = chartTheme === "light" ? "rgba(20,17,15,0.12)" : "rgba(255,255,255,0.1)";
+
   const { from, to } = useMemo(
     () => getDateRange(range, customFrom, customTo),
     [range, customFrom, customTo]
@@ -156,17 +176,17 @@ export default function BodyCompTrendChart() {
   }, [chartData]);
 
   return (
-    <div className="glass-panel rounded-3xl border border-white/10 p-6">
+    <div className="panel rounded-3xl p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
             Body Comp Trends
           </p>
-          <p className="mt-1 text-sm text-slate-500">Track your composition over time</p>
+          <p className="mt-1 text-sm text-[var(--text-soft)]">Track your composition over time</p>
         </div>
 
         {/* Range buttons */}
-        <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 p-1">
+        <div className="flex items-center gap-1 rounded-xl border border-[var(--line)] bg-[var(--panel-2)] p-1">
           {RANGES.map((r) => (
             <button
               key={r.key}
@@ -174,8 +194,8 @@ export default function BodyCompTrendChart() {
               onClick={() => setRange(r.key)}
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                 range === r.key
-                  ? "bg-white/15 text-slate-100"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-[var(--panel)] text-[var(--text)] shadow-sm"
+                  : "text-[var(--text-muted)] hover:text-[var(--text)]"
               }`}
             >
               {r.label}
@@ -191,14 +211,14 @@ export default function BodyCompTrendChart() {
             type="date"
             value={customFrom}
             onChange={(e) => setCustomFrom(e.target.value)}
-            className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-slate-100 outline-none focus:border-sky-400/60"
+            className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-1.5 text-sm text-[var(--text)] outline-none focus:border-sky-400/60"
           />
-          <span className="text-xs text-slate-500">to</span>
+          <span className="text-xs text-[var(--text-soft)]">to</span>
           <input
             type="date"
             value={customTo}
             onChange={(e) => setCustomTo(e.target.value)}
-            className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-slate-100 outline-none focus:border-sky-400/60"
+            className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-1.5 text-sm text-[var(--text)] outline-none focus:border-sky-400/60"
           />
         </div>
       )}
@@ -212,8 +232,8 @@ export default function BodyCompTrendChart() {
             onClick={() => setMetric(m.key)}
             className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
               metric === m.key
-                ? "border-transparent text-slate-100"
-                : "border-white/10 bg-white/5 text-slate-400 hover:text-slate-200"
+                ? "text-[var(--text)]"
+                : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:text-[var(--text)]"
             }`}
             style={metric === m.key ? { backgroundColor: `${m.color}22`, borderColor: `${m.color}55` } : {}}
           >
@@ -230,7 +250,7 @@ export default function BodyCompTrendChart() {
       <div className="mt-6 h-64">
         {loading ? (
           <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-slate-500">Loading...</p>
+            <p className="text-sm text-[var(--text-soft)]">Loading...</p>
           </div>
         ) : error ? (
           <div className="flex h-full items-center justify-center">
@@ -238,7 +258,7 @@ export default function BodyCompTrendChart() {
           </div>
         ) : !hasData ? (
           <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-slate-500">No data for this period. Log body comp to start tracking.</p>
+            <p className="text-sm text-[var(--text-soft)]">No data for this period. Log body comp to start tracking.</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -249,17 +269,17 @@ export default function BodyCompTrendChart() {
                   <stop offset="95%" stopColor={activeMetric.color} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
               <XAxis
                 dataKey="label"
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                tick={{ fill: tickColor, fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis
                 domain={yDomain}
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                tick={{ fill: tickColor, fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v) => `${v}${activeMetric.unit === "%" ? "%" : ""}`}
@@ -267,20 +287,19 @@ export default function BodyCompTrendChart() {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#0f172a",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  backgroundColor: tooltipBg,
+                  border: `1px solid ${tooltipBorder}`,
                   borderRadius: "12px",
-                  color: "#e2e8f0",
+                  color: tooltipText,
                   fontSize: 12,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
                 }}
-                labelStyle={{ color: "#94a3b8", marginBottom: 4 }}
+                labelStyle={{ color: tooltipLabel, marginBottom: 4 }}
                 formatter={(value, name) => [
                   `${value ?? ""}${activeMetric.unit}`,
                   name === "actual" ? activeMetric.label : "Trend",
                 ]}
               />
-              {/* Actual data line */}
               <Line
                 type="monotone"
                 dataKey="actual"
@@ -291,7 +310,6 @@ export default function BodyCompTrendChart() {
                 connectNulls={false}
                 name="actual"
               />
-              {/* Trendline */}
               <Line
                 type="linear"
                 dataKey="trend"
@@ -309,7 +327,7 @@ export default function BodyCompTrendChart() {
       </div>
 
       {hasData && !loading && (
-        <p className="mt-2 text-[11px] text-slate-600">
+        <p className="mt-2 text-[11px] text-[var(--text-soft)]">
           Dashed line = trendline (linear regression)
         </p>
       )}
