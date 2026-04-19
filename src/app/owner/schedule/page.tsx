@@ -7,7 +7,7 @@ import OwnerScheduleClient from "./OwnerScheduleClient";
 export default async function OwnerSchedulePage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("owner", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   return (

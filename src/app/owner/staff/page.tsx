@@ -7,7 +7,7 @@ import OwnerStaffClient from "./OwnerStaffClient";
 export default async function OwnerStaffPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("owner", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   return (

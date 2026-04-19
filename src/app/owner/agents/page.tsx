@@ -7,7 +7,7 @@ import OwnerAgentsClient from "./OwnerAgentsClient";
 export default async function OwnerAgentsPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("owner", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   const configuredMemberId = process.env.AGENT_MEMBER_ID ?? "";

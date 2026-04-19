@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function StoreSetupPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("owner", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   return (

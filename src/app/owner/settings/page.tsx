@@ -7,7 +7,7 @@ import OwnerSettingsClient from "./OwnerSettingsClient";
 export default async function OwnerSettingsPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("owner", role)) {
-    redirect("/organization");
+    redirect("/login");
   }
 
   return (
