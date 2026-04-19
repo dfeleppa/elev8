@@ -269,14 +269,14 @@ export default function MemberScheduleClient() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-2 py-2 shadow-[0_18px_48px_rgba(0,0,0,0.24)]">
+          <div className="flex items-center gap-2 self-start rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-2 py-2">
             <button
               type="button"
               onClick={() => setSelectedDate(todayKey)}
               className={`rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition ${
                 selectedDate === todayKey
-                  ? "bg-[var(--pink)]/20 text-[var(--pink)]"
-                  : "text-[var(--text-muted)] hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
+                  ? "bg-[linear-gradient(135deg,#ff4a8d,#8b5cf6)] text-white shadow-sm"
+                  : "text-[var(--text-muted)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
               }`}
             >
               Today
@@ -284,10 +284,10 @@ export default function MemberScheduleClient() {
             <button
               type="button"
               onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--cyan)]/40 hover:text-[var(--text)]"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="Choose a date"
             >
-              <CalendarDays size={18} />
+              <CalendarDays size={16} />
             </button>
             <input
               ref={dateInputRef}
@@ -313,18 +313,18 @@ export default function MemberScheduleClient() {
                   key={dateKey}
                   type="button"
                   onClick={() => setSelectedDate(dateKey)}
-                  className={`group flex min-w-[88px] flex-col items-center rounded-2xl border px-3 py-3 text-center transition ${
+                  className={`group flex min-w-[80px] flex-col items-center rounded-2xl border px-3 py-3 text-center transition ${
                     isSelected
-                      ? "border-[var(--pink)]/40 bg-[var(--pink)]/10 text-[var(--text)] shadow-[0_10px_28px_rgba(255,74,141,0.12)]"
+                      ? "border-transparent bg-[linear-gradient(135deg,#ff4a8d,#8b5cf6)] text-white shadow-[0_8px_24px_rgba(255,74,141,0.35)]"
                       : isToday
                         ? "border-[var(--cyan)]/30 bg-[var(--cyan)]/8 text-[var(--text)]"
                         : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
                   }`}
                 >
-                  <span className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${isToday && !isSelected ? "text-[var(--cyan)]" : ""}`}>
-                    {isToday ? "Today" : label.weekday}
+                  <span className={`text-[10px] font-bold uppercase tracking-[0.24em] ${isSelected ? "text-white/80" : isToday && !isSelected ? "text-[var(--cyan)]" : ""}`}>
+                    {isToday && !isSelected ? "Today" : label.weekday}
                   </span>
-                  <span className="mt-1 text-sm font-medium">{label.monthDay}</span>
+                  <span className={`mt-1 text-sm font-semibold ${isSelected ? "text-white" : ""}`}>{label.monthDay}</span>
                 </button>
               );
             })}
@@ -369,20 +369,26 @@ export default function MemberScheduleClient() {
             return (
               <article
                 key={`${session.id}-${session.classDate}`}
-                className="hover-lift relative overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--panel-2)] p-5 shadow-[0_8px_24px_rgba(0,0,0,0.1)]"
+                className="hover-lift relative overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--panel)] shadow-[0_4px_16px_rgba(0,0,0,0.07)]"
               >
+                {/* Colored top accent band */}
                 <div
-                  className="absolute inset-y-0 left-0 w-1.5 rounded-full"
+                  className="absolute inset-x-0 top-0 h-1"
                   style={{ backgroundColor: session.calendar_color }}
                 />
 
-                <div className="flex flex-col gap-5 pl-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="space-y-3">
+                <div className="flex flex-col gap-5 p-5 pt-6 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 flex-1 space-y-3">
+                    {/* Title + track badge */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-xl font-semibold text-[var(--text)]">{session.name}</h2>
+                      <span
+                        className="inline-block h-3 w-3 flex-shrink-0 rounded-full"
+                        style={{ backgroundColor: session.calendar_color }}
+                      />
+                      <h2 className="text-lg font-semibold text-[var(--text)]">{session.name}</h2>
                       {session.track ? (
                         <span
-                          className="rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
+                          className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.18em]"
                           style={{
                             color: session.calendar_color,
                             backgroundColor: `${session.calendar_color}22`,
@@ -393,44 +399,73 @@ export default function MemberScheduleClient() {
                       ) : null}
                     </div>
 
+                    {/* Meta row */}
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-muted)]">
-                      <span className="inline-flex items-center gap-2">
-                        <Clock3 size={15} />
-                        {formatTime(session.class_time)} · {formatDuration(session.duration_minutes)}
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock3 size={14} />
+                        <span className="font-medium text-[var(--text)]">{formatTime(session.class_time)}</span>
+                        <span className="text-[var(--text-soft)]">· {formatDuration(session.duration_minutes)}</span>
                       </span>
                       {coachLabel ? (
-                        <span className="inline-flex items-center gap-2">
-                          <User size={15} />
+                        <span className="inline-flex items-center gap-1.5">
+                          <User size={14} />
                           {coachLabel}
                         </span>
                       ) : null}
+                    </div>
+
+                    {/* Capacity + status row */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Status pill */}
+                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
+                        session.isReservedByCurrentUser
+                          ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-500"
+                          : session.isReservationClosed
+                            ? "border-amber-400/30 bg-amber-500/10 text-amber-500"
+                            : session.size_limit > 0 && session.capacityRemaining === 0
+                              ? "border-rose-400/30 bg-rose-500/10 text-rose-500"
+                              : "border-sky-400/30 bg-sky-500/10 text-sky-500"
+                      }`}>
+                        {session.isReservedByCurrentUser ? <CheckCircle2 size={12} /> : null}
+                        {status.title}
+                      </span>
+
+                      {/* Roster button */}
                       <button
                         type="button"
                         onClick={() => setRosterSession(session)}
-                        className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--panel-2)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--panel-2)] px-3 py-1 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
                       >
-                        <Users size={14} />
+                        <Users size={12} />
                         {session.size_limit > 0
-                          ? `${session.reservedCount}/${session.size_limit} reserved`
+                          ? `${session.reservedCount} / ${session.size_limit}`
                           : `${session.reservedCount} reserved`}
                       </button>
                     </div>
 
-                    <div className={`text-sm ${status.tone}`}>
-                      <p className="font-semibold">{status.title}</p>
-                      <p className="mt-1 text-[var(--text-soft)]">{status.body}</p>
-                    </div>
+                    {/* Capacity bar */}
+                    {session.size_limit > 0 ? (
+                      <div className="h-1.5 w-full max-w-[200px] overflow-hidden rounded-full bg-[var(--line-strong)]">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${Math.min(100, (session.reservedCount / session.size_limit) * 100)}%`,
+                            backgroundColor: session.calendar_color,
+                          }}
+                        />
+                      </div>
+                    ) : null}
                   </div>
 
-                  <div className="flex flex-col gap-3 lg:min-w-[220px] lg:items-end">
+                  <div className="flex flex-col gap-3 lg:min-w-[200px] lg:items-end">
                     {session.isReservedByCurrentUser ? (
                       <button
                         type="button"
                         onClick={() => void mutateReservation(session, "DELETE")}
                         disabled={isPending}
-                        className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-500 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex min-w-[170px] items-center justify-center gap-2 rounded-2xl border border-rose-400/30 bg-rose-500/8 px-4 py-2.5 text-sm font-semibold text-rose-500 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        {isPending ? <LoaderCircle size={16} className="animate-spin" /> : <XCircle size={16} />}
+                        {isPending ? <LoaderCircle size={15} className="animate-spin" /> : <XCircle size={15} />}
                         Cancel reservation
                       </button>
                     ) : (
@@ -438,13 +473,13 @@ export default function MemberScheduleClient() {
                         type="button"
                         onClick={() => void mutateReservation(session, "POST")}
                         disabled={!reserveEnabled || isPending}
-                        className={`inline-flex min-w-[180px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                        className={`inline-flex min-w-[170px] items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
                           reserveEnabled
-                            ? "bg-[linear-gradient(135deg,rgba(255,177,196,0.95),rgba(99,247,255,0.88))] text-slate-950 shadow-[0_18px_45px_rgba(99,247,255,0.18)] hover:brightness-105"
+                            ? "bg-[linear-gradient(135deg,#ff4a8d,#8b5cf6)] text-white shadow-[0_6px_20px_rgba(255,74,141,0.3)] hover:brightness-110"
                             : "border border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-soft)]"
                         }`}
                       >
-                        {isPending ? <LoaderCircle size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                        {isPending ? <LoaderCircle size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
                         {session.isReservationClosed
                           ? "Reservation closed"
                           : session.size_limit > 0 && session.capacityRemaining === 0
@@ -453,10 +488,10 @@ export default function MemberScheduleClient() {
                       </button>
                     )}
 
-                    <p className="max-w-[220px] text-right text-xs text-[var(--text-soft)]">
+                    <p className="max-w-[200px] text-right text-xs text-[var(--text-soft)]">
                       {session.reservationCutoffAt
-                        ? `Reserve before ${formatCutoff(session.reservationCutoffAt)}`
-                        : "Reservations available until class starts"}
+                        ? `Closes ${formatCutoff(session.reservationCutoffAt)}`
+                        : "Open until class starts"}
                     </p>
                   </div>
                 </div>
