@@ -56,10 +56,6 @@ type StripeRefund = {
   created: number;
 };
 
-function extractOrganizationId(metadata: Record<string, string | undefined> | undefined) {
-  return metadata?.organization_id || metadata?.organizationId || null;
-}
-
 function getCustomerId(customer: string | { id: string } | null | undefined) {
   if (!customer) return null;
   return typeof customer === "string" ? customer : customer.id;
@@ -76,61 +72,9 @@ function computeSubscriptionAmount(subscription: StripeSubscription) {
   return totalCents / 100;
 }
 
-async function resolveOrganizationIdByEmail(email: string | null | undefined) {
-  const normalizedEmail = email?.trim().toLowerCase();
-  if (!normalizedEmail) return null;
 
-  const { data: userRow } = await supabaseAdmin
-    .from("app_users")
-    .select("id")
-    .eq("email", normalizedEmail)
-    .maybeSingle();
-
-  if (!userRow?.id) return null;
-
-  const { data: membershipRow } = await supabaseAdmin
-    .from("organization_memberships")
-    .select("organization_id")
-    .eq("user_id", userRow.id)
-    .limit(1)
-    .maybeSingle();
-
-  return membershipRow?.organization_id ?? null;
-}
-
-async function resolveOrganizationIdFromCustomer(customer: StripeCustomer) {
-  const fromMetadata = extractOrganizationId(customer.metadata);
-  if (fromMetadata) return fromMetadata;
-
-  return resolveOrganizationIdByEmail(customer.email);
-}
-
-async function resolveOrganizationIdFromCustomerId(stripeCustomerId: string | null | undefined) {
-  if (!stripeCustomerId) return null;
-
-  const { data: cachedCustomer } = await supabaseAdmin
-    .from("stripe_customers")
-    .select("organization_id")
-    .eq("stripe_customer_id", stripeCustomerId)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (cachedCustomer?.organization_id) {
-    return cachedCustomer.organization_id;
-  }
-
-  try {
-    const remoteCustomer = await stripe.customers.retrieve(stripeCustomerId);
-    if (!remoteCustomer || remoteCustomer.deleted) return null;
-    return resolveOrganizationIdFromCustomer(remoteCustomer as StripeCustomer);
-  } catch {
-    return null;
-  }
-}
 
 async function upsertCustomer(
-  organizationId: string,
   customer: StripeCustomer,
   options?: { subscriptionStatus?: string | null; totalSpentDelta?: number }
 ) {
@@ -140,7 +84,6 @@ async function upsertCustomer(
   const { data: existingCustomer } = await supabaseAdmin
     .from("stripe_customers")
     .select("total_spent")
-    .eq("organization_id", organizationId)
     .eq("stripe_customer_id", customer.id)
     .maybeSingle();
 
@@ -151,7 +94,6 @@ async function upsertCustomer(
     .from("stripe_customers")
     .upsert(
       {
-        organization_id: organizationId,
         stripe_customer_id: customer.id,
         email: customer.email?.trim().toLowerCase() || "unknown@stripe.local",
         name: customer.name ?? null,
@@ -159,7 +101,7 @@ async function upsertCustomer(
         subscription_status: options?.subscriptionStatus ?? null,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "organization_id,stripe_customer_id" }
+      { onConflict: "stripe_customer_id" }
     );
 
   if (error) {
@@ -167,7 +109,7 @@ async function upsertCustomer(
   }
 }
 
-async function upsertSubscription(organizationId: string, subscription: StripeSubscription) {
+async function upsertSubscription(subscription: StripeSubscription) {
   const stripeCustomerId = getCustomerId(subscription.customer);
   if (!stripeCustomerId) {
     throw new Error("subscription_missing_customer");
@@ -179,7 +121,6 @@ async function upsertSubscription(organizationId: string, subscription: StripeSu
     .from("stripe_subscriptions")
     .upsert(
       {
-        organization_id: organizationId,
         stripe_subscription_id: subscription.id,
         stripe_customer_id: stripeCustomerId,
         status: subscription.status,
@@ -195,7 +136,7 @@ async function upsertSubscription(organizationId: string, subscription: StripeSu
           : null,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "organization_id,stripe_subscription_id" }
+      { onConflict: "stripe_subscription_id" }
     );
 
   if (error) {
@@ -204,7 +145,6 @@ async function upsertSubscription(organizationId: string, subscription: StripeSu
 }
 
 async function recordTransaction(input: {
-  organizationId: string;
   stripeCustomerId: string;
   stripeChargeId?: string | null;
   stripeInvoiceId?: string | null;
@@ -218,7 +158,6 @@ async function recordTransaction(input: {
 }) {
   const { error } = await supabaseAdmin.from("stripe_transactions").upsert(
     {
-      organization_id: input.organizationId,
       stripe_customer_id: input.stripeCustomerId,
       stripe_charge_id: input.stripeChargeId ?? null,
       stripe_invoice_id: input.stripeInvoiceId ?? null,
@@ -266,13 +205,7 @@ export async function POST(request: NextRequest) {
         const customer = event.data.object as StripeCustomer;
         if (customer.deleted) break;
 
-        const organizationId = await resolveOrganizationIdFromCustomer(customer);
-        if (!organizationId) {
-          console.warn("Stripe webhook: unable to resolve organization for customer", customer.id);
-          break;
-        }
-
-        await upsertCustomer(organizationId, customer);
+        await upsertCustomer(customer);
         break;
       }
 
@@ -294,24 +227,16 @@ export async function POST(request: NextRequest) {
       case "customer.subscription.deleted": {
         const subscription = event.data.object as StripeSubscription;
         const stripeCustomerId = getCustomerId(subscription.customer);
-        const organizationId = await resolveOrganizationIdFromCustomerId(stripeCustomerId);
-        if (!organizationId || !stripeCustomerId) {
-          console.warn(
-            "Stripe webhook: unable to resolve organization for subscription",
-            subscription.id,
-            stripeCustomerId
-          );
-          break;
-        }
-
-        await upsertSubscription(organizationId, subscription);
+        await upsertSubscription(subscription);
 
         try {
-          const remoteCustomer = await stripe.customers.retrieve(stripeCustomerId);
-          if (remoteCustomer && !remoteCustomer.deleted) {
-            await upsertCustomer(organizationId, remoteCustomer as StripeCustomer, {
-              subscriptionStatus: subscription.status,
-            });
+          if (stripeCustomerId) {
+            const remoteCustomer = await stripe.customers.retrieve(stripeCustomerId);
+            if (remoteCustomer && !remoteCustomer.deleted) {
+              await upsertCustomer(remoteCustomer as StripeCustomer, {
+                subscriptionStatus: subscription.status,
+              });
+            }
           }
         } catch {
           // Keep processing resilient even if this refresh call fails.
@@ -323,14 +248,12 @@ export async function POST(request: NextRequest) {
       case "charge.failed": {
         const charge = event.data.object as StripeCharge;
         const stripeCustomerId = getCustomerId(charge.customer);
-        const organizationId = await resolveOrganizationIdFromCustomerId(stripeCustomerId);
-        if (!organizationId || !stripeCustomerId) {
-          console.warn("Stripe webhook: unable to resolve organization for charge", charge.id);
+        if (!stripeCustomerId) {
+          console.warn("Stripe webhook: unable to resolve customer for charge", charge.id);
           break;
         }
 
         await recordTransaction({
-          organizationId,
           stripeCustomerId,
           stripeChargeId: charge.id,
           stripeInvoiceId: charge.invoice ?? null,
@@ -352,7 +275,7 @@ export async function POST(request: NextRequest) {
           name: expandedCustomer?.name ?? charge.billing_details?.name ?? null,
         };
 
-        await upsertCustomer(organizationId, customerForUpdate, {
+        await upsertCustomer(customerForUpdate, {
           totalSpentDelta: charge.paid && charge.status === "succeeded" ? charge.amount / 100 : 0,
         });
         break;
@@ -369,14 +292,12 @@ export async function POST(request: NextRequest) {
         })) as StripeCharge;
 
         const stripeCustomerId = getCustomerId(charge.customer);
-        const organizationId = await resolveOrganizationIdFromCustomerId(stripeCustomerId);
-        if (!organizationId || !stripeCustomerId) {
-          console.warn("Stripe webhook: unable to resolve organization for refund", refund.id);
+        if (!stripeCustomerId) {
+          console.warn("Stripe webhook: unable to resolve customer for refund", refund.id);
           break;
         }
 
         await recordTransaction({
-          organizationId,
           stripeCustomerId,
           stripeChargeId: charge.id,
           stripeInvoiceId: charge.invoice ?? null,
@@ -398,7 +319,7 @@ export async function POST(request: NextRequest) {
           name: expandedCustomer?.name ?? charge.billing_details?.name ?? null,
         };
 
-        await upsertCustomer(organizationId, customerForUpdate, {
+        await upsertCustomer(customerForUpdate, {
           totalSpentDelta: -(refund.amount / 100),
         });
         break;
@@ -407,15 +328,13 @@ export async function POST(request: NextRequest) {
       case "charge.refunded": {
         const charge = event.data.object as StripeCharge;
         const stripeCustomerId = getCustomerId(charge.customer);
-        const organizationId = await resolveOrganizationIdFromCustomerId(stripeCustomerId);
-        if (!organizationId || !stripeCustomerId) {
-          console.warn("Stripe webhook: unable to resolve organization for charge.refunded", charge.id);
+        if (!stripeCustomerId) {
+          console.warn("Stripe webhook: unable to resolve customer for charge.refunded", charge.id);
           break;
         }
 
         if (charge.amount_refunded && charge.amount_refunded > 0) {
           await recordTransaction({
-            organizationId,
             stripeCustomerId,
             stripeChargeId: charge.id,
             stripeInvoiceId: charge.invoice ?? null,
@@ -437,7 +356,7 @@ export async function POST(request: NextRequest) {
             name: expandedCustomer?.name ?? charge.billing_details?.name ?? null,
           };
 
-          await upsertCustomer(organizationId, customerForUpdate, {
+          await upsertCustomer(customerForUpdate, {
             totalSpentDelta: -(charge.amount_refunded / 100),
           });
         }
@@ -456,15 +375,13 @@ export async function POST(request: NextRequest) {
         };
 
         const stripeCustomerId = getCustomerId(invoice.customer);
-        const organizationId = await resolveOrganizationIdFromCustomerId(stripeCustomerId);
-        if (!organizationId || !stripeCustomerId) {
-          console.warn("Stripe webhook: unable to resolve organization for invoice.paid", invoice.id);
+        if (!stripeCustomerId) {
+          console.warn("Stripe webhook: unable to resolve customer for invoice.paid", invoice.id);
           break;
         }
 
         if (invoice.amount_paid && invoice.amount_paid > 0) {
           await recordTransaction({
-            organizationId,
             stripeCustomerId,
             stripeInvoiceId: invoice.id,
             amount: invoice.amount_paid / 100,
@@ -485,7 +402,7 @@ export async function POST(request: NextRequest) {
             name: expandedInvoiceCustomer?.name ?? invoice.billing_details?.name ?? null,
           };
 
-          await upsertCustomer(organizationId, customerForUpdate, {
+          await upsertCustomer(customerForUpdate, {
             totalSpentDelta: invoice.amount_paid / 100,
           });
         }
@@ -504,19 +421,10 @@ export async function POST(request: NextRequest) {
           break;
         }
 
-        const organizationId = await resolveOrganizationIdFromCustomerId(stripeCustomerId);
-        if (!organizationId) {
-          console.warn(
-            "Stripe webhook: unable to resolve organization for checkout.session.completed",
-            session.id
-          );
-          break;
-        }
-
         if (session.subscription) {
           try {
             const remoteSubscription = await stripe.subscriptions.retrieve(session.subscription);
-            await upsertSubscription(organizationId, remoteSubscription as StripeSubscription);
+            await upsertSubscription(remoteSubscription as StripeSubscription);
           } catch {
             // Keep processing resilient even if subscription retrieval fails.
           }

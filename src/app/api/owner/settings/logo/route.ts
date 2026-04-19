@@ -7,12 +7,10 @@ const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
 export async function POST(request: Request) {
-  const { error, role, organizationIds } = await requireUserContext();
-  if (error || !hasRole("owner", role) || organizationIds.length === 0) {
+  const { error, role } = await requireUserContext();
+  if (error || !hasRole("owner", role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const orgId = organizationIds[0];
 
   let formData: FormData;
   try {
@@ -41,12 +39,11 @@ export async function POST(request: Request) {
   }
 
   const ext = file.name.split(".").pop() ?? "png";
-  const filePath = `${orgId}/logo.${ext}`;
+  const filePath = `lyfe-fitness/logo.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  // Upload to Supabase Storage (upsert to replace existing logo)
   const { error: uploadError } = await supabaseAdmin.storage
-    .from("organization-logos")
+    .from("gym-assets")
     .upload(filePath, buffer, {
       contentType: file.type,
       upsert: true,
@@ -60,16 +57,15 @@ export async function POST(request: Request) {
   }
 
   const { data: publicUrlData } = supabaseAdmin.storage
-    .from("organization-logos")
+    .from("gym-assets")
     .getPublicUrl(filePath);
 
   const logoUrl = publicUrlData.publicUrl;
 
-  // Update the organization record
   await supabaseAdmin
-    .from("organizations")
+    .from("gym_settings")
     .update({ logo_url: logoUrl, updated_at: new Date().toISOString() })
-    .eq("id", orgId);
+    .eq("id", 1);
 
   return NextResponse.json({ logoUrl });
 }

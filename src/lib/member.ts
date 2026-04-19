@@ -3,7 +3,6 @@ import "server-only";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "./auth";
-import { isOrganizationMemberEmailReserved, normalizeEmail } from "./organization-member-email";
 import { supabaseAdmin } from "./supabase-admin";
 
 export type UserRole = "member" | "coach" | "admin" | "owner";
@@ -11,7 +10,6 @@ export type UserRole = "member" | "coach" | "admin" | "owner";
 type UserContext = {
   userId: string | null;
   role: UserRole;
-  organizationIds: string[];
   error: string | null;
 };
 
@@ -37,42 +35,8 @@ function normalizeRole(value: string | null | undefined): UserRole {
   return "member";
 }
 
-function getHighestRole(roles: Array<UserRole | null | undefined>): UserRole {
-  return roles.reduce<UserRole>((current, role) => {
-    if (!role) {
-      return current;
-    }
-    return roleOrder[role] > roleOrder[current] ? role : current;
-  }, "member");
-}
-
 export function hasRole(required: UserRole, actual: UserRole) {
   return roleOrder[actual] >= roleOrder[required];
-}
-
-async function resolveUserContext(userRow: { id: string; role: string | null }): Promise<UserContext> {
-  const { data: memberships, error: membershipError } = await supabaseAdmin
-    .from("organization_memberships")
-    .select("organization_id, role")
-    .eq("user_id", userRow.id);
-
-  if (membershipError) {
-    return {
-      userId: userRow.id,
-      role: normalizeRole(userRow.role),
-      organizationIds: [],
-      error: membershipError.message,
-    };
-  }
-
-  const organizationIds = (memberships ?? [])
-    .map((row) => row.organization_id)
-    .filter((id): id is string => Boolean(id));
-  const membershipRoles = (memberships ?? []).map((row) => normalizeRole(row.role));
-  const userRole = normalizeRole(userRow.role);
-  const role = getHighestRole([userRole, ...membershipRoles]);
-
-  return { userId: userRow.id, role, organizationIds, error: null };
 }
 
 export async function requireUserContextFromBearer(request: Request): Promise<UserContext> {
@@ -80,21 +44,20 @@ export async function requireUserContextFromBearer(request: Request): Promise<Us
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
   if (!token) {
-    return { userId: null, role: "member", organizationIds: [], error: "Unauthorized" };
+    return { userId: null, role: "member", error: "Unauthorized" };
   }
 
   const { data: jwtUser, error: jwtError } = await supabaseAdmin.auth.getUser(token);
   if (jwtError || !jwtUser?.user) {
-    return { userId: null, role: "member", organizationIds: [], error: "Invalid or expired token" };
+    return { userId: null, role: "member", error: "Invalid or expired token" };
   }
 
   const userId = jwtUser.user.id;
-  const email = normalizeEmail(jwtUser.user.email);
+  const email = jwtUser.user.email?.toLowerCase().trim() ?? null;
 
   let userRow: { id: string; role: string | null; full_name?: string | null } | null = null;
   let userError: { message: string } | null = null;
 
-  // Try supabase_auth_uid first, then id, then email
   const byUid = await supabaseAdmin
     .from("app_users")
     .select("id, role, full_name")
@@ -130,7 +93,7 @@ export async function requireUserContextFromBearer(request: Request): Promise<Us
   }
 
   if (userError || !userRow) {
-    return { userId, role: "member", organizationIds: [], error: userError?.message ?? "User not found." };
+    return { userId, role: "member", error: userError?.message ?? "User not found." };
   }
 
   if (userRow.id) {
@@ -143,15 +106,15 @@ export async function requireUserContextFromBearer(request: Request): Promise<Us
       .eq("id", userRow.id);
   }
 
-  return resolveUserContext(userRow);
+  return { userId: userRow.id, role: normalizeRole(userRow.role), error: null };
 }
 
 export async function requireUserContext(): Promise<UserContext> {
   const session = await getServerSession(authOptions);
-  const email = normalizeEmail(session?.user?.email);
+  const email = session?.user?.email?.toLowerCase().trim() ?? null;
 
   if (!email) {
-    return { userId: null, role: "member", organizationIds: [], error: "Unauthorized" };
+    return { userId: null, role: "member", error: "Unauthorized" };
   }
 
   const { fullName } = splitName(session?.user?.name);
@@ -166,7 +129,6 @@ export async function requireUserContext(): Promise<UserContext> {
     return {
       userId: null,
       role: "member",
-      organizationIds: [],
       error: existingUserError.message,
     };
   }
@@ -189,16 +151,6 @@ export async function requireUserContext(): Promise<UserContext> {
       }
     }
   } else {
-    if (await isOrganizationMemberEmailReserved(email)) {
-      return {
-        userId: null,
-        role: "member",
-        organizationIds: [],
-        error:
-          "This email already exists in an organization's member roster and cannot be used to create an app account.",
-      };
-    }
-
     const { data: insertedUser, error: insertError } = await supabaseAdmin
       .from("app_users")
       .insert({
@@ -217,10 +169,9 @@ export async function requireUserContext(): Promise<UserContext> {
     return {
       userId: null,
       role: "member",
-      organizationIds: [],
       error: userError ?? "User not found.",
     };
   }
 
-  return resolveUserContext(userRow);
+  return { userId: userRow.id, role: normalizeRole(userRow.role), error: null };
 }

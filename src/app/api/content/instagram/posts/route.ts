@@ -18,7 +18,6 @@ const ALLOWED_STATUSES = new Set([
 ]);
 
 type CreatePayload = {
-  organizationId?: string;
   igUserId?: string;
   caption?: string;
   firstComment?: string;
@@ -35,12 +34,11 @@ function normalizeStatus(status: string | undefined, scheduledFor: string | null
   return "draft";
 }
 
-async function resolveIgUserId(organizationId: string, explicitIgUserId?: string) {
+async function resolveIgUserId(explicitIgUserId?: string) {
   if (explicitIgUserId) {
     const { data } = await supabaseAdmin
       .from("instagram_oauth_tokens")
       .select("ig_user_id")
-      .eq("organization_id", organizationId)
       .eq("ig_user_id", explicitIgUserId)
       .maybeSingle();
 
@@ -50,7 +48,6 @@ async function resolveIgUserId(organizationId: string, explicitIgUserId?: string
   const { data } = await supabaseAdmin
     .from("instagram_oauth_tokens")
     .select("ig_user_id")
-    .eq("organization_id", organizationId)
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -59,14 +56,9 @@ async function resolveIgUserId(organizationId: string, explicitIgUserId?: string
 }
 
 export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
-  }
-
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
   }
 
   const statusFilter = request.nextUrl.searchParams.get("status")?.trim() ?? "";
@@ -76,7 +68,6 @@ export async function GET(request: NextRequest) {
   let query = supabaseAdmin
     .from("instagram_posts")
     .select("id, ig_user_id, caption, first_comment, post_type, publish_mode, status, scheduled_for, published_at, last_error_message, created_at, updated_at")
-    .eq("organization_id", organizationId)
     .order("scheduled_for", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -130,7 +121,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { error, role, userId, organizationIds } = await requireUserContext();
+  const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
@@ -138,11 +129,6 @@ export async function POST(request: NextRequest) {
   const payload = (await request.json().catch(() => null)) as CreatePayload | null;
   if (!payload) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
-  }
-
-  const organizationId = payload.organizationId?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
   }
 
   const caption = (payload.caption ?? "").trim() || null;
@@ -168,7 +154,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "This post type requires at least one media asset." }, { status: 400 });
   }
 
-  const igUserId = await resolveIgUserId(organizationId, payload.igUserId?.trim());
+  const igUserId = await resolveIgUserId(payload.igUserId?.trim());
   if (!igUserId) {
     return NextResponse.json({ error: "Instagram account is not connected." }, { status: 400 });
   }
@@ -178,7 +164,6 @@ export async function POST(request: NextRequest) {
   const { data: post, error: insertError } = await supabaseAdmin
     .from("instagram_posts")
     .insert({
-      organization_id: organizationId,
       member_id: userId,
       ig_user_id: igUserId,
       caption,

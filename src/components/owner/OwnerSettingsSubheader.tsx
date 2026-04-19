@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const TABS = [
-  { label: "Agents", href: "/organization/owner/agents" },
-  { label: "Store Setup", href: "/organization/owner/store-setup" },
-  { label: "Integrations", href: "/organization/owner/integrations" },
-  { label: "General Settings", href: "/organization/owner/settings" },
+  { label: "Agents", href: "/owner/agents" },
+  { label: "Store Setup", href: "/owner/store-setup" },
+  { label: "Integrations", href: "/owner/integrations" },
+  { label: "General Settings", href: "/owner/settings" },
 ];
 
 export default function OwnerSettingsSubheader() {

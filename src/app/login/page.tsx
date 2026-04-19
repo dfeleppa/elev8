@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import LoginClient from "./LoginClient";
 
 export const metadata = {
-  title: "Sign In — Elev8",
+  title: "Sign In — Lyfe Fitness",
 };
 
 export default function LoginPage() {

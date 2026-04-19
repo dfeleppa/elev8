@@ -1,6 +1,5 @@
 export type ScheduleClassRow = {
   id: string;
-  organization_id?: string;
   name: string;
   class_time: string;
   duration_minutes: number;

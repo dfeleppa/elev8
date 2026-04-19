@@ -16,24 +16,24 @@ type BillingMetricsPayload = {
 const metricsCache = new Map<string, { value: BillingMetricsPayload; expiresAt: number }>();
 const refreshInFlight = new Map<string, Promise<BillingMetricsPayload>>();
 
-function cacheValue(cacheKey: string, value: BillingMetricsPayload) {
-  metricsCache.set(cacheKey, {
+const CACHE_KEY = "lyfe-fitness";
+
+function cacheValue(value: BillingMetricsPayload) {
+  metricsCache.set(CACHE_KEY, {
     value,
     expiresAt: Date.now() + METRICS_CACHE_TTL_MS,
   });
   return value;
 }
 
-async function loadFromWebhookCache(organizationId: string): Promise<BillingMetricsPayload | null> {
+async function loadFromWebhookCache(): Promise<BillingMetricsPayload | null> {
   const [cachedSubscriptionsResult, cachedTransactionsResult] = await Promise.all([
     supabaseAdmin
       .from("stripe_subscriptions")
-      .select("status, amount_per_billing_cycle, stripe_customer_id")
-      .eq("organization_id", organizationId),
+      .select("status, amount_per_billing_cycle, stripe_customer_id"),
     supabaseAdmin
       .from("stripe_transactions")
-      .select("type, amount, stripe_customer_id")
-      .eq("organization_id", organizationId),
+      .select("type, amount, stripe_customer_id"),
   ]);
 
   const cachedSubscriptions = cachedSubscriptionsResult.data ?? [];
@@ -85,13 +85,13 @@ async function loadFromWebhookCache(organizationId: string): Promise<BillingMetr
   };
 }
 
-async function refreshMetrics(cacheKey: string, organizationId: string) {
-  const webhookMetrics = await loadFromWebhookCache(organizationId);
+async function refreshMetrics() {
+  const webhookMetrics = await loadFromWebhookCache();
   if (webhookMetrics) {
-    return cacheValue(cacheKey, webhookMetrics);
+    return cacheValue(webhookMetrics);
   }
 
-  return cacheValue(cacheKey, {
+  return cacheValue({
     mrr: 0,
     arr: 0,
     ltv: 0,
@@ -104,36 +104,34 @@ async function refreshMetrics(cacheKey: string, organizationId: string) {
 }
 
 export async function getOrganizationBillingMetrics(
-  organizationId: string,
   options?: { forceRefresh?: boolean }
 ): Promise<BillingMetricsPayload> {
   const forceRefresh = options?.forceRefresh === true;
-  const cacheKey = `org:${organizationId}`;
-  const cached = metricsCache.get(cacheKey);
+  const cached = metricsCache.get(CACHE_KEY);
 
   if (!forceRefresh && cached && cached.expiresAt > Date.now()) {
     return cached.value;
   }
 
   if (!forceRefresh && cached) {
-    if (!refreshInFlight.has(cacheKey)) {
-      const refreshPromise = refreshMetrics(cacheKey, organizationId)
+    if (!refreshInFlight.has(CACHE_KEY)) {
+      const refreshPromise = refreshMetrics()
         .catch(() => cached.value)
         .finally(() => {
-          refreshInFlight.delete(cacheKey);
+          refreshInFlight.delete(CACHE_KEY);
         });
-      refreshInFlight.set(cacheKey, refreshPromise);
+      refreshInFlight.set(CACHE_KEY, refreshPromise);
     }
     return cached.value;
   }
 
-  if (refreshInFlight.has(cacheKey)) {
-    return refreshInFlight.get(cacheKey) as Promise<BillingMetricsPayload>;
+  if (refreshInFlight.has(CACHE_KEY)) {
+    return refreshInFlight.get(CACHE_KEY) as Promise<BillingMetricsPayload>;
   }
 
-  const refreshPromise = refreshMetrics(cacheKey, organizationId).finally(() => {
-    refreshInFlight.delete(cacheKey);
+  const refreshPromise = refreshMetrics().finally(() => {
+    refreshInFlight.delete(CACHE_KEY);
   });
-  refreshInFlight.set(cacheKey, refreshPromise);
+  refreshInFlight.set(CACHE_KEY, refreshPromise);
   return refreshPromise;
 }

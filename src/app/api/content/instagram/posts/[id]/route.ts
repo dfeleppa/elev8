@@ -18,7 +18,6 @@ const ALLOWED_STATUSES = new Set([
 ]);
 
 type PatchPayload = {
-  organizationId?: string;
   caption?: string | null;
   firstComment?: string | null;
   postType?: string;
@@ -28,12 +27,11 @@ type PatchPayload = {
   assets?: Array<{ mediaUrl?: string; mediaType?: string }>;
 };
 
-async function resolvePostForOrganization(postId: string, organizationId: string) {
+async function resolvePost(postId: string) {
   const { data } = await supabaseAdmin
     .from("instagram_posts")
-    .select("id, organization_id")
+    .select("id")
     .eq("id", postId)
-    .eq("organization_id", organizationId)
     .maybeSingle();
 
   return data;
@@ -43,7 +41,7 @@ export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
@@ -54,12 +52,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
 
-  const organizationId = payload.organizationId?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  const post = await resolvePostForOrganization(id, organizationId);
+  const post = await resolvePost(id);
   if (!post) {
     return NextResponse.json({ error: "Post not found." }, { status: 404 });
   }
@@ -112,7 +105,6 @@ export async function PATCH(
     .from("instagram_posts")
     .update(patch)
     .eq("id", id)
-    .eq("organization_id", organizationId)
     .select("id, ig_user_id, caption, first_comment, post_type, publish_mode, status, scheduled_for, published_at, last_error_message, created_at, updated_at")
     .single();
 
@@ -160,18 +152,14 @@ export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
   const { id } = await context.params;
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
 
-  const post = await resolvePostForOrganization(id, organizationId);
+  const post = await resolvePost(id);
   if (!post) {
     return NextResponse.json({ error: "Post not found." }, { status: 404 });
   }
@@ -179,8 +167,7 @@ export async function DELETE(
   const { error: deleteError } = await supabaseAdmin
     .from("instagram_posts")
     .delete()
-    .eq("id", id)
-    .eq("organization_id", organizationId);
+    .eq("id", id);
 
   if (deleteError) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

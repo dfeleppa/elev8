@@ -62,58 +62,58 @@ const roleRank: Record<UserRole, number> = {
 
 const navItems: NavItem[] = [
   {
-    label: "Organization",
-    href: "/organization",
+    label: "Lyfe Fitness",
+    href: "/",
     minRole: "member",
     children: [
       {
         label: "Coach",
-        href: "/organization/coach",
+        href: "/coach",
         minRole: "coach",
         children: [
-          { label: "Gym Dashboard", href: "/organization/gym-dashboard", minRole: "coach" },
-          { label: "Nutrition Coach", href: "/organization/coach/nutrition-coach", minRole: "coach" },
-          { label: "Schedule", href: "/organization/coach/schedule", minRole: "coach" },
-          { label: "Reports - Members", href: "/organization/coach/reports-members", minRole: "coach" },
+          { label: "Gym Dashboard", href: "/gym-dashboard", minRole: "coach" },
+          { label: "Nutrition Coach", href: "/coach/nutrition-coach", minRole: "coach" },
+          { label: "Schedule", href: "/coach/schedule", minRole: "coach" },
+          { label: "Reports - Members", href: "/coach/reports-members", minRole: "coach" },
         ],
       },
       {
         label: "Owner",
-        href: "/organization/owner",
+        href: "/owner",
         minRole: "owner",
         children: [
-          { label: "Staff", href: "/organization/owner/staff", minRole: "owner" },
-          { label: "Class Setup", href: "/organization/owner/schedule", minRole: "owner" },
-          { label: "Payroll", href: "/organization/owner/payroll", minRole: "owner" },
-          { label: "Billing", href: "/organization/owner/billing", minRole: "owner" },
-          { label: "Tracks & Memberships", href: "/organization/owner/tracks-memberships", minRole: "owner" },
-          { label: "Members", href: "/organization/owner/members", minRole: "owner" },
-          { label: "Organization Settings", href: "/organization/owner/settings", minRole: "owner" },
+          { label: "Staff", href: "/owner/staff", minRole: "owner" },
+          { label: "Class Setup", href: "/owner/schedule", minRole: "owner" },
+          { label: "Payroll", href: "/owner/payroll", minRole: "owner" },
+          { label: "Billing", href: "/owner/billing", minRole: "owner" },
+          { label: "Tracks & Memberships", href: "/owner/tracks-memberships", minRole: "owner" },
+          { label: "Members", href: "/owner/members", minRole: "owner" },
+          { label: "Gym Settings", href: "/owner/settings", minRole: "owner" },
         ],
       },
       {
         label: "Admin",
-        href: "/organization/admin",
+        href: "/admin",
         minRole: "admin",
         children: [
           { label: "Management", href: "/management", minRole: "admin" },
-          { label: "Content", href: "/organization/admin/content", minRole: "admin" },
-          { label: "Business Analytics", href: "/organization/admin/analytics", minRole: "admin" },
-          { label: "Programming", href: "/organization/admin/programming", minRole: "admin" },
+          { label: "Content", href: "/admin/content", minRole: "admin" },
+          { label: "Business Analytics", href: "/admin/analytics", minRole: "admin" },
+          { label: "Programming", href: "/admin/programming", minRole: "admin" },
         ],
       },
       {
         label: "Member",
-        href: "/organization/member",
+        href: "/member",
         minRole: "member",
         children: [
-          { label: "Athlete Dashboard", href: "/organization/member/athlete-dashboard", minRole: "member" },
-          { label: "Workout", href: "/organization/member/workout", minRole: "member" },
-          { label: "Nutrition", href: "/organization/member/nutrition", minRole: "member" },
-          { label: "Nutrition Coach", href: "/organization/member/nutrition-coach", minRole: "member" },
-          { label: "Class Schedule", href: "/organization/member/class-schedule", minRole: "member" },
-          { label: "Account Dashboard", href: "/organization/member/account-dashboard", minRole: "member" },
-          { label: "Store", href: "/organization/member/store", minRole: "member" },
+          { label: "Athlete Dashboard", href: "/member/athlete-dashboard", minRole: "member" },
+          { label: "Workout", href: "/member/workout", minRole: "member" },
+          { label: "Nutrition", href: "/member/nutrition", minRole: "member" },
+          { label: "Nutrition Coach", href: "/member/nutrition-coach", minRole: "member" },
+          { label: "Class Schedule", href: "/member/class-schedule", minRole: "member" },
+          { label: "Account Dashboard", href: "/member/account-dashboard", minRole: "member" },
+          { label: "Store", href: "/member/store", minRole: "member" },
         ],
       },
     ],
@@ -140,18 +140,18 @@ const navItems: NavItem[] = [
 ];
 
 const mobileQuickLinks = [
-  { label: "Workout", href: "/organization/member/workout", icon: <Dumbbell className="h-4 w-4" aria-hidden="true" /> },
-  { label: "Nutrition", href: "/organization/member/nutrition", icon: <HandPlatter className="h-4 w-4" aria-hidden="true" /> },
-  { label: "Classes", href: "/organization/member/class-schedule", icon: <CalendarDays className="h-4 w-4" aria-hidden="true" /> },
+  { label: "Workout", href: "/member/workout", icon: <Dumbbell className="h-4 w-4" aria-hidden="true" /> },
+  { label: "Nutrition", href: "/member/nutrition", icon: <HandPlatter className="h-4 w-4" aria-hidden="true" /> },
+  { label: "Classes", href: "/member/class-schedule", icon: <CalendarDays className="h-4 w-4" aria-hidden="true" /> },
 ] as const;
 
 /** Static section groupings for the athlete view nav */
 const ATHLETE_SECTIONS = [
-  { label: "Today",    hrefs: ["/organization/member/athlete-dashboard"] },
-  { label: "Train",    hrefs: ["/organization/member/workout"] },
-  { label: "Schedule", hrefs: ["/organization/member/class-schedule"] },
-  { label: "Nutrition",hrefs: ["/organization/member/nutrition", "/organization/member/nutrition-coach"] },
-  { label: "Account",  hrefs: ["/organization/member/account-dashboard", "/organization/member/store"] },
+  { label: "Today",    hrefs: ["/member/athlete-dashboard"] },
+  { label: "Train",    hrefs: ["/member/workout"] },
+  { label: "Schedule", hrefs: ["/member/class-schedule"] },
+  { label: "Nutrition",hrefs: ["/member/nutrition", "/member/nutrition-coach"] },
+  { label: "Account",  hrefs: ["/member/account-dashboard", "/member/store"] },
 ] as const;
 
 function getNavIcon(href: string) {
@@ -163,51 +163,51 @@ function getNavIcon(href: string) {
   };
 
   switch (href) {
-    case "/organization/owner/agents":
+    case "/owner/agents":
       return <Bot {...iconProps} />;
-    case "/organization/owner/staff":
-    case "/organization/owner/members":
-    case "/organization/members":
+    case "/owner/staff":
+    case "/owner/members":
+    case "/members":
       return <Users {...iconProps} />;
-    case "/organization/owner/schedule":
-    case "/organization/member/class-schedule":
+    case "/owner/schedule":
+    case "/member/class-schedule":
       return <CalendarDays {...iconProps} />;
-    case "/organization/owner/payroll":
-    case "/organization/owner/billing":
+    case "/owner/payroll":
+    case "/owner/billing":
       return <Wallet {...iconProps} />;
-    case "/organization/owner/store-setup":
-    case "/organization/member/store":
+    case "/owner/store-setup":
+    case "/member/store":
       return <ShoppingBag {...iconProps} />;
-    case "/organization/owner/tracks-memberships":
+    case "/owner/tracks-memberships":
       return <ShieldCheck {...iconProps} />;
-    case "/organization/owner/integrations":
+    case "/owner/integrations":
       return <PlugZap {...iconProps} />;
-    case "/organization/owner/settings":
+    case "/owner/settings":
       return <Settings {...iconProps} />;
     case "/management":
       return <Briefcase {...iconProps} />;
-    case "/organization/gym-dashboard":
+    case "/gym-dashboard":
       return <BarChart3 {...iconProps} />;
-    case "/organization/admin/content":
+    case "/admin/content":
       return <FileText {...iconProps} />;
-    case "/organization/admin/analytics":
+    case "/admin/analytics":
       return <BarChart3 {...iconProps} />;
-    case "/organization/admin/programming":
-    case "/organization/admin/programming/builder":
-    case "/organization/member/workout":
+    case "/admin/programming":
+    case "/admin/programming/builder":
+    case "/member/workout":
       return <Dumbbell {...iconProps} />;
-    case "/organization/coach/nutrition-coach":
-    case "/organization/member/nutrition-coach":
+    case "/coach/nutrition-coach":
+    case "/member/nutrition-coach":
       return <HandPlatter {...iconProps} />;
-    case "/organization/coach/schedule":
+    case "/coach/schedule":
       return <CalendarDays {...iconProps} />;
-    case "/organization/coach/reports-members":
+    case "/coach/reports-members":
       return <ClipboardList {...iconProps} />;
-    case "/organization/member/athlete-dashboard":
+    case "/member/athlete-dashboard":
       return <Activity {...iconProps} />;
-    case "/organization/member/nutrition":
+    case "/member/nutrition":
       return <HandPlatter {...iconProps} />;
-    case "/organization/member/account-dashboard":
+    case "/member/account-dashboard":
       return <UserCircle2 {...iconProps} />;
     default:
       return <CircleDot {...iconProps} />;
@@ -221,8 +221,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const [viewMode, setViewMode] = useState<ViewMode>("gym");
   const [userRole, setUserRole] = useState<UserRole>("member");
   const [userName, setUserName] = useState("User");
-  const [organizationName, setOrganizationName] = useState("Organization");
-  const [organizationLogoUrl, setOrganizationLogoUrl] = useState<string | null>(null);
+  const [gymName, setGymName] = useState("Lyfe Fitness");
+  const [gymLogoUrl, setGymLogoUrl] = useState<string | null>(null);
   const [currentTrack, setCurrentTrack] = useState("Main");
   const [tracks, setTracks] = useState<{ id: string; name: string }[]>([]);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
@@ -274,7 +274,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       return;
     }
 
-    if (!canAccessGymView || pathname?.startsWith("/organization/member")) {
+    if (!canAccessGymView || pathname?.startsWith("/member")) {
       setViewMode("athlete");
     } else {
       setViewMode("gym");
@@ -303,13 +303,13 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         if (isMounted && typeof payload.userName === "string" && payload.userName.trim()) {
           setUserName(payload.userName.trim());
         }
-        if (isMounted && typeof payload.organizationName === "string" && payload.organizationName.trim()) {
-          setOrganizationName(payload.organizationName.trim());
+        if (isMounted && typeof payload.gymName === "string" && payload.gymName.trim()) {
+          setGymName(payload.gymName.trim());
         }
         if (isMounted) {
-          setOrganizationLogoUrl(
-            typeof payload.organizationLogoUrl === "string" && payload.organizationLogoUrl.trim()
-              ? payload.organizationLogoUrl.trim()
+          setGymLogoUrl(
+            typeof payload.gymLogoUrl === "string" && payload.gymLogoUrl.trim()
+              ? payload.gymLogoUrl.trim()
               : null
           );
         }
@@ -317,14 +317,9 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           setCurrentTrack(payload.currentTrack.trim());
         }
 
-        const orgId =
-          Array.isArray(payload.organizationIds) && payload.organizationIds.length > 0
-            ? payload.organizationIds[0]
-            : null;
-
-        if (orgId && isMounted) {
+        if (isMounted) {
           try {
-            const tr = await fetch(`/api/programming/tracks?organizationId=${orgId}`, { cache: "no-store" });
+            const tr = await fetch(`/api/programming/tracks`, { cache: "no-store" });
             const tp = await tr.json();
             const fetchedTracks: { id: string; name: string }[] = (tp?.tracks ?? []).map(
               (t: { id: string; name: string }) => ({ id: t.id, name: t.name })
@@ -463,8 +458,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     userRole === "owner" ? ["owner", "admin", "coach"] : userRole === "admin" ? ["admin", "coach"] : userRole === "coach" ? ["coach"] : [];
 
   const rawGymEntries = gymSectionOrder.flatMap((label) => sectionByLabel.get(label)?.children ?? []);
-  const gymDashboardEntry = rawGymEntries.find((e) => e.href === "/organization/gym-dashboard");
-  const gymEntriesWithoutDashboard = rawGymEntries.filter((e) => e.href !== "/organization/gym-dashboard");
+  const gymDashboardEntry = rawGymEntries.find((e) => e.href === "/gym-dashboard");
+  const gymEntriesWithoutDashboard = rawGymEntries.filter((e) => e.href !== "/gym-dashboard");
   const gymEntries = gymDashboardEntry ? [gymDashboardEntry, ...gymEntriesWithoutDashboard] : rawGymEntries;
   const athleteEntries = sectionByLabel.get("member")?.children ?? [];
   const visibleEntries = viewMode === "athlete" ? athleteEntries : gymEntries;
@@ -488,7 +483,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           };
           for (const key of gymSectionOrder) {
             const entries = (sectionByLabel.get(key)?.children ?? []).filter(
-              (e) => e.href !== "/organization/gym-dashboard"
+              (e) => e.href !== "/gym-dashboard"
             );
             if (entries.length > 0) {
               sections.push({ label: GYM_LABELS[key] ?? key, entries });
@@ -506,7 +501,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     if (typeof window !== "undefined") {
       window.localStorage.setItem("sidebar-view-mode", nextMode);
     }
-    router.push(nextMode === "gym" ? "/organization/gym-dashboard" : "/organization/member/athlete-dashboard");
+    router.push(nextMode === "gym" ? "/gym-dashboard" : "/member/athlete-dashboard");
   };
 
   const toggleTheme = () => {
@@ -519,8 +514,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   };
 
   const themeToggleLabel = theme === "dark" ? "Light mode" : "Dark mode";
-  const brandLogoSrc = organizationLogoUrl || "/Elev8rlogo (1).png";
-  const brandLogoAlt = organizationLogoUrl ? `${organizationName} logo` : "Elev8";
+  const brandLogoSrc = gymLogoUrl || "/lyfe-fitness-logo.png";
+  const brandLogoAlt = gymName + " logo";
   const themeIcon = theme === "dark" ? (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
       <circle cx="12" cy="12" r="4.4" fill="none" stroke="currentColor" strokeWidth="1.8" />
@@ -703,8 +698,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               />
             </span>
             <div className={sidebarCollapsed ? "sr-only" : "block"}>
-              <p className="text-sm font-semibold text-[var(--text)]">Elev8</p>
-              <p className="text-xs text-[var(--text-soft)]">Control Center</p>
+              <p className="text-sm font-semibold text-[var(--text)]">Lyfe Fitness</p>
+              <p className="text-xs text-[var(--text-soft)]">Gym OS</p>
             </div>
           </button>
           <button
@@ -773,7 +768,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       <div className={`${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
         <header className="app-shell-topbar hidden h-14 w-full items-center justify-between px-5 text-[var(--text)] lg:flex">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{organizationName}</p>
+            <p className="truncate text-sm font-semibold">{gymName}</p>
             {tracks.length > 1 ? (
               <select
                 value={selectedTrackId ?? ""}
@@ -846,7 +841,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             {canAccessGymView ? (
               <Link
-                href="/organization/admin/content"
+                href="/admin/content"
                 className="inline-flex items-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
                 aria-label="Messenger"
               >

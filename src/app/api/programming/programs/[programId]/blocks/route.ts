@@ -19,7 +19,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   const { data: program, error: programError } = await supabaseAdmin
     .from("programs")
-    .select("organization_id, duration_weeks")
+    .select("duration_weeks")
     .eq("id", programId)
     .single();
 
@@ -27,7 +27,7 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Program not found." }, { status: 404 });
   }
 
-  const canWrite = await hasOrgRole(userId, program.organization_id, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -79,7 +79,6 @@ export async function POST(request: Request, context: RouteContext) {
     .from("program_template_blocks")
     .insert({
       template_day_id: templateDayId,
-      organization_id: program.organization_id,
       program_id: programId,
       block_order: blockOrder,
       block_type: blockType,

@@ -11,7 +11,6 @@ type UserProfile = {
 };
 
 type OrgMembership = {
-  organizationName: string;
   membershipRole: string;
   joinedAt: string | null;
 };
@@ -51,7 +50,6 @@ export default function AccountDashboardClient({ userId }: { userId: string }) {
           memberSince: profileData.createdAt ?? null,
         },
         membership: {
-          organizationName: profileData.organizationName ?? "",
           membershipRole: profileData.role ?? "member",
           joinedAt: profileData.joinedAt ?? null,
         },
@@ -238,11 +236,9 @@ export default function AccountDashboardClient({ userId }: { userId: string }) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
-                  Organization
+                  Gym
                 </p>
-                <p className="text-sm font-medium text-slate-100">
-                  {data.membership.organizationName || "—"}
-                </p>
+                <p className="text-sm font-medium text-slate-100">Lyfe Fitness</p>
               </div>
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">

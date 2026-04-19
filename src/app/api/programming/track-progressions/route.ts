@@ -39,8 +39,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ progression: null });
   }
 
-  // Auth — any org member can read.
-  const member = await isOrgMember(userId, progression.organization_id);
+  const member = await isOrgMember(userId);
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -73,7 +72,6 @@ export async function PUT(request: Request) {
   const body = await request.json();
   const {
     blockId,
-    organizationId,
     trackId,
     category,
     startDate,
@@ -81,7 +79,6 @@ export async function PUT(request: Request) {
     weeks,
   } = body as {
     blockId: string;
-    organizationId: string;
     trackId: string;
     category: "lift" | "conditioning";
     startDate: string;
@@ -89,7 +86,7 @@ export async function PUT(request: Request) {
     weeks: Array<Record<string, unknown>>;
   };
 
-  if (!blockId || !organizationId || !trackId || !category || !startDate || !durationWeeks) {
+  if (!blockId || !trackId || !category || !startDate || !durationWeeks) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
   }
 
@@ -97,7 +94,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Invalid category." }, { status: 400 });
   }
 
-  const admin = await hasOrgRole(userId, organizationId, "admin");
+  const admin = await hasOrgRole(userId, "", "admin");
   if (!admin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -107,7 +104,6 @@ export async function PUT(request: Request) {
     .from("track_progressions")
     .upsert(
       {
-        organization_id: organizationId,
         track_id: trackId,
         source_block_id: blockId,
         start_date: startDate,

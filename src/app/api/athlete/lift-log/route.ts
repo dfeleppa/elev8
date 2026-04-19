@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
 import { requireUserContext } from "../../../../lib/member";
-import { isOrgMember } from "../../../../lib/programming-access";
 import { isValidDate } from "../../../../lib/programming";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
 
@@ -28,28 +27,22 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const organizationId = typeof body?.organizationId === "string" ? body.organizationId : "";
   const movementId = typeof body?.movementId === "string" ? body.movementId : "";
   const dayDate = typeof body?.dayDate === "string" ? body.dayDate : "";
   const notes = typeof body?.notes === "string" ? body.notes.trim() : null;
   const sets = parseSets(body?.sets);
 
-  if (!organizationId || !movementId || !isValidDate(dayDate)) {
+  if (!movementId || !isValidDate(dayDate)) {
     return NextResponse.json(
-      { error: "organizationId, movementId and dayDate are required." },
+      { error: "movementId and dayDate are required." },
       { status: 400 }
     );
   }
 
-  const isMember = await isOrgMember(userId, organizationId);
-  if (!isMember) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   const { data: log, error: insertError } = await supabaseAdmin
     .from("athlete_lift_logs")
     .insert({
-      organization_id: organizationId,
       member_id: userId,
       movement_id: movementId,
       day_date: dayDate,

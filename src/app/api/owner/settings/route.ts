@@ -1,80 +1,64 @@
 import { NextResponse } from "next/server";
 
 import { hasRole, requireUserContext } from "../../../../lib/member";
-import { normalizeInvitationCode } from "../../../../lib/invitation-code";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
 
 export async function GET() {
-  const { error, role, organizationIds } = await requireUserContext();
-  if (error || !hasRole("owner", role) || organizationIds.length === 0) {
+  const { error, role } = await requireUserContext();
+  if (error || !hasRole("owner", role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const orgId = organizationIds[0];
-  const { data: org, error: fetchError } = await supabaseAdmin
-    .from("organizations")
-    .select("id, name, logo_url, address, phone, email, invitation_code")
-    .eq("id", orgId)
+  const { data: gym, error: fetchError } = await supabaseAdmin
+    .from("gym_settings")
+    .select("name, logo_url, address, phone, email")
+    .eq("id", 1)
     .single();
 
-  if (fetchError || !org) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 404 });
+  if (fetchError || !gym) {
+    return NextResponse.json({ error: "Gym settings not found." }, { status: 404 });
   }
 
   return NextResponse.json({
-    id: org.id,
-    name: org.name,
-    logoUrl: org.logo_url,
-    address: org.address,
-    phone: org.phone,
-    email: org.email,
-    invitationCode: org.invitation_code,
+    name: gym.name,
+    logoUrl: gym.logo_url,
+    address: gym.address,
+    phone: gym.phone,
+    email: gym.email,
   });
 }
 
 export async function PATCH(request: Request) {
-  const { error, role, organizationIds } = await requireUserContext();
-  if (error || !hasRole("owner", role) || organizationIds.length === 0) {
+  const { error, role } = await requireUserContext();
+  if (error || !hasRole("owner", role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const orgId = organizationIds[0];
   const body = await request.json();
 
-  // Build update object from allowed fields
   const updates: Record<string, string | null> = {};
   if ("name" in body) updates.name = body.name;
   if ("address" in body) updates.address = body.address ?? null;
   if ("phone" in body) updates.phone = body.phone ?? null;
   if ("email" in body) updates.email = body.email ?? null;
-  if ("invitationCode" in body) updates.invitation_code = normalizeInvitationCode(body.invitationCode);
   updates.updated_at = new Date().toISOString();
 
-  const { data: org, error: updateError } = await supabaseAdmin
-    .from("organizations")
+  const { data: gym, error: updateError } = await supabaseAdmin
+    .from("gym_settings")
     .update(updates)
-    .eq("id", orgId)
-    .select("id, name, logo_url, address, phone, email, invitation_code")
+    .eq("id", 1)
+    .select("name, logo_url, address, phone, email")
     .single();
 
   if (updateError) {
-    // Handle unique constraint on invitation_code
-    if (updateError.code === "23505") {
-      return NextResponse.json(
-        { error: "This invitation code is already in use." },
-        { status: 409 }
-      );
-    }
     return NextResponse.json({ error: "Failed to update settings." }, { status: 500 });
   }
 
   return NextResponse.json({
-    id: org.id,
-    name: org.name,
-    logoUrl: org.logo_url,
-    address: org.address,
-    phone: org.phone,
-    email: org.email,
-    invitationCode: org.invitation_code,
+    name: gym.name,
+    logoUrl: gym.logo_url,
+    address: gym.address,
+    phone: gym.phone,
+    email: gym.email,
   });
 }

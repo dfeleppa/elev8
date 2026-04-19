@@ -6,12 +6,10 @@ import { supabaseAdmin } from "../../../lib/supabase-admin";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const { error, userId, role, organizationIds } = await requireUserContext();
+  const { error, userId, role } = await requireUserContext();
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
-
-  const organizationId = organizationIds[0] ?? null;
 
   const { data: userRow } = await supabaseAdmin
     .from("app_users")
@@ -19,25 +17,20 @@ export async function GET() {
     .eq("id", userId)
     .maybeSingle();
 
-  const { data: organizationRow } = organizationId
-    ? await supabaseAdmin
-        .from("organizations")
-        .select("name, logo_url")
-        .eq("id", organizationId)
-        .maybeSingle()
-    : { data: null };
+  const { data: gymRow } = await supabaseAdmin
+    .from("gym_settings")
+    .select("name, logo_url")
+    .eq("id", 1)
+    .maybeSingle();
 
-  const { data: latestResult } = organizationId
-    ? await supabaseAdmin
-        .from("workout_results")
-        .select("track_id")
-        .eq("organization_id", organizationId)
-        .eq("member_id", userId)
-        .order("day_date", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
-    : { data: null };
+  const { data: latestResult } = await supabaseAdmin
+    .from("workout_results")
+    .select("track_id")
+    .eq("member_id", userId)
+    .order("day_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   const latestTrackId =
     latestResult && typeof latestResult.track_id === "string" ? latestResult.track_id : null;
@@ -53,10 +46,9 @@ export async function GET() {
   return NextResponse.json({
     userId,
     role,
-    organizationIds,
     userName: userRow?.full_name ?? userRow?.email ?? "User",
-    organizationName: organizationRow?.name ?? "Organization",
-    organizationLogoUrl: organizationRow?.logo_url ?? null,
+    gymName: gymRow?.name ?? "Lyfe Fitness",
+    gymLogoUrl: gymRow?.logo_url ?? null,
     trackId: latestTrackId,
     currentTrack: trackRow?.name ?? "Main",
   });

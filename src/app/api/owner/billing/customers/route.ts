@@ -20,17 +20,14 @@ type CustomersPayload = {
 const customersCache = new Map<string, { value: CustomersPayload; expiresAt: number }>();
 
 export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const organizationId = organizationIds[0] ?? null;
-  if (!organizationId) return NextResponse.json({ error: "Organization not found" }, { status: 400 });
 
   const requestedLimit = parseInt(request.nextUrl.searchParams.get("limit") ?? "20", 10);
   const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 100) : 20;
   const forceRefresh = request.nextUrl.searchParams.get("fresh") === "1";
-  const cacheKey = `org:${organizationId}:limit:${limit}`;
+  const cacheKey = `limit:${limit}`;
 
   if (!forceRefresh) {
     const cached = customersCache.get(cacheKey);
@@ -47,7 +44,6 @@ export async function GET(request: NextRequest) {
     const { data: cachedCustomers, error: cacheError } = await supabaseAdmin
       .from("stripe_customers")
       .select("*")
-      .eq("organization_id", organizationId)
       .order("updated_at", { ascending: false })
       .limit(limit);
 

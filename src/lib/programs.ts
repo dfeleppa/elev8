@@ -29,7 +29,6 @@ export function isConditioningProgressionType(value: unknown): value is Conditio
 
 export type Program = {
   id: string;
-  organization_id: string;
   name: string;
   description: string | null;
   duration_weeks: number;
@@ -43,7 +42,6 @@ export type Program = {
 export type ProgramTemplateDay = {
   id: string;
   program_id: string;
-  organization_id: string;
   week_number: number;
   day_of_week: number;
   title: string | null;
@@ -55,7 +53,6 @@ export type ProgramTemplateDay = {
 export type ProgramTemplateBlock = {
   id: string;
   template_day_id: string;
-  organization_id: string;
   program_id: string;
   block_order: number;
   block_type: "warmup" | "lift" | "workout" | "cooldown";
@@ -111,7 +108,6 @@ export type ConditioningProgression = {
 export type ProgramAssignment = {
   id: string;
   program_id: string;
-  organization_id: string;
   assigned_member_id: string | null;
   assigned_track_id: string | null;
   start_date: string;

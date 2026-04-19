@@ -1,6 +1,6 @@
-## Elev8 Control Center
+## Lyfe Fitness
 
-A personal operating system that blends a dashboard, task manager, and ritual tracker. The single-page experience is purpose-built for fast daily calibration—review focus signals, scan priority tasks, and protect recovery habits without hopping between tools.
+A full-stack gym management platform for Lyfe Fitness. Role-based access for members, coaches, admins, and owners — covering training, nutrition, class scheduling, payroll, and business analytics.
 
 ### Feature Highlights
 - **Mission Stack:** Track priority work with live progress bars, tags, priority cues, and status pills.

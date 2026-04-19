@@ -14,18 +14,17 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const organizationId = url.searchParams.get("organizationId") ?? "";
   const movementId = url.searchParams.get("movementId") ?? "";
   const percentParam = url.searchParams.get("percent") ?? "";
   const targetMemberId = url.searchParams.get("memberId") ?? userId;
 
   const percent = Number(percentParam);
 
-  if (!organizationId || !movementId || !Number.isFinite(percent) || percent <= 0) {
-    return NextResponse.json({ error: "organizationId, movementId and percent are required." }, { status: 400 });
+  if (!movementId || !Number.isFinite(percent) || percent <= 0) {
+    return NextResponse.json({ error: "movementId and percent are required." }, { status: 400 });
   }
 
-  const member = await isOrgMember(userId, organizationId);
+  const member = await isOrgMember(userId);
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -33,7 +32,6 @@ export async function GET(request: Request) {
   const { data: prRow, error: prError } = await supabaseAdmin
     .from("member_movement_prs")
     .select("best_weight, estimated_one_rep_max")
-    .eq("organization_id", organizationId)
     .eq("member_id", targetMemberId)
     .eq("movement_id", movementId)
     .maybeSingle();

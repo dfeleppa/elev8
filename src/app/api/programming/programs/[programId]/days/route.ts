@@ -21,7 +21,7 @@ export async function GET(request: Request, context: RouteContext) {
 
   const { data: program, error: programError } = await supabaseAdmin
     .from("programs")
-    .select("organization_id")
+    .select("id")
     .eq("id", programId)
     .single();
 
@@ -29,10 +29,6 @@ export async function GET(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Program not found." }, { status: 404 });
   }
 
-  const isMember = await isOrgMember(userId, program.organization_id);
-  if (!isMember) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   let query = supabaseAdmin
     .from("program_template_days")
@@ -70,7 +66,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   const { data: program, error: programError } = await supabaseAdmin
     .from("programs")
-    .select("organization_id")
+    .select("id")
     .eq("id", programId)
     .single();
 
@@ -78,7 +74,7 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Program not found." }, { status: 404 });
   }
 
-  const canWrite = await hasOrgRole(userId, program.organization_id, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -98,7 +94,6 @@ export async function POST(request: Request, context: RouteContext) {
     .upsert(
       {
         program_id: programId,
-        organization_id: program.organization_id,
         week_number: weekNumber,
         day_of_week: dayOfWeek,
         title,

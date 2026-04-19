@@ -21,17 +21,14 @@ type TransactionsPayload = {
 const transactionsCache = new Map<string, { value: TransactionsPayload; expiresAt: number }>();
 
 export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const organizationId = organizationIds[0] ?? null;
-  if (!organizationId) return NextResponse.json({ error: "Organization not found" }, { status: 400 });
 
   const requestedLimit = parseInt(request.nextUrl.searchParams.get("limit") ?? "50", 10);
   const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 100) : 50;
   const forceRefresh = request.nextUrl.searchParams.get("fresh") === "1";
-  const cacheKey = `org:${organizationId}:limit:${limit}`;
+  const cacheKey = `limit:${limit}`;
 
   if (!forceRefresh) {
     const cached = transactionsCache.get(cacheKey);
@@ -48,7 +45,6 @@ export async function GET(request: NextRequest) {
     const { data: cachedTransactions, error: cacheError } = await supabaseAdmin
       .from("stripe_transactions")
       .select("*")
-      .eq("organization_id", organizationId)
       .order("created_at", { ascending: false })
       .limit(limit);
 

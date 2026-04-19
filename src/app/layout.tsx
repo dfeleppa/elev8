@@ -13,8 +13,8 @@ const fontBody = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Elev8 Control Center",
-  description: "Personal operating system for focus, tasks, and rituals",
+  title: "Lyfe Fitness",
+  description: "Your gym management platform — training, nutrition, and performance.",
 };
 
 export default function RootLayout({

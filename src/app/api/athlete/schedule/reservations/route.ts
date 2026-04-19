@@ -14,35 +14,31 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const runtime = "nodejs";
 
 type ReservationRequestBody = {
-  organizationId?: string;
   classId?: string;
   date?: string;
 };
 
 type ScheduleClassRecord = ScheduleClassRow & {
-  organization_id: string;
   track_id: string | null;
   default_coach_user_id: string | null;
 };
 
-async function loadScheduleClass(organizationId: string, classId: string) {
+async function loadScheduleClass(classId: string) {
   return supabaseAdmin
-    .from("organization_schedule_classes")
+    .from("schedule_classes")
     .select(
-      "id, organization_id, name, class_time, duration_minutes, class_days, start_date, end_date, track_id, default_coach_user_id, size_limit, reservation_cutoff_hours, calendar_color"
+      "id, name, class_time, duration_minutes, class_days, start_date, end_date, track_id, default_coach_user_id, size_limit, reservation_cutoff_hours, calendar_color"
     )
-    .eq("organization_id", organizationId)
     .eq("id", classId)
     .maybeSingle();
 }
 
 async function loadSessionSummary(params: {
-  organizationId: string;
   classRow: ScheduleClassRecord;
   dateKey: string;
   currentUserId: string;
 }) {
-  const { organizationId, classRow, dateKey, currentUserId } = params;
+  const { classRow, dateKey, currentUserId } = params;
 
   const [trackResult, coachResult, reservationsResult] = await Promise.all([
     classRow.track_id
@@ -56,9 +52,8 @@ async function loadSessionSummary(params: {
         .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     supabaseAdmin
-      .from("organization_class_reservations")
+      .from("class_reservations")
       .select("id, class_id, member_id, class_date, created_at")
-      .eq("organization_id", organizationId)
       .eq("class_id", classRow.id)
       .eq("class_date", dateKey),
   ]);
@@ -98,19 +93,18 @@ async function loadSessionSummary(params: {
 
 async function parseReservationRequest(request: Request) {
   const body = (await request.json().catch(() => null)) as ReservationRequestBody | null;
-  const organizationId = body?.organizationId?.trim() ?? "";
   const classId = body?.classId?.trim() ?? "";
   const dateKey = body?.date?.trim() ?? "";
 
-  if (!organizationId || !classId || !isValidDateKey(dateKey)) {
-    return { error: "organizationId, classId, and date are required.", organizationId: "", classId: "", dateKey: "" };
+  if (!classId || !isValidDateKey(dateKey)) {
+    return { error: "classId and date are required.", classId: "", dateKey: "" };
   }
 
-  return { error: null, organizationId, classId, dateKey };
+  return { error: null, classId, dateKey };
 }
 
 export async function POST(request: Request) {
-  const { error, userId, role, organizationIds } = await requireUserContext();
+  const { error, userId, role } = await requireUserContext();
   if (error || !userId || !hasRole("member", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized." }, { status: 401 });
   }
@@ -120,12 +114,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  const { organizationId, classId, dateKey } = parsed;
-  if (!organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 403 });
-  }
-
-  const classResult = await loadScheduleClass(organizationId, classId);
+  const { classId, dateKey } = parsed;
+  const classResult = await loadScheduleClass(classId);
   if (classResult.error || !classResult.data) {
     return NextResponse.json({ error: "Class not found." }, { status: 404 });
   }
@@ -140,9 +130,8 @@ export async function POST(request: Request) {
   }
 
   const existingResult = await supabaseAdmin
-    .from("organization_class_reservations")
+    .from("class_reservations")
     .select("id")
-    .eq("organization_id", organizationId)
     .eq("class_id", classId)
     .eq("class_date", dateKey)
     .eq("member_id", userId)
@@ -157,9 +146,8 @@ export async function POST(request: Request) {
   }
 
   const reservationsResult = await supabaseAdmin
-    .from("organization_class_reservations")
+    .from("class_reservations")
     .select("id, member_id")
-    .eq("organization_id", organizationId)
     .eq("class_id", classId)
     .eq("class_date", dateKey);
 
@@ -173,9 +161,8 @@ export async function POST(request: Request) {
   }
 
   const insertResult = await supabaseAdmin
-    .from("organization_class_reservations")
+    .from("class_reservations")
     .insert({
-      organization_id: organizationId,
       class_id: classId,
       member_id: userId,
       class_date: dateKey,
@@ -189,7 +176,6 @@ export async function POST(request: Request) {
   }
 
   const summary = await loadSessionSummary({
-    organizationId,
     classRow,
     dateKey,
     currentUserId: userId,
@@ -203,7 +189,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const { error, userId, role, organizationIds } = await requireUserContext();
+  const { error, userId, role } = await requireUserContext();
   if (error || !userId || !hasRole("member", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized." }, { status: 401 });
   }
@@ -213,20 +199,15 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  const { organizationId, classId, dateKey } = parsed;
-  if (!organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 403 });
-  }
-
-  const classResult = await loadScheduleClass(organizationId, classId);
+  const { classId, dateKey } = parsed;
+  const classResult = await loadScheduleClass(classId);
   if (classResult.error || !classResult.data) {
     return NextResponse.json({ error: "Class not found." }, { status: 404 });
   }
 
   const deleteResult = await supabaseAdmin
-    .from("organization_class_reservations")
+    .from("class_reservations")
     .delete()
-    .eq("organization_id", organizationId)
     .eq("class_id", classId)
     .eq("class_date", dateKey)
     .eq("member_id", userId);
@@ -236,7 +217,6 @@ export async function DELETE(request: Request) {
   }
 
   const summary = await loadSessionSummary({
-    organizationId,
     classRow: classResult.data as ScheduleClassRecord,
     dateKey,
     currentUserId: userId,

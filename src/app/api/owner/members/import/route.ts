@@ -149,20 +149,11 @@ function parseDate(value: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error) {
     return NextResponse.json({ error }, { status: 401 });
   }
   if (!hasRole("owner", role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const organizationId =
-    request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-  if (!organizationIds.includes(organizationId)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -189,7 +180,6 @@ export async function POST(request: NextRequest) {
 
   for (const row of rows) {
     payloads.push({
-      organization_id: organizationId,
       email: row.email,
       first_name: row.firstName || null,
       last_name: row.lastName || null,
@@ -224,8 +214,8 @@ export async function POST(request: NextRequest) {
   for (let i = 0; i < deduped.length; i += BATCH_SIZE) {
     const batch = deduped.slice(i, i + BATCH_SIZE);
     const { error: upsertError } = await supabaseAdmin
-      .from("organization_members")
-      .upsert(batch, { onConflict: "organization_id,email" });
+      .from("members")
+      .upsert(batch, { onConflict: "email" });
     if (upsertError) {
       return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }

@@ -24,7 +24,6 @@ type ChannelPayload = {
 };
 
 type CreatePayload = {
-  organizationId?: string;
   title?: string | null;
   summary?: string | null;
   brief?: string | null;
@@ -43,12 +42,11 @@ type CreatePayload = {
   plannerSlot?: { slotDate?: string; lane?: string; sortOrder?: number } | null;
 };
 
-async function resolveDefaultAccounts(organizationId: string, channels: ChannelPayload[]) {
+async function resolveDefaultAccounts(channels: ChannelPayload[]) {
   const platforms = Array.from(new Set(channels.map((channel) => normalizePlatform(channel.platform))));
   const { data } = await supabaseAdmin
     .from("social_accounts")
     .select("id, platform")
-    .eq("organization_id", organizationId)
     .in("platform", platforms);
 
   const accountByPlatform = new Map<string, string>();
@@ -61,31 +59,25 @@ async function resolveDefaultAccounts(organizationId: string, channels: ChannelP
 }
 
 export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
   const workflowState = request.nextUrl.searchParams.get("workflowState")?.trim() ?? undefined;
   const weekOf = request.nextUrl.searchParams.get("weekOf")?.trim() ?? undefined;
-  const posts = await listSocialPosts(organizationId, { workflowState, weekOf, limit: 200 });
+  const posts = await listSocialPosts({ workflowState, weekOf, limit: 200 });
   return NextResponse.json({ posts });
 }
 
 export async function POST(request: NextRequest) {
-  const { error, role, userId, organizationIds } = await requireUserContext();
+  const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
   const body = (await request.json().catch(() => null)) as CreatePayload | null;
-  const organizationId = body?.organizationId?.trim() ?? organizationIds[0] ?? null;
-  if (!body || !organizationId || !organizationIds.includes(organizationId)) {
+  if (!body) {
     return NextResponse.json({ error: "Organization not found." }, { status: 400 });
   }
 
@@ -93,12 +85,11 @@ export async function POST(request: NextRequest) {
   const publishMode = normalizePublishMode(body.publishMode);
   const tags = Array.isArray(body.tags) ? body.tags.map((tag) => tag.trim()).filter(Boolean) : [];
   const channelsInput = Array.isArray(body.channels) && body.channels.length > 0 ? body.channels : [{ platform: "instagram", channelType: "image" }];
-  const defaultAccounts = await resolveDefaultAccounts(organizationId, channelsInput);
+  const defaultAccounts = await resolveDefaultAccounts(channelsInput);
 
   const { data: post, error: insertError } = await supabaseAdmin
     .from("social_posts")
     .insert({
-      organization_id: organizationId,
       member_id: userId,
       title: body.title?.trim() || null,
       summary: body.summary?.trim() || null,
@@ -148,11 +139,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (body.plannerSlot?.slotDate && body.plannerSlot?.lane) {
-    await ensurePlannerSlot(organizationId, post.id, body.plannerSlot.slotDate, body.plannerSlot.lane, Number(body.plannerSlot.sortOrder ?? 0));
+    await ensurePlannerSlot( post.id, body.plannerSlot.slotDate, body.plannerSlot.lane, Number(body.plannerSlot.sortOrder ?? 0));
   }
 
   await logSocialActivity({
-    organizationId,
     socialPostId: post.id,
     actorUserId: userId,
     eventType: "social_post.created",
@@ -160,7 +150,7 @@ export async function POST(request: NextRequest) {
     payload: { workflowState, platforms: channelRows.map((row) => row.platform) },
   });
 
-  const created = await listSocialPosts(organizationId, { limit: 200 });
+  const created = await listSocialPosts({ limit: 200 });
   const hydrated = created.find((item) => item.id === post.id);
   return NextResponse.json({ post: hydrated ?? { id: post.id } });
 }

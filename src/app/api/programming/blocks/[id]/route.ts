@@ -34,7 +34,7 @@ export async function PATCH(
 
   const { data: existing, error: existingError } = await supabaseAdmin
     .from("workout_blocks")
-    .select("id, organization_id, block_type")
+    .select("id, block_type")
     .eq("id", id)
     .single();
 
@@ -42,12 +42,7 @@ export async function PATCH(
     return NextResponse.json({ error: existingError?.message ?? "Block not found." }, { status: 404 });
   }
 
-  const isMember = await isOrgMember(userId, existing.organization_id);
-  if (!isMember) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const canWrite = await hasOrgRole(userId, existing.organization_id, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -178,7 +173,7 @@ export async function DELETE(
 
   const { data: existing, error: existingError } = await supabaseAdmin
     .from("workout_blocks")
-    .select("id, organization_id")
+    .select("id")
     .eq("id", id)
     .single();
 
@@ -186,7 +181,7 @@ export async function DELETE(
     return NextResponse.json({ error: existingError?.message ?? "Block not found." }, { status: 404 });
   }
 
-  const canWrite = await hasOrgRole(userId, existing.organization_id, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

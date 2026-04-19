@@ -6,18 +6,13 @@ import { supabaseAdmin } from "../../../../lib/supabase-admin";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
-  }
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
   }
   const { data } = await supabaseAdmin
     .from("social_google_photos_sources")
     .select("id, google_account_email, album_id, album_title, status, last_synced_at, metadata, created_at")
-    .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
   return NextResponse.json({
     sources: data ?? [],
@@ -26,23 +21,21 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { error, role, userId, organizationIds } = await requireUserContext();
+  const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
   const body = (await request.json().catch(() => null)) as
-    | { organizationId?: string; googleAccountEmail?: string | null; albumId?: string | null; albumTitle?: string | null }
+    | { googleAccountEmail?: string | null; albumId?: string | null; albumTitle?: string | null }
     | null;
-  const organizationId = body?.organizationId?.trim() ?? organizationIds[0] ?? null;
-  if (!body || !organizationId || !organizationIds.includes(organizationId)) {
+  if (!body) {
     return NextResponse.json({ error: "Organization not found." }, { status: 400 });
   }
 
   const { data, error: insertError } = await supabaseAdmin
     .from("social_google_photos_sources")
     .insert({
-      organization_id: organizationId,
       member_id: userId,
       google_account_email: body.googleAccountEmail?.trim() || null,
       album_id: body.albumId?.trim() || null,

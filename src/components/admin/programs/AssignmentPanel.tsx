@@ -74,12 +74,9 @@ export default function AssignmentPanel({ programId, onClose }: Props) {
           fetch("/api/me"),
         ]);
         const assignData = await assignRes.json();
-        const meData = await meRes.json();
-        const orgId: string = meData?.organizationIds?.[0] ?? meData?.organizationId ?? "";
-
         const [membersData, tracksData] = await Promise.all([
-          fetch(`/api/programming/programs/members?organizationId=${orgId}`).then((r) => r.json()),
-          fetch(`/api/programming/tracks?organizationId=${orgId}`).then((r) => r.json()),
+          fetch(`/api/programming/programs/members`).then((r) => r.json()),
+          fetch(`/api/programming/tracks`).then((r) => r.json()),
         ]);
 
         if (!isMounted) return;

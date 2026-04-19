@@ -7,7 +7,7 @@ type RouteContext = { params: Promise<{ productId: string }> };
 
 // PATCH /api/owner/store/[productId] — update product
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -18,11 +18,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   // Verify ownership
   const { data: existing } = await supabaseAdmin
     .from("store_products")
-    .select("organization_id")
+    .select("id")
     .eq("id", productId)
     .single();
 
-  if (!existing || !organizationIds.includes(existing.organization_id)) {
+  if (!existing) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
 // DELETE /api/owner/store/[productId] — delete product
 export async function DELETE(_request: NextRequest, context: RouteContext) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -63,11 +63,11 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
   const { data: existing } = await supabaseAdmin
     .from("store_products")
-    .select("organization_id")
+    .select("id")
     .eq("id", productId)
     .single();
 
-  if (!existing || !organizationIds.includes(existing.organization_id)) {
+  if (!existing) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 

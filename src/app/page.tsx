@@ -10,8 +10,8 @@ export default async function Home() {
   }
 
   if (hasRole("admin", role)) {
-    redirect("/organization/gym-dashboard");
+    redirect("/gym-dashboard");
   }
 
-  redirect("/organization/member/athlete-dashboard");
+  redirect("/member/athlete-dashboard");
 }

@@ -19,7 +19,6 @@ function constantTimeEqual(left: string, right: string) {
 
 type DuePostRow = {
   id: string;
-  organization_id: string;
   ig_user_id: string;
   caption: string | null;
   first_comment: string | null;
@@ -36,7 +35,7 @@ async function acquirePost(postId: string) {
     .update({ status: "publishing", updated_at: new Date().toISOString() })
     .eq("id", postId)
     .eq("status", "scheduled")
-    .select("id, organization_id, ig_user_id, caption, first_comment, post_type, publish_mode, status, scheduled_for, retry_count")
+    .select("id, ig_user_id, caption, first_comment, post_type, publish_mode, status, scheduled_for, retry_count")
     .single();
 
   if (error) {
@@ -59,11 +58,10 @@ async function loadAssets(postId: string) {
   }));
 }
 
-async function loadToken(organizationId: string, igUserId: string) {
+async function loadToken(igUserId: string) {
   const { data } = await supabaseAdmin
     .from("instagram_oauth_tokens")
     .select("access_token")
-    .eq("organization_id", organizationId)
     .eq("ig_user_id", igUserId)
     .maybeSingle();
 
@@ -130,7 +128,7 @@ async function processPost(post: DuePostRow) {
     return markReminder(post, "Post is configured for reminder mode.");
   }
 
-  const token = await loadToken(post.organization_id, post.ig_user_id);
+  const token = await loadToken(post.ig_user_id);
   if (!token) {
     return markFailure(post, "Instagram access token not found for organization account.");
   }

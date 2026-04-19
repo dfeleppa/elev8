@@ -63,10 +63,7 @@ export default function TodaysWorkoutCard() {
   const [loading, setLoading] = useState(true);
   const [noWorkout, setNoWorkout] = useState(false);
 
-  // Keep orgId available for storage-event refetches without re-calling /api/me
-  const orgIdRef = useRef<string | null>(null);
-
-  const loadWorkout = useCallback(async (orgId: string, trackId: string) => {
+  const loadWorkout = useCallback(async (trackId: string) => {
     setLoading(true);
     setNoWorkout(false);
     setBlocks(null);
@@ -74,7 +71,7 @@ export default function TodaysWorkoutCard() {
       const today = todayKey();
       const weekStart = startOfWeek(today);
       const res = await fetch(
-        `/api/programming/week?organizationId=${orgId}&trackId=${trackId}&startDate=${weekStart}`,
+        `/api/programming/week?trackId=${trackId}&startDate=${weekStart}`,
         { cache: "no-store" }
       );
       const payload = await res.json();
@@ -99,12 +96,9 @@ export default function TodaysWorkoutCard() {
       try {
         const meRes = await fetch("/api/me", { cache: "no-store" });
         const me = await meRes.json();
-        const orgId = me?.organizationIds?.[0] ?? null;
-        if (!orgId) { setNoWorkout(true); setLoading(false); return; }
-        orgIdRef.current = orgId;
 
         const storedId = localStorage.getItem("elev8-track-id");
-        const tr = await fetch(`/api/programming/tracks?organizationId=${orgId}`, { cache: "no-store" });
+        const tr = await fetch(`/api/programming/tracks`, { cache: "no-store" });
         const tp = await tr.json();
         const fetchedTracks: { id: string }[] = tp?.tracks ?? [];
 
@@ -118,7 +112,7 @@ export default function TodaysWorkoutCard() {
         }
 
         if (!trackId) { setNoWorkout(true); setLoading(false); return; }
-        await loadWorkout(orgId, trackId);
+        await loadWorkout(trackId);
       } catch {
         setNoWorkout(true);
         setLoading(false);
@@ -129,8 +123,8 @@ export default function TodaysWorkoutCard() {
   // React to track changes from header / workout page dropdowns
   useEffect(() => {
     function onStorage(e: StorageEvent) {
-      if (e.key === "elev8-track-id" && e.newValue && orgIdRef.current) {
-        loadWorkout(orgIdRef.current, e.newValue);
+      if (e.key === "elev8-track-id" && e.newValue) {
+        loadWorkout(e.newValue);
       }
     }
     window.addEventListener("storage", onStorage);
@@ -142,7 +136,7 @@ export default function TodaysWorkoutCard() {
       <div className="mb-4 flex items-center justify-between">
         <Micro onAccent as="p">Today&apos;s Workout</Micro>
         <Link
-          href="/organization/member/workout"
+          href="/member/workout"
           className="flex items-center gap-1 text-xs font-medium opacity-70 transition hover:opacity-100"
         >
           View full

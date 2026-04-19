@@ -15,7 +15,6 @@ import { supabaseAdmin } from "../../../../../lib/supabase-admin";
 export const runtime = "nodejs";
 
 type PatchPayload = {
-  organizationId?: string;
   action?: "duplicate";
   title?: string | null;
   summary?: string | null;
@@ -42,31 +41,30 @@ type PatchPayload = {
   plannerSlot?: { slotDate?: string; lane?: string; sortOrder?: number } | null;
 };
 
-async function resolvePost(id: string, organizationId: string) {
-  const { data } = await supabaseAdmin.from("social_posts").select("id, organization_id").eq("id", id).eq("organization_id", organizationId).maybeSingle();
+async function resolvePost(id: string) {
+  const { data } = await supabaseAdmin.from("social_posts").select("id").eq("id", id).maybeSingle();
   return data;
 }
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const { error, role, userId, organizationIds } = await requireUserContext();
+  const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
   const { id } = await context.params;
   const body = (await request.json().catch(() => null)) as PatchPayload | null;
-  const organizationId = body?.organizationId?.trim() ?? organizationIds[0] ?? null;
-  if (!body || !organizationId || !organizationIds.includes(organizationId)) {
+  if (!body) {
     return NextResponse.json({ error: "Organization not found." }, { status: 400 });
   }
 
-  const post = await resolvePost(id, organizationId);
+  const post = await resolvePost(id);
   if (!post) {
     return NextResponse.json({ error: "Post not found." }, { status: 404 });
   }
 
   if (body.action === "duplicate") {
-    const existing = (await listSocialPosts(organizationId, { limit: 200 })).find((item) => item.id === id);
+    const existing = (await listSocialPosts({ limit: 200 })).find((item) => item.id === id);
     if (!existing) {
       return NextResponse.json({ error: "Post not found." }, { status: 404 });
     }
@@ -74,7 +72,6 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const { data: clone, error: cloneError } = await supabaseAdmin
       .from("social_posts")
       .insert({
-        organization_id: organizationId,
         member_id: userId,
         title: existing.title ? `${existing.title} Copy` : "Untitled Copy",
         summary: existing.caption,
@@ -119,7 +116,6 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     }
 
     await logSocialActivity({
-      organizationId,
       socialPostId: clone.id,
       actorUserId: userId,
       eventType: "social_post.duplicated",
@@ -127,7 +123,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       payload: { sourcePostId: id },
     });
 
-    const duplicated = (await listSocialPosts(organizationId, { limit: 200 })).find((item) => item.id === clone.id);
+    const duplicated = (await listSocialPosts({ limit: 200 })).find((item) => item.id === clone.id);
     return NextResponse.json({ post: duplicated ?? { id: clone.id } });
   }
 
@@ -146,7 +142,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   if (body.contentPillarId !== undefined) patch.content_pillar_id = body.contentPillarId || null;
   if (body.tags !== undefined) patch.tags = Array.isArray(body.tags) ? body.tags.map((tag) => tag.trim()).filter(Boolean) : [];
 
-  const { error: updateError } = await supabaseAdmin.from("social_posts").update(patch).eq("id", id).eq("organization_id", organizationId);
+  const { error: updateError } = await supabaseAdmin.from("social_posts").update(patch).eq("id", id);
   if (updateError) {
     return NextResponse.json({ error: "Failed to update post." }, { status: 500 });
   }
@@ -185,45 +181,38 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   }
 
   if (body.plannerSlot?.slotDate && body.plannerSlot?.lane) {
-    await ensurePlannerSlot(organizationId, id, body.plannerSlot.slotDate, body.plannerSlot.lane, Number(body.plannerSlot.sortOrder ?? 0));
+    await ensurePlannerSlot( id, body.plannerSlot.slotDate, body.plannerSlot.lane, Number(body.plannerSlot.sortOrder ?? 0));
   }
 
   await logSocialActivity({
-    organizationId,
     socialPostId: id,
     actorUserId: userId,
     eventType: "social_post.updated",
     summary: body.title?.trim() || body.caption?.trim() || "Social post updated",
   });
 
-  const updated = (await listSocialPosts(organizationId, { limit: 200 })).find((item) => item.id === id);
+  const updated = (await listSocialPosts({ limit: 200 })).find((item) => item.id === id);
   return NextResponse.json({ post: updated });
 }
 
 export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const { error, role, userId, organizationIds } = await requireUserContext();
+  const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
   const { id } = await context.params;
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  const post = await resolvePost(id, organizationId);
+  const post = await resolvePost(id);
   if (!post) {
     return NextResponse.json({ error: "Post not found." }, { status: 404 });
   }
 
-  const { error: deleteError } = await supabaseAdmin.from("social_posts").delete().eq("id", id).eq("organization_id", organizationId);
+  const { error: deleteError } = await supabaseAdmin.from("social_posts").delete().eq("id", id);
   if (deleteError) {
     return NextResponse.json({ error: "Failed to delete post." }, { status: 500 });
   }
 
   await logSocialActivity({
-    organizationId,
     socialPostId: id,
     actorUserId: userId,
     eventType: "social_post.deleted",

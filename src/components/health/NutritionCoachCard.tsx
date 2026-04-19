@@ -212,7 +212,7 @@ export default function NutritionCoachCard() {
       <div className="flex flex-col items-center justify-center glass-panel rounded-3xl border border-white/10 p-6 min-h-[120px] gap-3">
         <p className="text-sm text-slate-400">No coach plan active.</p>
         <Link
-          href="/organization/member/nutrition-coach"
+          href="/member/nutrition-coach"
           className="rounded-full bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] px-6 py-2.5 text-sm font-semibold text-[#031525] transition hover:brightness-110"
         >
           Nutrition Coach

@@ -12,156 +12,87 @@ function isAllowedStaffRole(value: unknown): value is AllowedStaffRole {
 }
 
 function normalizeEmail(value: unknown): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
+  if (typeof value !== "string") return null;
   const email = value.trim().toLowerCase();
-  if (!email || !email.includes("@")) {
-    return null;
-  }
+  if (!email || !email.includes("@")) return null;
   return email;
 }
 
 function normalizeName(value: unknown): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
+  if (typeof value !== "string") return null;
   const fullName = value.trim();
   return fullName || null;
 }
 
 function normalizePayrate(value: unknown): number | null {
-  if (value === null || value === undefined || value === "") {
-    return null;
-  }
-
+  if (value === null || value === undefined || value === "") return null;
   const parsed = typeof value === "number" ? value : Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    return null;
-  }
-
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
   return parsed;
 }
 
-function canAccessOrganization(organizationIds: string[], organizationId: string) {
-  return organizationIds.includes(organizationId);
-}
+export async function GET() {
+  const { error, role } = await requireUserContext();
+  if (error) return NextResponse.json({ error }, { status: 401 });
+  if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-async function getOrganizationMembers(organizationId: string) {
-  const query = supabaseAdmin
-    .from("organization_members")
-    .select("first_name, last_name, email, role, membership")
-    .eq("organization_id", organizationId)
+  // Staff = all app_users with coach, admin, or owner role
+  const { data: staffRows, error: staffError } = await supabaseAdmin
+    .from("app_users")
+    .select("id, full_name, email, role, coaching_payrate, office_payrate")
+    .in("role", ["coach", "admin", "owner"])
     .order("created_at", { ascending: true });
 
-  const { data, error } = await query;
+  if (staffError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data ?? [];
-}
-
-export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
-  if (error) {
-    return NextResponse.json({ error }, { status: 401 });
-  }
-
-  if (!hasRole("owner", role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  if (!canAccessOrganization(organizationIds, organizationId)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const { data, error: membershipError } = await supabaseAdmin
-    .from("organization_memberships")
-    .select("id, user_id, role, coaching_payrate, office_payrate, user:app_users(id, full_name, email)")
-    .eq("organization_id", organizationId)
-    .order("created_at", { ascending: true });
-
-  if (membershipError) {
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-  }
-
-  const rows = (data ?? []).map((row) => {
-    const user = Array.isArray(row.user) ? row.user[0] : row.user;
-    return {
+  const staff = (staffRows ?? []).map((row) => ({
+    id: row.id,
+    userId: row.id,
+    role: row.role,
+    coachingPayrate: row.coaching_payrate ?? null,
+    officePayrate: row.office_payrate ?? null,
+    user: {
       id: row.id,
-      userId: row.user_id,
-      role: row.role,
-      coachingPayrate: row.coaching_payrate,
-      officePayrate: row.office_payrate,
-      user: user
-        ? {
-            id: user.id,
-            fullName: user.full_name,
-            email: user.email,
-          }
-        : null,
-    };
-  });
+      fullName: row.full_name,
+      email: row.email,
+    },
+  }));
 
-  const staff = rows.filter((row) => row.role === "coach" || row.role === "admin" || row.role === "owner");
   const staffEmails = new Set(
-    staff
-      .map((row) => row.user?.email?.toLowerCase().trim())
-      .filter((value): value is string => Boolean(value))
+    staff.map((s) => s.user.email?.toLowerCase().trim()).filter(Boolean) as string[]
   );
 
-  let promotableMembers: Array<{
-    email: string;
-    fullName: string;
-    membership: string | null;
-    role: string;
-  }> = [];
+  // Promotable = members roster entries not already in staff
+  const { data: memberRows, error: memberError } = await supabaseAdmin
+    .from("members")
+    .select("first_name, last_name, email, role, membership")
+    .order("created_at", { ascending: true });
 
-  try {
-    const memberRows = await getOrganizationMembers(organizationId);
-    promotableMembers = memberRows
-      .map((row) => {
-        const email = normalizeEmail(row.email);
-        if (!email) {
-          return null;
-        }
+  if (memberError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
-        const fullName = `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim();
-        return {
-          email,
-          fullName: fullName || email,
-          membership: typeof row.membership === "string" ? row.membership : null,
-          role: typeof row.role === "string" ? row.role : "member",
-        };
-      })
-      .filter((row): row is { email: string; fullName: string; membership: string | null; role: string } => Boolean(row))
-      .filter((row) => !staffEmails.has(row.email));
-  } catch {
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-  }
+  const promotableMembers = (memberRows ?? [])
+    .map((row) => {
+      const email = normalizeEmail(row.email);
+      if (!email || staffEmails.has(email)) return null;
+      const fullName = `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim();
+      return {
+        email,
+        fullName: fullName || email,
+        membership: typeof row.membership === "string" ? row.membership : null,
+        role: typeof row.role === "string" ? row.role : "member",
+      };
+    })
+    .filter(Boolean) as { email: string; fullName: string; membership: string | null; role: string }[];
 
-  return NextResponse.json({ organizationId, staff, promotableMembers });
+  return NextResponse.json({ staff, promotableMembers });
 }
 
 export async function POST(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
-  if (error) {
-    return NextResponse.json({ error }, { status: 401 });
-  }
-
-  if (!hasRole("owner", role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { error, role } = await requireUserContext();
+  if (error) return NextResponse.json({ error }, { status: 401 });
+  if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const payload = (await request.json().catch(() => null)) as {
-    organizationId?: string;
     existingUserId?: string;
     existingMemberEmail?: string;
     existingMemberName?: string;
@@ -172,18 +103,7 @@ export async function POST(request: NextRequest) {
     officePayrate?: number | string | null;
   } | null;
 
-  if (!payload) {
-    return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
-  }
-
-  const organizationId = payload.organizationId?.trim() || organizationIds[0] || null;
-  if (!organizationId) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  if (!canAccessOrganization(organizationIds, organizationId)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  if (!payload) return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
 
   if (!isAllowedStaffRole(payload.role)) {
     return NextResponse.json({ error: "role must be one of: coach, admin." }, { status: 400 });
@@ -193,16 +113,14 @@ export async function POST(request: NextRequest) {
   const officePayrate = normalizePayrate(payload.officePayrate);
 
   let userId = payload.existingUserId?.trim() || null;
-  let sourceEmail: string | null = null;
 
   if (!userId) {
     const email = normalizeEmail(payload.existingMemberEmail ?? payload.email);
     if (!email) {
       return NextResponse.json({ error: "A valid email is required when creating new staff." }, { status: 400 });
     }
-    sourceEmail = email;
 
-    const { data: user, error: userError } = await supabaseAdmin
+    const { data: user, error: upsertError } = await supabaseAdmin
       .from("app_users")
       .upsert(
         {
@@ -215,118 +133,74 @@ export async function POST(request: NextRequest) {
       .select("id")
       .single();
 
-    if (userError || !user?.id) {
+    if (upsertError || !user?.id) {
       return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
     userId = user.id;
   }
 
-  if (sourceEmail) {
-    await supabaseAdmin
-      .from("organization_members")
-      .update({
-        role: payload.role,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("organization_id", organizationId)
-      .eq("email", sourceEmail);
-  }
-
-  const { error: membershipError } = await supabaseAdmin.from("organization_memberships").upsert(
-    {
-      organization_id: organizationId,
-      user_id: userId,
+  const { error: updateError } = await supabaseAdmin
+    .from("app_users")
+    .update({
       role: payload.role,
       coaching_payrate: coachingPayrate,
       office_payrate: officePayrate,
       updated_at: new Date().toISOString(),
-    },
-    { onConflict: "organization_id,user_id" }
-  );
+    })
+    .eq("id", userId);
 
-  if (membershipError) {
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-  }
+  if (updateError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
-  const { data: updatedMembership, error: fetchError } = await supabaseAdmin
-    .from("organization_memberships")
-    .select("id, user_id, role, coaching_payrate, office_payrate, user:app_users(id, full_name, email)")
-    .eq("organization_id", organizationId)
-    .eq("user_id", userId)
+  const { data: updatedUser } = await supabaseAdmin
+    .from("app_users")
+    .select("id, full_name, email, role, coaching_payrate, office_payrate")
+    .eq("id", userId)
     .single();
-
-  if (fetchError || !updatedMembership) {
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-  }
-
-  const user = Array.isArray(updatedMembership.user) ? updatedMembership.user[0] : updatedMembership.user;
 
   return NextResponse.json({
     staff: {
-      id: updatedMembership.id,
-      userId: updatedMembership.user_id,
-      role: updatedMembership.role,
-      coachingPayrate: updatedMembership.coaching_payrate,
-      officePayrate: updatedMembership.office_payrate,
-      user: user
-        ? {
-            id: user.id,
-            fullName: user.full_name,
-            email: user.email,
-          }
-        : null,
+      id: updatedUser?.id,
+      userId: updatedUser?.id,
+      role: updatedUser?.role,
+      coachingPayrate: updatedUser?.coaching_payrate ?? null,
+      officePayrate: updatedUser?.office_payrate ?? null,
+      user: {
+        id: updatedUser?.id,
+        fullName: updatedUser?.full_name,
+        email: updatedUser?.email,
+      },
     },
   });
 }
 
 export async function PATCH(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
-  if (error) {
-    return NextResponse.json({ error }, { status: 401 });
-  }
-
-  if (!hasRole("owner", role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { error, role } = await requireUserContext();
+  if (error) return NextResponse.json({ error }, { status: 401 });
+  if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const payload = (await request.json().catch(() => null)) as {
-    organizationId?: string;
-    membershipId?: string;
+    userId?: string;
     role?: string;
     coachingPayrate?: number | string | null;
     officePayrate?: number | string | null;
   } | null;
 
-  if (!payload?.membershipId) {
-    return NextResponse.json({ error: "membershipId is required." }, { status: 400 });
-  }
-
-  const organizationId = payload.organizationId?.trim() || organizationIds[0] || null;
-  if (!organizationId) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  if (!canAccessOrganization(organizationIds, organizationId)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  if (!payload?.userId) return NextResponse.json({ error: "userId is required." }, { status: 400 });
 
   if (!isAllowedStaffRole(payload.role)) {
     return NextResponse.json({ error: "role must be one of: coach, admin." }, { status: 400 });
   }
 
-  const { data: existingMembership, error: existingError } = await supabaseAdmin
-    .from("organization_memberships")
+  const { data: existing } = await supabaseAdmin
+    .from("app_users")
     .select("id, role")
-    .eq("id", payload.membershipId)
-    .eq("organization_id", organizationId)
+    .eq("id", payload.userId)
     .single();
 
-  if (existingError || !existingMembership) {
-    return NextResponse.json({ error: existingError?.message ?? "Membership not found." }, { status: 404 });
-  }
+  if (!existing) return NextResponse.json({ error: "User not found." }, { status: 404 });
 
-  if (existingMembership.role === "owner") {
+  if (existing.role === "owner") {
     return NextResponse.json({ error: "Owner role cannot be edited here." }, { status: 400 });
   }
 
@@ -334,19 +208,16 @@ export async function PATCH(request: NextRequest) {
   const officePayrate = normalizePayrate(payload.officePayrate);
 
   const { error: updateError } = await supabaseAdmin
-    .from("organization_memberships")
+    .from("app_users")
     .update({
       role: payload.role,
       coaching_payrate: coachingPayrate,
       office_payrate: officePayrate,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", payload.membershipId)
-    .eq("organization_id", organizationId);
+    .eq("id", payload.userId);
 
-  if (updateError) {
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-  }
+  if (updateError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }

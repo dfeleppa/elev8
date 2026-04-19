@@ -1,0 +1,907 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import ProgrammingSubheader from "../../../../components/admin/ProgrammingSubheader";
+import TipTapEditor from "../../../../components/owner/TipTapEditor";
+import TrackProgressionPanel from "../../../../components/admin/TrackProgressionPanel";
+
+type SessionEntry = {
+  id: string;
+  title: string;
+  block?: string;
+  blockType: string;
+  lines: string[];
+  htmlContent: string;
+};
+
+type TrackOption = {
+  id: string;
+  name: string;
+};
+
+type ViewMode = "month" | "week" | "day";
+
+type WeekDayResponse = {
+  id: string;
+  day_date: string;
+  blocks: Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    score_type: string;
+    block_type: string;
+  }>;
+};
+
+const weekDayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const fallbackSessions: Record<string, SessionEntry[]> = {};
+
+function formatDateKey(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function parseDateKey(value: string) {
+  return new Date(`${value}T00:00:00`);
+}
+
+function startOfWeek(date: Date) {
+  const copy = new Date(date);
+  const day = copy.getDay();
+  copy.setDate(copy.getDate() - day);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function endOfWeek(date: Date) {
+  const start = startOfWeek(date);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return end;
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function addMonths(date: Date, months: number) {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + months);
+  return next;
+}
+
+function toWeekRangeLabel(date: Date) {
+  const start = startOfWeek(date);
+  const end = endOfWeek(date);
+  const left = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const right = end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return `${left} - ${right}`;
+}
+
+function toMonthLabel(date: Date) {
+  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+function toDayLabel(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function toHeaderDayLabel(date: Date) {
+  return `${weekDayNames[date.getDay()]} ${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+const SCORE_LABELS: Record<string, string> = {
+  calories: "Calories",
+  distance: "Distance",
+  time: "For Time",
+  reps: "Reps",
+  rounds_reps: "Rounds & Reps",
+};
+
+function getScoreLabel(value?: string) {
+  const text = (value ?? "none").trim();
+  if (!text || text === "none") {
+    return null;
+  }
+  return SCORE_LABELS[text] ?? (text.charAt(0).toUpperCase() + text.slice(1));
+}
+
+function getSessionById(
+  sessions: Record<string, SessionEntry[]>,
+  sessionId: string | null
+): { day: string; session: SessionEntry } | null {
+  if (!sessionId) {
+    return null;
+  }
+
+  for (const [dayKey, daySessions] of Object.entries(sessions)) {
+    const match = daySessions.find((session) => session.id === sessionId);
+    if (match) {
+      return { day: dayKey, session: match };
+    }
+  }
+
+  return null;
+}
+
+function htmlToPlainLines(html: string): string[] {
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .split(/\s{2,}|\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function mapWeekResponse(days: WeekDayResponse[]) {
+  const mapped: Record<string, SessionEntry[]> = {};
+  for (const day of days) {
+    mapped[day.day_date] = day.blocks.map((block) => {
+      const raw = block.description ?? "";
+      const isHtml = raw.trimStart().startsWith("<");
+      return {
+        id: block.id,
+        title: block.title,
+        block: block.score_type,
+        blockType: block.block_type ?? "workout",
+        htmlContent: raw,
+        lines: isHtml ? htmlToPlainLines(raw) : raw.split("\n").map((l) => l.trim()).filter(Boolean),
+      };
+    });
+  }
+  return mapped;
+}
+
+export default function ProgrammingClient() {
+  const datePickerRef = useRef<HTMLInputElement | null>(null);
+
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [viewMode, setViewMode] = useState<ViewMode>("week");
+  const [showDetails, setShowDetails] = useState(true);
+
+  const [selectedDay, setSelectedDay] = useState(() => formatDateKey(new Date()));
+  const [sessions, setSessions] = useState<Record<string, SessionEntry[]>>(fallbackSessions);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [tracks, setTracks] = useState<TrackOption[]>([]);
+  const [selectedTrackId, setSelectedTrackId] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [creatingType, setCreatingType] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"details" | "progression">("details");
+
+  const weekDays = useMemo(() => {
+    const start = startOfWeek(currentDate);
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = addDays(start, index);
+      return {
+        label: toHeaderDayLabel(date),
+        date: formatDateKey(date),
+        dateObj: date,
+      };
+    });
+  }, [currentDate]);
+
+  const monthDays = useMemo(() => {
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const gridStart = startOfWeek(monthStart);
+    const gridEnd = endOfWeek(monthEnd);
+
+    const days: Array<{ key: string; dateObj: Date; inMonth: boolean }> = [];
+    for (let d = new Date(gridStart); d <= gridEnd; d = addDays(d, 1)) {
+      days.push({
+        key: formatDateKey(d),
+        dateObj: new Date(d),
+        inMonth: d.getMonth() === currentDate.getMonth(),
+      });
+    }
+
+    return days;
+  }, [currentDate]);
+
+  const selected = useMemo(() => getSessionById(sessions, selectedSessionId), [sessions, selectedSessionId]);
+  const selectedDaySessions = sessions[selectedDay] ?? [];
+
+  const editor = selected ?? {
+    day: selectedDay,
+    session: {
+      id: "empty",
+      title: "",
+      block: "none",
+      blockType: "workout",
+      lines: [],
+      htmlContent: "",
+    },
+  };
+
+  const dayLabel = toDayLabel(parseDateKey(selectedDay));
+
+  const headerLabel =
+    viewMode === "month"
+      ? toMonthLabel(currentDate)
+      : viewMode === "day"
+        ? toDayLabel(currentDate)
+        : toWeekRangeLabel(currentDate);
+
+  const visibleColumns =
+    viewMode === "week"
+      ? weekDays
+      : [{ label: toHeaderDayLabel(parseDateKey(selectedDay)), date: selectedDay, dateObj: parseDateKey(selectedDay) }];
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadBootstrap = async () => {
+      try {
+        const trackResponse = await fetch(`/api/programming/tracks`, {
+          cache: "no-store",
+        });
+        const trackPayload = await trackResponse.json();
+        if (!trackResponse.ok) {
+          return;
+        }
+
+        const trackRows: TrackOption[] = trackPayload?.tracks ?? [];
+        if (!isMounted || trackRows.length === 0) {
+          return;
+        }
+
+        setTracks(trackRows);
+        setSelectedTrackId((prev) => prev || trackRows[0].id);
+      } catch {
+        // Keep fallback state when bootstrap fails.
+      }
+    };
+
+    loadBootstrap();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadWeek = async () => {
+      if (!selectedTrackId) {
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const startDate = formatDateKey(startOfWeek(currentDate));
+        const response = await fetch(
+          `/api/programming/week?trackId=${selectedTrackId}&startDate=${startDate}`,
+          { cache: "no-store" }
+        );
+        const payload = await response.json();
+        if (!response.ok) {
+          return;
+        }
+
+        const nextSessions = mapWeekResponse(payload?.days ?? []);
+        if (!isMounted || Object.keys(nextSessions).length === 0) {
+          return;
+        }
+
+        setSessions(nextSessions);
+
+        const preferredDay = formatDateKey(currentDate);
+        const firstDay = nextSessions[preferredDay] ? preferredDay : Object.keys(nextSessions)[0];
+        setSelectedDay(firstDay);
+        setSelectedSessionId(nextSessions[firstDay]?.[0]?.id ?? null);
+      } catch {
+        // Keep state when fetch fails.
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadWeek();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedTrackId, currentDate]);
+
+  useEffect(() => {
+    setActiveTab("details");
+  }, [selectedSessionId]);
+
+  useEffect(() => {
+    if (!selectedDay) {
+      return;
+    }
+
+    const daySessions = sessions[selectedDay] ?? [];
+    if (daySessions.length === 0) {
+      if (selectedSessionId !== null) {
+        setSelectedSessionId(null);
+      }
+      return;
+    }
+
+    const selectedBelongsToDay = daySessions.some((entry) => entry.id === selectedSessionId);
+    if (!selectedBelongsToDay) {
+      setSelectedSessionId(daySessions[0].id);
+    }
+  }, [selectedDay, sessions, selectedSessionId]);
+
+  const stepDate = (delta: number) => {
+    setCurrentDate((prev) => {
+      if (viewMode === "month") {
+        return addMonths(prev, delta);
+      }
+      if (viewMode === "day") {
+        return addDays(prev, delta);
+      }
+      return addDays(prev, delta * 7);
+    });
+    setEditorOpen(false);
+  };
+
+  const updateEditor = (field: "title" | "block" | "htmlContent", value: string) => {
+    setSessions((prev) => {
+      const current = getSessionById(prev, selectedSessionId);
+      if (!current) {
+        return prev;
+      }
+
+      const updatedSessions = { ...prev };
+      const daySessions = [...(updatedSessions[current.day] ?? [])];
+      const index = daySessions.findIndex((entry) => entry.id === current.session.id);
+      if (index === -1) {
+        return prev;
+      }
+
+      const updated = { ...daySessions[index] };
+      if (field === "htmlContent") {
+        updated.htmlContent = value;
+        updated.lines = htmlToPlainLines(value);
+      } else {
+        updated[field] = value;
+      }
+
+      daySessions[index] = updated;
+      updatedSessions[current.day] = daySessions;
+      return updatedSessions;
+    });
+  };
+
+  const createBlock = async (blockType: "warmup" | "lift" | "workout" | "cooldown") => {
+    if (!selectedTrackId) {
+      return;
+    }
+
+    setCreatingType(blockType);
+    try {
+      const daySessions = sessions[selectedDay] ?? [];
+      const blockOrder = daySessions.length;
+      const scoreType = blockType === "lift" ? "none" : blockType === "workout" ? "time" : "none";
+      const defaultTitle =
+        blockType === "warmup"
+          ? "Warm Up"
+          : blockType === "cooldown"
+            ? "Cooldown"
+            : blockType === "lift"
+              ? "Lift"
+              : "Workout";
+
+      const response = await fetch("/api/programming/blocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trackId: selectedTrackId,
+          dayDate: selectedDay,
+          blockType,
+          title: defaultTitle,
+          description: "",
+          scoreType,
+          blockOrder,
+          leaderboardEnabled: blockType === "workout" || blockType === "lift",
+          benchmarkEnabled: false,
+          tags: [],
+          levels: blockType === "workout" ? [{ level: 1, title: "RX", instructions: "" }] : [],
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok || !payload?.block?.id) {
+        return;
+      }
+
+      const created: SessionEntry = {
+        id: payload.block.id,
+        title: payload.block.title,
+        block: payload.block.score_type,
+        blockType: blockType,
+        lines: [],
+        htmlContent: "",
+      };
+
+      setSessions((prev) => {
+        const next = { ...prev };
+        const previousDay = next[selectedDay] ?? [];
+        next[selectedDay] = [...previousDay, created];
+        return next;
+      });
+
+      setSelectedSessionId(created.id);
+      setEditorOpen(true);
+    } finally {
+      setCreatingType(null);
+    }
+  };
+
+  const saveSelectedSession = async () => {
+    if (!selectedTrackId) {
+      return;
+    }
+
+    const current = getSessionById(sessions, selectedSessionId);
+    if (!current) {
+      return;
+    }
+
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(current.session.id)) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await fetch(`/api/programming/blocks/${current.session.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: current.session.title,
+          scoreType: current.session.block ?? "none",
+          description: current.session.htmlContent || current.session.lines.join("\n"),
+        }),
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <ProgrammingSubheader />
+    <section className="space-y-4">
+      <header className="rounded-2xl border border-white/10 bg-white/5/5 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => stepDate(-1)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/5 text-slate-300 hover:border-white/25"
+              aria-label="Previous"
+            >
+              {"<"}
+            </button>
+            <p className="text-xl font-semibold text-slate-200">{headerLabel}</p>
+            <button
+              type="button"
+              onClick={() => stepDate(1)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/5 text-slate-300 hover:border-white/25"
+              aria-label="Next"
+            >
+              {">"}
+            </button>
+            <button
+              type="button"
+              onClick={() => datePickerRef.current?.showPicker?.() ?? datePickerRef.current?.click()}
+              className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-white/5 text-sm text-slate-300 hover:border-white/25"
+              aria-label="Pick date"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </button>
+            <input
+              ref={datePickerRef}
+              type="date"
+              value={formatDateKey(currentDate)}
+              onChange={(event) => {
+                if (!event.target.value) {
+                  return;
+                }
+                const next = parseDateKey(event.target.value);
+                setCurrentDate(next);
+                setSelectedDay(event.target.value);
+              }}
+              className="sr-only"
+            />
+          </div>
+
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={showDetails}
+                onChange={(event) => setShowDetails(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-400"
+              />
+              Show Details
+            </label>
+
+            <div className="inline-flex rounded-md border border-white/15 bg-white/5 p-0.5">
+              {(["month", "week", "day"] as ViewMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setViewMode(mode)}
+                  className={`rounded px-3 py-1 text-sm font-medium transition ${
+                    viewMode === mode ? "bg-slate-900 text-white" : "text-slate-300 hover:bg-white/10"
+                  }`}
+                >
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-white/10/80 pt-3">
+          <div className="flex items-center gap-2">
+            <label className="text-xs uppercase tracking-[0.14em] text-slate-500" htmlFor="track-selector">
+              Track
+            </label>
+            <select
+              id="track-selector"
+              name="track"
+              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-slate-200"
+              value={selectedTrackId}
+              onChange={(event) => setSelectedTrackId(event.target.value)}
+            >
+              {tracks.length === 0 ? <option value="">No tracks yet</option> : null}
+              {tracks.map((track) => (
+                <option key={track.id} value={track.id}>
+                  {track.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <span className="text-xs text-slate-500">{loading ? "Loading programming..." : "Ready"}</span>
+        </div>
+      </header>
+
+      <div className={`relative grid gap-4 transition-[padding] duration-300 ${editorOpen ? "lg:pr-[26rem]" : ""}`}>
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5/5">
+          {viewMode === "month" ? (
+            <>
+              <div className="grid grid-cols-7 border-b border-white/10 text-xs uppercase tracking-[0.14em] text-slate-500">
+                {weekDayNames.map((name) => (
+                  <div key={name} className="px-3 py-2 text-center font-semibold">
+                    {name}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7">
+                {monthDays.map((day) => {
+                  const dayKey = day.key;
+                  const daySessions = sessions[dayKey] ?? [];
+                  const isSelectedDay = selectedDay === dayKey;
+                  return (
+                    <button
+                      key={dayKey}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDay(dayKey);
+                        setCurrentDate(day.dateObj);
+                        setSelectedSessionId(daySessions[0]?.id ?? null);
+                        setEditorOpen(true);
+                      }}
+                      className={`min-h-[150px] border-r border-t border-white/10 px-2 py-2 text-left align-top transition ${
+                        isSelectedDay ? "bg-blue-500/10" : day.inMonth ? "bg-white/80" : "bg-white/10/60"
+                      }`}
+                    >
+                      <p className="text-xs font-semibold text-slate-400">{day.dateObj.getDate()}</p>
+                      <div className="mt-1 space-y-1">
+                        {daySessions.slice(0, 2).map((session) => (
+                          <button
+                            key={session.id}
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSelectedDay(dayKey);
+                              setCurrentDate(day.dateObj);
+                              setSelectedSessionId(session.id);
+                              setEditorOpen(true);
+                            }}
+                            className="w-full rounded-md bg-[#2f3136] px-2 py-1 text-left text-[10px] text-white"
+                          >
+                            {session.title}
+                          </button>
+                        ))}
+                        {daySessions.length > 2 ? (
+                          <p className="text-[10px] text-slate-500">+{daySessions.length - 2} more</p>
+                        ) : null}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              <div
+                className="grid border-b border-white/10 text-xs uppercase tracking-[0.14em] text-slate-500"
+                style={{ gridTemplateColumns: `repeat(${visibleColumns.length}, minmax(0, 1fr))` }}
+              >
+                {visibleColumns.map((day) => (
+                  <button
+                    key={day.date}
+                    type="button"
+                    onClick={() => setSelectedDay(day.date)}
+                    className={`px-3 py-3 text-center font-semibold transition ${
+                      selectedDay === day.date ? "bg-blue-500/10 text-slate-100" : "hover:bg-white/10"
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+
+              <div
+                className="grid"
+                style={{ gridTemplateColumns: `repeat(${visibleColumns.length}, minmax(0, 1fr))` }}
+              >
+                {visibleColumns.map((day) => {
+                  const daySessions = sessions[day.date] ?? [];
+                  return (
+                    <div key={day.date} className="min-h-[540px] border-r border-white/10 px-2.5 pb-4 pt-2.5">
+                      <div className="space-y-2">
+                        {daySessions.map((session) => {
+                          const scoreLabel = getScoreLabel(session.block);
+                          const visibleLines = showDetails ? session.lines : session.lines.slice(0, 2);
+                          const isSelected = selectedSessionId === session.id;
+                          return (
+                            <button
+                              key={session.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedDay(day.date);
+                                setSelectedSessionId(session.id);
+                                setEditorOpen(true);
+                              }}
+                              className={`w-full rounded-xl border px-2.5 py-2 text-left text-white transition ${
+                                isSelected
+                                  ? "border-slate-800 bg-[#22262f] ring-2 ring-slate-500/50"
+                                  : "border-slate-700 bg-[#2f3136] hover:border-slate-500"
+                              }`}
+                            >
+                              <p className="text-[20px] font-semibold leading-none">{session.title}</p>
+                              {scoreLabel ? (
+                                <span className="mt-1 inline-flex rounded-full border border-white/10/40 bg-white/10/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-100">
+                                  {scoreLabel}
+                                </span>
+                              ) : null}
+                              {showDetails ? (
+                                <div className="mt-2 space-y-0.5 text-[12px] text-slate-100/95">
+                                  {visibleLines.map((line, idx) => (
+                                    <p key={`${session.id}-${idx}`}>{line}</p>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </button>
+                          );
+                        })}
+
+                        {daySessions.length === 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedDay(day.date);
+                              setSelectedSessionId(null);
+                              setEditorOpen(true);
+                            }}
+                            className="w-full rounded-xl border border-dashed border-slate-400 bg-white/60 px-3 py-5 text-center text-xs text-slate-500 transition hover:border-slate-500 hover:bg-white"
+                          >
+                            No blocks yet
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setEditorOpen((prev) => !prev)}
+          className="fixed bottom-6 right-6 z-40 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 shadow-lg transition hover:border-slate-500 lg:hidden"
+        >
+          {editorOpen ? "Close Editor" : "Open Editor"}
+        </button>
+
+        <div
+          aria-hidden={!editorOpen}
+          onClick={() => setEditorOpen(false)}
+          className={`fixed inset-0 z-30 bg-slate-950/40 transition-opacity duration-300 lg:hidden ${
+            editorOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        />
+
+        <aside
+          className={`fixed bottom-0 right-0 top-0 z-40 w-full sm:w-[70vw] lg:w-[48vw] xl:w-[40vw] max-w-[860px] border-l border-white/10 bg-[#12151c] p-5 shadow-2xl transition-transform duration-300 ${
+            editorOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="flex h-full flex-col">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Selected Day</p>
+                <h2 className="mt-2 text-lg font-semibold text-slate-100">{dayLabel}</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditorOpen(false)}
+                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300 transition hover:border-white/25 hover:bg-white/5"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { key: "warmup", label: "Add Warmup" },
+                  { key: "lift", label: "Add Lift" },
+                  { key: "workout", label: "Add Workout" },
+                  { key: "cooldown", label: "Add Cooldown" },
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() =>
+                      createBlock(item.key as "warmup" | "lift" | "workout" | "cooldown")
+                    }
+                    disabled={Boolean(creatingType)}
+                    className="rounded-2xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-cyan-500 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {creatingType === item.key ? "Creating..." : item.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Entries</p>
+                {selectedDaySessions.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-3 py-4 text-sm text-slate-500">
+                    No entries yet for this day.
+                  </div>
+                ) : (
+                  selectedDaySessions.map((session) => {
+                    const isActive = selectedSessionId === session.id;
+                    const scoreLabel = getScoreLabel(session.block) ?? "None";
+                    return (
+                      <button
+                        key={session.id}
+                        type="button"
+                        onClick={() => setSelectedSessionId(session.id)}
+                        className={`w-full rounded-2xl border px-3 py-3 text-left transition ${
+                          isActive
+                            ? "border-cyan-400 bg-cyan-500/10"
+                            : "border-white/15 bg-white/5 hover:border-cyan-300"
+                        }`}
+                      >
+                        <p className="text-sm font-semibold text-slate-100">{session.title}</p>
+                        <p className="mt-1 text-xs text-slate-500">{scoreLabel}</p>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+
+              {selected ? (
+                <>
+                  {/* ── Tabs ── */}
+                  <div className="flex gap-0.5 rounded-xl border border-white/10 bg-white/5 p-0.5">
+                    {(["details", "progression"] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setActiveTab(tab)}
+                        className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
+                          activeTab === tab
+                            ? "bg-slate-800 text-white"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+
+                  {activeTab === "details" ? (
+                    <>
+                      <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-title">
+                        Session Title
+                      </label>
+                      <input
+                        id="session-title"
+                        value={editor.session.title}
+                        onChange={(event) => updateEditor("title", event.target.value)}
+                        className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
+                      />
+
+                      {selected.session.blockType !== "warmup" && (
+                        <>
+                          <label className="text-xs uppercase tracking-[0.2em] text-slate-500" htmlFor="session-block">
+                            Score Type
+                          </label>
+                          <select
+                            id="session-block"
+                            value={editor.session.block ?? "none"}
+                            onChange={(event) => updateEditor("block", event.target.value)}
+                            className="w-full rounded-2xl border border-white/15 bg-[#1a1d26] px-4 py-3 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
+                          >
+                            <option value="none">None</option>
+                            <option value="calories">Calories</option>
+                            <option value="distance">Distance</option>
+                            <option value="time">For Time</option>
+                            <option value="reps">Reps</option>
+                            <option value="rounds_reps">Rounds &amp; Reps</option>
+                          </select>
+                        </>
+                      )}
+
+                      <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        Details
+                      </label>
+                      <TipTapEditor
+                        content={editor.session.htmlContent}
+                        onChange={(html) => updateEditor("htmlContent", html)}
+                        placeholder="Add workout details..."
+                      />
+
+                      <div className="flex items-center justify-end gap-2 pb-2">
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={saveSelectedSession}
+                          className="rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(2,132,199,0.35)] transition hover:from-sky-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {saving ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <TrackProgressionPanel
+                      blockId={selected.session.id}
+                      blockType={selected.session.blockType}
+                      trackId={selectedTrackId}
+                      selectedDay={selected.day}
+                      onApplied={() => setCurrentDate((prev) => new Date(prev))}
+                    />
+                  )}
+                </>
+              ) : null}
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+    </>
+  );
+}

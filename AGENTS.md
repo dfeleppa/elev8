@@ -15,7 +15,7 @@ npm run import:workouts:dry  # Dry run (preview only)
 
 ## Architecture Overview
 
-**Elev8** is a full-stack Next.js (App Router) fitness gym management platform with role-based access control.
+**Lyfe Fitness** is a full-stack Next.js (App Router) single-tenant gym management platform with role-based access control.
 
 ### Tech Stack
 - **Framework**: Next.js 16 with App Router, React 19, TypeScript 5
@@ -25,13 +25,13 @@ npm run import:workouts:dry  # Dry run (preview only)
 - **Fonts**: Space Grotesk (headings), Manrope (body) via `next/font`
 
 ### Role Hierarchy & Routing
-Users have roles: `member → coach → admin → owner`. Role resolution lives in `src/lib/member.ts` (`requireUserContext()` — server-only). Every API route calls this at the start to authenticate and resolve the user's role and organization.
+Users have roles: `member → coach → admin → owner`. Role resolution lives in `src/lib/member.ts` (`requireUserContext()` — server-only). Every API route calls this at the start to authenticate and resolve the user's role.
 
 Routes are organized by role:
-- `/organization/owner/` — owner-only tools
-- `/organization/admin/` — admin features
-- `/organization/coach/` — coach features
-- `/organization/member/` — athlete/member views
+- `/owner/` — owner-only tools
+- `/admin/` — admin features
+- `/coach/` — coach features
+- `/member/` — athlete/member views
 
 ### Navigation Shell
 `src/components/SidebarShell.tsx` is the unified client-side shell wrapping all pages. It handles sidebar navigation, view-mode toggling (gym vs athlete), and role-based menu rendering.

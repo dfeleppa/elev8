@@ -160,7 +160,7 @@ export function toDateKey(input: Date) {
   return `${year}-${month}-${day}`;
 }
 
-export async function listSocialAccounts(organizationId: string): Promise<SocialAccountSummary[]> {
+export async function listSocialAccounts(): Promise<SocialAccountSummary[]> {
   const { data, error } = await supabaseAdmin
     .from("social_accounts")
     .select(`
@@ -181,7 +181,6 @@ export async function listSocialAccounts(organizationId: string): Promise<Social
         updated_at
       )
     `)
-    .eq("organization_id", organizationId)
     .order("platform", { ascending: true })
     .order("updated_at", { ascending: false });
 
@@ -209,21 +208,19 @@ export async function listSocialAccounts(organizationId: string): Promise<Social
   });
 }
 
-export async function getSocialSettings(organizationId: string) {
+export async function getSocialSettings() {
   const { data } = await supabaseAdmin
     .from("social_org_settings")
-    .select("organization_id, approval_mode, allow_admin_bypass, brand_voice, cta_presets, default_hashtags, posting_windows, timezone, ai_generation_preferences")
-    .eq("organization_id", organizationId)
+    .select("id, approval_mode, allow_admin_bypass, brand_voice, cta_presets, default_hashtags, posting_windows, timezone, ai_generation_preferences")
     .maybeSingle();
 
   return data ?? null;
 }
 
-export async function listSocialCampaigns(organizationId: string) {
+export async function listSocialCampaigns() {
   const { data, error } = await supabaseAdmin
     .from("social_campaigns")
     .select("id, title, objective, audience, offer_summary, status, start_date, end_date, target_posts, owner_user_id, content_pillar_id, created_at, updated_at")
-    .eq("organization_id", organizationId)
     .order("start_date", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
 
@@ -231,39 +228,35 @@ export async function listSocialCampaigns(organizationId: string) {
   return (data ?? []) as any[];
 }
 
-export async function listSocialPillars(organizationId: string) {
+export async function listSocialPillars() {
   const { data, error } = await supabaseAdmin
     .from("social_content_pillars")
     .select("id, name, description, color_token")
-    .eq("organization_id", organizationId)
     .order("name", { ascending: true });
   if (error) return [];
   return (data ?? []) as any[];
 }
 
-export async function listSocialAssets(organizationId: string, limit = 60) {
+export async function listSocialAssets(limit = 60) {
   const { data, error } = await supabaseAdmin
     .from("social_assets")
     .select("id, title, media_type, public_url, source_url, validation_status, tags, created_at, folder_id, orientation, file_size_bytes")
-    .eq("organization_id", organizationId)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) return [];
   return (data ?? []) as any[];
 }
 
-export async function listInboxItems(organizationId: string) {
+export async function listInboxItems() {
   const [commentsResult, conversationsResult] = await Promise.all([
     supabaseAdmin
       .from("social_comments")
       .select("id, platform, author_name, author_handle, body, status, priority, created_at, replied_at")
-      .eq("organization_id", organizationId)
       .order("created_at", { ascending: false })
       .limit(40),
     supabaseAdmin
       .from("social_conversations")
       .select("id, platform, conversation_type, participant_name, participant_handle, status, priority, last_message_at, created_at")
-      .eq("organization_id", organizationId)
       .order("last_message_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(40),
@@ -275,34 +268,31 @@ export async function listInboxItems(organizationId: string) {
   };
 }
 
-export async function buildSocialOverview(organizationId: string): Promise<SocialOverviewPayload> {
+export async function buildSocialOverview(): Promise<SocialOverviewPayload> {
   const [accounts, postsResult, channelsResult, commentsResult, conversationsResult, activityResult, metricsResult] = await Promise.all([
-    listSocialAccounts(organizationId),
+    listSocialAccounts(),
     supabaseAdmin
       .from("social_posts")
-      .select("id, workflow_state, published_at")
-      .eq("organization_id", organizationId),
+      .select("id, workflow_state, published_at"),
     supabaseAdmin
       .from("social_post_channels")
       .select("status")
       .in(
         "social_post_id",
         (
-          await supabaseAdmin.from("social_posts").select("id").eq("organization_id", organizationId)
+          await supabaseAdmin.from("social_posts").select("id")
         ).data?.map((row) => row.id) ?? ["00000000-0000-0000-0000-000000000000"]
       ),
-    supabaseAdmin.from("social_comments").select("id, status").eq("organization_id", organizationId),
-    supabaseAdmin.from("social_conversations").select("id, status").eq("organization_id", organizationId),
+    supabaseAdmin.from("social_comments").select("id, status"),
+    supabaseAdmin.from("social_conversations").select("id, status"),
     supabaseAdmin
       .from("social_activity_log")
       .select("id, event_type, summary, created_at")
-      .eq("organization_id", organizationId)
       .order("created_at", { ascending: false })
       .limit(8),
     supabaseAdmin
       .from("social_post_metrics_daily")
       .select("social_post_id, platform, impressions, reach, engagements")
-      .eq("organization_id", organizationId)
       .order("metric_date", { ascending: false })
       .limit(100),
   ]);
@@ -362,12 +352,11 @@ export async function buildSocialOverview(organizationId: string): Promise<Socia
   };
 }
 
-export async function listSocialPosts(organizationId: string, options?: { workflowState?: string; weekOf?: string | null; limit?: number }) {
+export async function listSocialPosts(options?: { workflowState?: string; weekOf?: string | null; limit?: number }) {
   const limit = Math.min(Math.max(options?.limit ?? 80, 1), 200);
   let query = supabaseAdmin
     .from("social_posts")
     .select("id, title, caption, brief, workflow_state, approval_required, publish_mode, target_publish_at, published_at, tags, campaign_id, content_pillar_id, assigned_to_user_id, created_at, updated_at")
-    .eq("organization_id", organizationId)
     .order("target_publish_at", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -458,7 +447,6 @@ export async function listSocialPosts(organizationId: string, options?: { workfl
 }
 
 export async function logSocialActivity(input: {
-  organizationId: string;
   socialPostId?: string | null;
   actorUserId?: string | null;
   eventType: string;
@@ -466,7 +454,6 @@ export async function logSocialActivity(input: {
   payload?: Record<string, unknown>;
 }) {
   await supabaseAdmin.from("social_activity_log").insert({
-    organization_id: input.organizationId,
     social_post_id: input.socialPostId ?? null,
     actor_user_id: input.actorUserId ?? null,
     event_type: input.eventType,
@@ -475,13 +462,12 @@ export async function logSocialActivity(input: {
   });
 }
 
-export async function ensurePlannerSlot(organizationId: string, socialPostId: string, slotDate: string, lane: string, sortOrder = 0) {
+export async function ensurePlannerSlot(socialPostId: string, slotDate: string, lane: string, sortOrder = 0) {
   const week = toDateKey(startOfWeek(new Date(`${slotDate}T00:00:00`)));
   const { error } = await supabaseAdmin
     .from("social_planner_slots")
     .upsert(
       {
-        organization_id: organizationId,
         social_post_id: socialPostId,
         slot_date: slotDate,
         slot_week: week,
@@ -489,7 +475,7 @@ export async function ensurePlannerSlot(organizationId: string, socialPostId: st
         sort_order: sortOrder,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "organization_id,social_post_id" }
+      { onConflict: "social_post_id" }
     );
 
   return !error;
@@ -675,7 +661,6 @@ export async function fingerprintBuffer(buffer: Buffer) {
 }
 
 export async function runSocialAi(input: {
-  organizationId: string;
   socialPostId?: string | null;
   memberId?: string | null;
   promptType: string;
@@ -773,7 +758,6 @@ export async function runSocialAi(input: {
   const { data } = await supabaseAdmin
     .from("social_ai_runs")
     .insert({
-      organization_id: input.organizationId,
       social_post_id: input.socialPostId ?? null,
       member_id: input.memberId ?? null,
       run_type: input.promptType,

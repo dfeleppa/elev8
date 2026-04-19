@@ -17,44 +17,21 @@ function computeAge(birthDate: string | null): number | null {
   return age;
 }
 
-type MembershipRow = {
-  role: string | null;
-  created_at: string | null;
-  organizations: { name: string | null } | Array<{ name: string | null }> | null;
-};
-
 export async function GET() {
-  const { error, userId } = await requireUserContext();
+  const { error, userId, role } = await requireUserContext();
   if (error || !userId) {
     return NextResponse.json({ error }, { status: 401 });
   }
 
-  const [userResult, membershipResult] = await Promise.all([
-    supabaseAdmin
-      .from("app_users")
-      .select("id, email, full_name, sex, birth_date, height_cm, current_weight_kg, body_fat_percent, created_at")
-      .eq("id", userId)
-      .maybeSingle(),
-    supabaseAdmin
-      .from("organization_memberships")
-      .select("role, created_at, organizations(name)")
-      .eq("user_id", userId),
-  ]);
+  const { data, error: userError } = await supabaseAdmin
+    .from("app_users")
+    .select("id, email, full_name, sex, birth_date, height_cm, current_weight_kg, body_fat_percent, created_at")
+    .eq("id", userId)
+    .maybeSingle();
 
-  if (userResult.error) {
+  if (userError) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
-
-  const data = userResult.data;
-  const memberships = (membershipResult.data ?? []).map((row) => {
-    const r = row as unknown as MembershipRow;
-    const org = Array.isArray(r.organizations) ? r.organizations[0] : r.organizations;
-    return {
-      organizationName: org?.name ?? null,
-      role: r.role ?? null,
-      memberSince: r.created_at ?? null,
-    };
-  });
 
   return NextResponse.json({
     fullName: data?.full_name ?? null,
@@ -66,7 +43,7 @@ export async function GET() {
     weightKg: data?.current_weight_kg ?? null,
     bodyFatPercent: data?.body_fat_percent ?? null,
     createdAt: data?.created_at ?? null,
-    memberships,
+    role,
   });
 }
 

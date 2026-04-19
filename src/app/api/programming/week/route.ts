@@ -20,15 +20,14 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const organizationId = url.searchParams.get("organizationId") ?? "";
   const trackId = url.searchParams.get("trackId") ?? "";
   const startDate = url.searchParams.get("startDate") ?? "";
 
-  if (!organizationId || !trackId || !isValidDate(startDate)) {
-    return NextResponse.json({ error: "organizationId, trackId and startDate are required." }, { status: 400 });
+  if ( !trackId || !isValidDate(startDate)) {
+    return NextResponse.json({ error: "trackId and startDate are required." }, { status: 400 });
   }
 
-  const member = await isOrgMember(userId, organizationId);
+  const member = await isOrgMember(userId);
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -38,7 +37,6 @@ export async function GET(request: Request) {
   const { data: days, error: daysError } = await supabaseAdmin
     .from("programming_days")
     .select("id, day_date, title, notes, is_published")
-    .eq("organization_id", organizationId)
     .eq("track_id", trackId)
     .gte("day_date", startDate)
     .lte("day_date", endDate)

@@ -33,7 +33,7 @@ export async function POST(
     return NextResponse.json({ error: "Progression not found." }, { status: 404 });
   }
 
-  const admin = await hasOrgRole(userId, progression.organization_id, "admin");
+  const admin = await hasOrgRole(userId, "", "admin");
   if (!admin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -73,14 +73,13 @@ export async function POST(
       .from("programming_days")
       .upsert(
         {
-          organization_id: progression.organization_id,
           track_id: progression.track_id,
           day_date: targetDate,
           title: null,
           notes: null,
           is_published: false,
         },
-        { onConflict: "organization_id,track_id,day_date" }
+        { onConflict: "track_id,day_date" }
       )
       .select("id")
       .single();
@@ -108,7 +107,6 @@ export async function POST(
       .from("workout_blocks")
       .insert({
         programming_day_id: day.id,
-        organization_id: progression.organization_id,
         block_order: blockOrder,
         block_type: sourceBlock.block_type,
         title: blockTitle,

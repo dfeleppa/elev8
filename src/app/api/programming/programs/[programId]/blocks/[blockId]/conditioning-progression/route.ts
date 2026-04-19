@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasOrgRole, isOrgMember } from "../../../../../../../../lib/programming-access";
+import { hasOrgRole } from "../../../../../../../../lib/programming-access";
 import { requireUserContext } from "../../../../../../../../lib/member";
 import {
   isConditioningModality,
@@ -17,11 +17,11 @@ type RouteContext = { params: Promise<{ programId: string; blockId: string }> };
 async function resolveProgram(programId: string) {
   const { data, error } = await supabaseAdmin
     .from("programs")
-    .select("organization_id, duration_weeks")
+    .select("duration_weeks")
     .eq("id", programId)
     .single();
   if (error || !data) return null;
-  return data as { organization_id: string; duration_weeks: number };
+  return data as { duration_weeks: number };
 }
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -35,8 +35,6 @@ export async function GET(_request: Request, context: RouteContext) {
   const program = await resolveProgram(programId);
   if (!program) return NextResponse.json({ error: "Program not found." }, { status: 404 });
 
-  const isMember = await isOrgMember(userId, program.organization_id);
-  if (!isMember) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { data, error: fetchError } = await supabaseAdmin
     .from("program_conditioning_progressions")
@@ -63,7 +61,7 @@ export async function PUT(request: Request, context: RouteContext) {
   const program = await resolveProgram(programId);
   if (!program) return NextResponse.json({ error: "Program not found." }, { status: 404 });
 
-  const canWrite = await hasOrgRole(userId, program.organization_id, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json().catch(() => null);

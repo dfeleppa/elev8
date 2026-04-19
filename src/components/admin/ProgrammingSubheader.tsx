@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const TABS = [
-  { label: "Programming", href: "/organization/admin/programming" },
-  { label: "Builder", href: "/organization/admin/programming/builder" },
+  { label: "Programming", href: "/admin/programming" },
+  { label: "Builder", href: "/admin/programming/builder" },
 ];
 
 export default function ProgrammingSubheader() {
@@ -17,7 +17,7 @@ export default function ProgrammingSubheader() {
         <div className="app-subheader-track">
         {TABS.map((tab) => {
           const isActive =
-            tab.href === "/organization/admin/programming"
+            tab.href === "/admin/programming"
               ? pathname === tab.href
               : pathname === tab.href || pathname.startsWith(tab.href + "/");
           return (
