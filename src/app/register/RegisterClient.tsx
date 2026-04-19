@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -67,14 +66,8 @@ export default function RegisterClient() {
       <div className="card-fade-in glass-panel relative z-10 w-full max-w-md rounded-2xl px-8 py-10">
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/5">
-            <Image
-              src="/lyfe-fitness-logo.png"
-              alt="Lyfe Fitness"
-              width={40}
-              height={40}
-              className="object-contain"
-            />
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/5 text-base font-bold text-slate-100">
+            LF
           </span>
           <h1 className="font-[family-name:var(--font-brand-heading)] text-2xl font-bold text-slate-100">
             Create your account

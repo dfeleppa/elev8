@@ -514,7 +514,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   };
 
   const themeToggleLabel = theme === "dark" ? "Light mode" : "Dark mode";
-  const brandLogoSrc = gymLogoUrl || "/lyfe-fitness-logo.png";
+  const brandLogoSrc = gymLogoUrl ?? null;
   const brandLogoAlt = gymName + " logo";
   const themeIcon = theme === "dark" ? (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -545,13 +545,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               aria-label="Open menu"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-                <Image
-                  src={brandLogoSrc}
-                  alt={brandLogoAlt}
-                  width={28}
-                  height={28}
-                  className="h-7 w-7 object-contain"
-                />
+                {brandLogoSrc ? (
+                  <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
+                ) : (
+                  <span className="text-[11px] font-bold text-[var(--text-muted)]">LF</span>
+                )}
               </span>
             </button>
             <div className="flex min-w-0 items-center justify-end gap-2">
@@ -615,13 +613,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-6">
             <div className="flex items-center justify-between gap-2 px-2">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-                <Image
-                  src={brandLogoSrc}
-                  alt={brandLogoAlt}
-                  width={28}
-                  height={28}
-                  className="h-7 w-7 object-contain"
-                />
+                {brandLogoSrc ? (
+                  <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
+                ) : (
+                  <span className="text-[11px] font-bold text-[var(--text-muted)]">LF</span>
+                )}
               </span>
               <button
                 type="button"
@@ -689,13 +685,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Sidebar logo"}
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-              <Image
-                src={brandLogoSrc}
-                alt={brandLogoAlt}
-                width={28}
-                height={28}
-                className="h-7 w-7 object-contain"
-              />
+              {brandLogoSrc ? (
+                <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
+              ) : (
+                <span className="text-[11px] font-bold text-[var(--text-muted)]">LF</span>
+              )}
             </span>
             <div className={sidebarCollapsed ? "sr-only" : "block"}>
               <p className="text-sm font-semibold text-[var(--text)]">Lyfe Fitness</p>
