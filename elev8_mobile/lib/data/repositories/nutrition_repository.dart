@@ -581,6 +581,56 @@ class NutritionRepository {
 
   // ---- Coach Plan ----
 
+  CoachPlanStatus _coachPlanStatusFromLatestPlan(
+    Map<String, dynamic>? latestPlan, {
+    Map<String, dynamic>? profile,
+    double? currentWeightOverride,
+  }) {
+    if (latestPlan == null) {
+      return CoachPlanStatus(hasPlan: false);
+    }
+
+    final planPayload = Map<String, dynamic>.from(
+      latestPlan['plan_payload'] as Map? ?? {},
+    );
+
+    final startWeight =
+        _parseNumeric(planPayload['weightLbs']) ??
+        (() {
+          final weightKg = _parseNumeric(planPayload['weightKg']);
+          return weightKg == null ? null : weightKg * CoachPlanStatus.lbsPerKg;
+        })() ??
+        (() {
+          final weightKg = _parseNumeric(profile?['current_weight_kg']);
+          return weightKg == null ? null : weightKg * CoachPlanStatus.lbsPerKg;
+        })();
+
+    final currentWeight =
+        currentWeightOverride ??
+        (() {
+          final weightKg = _parseNumeric(profile?['current_weight_kg']);
+          return weightKg == null ? null : weightKg * CoachPlanStatus.lbsPerKg;
+        })() ??
+        startWeight;
+
+    return CoachPlanStatus(
+      hasPlan: true,
+      goalType: latestPlan['goal_type'] as String?,
+      startWeight: startWeight,
+      currentWeight: currentWeight,
+      targetWeight: _parseNumeric(latestPlan['target_weight_lbs']),
+      effectiveDate: latestPlan['effective_date'] != null
+          ? DateTime.tryParse(latestPlan['effective_date'] as String)
+          : null,
+      lastCheckInDate: latestPlan['last_check_in_date'] != null
+          ? DateTime.tryParse(latestPlan['last_check_in_date'] as String)
+          : null,
+      nextCheckInDate: latestPlan['next_check_in_date'] != null
+          ? DateTime.tryParse(latestPlan['next_check_in_date'] as String)
+          : null,
+    );
+  }
+
   Future<CoachPlanStatus?> _fetchCoachPlanStatusFromSupabase() async {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return null;
@@ -628,53 +678,10 @@ class NutritionRepository {
           .limit(1)
           .maybeSingle();
 
-      double? parseNumeric(dynamic v) =>
-          v == null ? null : double.tryParse(v.toString());
-
-      final planPayload = Map<String, dynamic>.from(
-        fallbackPlan['plan_payload'] as Map? ?? {},
-      );
-
-      final startWeight =
-          parseNumeric(planPayload['weightLbs']) ??
-          (() {
-            final weightKg = parseNumeric(planPayload['weightKg']);
-            return weightKg == null
-                ? null
-                : weightKg * CoachPlanStatus.lbsPerKg;
-          })() ??
-          (() {
-            final weightKg = parseNumeric(profile?['current_weight_kg']);
-            return weightKg == null
-                ? null
-                : weightKg * CoachPlanStatus.lbsPerKg;
-          })();
-
-      final currentWeight =
-          parseNumeric(currentWeightEntry?['value']) ??
-          (() {
-            final weightKg = parseNumeric(profile?['current_weight_kg']);
-            return weightKg == null
-                ? null
-                : weightKg * CoachPlanStatus.lbsPerKg;
-          })() ??
-          startWeight;
-
-      return CoachPlanStatus(
-        hasPlan: true,
-        goalType: fallbackPlan['goal_type'] as String?,
-        startWeight: startWeight,
-        currentWeight: currentWeight,
-        targetWeight: parseNumeric(fallbackPlan['target_weight_lbs']),
-        effectiveDate: fallbackPlan['effective_date'] != null
-            ? DateTime.tryParse(fallbackPlan['effective_date'] as String)
-            : null,
-        lastCheckInDate: fallbackPlan['last_check_in_date'] != null
-            ? DateTime.tryParse(fallbackPlan['last_check_in_date'] as String)
-            : null,
-        nextCheckInDate: fallbackPlan['next_check_in_date'] != null
-            ? DateTime.tryParse(fallbackPlan['next_check_in_date'] as String)
-            : null,
+      return _coachPlanStatusFromLatestPlan(
+        fallbackPlan,
+        profile: profile,
+        currentWeightOverride: _parseNumeric(currentWeightEntry?['value']),
       );
     } catch (_) {
       return null;
@@ -686,7 +693,11 @@ class NutritionRepository {
       final response = await CoachApiService.fetchCoachPlanStatus();
       final summary = response.summary;
       if (!response.hasPlan || summary == null) {
-        return CoachPlanStatus(hasPlan: false);
+        final existingPlan = await CoachApiService.fetchExistingPlan();
+        return _coachPlanStatusFromLatestPlan(
+          existingPlan.latestPlan,
+          profile: existingPlan.profile,
+        );
       }
 
       double? parseNumeric(dynamic v) =>

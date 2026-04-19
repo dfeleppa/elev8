@@ -38,6 +38,12 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
   String? _previewError;
   bool _applying = false;
 
+  double? _asDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
   @override
   void initState() {
     super.initState();
@@ -64,10 +70,46 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
         if (data.latestPlan != null) {
           final p = data.latestPlan!;
           _goalType = p['goal_type'] as String? ?? _goalType;
-          _intensityPreset = p['intensity_preset'] as String? ?? _intensityPreset;
-          _sessionsPerWeek = (p['sessions_per_week'] as num?)?.toInt() ?? _sessionsPerWeek;
+          _intensityPreset =
+              p['intensity_preset'] as String? ?? _intensityPreset;
+          _sessionsPerWeek =
+              (p['sessions_per_week'] as num?)?.toInt() ?? _sessionsPerWeek;
+          if (p['effective_date'] != null) {
+            _effectiveDate =
+                DateTime.tryParse(p['effective_date'] as String) ??
+                _effectiveDate;
+          }
           if (p['target_weight_lbs'] != null) {
-            _targetWeightCtrl.text = (p['target_weight_lbs'] as num).toStringAsFixed(1);
+            _targetWeightCtrl.text = (p['target_weight_lbs'] as num)
+                .toStringAsFixed(1);
+          }
+          final formulaUsed = p['formula_used'] as String?;
+          final maintenanceCalories = _asDouble(p['maintenance_calories']);
+          final targetCalories = _asDouble(p['target_calories']);
+          final proteinGrams = _asDouble(p['protein_grams']);
+          final carbsGrams = _asDouble(p['carbs_grams']);
+          final fatGrams = _asDouble(p['fat_grams']);
+          final activityMultiplier = _asDouble(p['activity_multiplier']);
+
+          if (formulaUsed != null &&
+              maintenanceCalories != null &&
+              targetCalories != null &&
+              proteinGrams != null &&
+              carbsGrams != null &&
+              fatGrams != null &&
+              activityMultiplier != null) {
+            _preview = CoachPlanPreview(
+              maintenanceCalories: maintenanceCalories,
+              targetCalories: targetCalories,
+              proteinGrams: proteinGrams,
+              carbsGrams: carbsGrams,
+              fatGrams: fatGrams,
+              weeklyRatePercent: _asDouble(p['weekly_rate_percent']) ?? 0,
+              formulaUsed: formulaUsed,
+              activityMultiplier: activityMultiplier,
+            );
+            _step = 3;
+            _previewError = null;
           }
         }
         if (data.profile != null) {
@@ -87,10 +129,18 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
             _inchesCtrl.text = (totalInches % 12).toStringAsFixed(0);
           }
           if (pr['body_fat_percent'] != null) {
-            _bodyFatCtrl.text = (pr['body_fat_percent'] as num).toStringAsFixed(1);
+            _bodyFatCtrl.text = (pr['body_fat_percent'] as num).toStringAsFixed(
+              1,
+            );
           }
         }
       });
+      if (data.latestPlan != null && _preview != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _pages.jumpToPage(3);
+        });
+      }
     } catch (_) {}
   }
 
@@ -98,8 +148,11 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
   void _next() {
     if (_step < 3) {
       setState(() => _step++);
-      _pages.animateToPage(_step,
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      _pages.animateToPage(
+        _step,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
       if (_step == 3) _generatePreview();
     }
   }
@@ -107,8 +160,11 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
   void _back() {
     if (_step > 0) {
       setState(() => _step--);
-      _pages.animateToPage(_step,
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      _pages.animateToPage(
+        _step,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     } else {
       Navigator.of(context).pop(false);
     }
@@ -121,6 +177,7 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
     final ft = int.tryParse(_feetCtrl.text);
     return w != null && w > 0 && ft != null && ft > 0 && _birthDate != null;
   }
+
   bool get _step3Valid => _sessionsPerWeek > 0;
 
   // ── Height/weight helpers ────────────────────────────────────────────────────
@@ -181,8 +238,10 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to apply plan: $e'),
-              backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text('Failed to apply plan: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     } finally {
@@ -202,8 +261,10 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 18),
           onPressed: _back,
         ),
-        title: const Text('Nutrition Coach',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Nutrition Coach',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: Column(
@@ -233,9 +294,12 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
                   sessionsPerWeek: _sessionsPerWeek,
                   effectiveDate: _effectiveDate,
                   intensityPreset: _intensityPreset,
-                  onSessionsChanged: (v) => setState(() => _sessionsPerWeek = v),
-                  onEffectiveDateChanged: (d) => setState(() => _effectiveDate = d),
-                  onIntensityChanged: (i) => setState(() => _intensityPreset = i),
+                  onSessionsChanged: (v) =>
+                      setState(() => _sessionsPerWeek = v),
+                  onEffectiveDateChanged: (d) =>
+                      setState(() => _effectiveDate = d),
+                  onIntensityChanged: (i) =>
+                      setState(() => _intensityPreset = i),
                 ),
                 _Step4Preview(
                   preview: _preview,
@@ -254,8 +318,8 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
               canNext: _step == 0
                   ? _step1Valid
                   : _step == 1
-                      ? _step2Valid
-                      : _step3Valid,
+                  ? _step2Valid
+                  : _step3Valid,
               onBack: _back,
               onNext: _next,
             ),
@@ -301,21 +365,30 @@ class _StepIndicator extends StatelessWidget {
                         color: done
                             ? const Color(0xFF63f7ff)
                             : active
-                                ? const Color(0xFF0EA5E9)
-                                : Colors.white10,
+                            ? const Color(0xFF0EA5E9)
+                            : Colors.white10,
                         border: active
-                            ? Border.all(color: const Color(0xFF63f7ff), width: 2)
+                            ? Border.all(
+                                color: const Color(0xFF63f7ff),
+                                width: 2,
+                              )
                             : null,
                       ),
                       child: Center(
                         child: done
-                            ? const Icon(Icons.check, size: 14, color: Colors.black)
-                            : Text('${i + 1}',
+                            ? const Icon(
+                                Icons.check,
+                                size: 14,
+                                color: Colors.black,
+                              )
+                            : Text(
+                                '${i + 1}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: active ? Colors.white : Colors.white38,
                                   fontWeight: FontWeight.bold,
-                                )),
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -324,7 +397,9 @@ class _StepIndicator extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 10,
                         color: active ? Colors.white : Colors.white38,
-                        fontWeight: active ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: active
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -373,7 +448,10 @@ class _BottomNav extends StatelessWidget {
           if (step > 0)
             TextButton(
               onPressed: onBack,
-              child: const Text('Back', style: TextStyle(color: Colors.white54)),
+              child: const Text(
+                'Back',
+                style: TextStyle(color: Colors.white54),
+              ),
             ),
           const Spacer(),
           FilledButton(
@@ -382,7 +460,9 @@ class _BottomNav extends StatelessWidget {
               backgroundColor: const Color(0xFF0EA5E9),
               disabledBackgroundColor: Colors.white12,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: Text(
               step == 2 ? 'Generate Plan' : 'Next',
@@ -398,10 +478,30 @@ class _BottomNav extends StatelessWidget {
 // ─── Step 1: Goal ─────────────────────────────────────────────────────────────
 
 const _goals = [
-  (id: 'lose_weight', label: 'Lose Weight', icon: Icons.trending_down, desc: 'Reduce body fat while preserving muscle'),
-  (id: 'gain_weight', label: 'Gain Weight', icon: Icons.trending_up, desc: 'Build muscle mass with a calorie surplus'),
-  (id: 'maintain_weight', label: 'Maintain', icon: Icons.balance, desc: 'Keep current weight and improve body composition'),
-  (id: 'performance_reverse_diet', label: 'Performance / Reverse', icon: Icons.bolt, desc: 'Gradually increase calories to boost metabolism'),
+  (
+    id: 'lose_weight',
+    label: 'Lose Weight',
+    icon: Icons.trending_down,
+    desc: 'Reduce body fat while preserving muscle',
+  ),
+  (
+    id: 'gain_weight',
+    label: 'Gain Weight',
+    icon: Icons.trending_up,
+    desc: 'Build muscle mass with a calorie surplus',
+  ),
+  (
+    id: 'maintain_weight',
+    label: 'Maintain',
+    icon: Icons.balance,
+    desc: 'Keep current weight and improve body composition',
+  ),
+  (
+    id: 'performance_reverse_diet',
+    label: 'Performance / Reverse',
+    icon: Icons.bolt,
+    desc: 'Gradually increase calories to boost metabolism',
+  ),
 ];
 
 class _Step1Goal extends StatelessWidget {
@@ -416,11 +516,19 @@ class _Step1Goal extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('What\'s your goal?',
-              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text(
+            'What\'s your goal?',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 6),
-          const Text('Your nutrition plan will be built around this.',
-              style: TextStyle(color: Colors.white54, fontSize: 14)),
+          const Text(
+            'Your nutrition plan will be built around this.',
+            style: TextStyle(color: Colors.white54, fontSize: 14),
+          ),
           const SizedBox(height: 24),
           ...(_goals.map((g) {
             final isSelected = selected == g.id;
@@ -436,7 +544,9 @@ class _Step1Goal extends StatelessWidget {
                       : Colors.white.withOpacity(0.04),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFF63f7ff) : Colors.white12,
+                    color: isSelected
+                        ? const Color(0xFF63f7ff)
+                        : Colors.white12,
                     width: isSelected ? 1.5 : 1,
                   ),
                 ),
@@ -451,28 +561,44 @@ class _Step1Goal extends StatelessWidget {
                             : Colors.white10,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(g.icon,
-                          color: isSelected ? const Color(0xFF63f7ff) : Colors.white38,
-                          size: 22),
+                      child: Icon(
+                        g.icon,
+                        color: isSelected
+                            ? const Color(0xFF63f7ff)
+                            : Colors.white38,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(g.label,
-                              style: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.white70,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15)),
+                          Text(
+                            g.label,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white70,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          Text(g.desc,
-                              style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                          Text(
+                            g.desc,
+                            style: const TextStyle(
+                              color: Colors.white38,
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     if (isSelected)
-                      const Icon(Icons.check_circle, color: Color(0xFF63f7ff), size: 20),
+                      const Icon(
+                        Icons.check_circle,
+                        color: Color(0xFF63f7ff),
+                        size: 20,
+                      ),
                   ],
                 ),
               ),
@@ -516,23 +642,41 @@ class _Step2Body extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Tell us about you',
-              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text(
+            'Tell us about you',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 6),
-          const Text('Used to calculate your personalised targets.',
-              style: TextStyle(color: Colors.white54, fontSize: 14)),
+          const Text(
+            'Used to calculate your personalised targets.',
+            style: TextStyle(color: Colors.white54, fontSize: 14),
+          ),
           const SizedBox(height: 28),
 
           // Sex
           _FieldLabel('Biological Sex'),
           const SizedBox(height: 8),
-          Row(children: [
-            _SexButton(label: 'Male', icon: Icons.male, selected: sex == 'male',
-                onTap: () => onSexChanged('male')),
-            const SizedBox(width: 12),
-            _SexButton(label: 'Female', icon: Icons.female, selected: sex == 'female',
-                onTap: () => onSexChanged('female')),
-          ]),
+          Row(
+            children: [
+              _SexButton(
+                label: 'Male',
+                icon: Icons.male,
+                selected: sex == 'male',
+                onTap: () => onSexChanged('male'),
+              ),
+              const SizedBox(width: 12),
+              _SexButton(
+                label: 'Female',
+                icon: Icons.female,
+                selected: sex == 'female',
+                onTap: () => onSexChanged('female'),
+              ),
+            ],
+          ),
 
           const SizedBox(height: 20),
           _FieldLabel('Birthday'),
@@ -543,10 +687,14 @@ class _Step2Body extends StatelessWidget {
                 context: context,
                 initialDate: birthDate ?? DateTime(1990),
                 firstDate: DateTime(1930),
-                lastDate: DateTime.now().subtract(const Duration(days: 365 * 13)),
+                lastDate: DateTime.now().subtract(
+                  const Duration(days: 365 * 13),
+                ),
                 builder: (ctx, child) => Theme(
                   data: Theme.of(ctx).copyWith(
-                    colorScheme: const ColorScheme.dark(primary: Color(0xFF0EA5E9)),
+                    colorScheme: const ColorScheme.dark(
+                      primary: Color(0xFF0EA5E9),
+                    ),
                   ),
                   child: child!,
                 ),
@@ -560,19 +708,25 @@ class _Step2Body extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white12),
               ),
-              child: Row(children: [
-                const Icon(Icons.calendar_today, color: Colors.white38, size: 18),
-                const SizedBox(width: 12),
-                Text(
-                  birthDate != null
-                      ? DateFormat('MMMM d, yyyy').format(birthDate!)
-                      : 'Select your birthday',
-                  style: TextStyle(
-                    color: birthDate != null ? Colors.white : Colors.white38,
-                    fontSize: 15,
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today,
+                    color: Colors.white38,
+                    size: 18,
                   ),
-                ),
-              ]),
+                  const SizedBox(width: 12),
+                  Text(
+                    birthDate != null
+                        ? DateFormat('MMMM d, yyyy').format(birthDate!)
+                        : 'Select your birthday',
+                    style: TextStyle(
+                      color: birthDate != null ? Colors.white : Colors.white38,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -584,11 +738,22 @@ class _Step2Body extends StatelessWidget {
           const SizedBox(height: 20),
           _FieldLabel('Height *'),
           const SizedBox(height: 8),
-          Row(children: [
-            Expanded(child: _NumField(ctrl: feetCtrl, hint: 'Feet', suffix: 'ft')),
-            const SizedBox(width: 12),
-            Expanded(child: _NumField(ctrl: inchesCtrl, hint: 'Inches', suffix: 'in', decimal: true)),
-          ]),
+          Row(
+            children: [
+              Expanded(
+                child: _NumField(ctrl: feetCtrl, hint: 'Feet', suffix: 'ft'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _NumField(
+                  ctrl: inchesCtrl,
+                  hint: 'Inches',
+                  suffix: 'in',
+                  decimal: true,
+                ),
+              ),
+            ],
+          ),
 
           const SizedBox(height: 20),
           _FieldLabel('Goal Weight (lbs)  –  optional'),
@@ -598,7 +763,12 @@ class _Step2Body extends StatelessWidget {
           const SizedBox(height: 20),
           _FieldLabel('Body Fat %  –  optional'),
           const SizedBox(height: 8),
-          _NumField(ctrl: bodyFatCtrl, hint: 'e.g. 18', decimal: true, suffix: '%'),
+          _NumField(
+            ctrl: bodyFatCtrl,
+            hint: 'e.g. 18',
+            decimal: true,
+            suffix: '%',
+          ),
 
           const SizedBox(height: 8),
         ],
@@ -612,7 +782,12 @@ class _SexButton extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
-  const _SexButton({required this.label, required this.icon, required this.selected, required this.onTap});
+  const _SexButton({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -623,18 +798,33 @@ class _SexButton extends StatelessWidget {
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFF0EA5E9).withOpacity(0.15) : Colors.white.withOpacity(0.05),
+            color: selected
+                ? const Color(0xFF0EA5E9).withOpacity(0.15)
+                : Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected ? const Color(0xFF63f7ff) : Colors.white12,
               width: selected ? 1.5 : 1,
             ),
           ),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(icon, color: selected ? const Color(0xFF63f7ff) : Colors.white38, size: 20),
-            const SizedBox(width: 8),
-            Text(label, style: TextStyle(color: selected ? Colors.white : Colors.white54, fontWeight: FontWeight.w600)),
-          ]),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: selected ? const Color(0xFF63f7ff) : Colors.white38,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? Colors.white : Colors.white54,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -644,9 +834,24 @@ class _SexButton extends StatelessWidget {
 // ─── Step 3: Training + Intensity ─────────────────────────────────────────────
 
 const _intensities = [
-  (id: 'conservative', label: 'Conservative', desc: 'Slow, sustainable changes', icon: Icons.spa),
-  (id: 'moderate', label: 'Moderate', desc: 'Balanced pace for most people', icon: Icons.directions_run),
-  (id: 'aggressive', label: 'Aggressive', desc: 'Faster results, more discipline required', icon: Icons.local_fire_department),
+  (
+    id: 'conservative',
+    label: 'Conservative',
+    desc: 'Slow, sustainable changes',
+    icon: Icons.spa,
+  ),
+  (
+    id: 'moderate',
+    label: 'Moderate',
+    desc: 'Balanced pace for most people',
+    icon: Icons.directions_run,
+  ),
+  (
+    id: 'aggressive',
+    label: 'Aggressive',
+    desc: 'Faster results, more discipline required',
+    icon: Icons.local_fire_department,
+  ),
 ];
 
 class _Step3Training extends StatelessWidget {
@@ -673,11 +878,19 @@ class _Step3Training extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Training & Intensity',
-              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text(
+            'Training & Intensity',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 6),
-          const Text('How hard do you want to push?',
-              style: TextStyle(color: Colors.white54, fontSize: 14)),
+          const Text(
+            'How hard do you want to push?',
+            style: TextStyle(color: Colors.white54, fontSize: 14),
+          ),
           const SizedBox(height: 28),
 
           _FieldLabel('Workouts per week'),
@@ -687,17 +900,25 @@ class _Step3Training extends StatelessWidget {
             children: [
               _CounterButton(
                 icon: Icons.remove,
-                onTap: sessionsPerWeek > 1 ? () => onSessionsChanged(sessionsPerWeek - 1) : null,
+                onTap: sessionsPerWeek > 1
+                    ? () => onSessionsChanged(sessionsPerWeek - 1)
+                    : null,
               ),
               const SizedBox(width: 24),
               Text(
                 '$sessionsPerWeek',
-                style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(width: 24),
               _CounterButton(
                 icon: Icons.add,
-                onTap: sessionsPerWeek < 7 ? () => onSessionsChanged(sessionsPerWeek + 1) : null,
+                onTap: sessionsPerWeek < 7
+                    ? () => onSessionsChanged(sessionsPerWeek + 1)
+                    : null,
               ),
             ],
           ),
@@ -714,7 +935,9 @@ class _Step3Training extends StatelessWidget {
                 lastDate: DateTime.now().add(const Duration(days: 30)),
                 builder: (ctx, child) => Theme(
                   data: Theme.of(ctx).copyWith(
-                    colorScheme: const ColorScheme.dark(primary: Color(0xFF0EA5E9)),
+                    colorScheme: const ColorScheme.dark(
+                      primary: Color(0xFF0EA5E9),
+                    ),
                   ),
                   child: child!,
                 ),
@@ -728,14 +951,20 @@ class _Step3Training extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white12),
               ),
-              child: Row(children: [
-                const Icon(Icons.calendar_month, color: Colors.white38, size: 18),
-                const SizedBox(width: 12),
-                Text(
-                  DateFormat('MMMM d, yyyy').format(effectiveDate),
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
-                ),
-              ]),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_month,
+                    color: Colors.white38,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    DateFormat('MMMM d, yyyy').format(effectiveDate),
+                    style: const TextStyle(color: Colors.white, fontSize: 15),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -760,25 +989,46 @@ class _Step3Training extends StatelessWidget {
                     width: selected ? 1.5 : 1,
                   ),
                 ),
-                child: Row(children: [
-                  Icon(i.icon,
-                      color: selected ? const Color(0xFF63f7ff) : Colors.white38,
-                      size: 22),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(i.label,
-                          style: TextStyle(
+                child: Row(
+                  children: [
+                    Icon(
+                      i.icon,
+                      color: selected
+                          ? const Color(0xFF63f7ff)
+                          : Colors.white38,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            i.label,
+                            style: TextStyle(
                               color: selected ? Colors.white : Colors.white70,
-                              fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 2),
-                      Text(i.desc,
-                          style: const TextStyle(color: Colors.white38, fontSize: 12)),
-                    ]),
-                  ),
-                  if (selected)
-                    const Icon(Icons.check_circle, color: Color(0xFF63f7ff), size: 20),
-                ]),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            i.desc,
+                            style: const TextStyle(
+                              color: Colors.white38,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (selected)
+                      const Icon(
+                        Icons.check_circle,
+                        color: Color(0xFF63f7ff),
+                        size: 20,
+                      ),
+                  ],
+                ),
               ),
             );
           })),
@@ -801,12 +1051,17 @@ class _CounterButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: onTap != null ? Colors.white10 : Colors.white.withOpacity(0.03),
+          color: onTap != null
+              ? Colors.white10
+              : Colors.white.withOpacity(0.03),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white12),
         ),
-        child: Icon(icon,
-            color: onTap != null ? Colors.white : Colors.white24, size: 20),
+        child: Icon(
+          icon,
+          color: onTap != null ? Colors.white : Colors.white24,
+          size: 20,
+        ),
       ),
     );
   }
@@ -835,12 +1090,17 @@ class _Step4Preview extends StatelessWidget {
   Widget build(BuildContext context) {
     if (loading) {
       return const Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          CircularProgressIndicator(color: Color(0xFF63f7ff)),
-          SizedBox(height: 16),
-          Text('Calculating your plan…',
-              style: TextStyle(color: Colors.white54, fontSize: 14)),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: Color(0xFF63f7ff)),
+            SizedBox(height: 16),
+            Text(
+              'Calculating your plan…',
+              style: TextStyle(color: Colors.white54, fontSize: 14),
+            ),
+          ],
+        ),
       );
     }
 
@@ -848,22 +1108,40 @@ class _Step4Preview extends StatelessWidget {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
-            const SizedBox(height: 16),
-            const Text('Something went wrong',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text(error!, style: const TextStyle(color: Colors.white54, fontSize: 12),
-                textAlign: TextAlign.center),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF0EA5E9)),
-            ),
-          ]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: Colors.redAccent,
+                size: 48,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Something went wrong',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error!,
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Try Again'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF0EA5E9),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -876,11 +1154,19 @@ class _Step4Preview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Your Plan',
-              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text(
+            'Your Plan',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 6),
-          const Text('Based on your inputs. Apply to start tracking.',
-              style: TextStyle(color: Colors.white54, fontSize: 14)),
+          const Text(
+            'Based on your inputs. Apply to start tracking.',
+            style: TextStyle(color: Colors.white54, fontSize: 14),
+          ),
           const SizedBox(height: 24),
 
           // Primary targets
@@ -896,14 +1182,25 @@ class _Step4Preview extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.local_fire_department, color: Colors.white70, size: 16),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${p.targetCalories.round()} kcal / day',
-                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ]),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.local_fire_department,
+                      color: Colors.white70,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${p.targetCalories.round()} kcal / day',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -927,13 +1224,30 @@ class _Step4Preview extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white10),
             ),
-            child: Column(children: [
-              _DetailRow('Maintenance Calories', '${p.maintenanceCalories.round()} kcal'),
-              _DetailRow('Target Calories', '${p.targetCalories.round()} kcal'),
-              _DetailRow('Weekly Rate', '${p.weeklyRatePercent.toStringAsFixed(1)}%'),
-              _DetailRow('Activity Multiplier', p.activityMultiplier.toStringAsFixed(2)),
-              _DetailRow('Formula', p.formulaUsed.replaceAll('_', ' ').toUpperCase()),
-            ]),
+            child: Column(
+              children: [
+                _DetailRow(
+                  'Maintenance Calories',
+                  '${p.maintenanceCalories.round()} kcal',
+                ),
+                _DetailRow(
+                  'Target Calories',
+                  '${p.targetCalories.round()} kcal',
+                ),
+                _DetailRow(
+                  'Weekly Rate',
+                  '${p.weeklyRatePercent.toStringAsFixed(1)}%',
+                ),
+                _DetailRow(
+                  'Activity Multiplier',
+                  p.activityMultiplier.toStringAsFixed(2),
+                ),
+                _DetailRow(
+                  'Formula',
+                  p.formulaUsed.replaceAll('_', ' ').toUpperCase(),
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 28),
@@ -946,16 +1260,26 @@ class _Step4Preview extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF0EA5E9),
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: applying
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
-                  : const Text('Apply Plan',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  : const Text(
+                      'Apply Plan',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 8),
@@ -973,12 +1297,23 @@ class _MacroChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Text('${grams.round()}g',
-          style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
-      const SizedBox(height: 2),
-      Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-    ]);
+    return Column(
+      children: [
+        Text(
+          '${grams.round()}g',
+          style: TextStyle(
+            color: color,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+      ],
+    );
   }
 }
 
@@ -994,10 +1329,18 @@ class _DetailRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 13)),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -1012,9 +1355,15 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text,
-        style: const TextStyle(
-            color: Colors.white70, fontSize: 12, letterSpacing: 0.5, fontWeight: FontWeight.w600));
+    return Text(
+      text,
+      style: const TextStyle(
+        color: Colors.white70,
+        fontSize: 12,
+        letterSpacing: 0.5,
+        fontWeight: FontWeight.w600,
+      ),
+    );
   }
 }
 
@@ -1037,7 +1386,9 @@ class _NumField extends StatelessWidget {
       controller: ctrl,
       keyboardType: TextInputType.numberWithOptions(decimal: decimal),
       inputFormatters: [
-        FilteringTextInputFormatter.allow(decimal ? RegExp(r'[\d.]') : RegExp(r'\d')),
+        FilteringTextInputFormatter.allow(
+          decimal ? RegExp(r'[\d.]') : RegExp(r'\d'),
+        ),
       ],
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
@@ -1059,7 +1410,10 @@ class _NumField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF0EA5E9)),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
