@@ -9,14 +9,13 @@ export const runtime = "nodejs";
 
 type RouteContext = { params: Promise<{ programId: string; blockId: string }> };
 
-async function resolveOrgId(programId: string) {
+async function programExists(programId: string) {
   const { data, error } = await supabaseAdmin
     .from("programs")
-    .select("organization_id")
+    .select("id")
     .eq("id", programId)
     .single();
-  if (error || !data) return null;
-  return data.organization_id as string;
+  return !error && !!data;
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
@@ -27,10 +26,10 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   const { programId, blockId } = await context.params;
 
-  const orgId = await resolveOrgId(programId);
-  if (!orgId) return NextResponse.json({ error: "Program not found." }, { status: 404 });
+  const exists = await programExists(programId);
+  if (!exists) return NextResponse.json({ error: "Program not found." }, { status: 404 });
 
-  const canWrite = await hasOrgRole(userId, orgId, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json().catch(() => null);
@@ -84,10 +83,10 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   const { programId, blockId } = await context.params;
 
-  const orgId = await resolveOrgId(programId);
-  if (!orgId) return NextResponse.json({ error: "Program not found." }, { status: 404 });
+  const exists = await programExists(programId);
+  if (!exists) return NextResponse.json({ error: "Program not found." }, { status: 404 });
 
-  const canWrite = await hasOrgRole(userId, orgId, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { error: deleteError } = await supabaseAdmin

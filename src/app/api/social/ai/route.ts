@@ -6,14 +6,13 @@ import { runSocialAi } from "../../../../lib/social";
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  const { error, role, userId, organizationIds } = await requireUserContext();
+  const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
   const body = (await request.json().catch(() => null)) as
     | {
-        organizationId?: string;
         socialPostId?: string | null;
         promptType?: string;
         brief?: string;
@@ -23,14 +22,12 @@ export async function POST(request: NextRequest) {
         brandVoice?: string | null;
       }
     | null;
-  const organizationId = body?.organizationId?.trim() ?? organizationIds[0] ?? null;
-  if (!body || !organizationId || !organizationIds.includes(organizationId) || !body.brief?.trim()) {
+  if (!body || !body.brief?.trim()) {
     return NextResponse.json({ error: "Brief is required." }, { status: 400 });
   }
 
   try {
     const run = await runSocialAi({
-      organizationId,
       socialPostId: body.socialPostId ?? null,
       memberId: userId,
       promptType: body.promptType?.trim() || "caption_pack",

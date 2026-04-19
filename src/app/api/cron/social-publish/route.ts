@@ -67,16 +67,12 @@ export async function GET(request: Request) {
           .eq("id", row.social_post_id);
       }
 
-      const { data: postData } = await supabaseAdmin.from("social_posts").select("organization_id").eq("id", row.social_post_id).maybeSingle();
-      if (postData?.organization_id) {
-        await logSocialActivity({
-          organizationId: postData.organization_id,
+      await logSocialActivity({
           socialPostId: row.social_post_id,
           eventType: isReminder ? "social_publish.reminder_pending" : "social_publish.published",
           summary: isReminder ? "Reminder workflow queued" : "Social channel published",
           payload: { channelId: row.id, externalId: result.externalId, permalink: result.permalink },
         });
-      }
 
       processed.push({ channelId: row.id, socialPostId: row.social_post_id, result: isReminder ? "reminder_pending" : "published" });
     } catch (publishError) {
@@ -92,16 +88,12 @@ export async function GET(request: Request) {
         })
         .eq("id", row.id);
 
-      const { data: postData } = await supabaseAdmin.from("social_posts").select("organization_id").eq("id", row.social_post_id).maybeSingle();
-      if (postData?.organization_id) {
-        await logSocialActivity({
-          organizationId: postData.organization_id,
+      await logSocialActivity({
           socialPostId: row.social_post_id,
           eventType: "social_publish.failed",
           summary: message,
           payload: { channelId: row.id },
         });
-      }
 
       processed.push({ channelId: row.id, socialPostId: row.social_post_id, result: "publish_failed", error: message });
     }

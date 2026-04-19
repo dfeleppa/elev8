@@ -7,29 +7,23 @@ import { supabaseAdmin } from "../../../../lib/supabase-admin";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  const campaigns = await listSocialCampaigns(organizationId);
+  const campaigns = await listSocialCampaigns();
   return NextResponse.json({ campaigns });
 }
 
 export async function POST(request: NextRequest) {
-  const { error, role, userId, organizationIds } = await requireUserContext();
+  const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
   const body = (await request.json().catch(() => null)) as
     | {
-        organizationId?: string;
         title?: string;
         objective?: string;
         audience?: string;
@@ -43,8 +37,7 @@ export async function POST(request: NextRequest) {
       }
     | null;
 
-  const organizationId = body?.organizationId?.trim() ?? organizationIds[0] ?? null;
-  if (!body || !organizationId || !organizationIds.includes(organizationId)) {
+  if (!body) {
     return NextResponse.json({ error: "Organization not found." }, { status: 400 });
   }
 
@@ -56,7 +49,6 @@ export async function POST(request: NextRequest) {
   const { data, error: insertError } = await supabaseAdmin
     .from("social_campaigns")
     .insert({
-      organization_id: organizationId,
       title,
       objective: body.objective?.trim() || null,
       audience: body.audience?.trim() || null,
@@ -80,7 +72,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
@@ -100,8 +92,7 @@ export async function PATCH(request: NextRequest) {
       }
     | null;
 
-  const organizationId = body?.organizationId?.trim() ?? organizationIds[0] ?? null;
-  if (!body || !body.id || !organizationId || !organizationIds.includes(organizationId)) {
+  if (!body || !body.id) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
 
@@ -119,7 +110,6 @@ export async function PATCH(request: NextRequest) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", body.id)
-    .eq("organization_id", organizationId)
     .select("id, title, objective, audience, offer_summary, status, start_date, end_date, target_posts, owner_user_id, content_pillar_id, created_at, updated_at")
     .single();
 

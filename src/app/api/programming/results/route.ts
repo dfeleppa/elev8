@@ -36,22 +36,21 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const organizationId = url.searchParams.get("organizationId") ?? "";
   const startDate = url.searchParams.get("startDate") ?? "";
   const endDate = url.searchParams.get("endDate") ?? "";
   const memberId = url.searchParams.get("memberId") ?? userId;
 
-  if (!organizationId || !isValidDate(startDate) || !isValidDate(endDate)) {
-    return NextResponse.json({ error: "organizationId, startDate and endDate are required." }, { status: 400 });
+  if ( !isValidDate(startDate) || !isValidDate(endDate)) {
+    return NextResponse.json({ error: "startDate and endDate are required." }, { status: 400 });
   }
 
-  const member = await isOrgMember(userId, organizationId);
+  const member = await isOrgMember(userId);
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   if (memberId !== userId) {
-    const canViewOthers = await hasOrgRole(userId, organizationId, "coach");
+    const canViewOthers = await hasOrgRole(userId, "", "coach");
     if (!canViewOthers) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -60,7 +59,6 @@ export async function GET(request: Request) {
   const { data, error: fetchError } = await supabaseAdmin
     .from("workout_results")
     .select("id, block_id, day_date, member_id, level, score_type, score_text, score_value, total_reps, rounds, distance, calories, duration_seconds, is_rx, notes, created_at, updated_at")
-    .eq("organization_id", organizationId)
     .eq("member_id", memberId)
     .gte("day_date", startDate)
     .lte("day_date", endDate)
@@ -81,7 +79,6 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const organizationId = typeof body?.organizationId === "string" ? body.organizationId : "";
   const trackId = typeof body?.trackId === "string" ? body.trackId : "";
   const blockId = typeof body?.blockId === "string" ? body.blockId : "";
   const dayDate = typeof body?.dayDate === "string" ? body.dayDate : "";
@@ -99,17 +96,17 @@ export async function POST(request: Request) {
   const notes = typeof body?.notes === "string" ? body.notes.trim() : null;
   const liftSets = parseLiftSets(body?.liftSets);
 
-  if (!organizationId || !trackId || !blockId || !isValidDate(dayDate) || !isWorkoutScoreType(scoreType)) {
+  if ( !trackId || !blockId || !isValidDate(dayDate) || !isWorkoutScoreType(scoreType)) {
     return NextResponse.json({ error: "Invalid workout result payload." }, { status: 400 });
   }
 
-  const isMember = await isOrgMember(userId, organizationId);
+  const isMember = await isOrgMember(userId);
   if (!isMember) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   if (memberId !== userId) {
-    const canSubmitForOthers = await hasOrgRole(userId, organizationId, "coach");
+    const canSubmitForOthers = await hasOrgRole(userId, "", "coach");
     if (!canSubmitForOthers) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -119,7 +116,6 @@ export async function POST(request: Request) {
     .from("workout_blocks")
     .select("id, movement_id, block_type")
     .eq("id", blockId)
-    .eq("organization_id", organizationId)
     .single();
 
   if (blockError || !block?.id) {
@@ -129,7 +125,6 @@ export async function POST(request: Request) {
   const { data: result, error: resultError } = await supabaseAdmin
     .from("workout_results")
     .insert({
-      organization_id: organizationId,
       track_id: trackId,
       block_id: blockId,
       day_date: dayDate,
@@ -177,7 +172,6 @@ export async function POST(request: Request) {
         .from("member_movement_prs")
         .upsert(
           {
-            organization_id: organizationId,
             member_id: memberId,
             movement_id: block.movement_id,
             best_weight: bestWeight,
@@ -187,7 +181,7 @@ export async function POST(request: Request) {
             recorded_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
-          { onConflict: "organization_id,member_id,movement_id" }
+          { onConflict: "member_id,movement_id" }
         );
 
       if (prError) {

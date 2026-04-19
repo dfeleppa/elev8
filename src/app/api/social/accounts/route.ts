@@ -7,17 +7,12 @@ import { supabaseAdmin } from "../../../../lib/supabase-admin";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  const [accounts, settings] = await Promise.all([listSocialAccounts(organizationId), getSocialSettings(organizationId)]);
+  const [accounts, settings] = await Promise.all([listSocialAccounts(), getSocialSettings()]);
   return NextResponse.json({
     accounts,
     settings,
@@ -26,14 +21,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
   const body = (await request.json().catch(() => null)) as
     | {
-        organizationId?: string;
         approvalMode?: string;
         allowAdminBypass?: boolean;
         brandVoice?: string | null;
@@ -45,11 +39,6 @@ export async function PATCH(request: NextRequest) {
 
   if (!body) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
-  }
-
-  const organizationId = body.organizationId?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
   }
 
   const patch = {
@@ -64,8 +53,8 @@ export async function PATCH(request: NextRequest) {
 
   const { data, error: updateError } = await supabaseAdmin
     .from("social_org_settings")
-    .upsert({ organization_id: organizationId, ...patch }, { onConflict: "organization_id" })
-    .select("organization_id, approval_mode, allow_admin_bypass, brand_voice, default_hashtags, cta_presets, timezone")
+    .upsert({ id: 1, ...patch }, { onConflict: "id" })
+    .select("id, approval_mode, allow_admin_bypass, brand_voice, default_hashtags, cta_presets, timezone")
     .single();
 
   if (updateError || !data) {

@@ -5,17 +5,14 @@ import { supabaseAdmin } from "../../../../lib/supabase-admin";
 
 // GET /api/member/store — list visible products for the member's organization
 export async function GET() {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role,  } = await requireUserContext();
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("member", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const organizationId = organizationIds[0] ?? null;
-  if (!organizationId) return NextResponse.json({ error: "Organization not found." }, { status: 400 });
 
   const { data: products, error: dbError } = await supabaseAdmin
     .from("store_products")
     .select("*, store_product_options(*)")
-    .eq("organization_id", organizationId)
     .eq("hidden_in_store", false)
     .order("created_at", { ascending: false });
 
@@ -24,7 +21,6 @@ export async function GET() {
   const { data: preorders } = await supabaseAdmin
     .from("store_preorders")
     .select("*, store_preorder_items(product_id)")
-    .eq("organization_id", organizationId)
     .eq("is_active", true)
     .order("order_deadline", { ascending: true });
 

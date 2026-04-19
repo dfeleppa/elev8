@@ -28,15 +28,6 @@ export async function POST(request: Request) {
     const result = await registerWithEmailPassword(fullName, email, password);
 
     if (!result.ok) {
-      if (result.code === "reserved_email") {
-        return NextResponse.json(
-          {
-            error:
-              "This email already exists in an organization's member roster and cannot be used to create an app account.",
-          },
-          { status: 409 }
-        );
-      }
       if (result.code === "already_exists") {
         return NextResponse.json(
           { error: "An account with this email already exists." },

@@ -3,26 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { hasRole, requireUserContext } from "../../../../lib/member";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
 
-function canAccess(organizationIds: string[], organizationId: string) {
-  return organizationIds.includes(organizationId);
-}
-
 // GET /api/owner/preorders
 export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const organizationId =
-    request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId) return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  if (!canAccess(organizationIds, organizationId))
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { data, error: dbError } = await supabaseAdmin
     .from("store_preorders")
     .select("*, store_preorder_items(product_id)")
-    .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
 
   if (dbError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
@@ -32,12 +21,9 @@ export async function GET(request: NextRequest) {
 
 // POST /api/owner/preorders
 export async function POST(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const organizationId = organizationIds[0] ?? null;
-  if (!organizationId) return NextResponse.json({ error: "Organization not found." }, { status: 400 });
 
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
@@ -48,7 +34,6 @@ export async function POST(request: NextRequest) {
   const { data: preorder, error: insertError } = await supabaseAdmin
     .from("store_preorders")
     .insert({
-      organization_id: organizationId,
       name,
       description: body.description?.trim() || null,
       order_deadline: body.orderDeadline || null,

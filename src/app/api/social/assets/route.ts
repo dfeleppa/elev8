@@ -16,22 +16,17 @@ function normalizeFileName(name: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  const assets = await listSocialAssets(organizationId);
+  const assets = await listSocialAssets();
   return NextResponse.json({ assets });
 }
 
 export async function POST(request: NextRequest) {
-  const { error, role, userId, organizationIds } = await requireUserContext();
+  const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
@@ -39,17 +34,15 @@ export async function POST(request: NextRequest) {
   const contentType = request.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
     const body = (await request.json().catch(() => null)) as
-      | { organizationId?: string; sourceUrl?: string; title?: string; mediaType?: string; tags?: string[] }
+      | { sourceUrl?: string; title?: string; mediaType?: string; tags?: string[] }
       | null;
-    const organizationId = body?.organizationId?.trim() ?? organizationIds[0] ?? null;
-    if (!body || !organizationId || !organizationIds.includes(organizationId) || !body.sourceUrl?.trim()) {
+    if (!body || !body.sourceUrl?.trim()) {
       return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
     }
 
     const { data, error: insertError } = await supabaseAdmin
       .from("social_assets")
       .insert({
-        organization_id: organizationId,
         uploaded_by: userId,
         source_url: body.sourceUrl.trim(),
         public_url: body.sourceUrl.trim(),
@@ -76,11 +69,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid form data." }, { status: 400 });
   }
 
-  const organizationId = String(formData.get("organizationId") ?? organizationIds[0] ?? "").trim();
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
   const file = formData.get("file");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "File is required." }, { status: 400 });
@@ -97,7 +85,7 @@ export async function POST(request: NextRequest) {
   const buffer = Buffer.from(await file.arrayBuffer());
   const fingerprint = await fingerprintBuffer(buffer);
   const mediaType = file.type.startsWith("video/") ? "video" : "image";
-  const filePath = `${organizationId}/${fingerprint}${ext}`;
+  const filePath = `lyfe-fitness/${fingerprint}${ext}`;
 
   const { error: uploadError } = await supabaseAdmin.storage.from("social-assets").upload(filePath, buffer, {
     contentType: file.type,
@@ -112,7 +100,6 @@ export async function POST(request: NextRequest) {
   const { data, error: insertError } = await supabaseAdmin
     .from("social_assets")
     .insert({
-      organization_id: organizationId,
       uploaded_by: userId,
       storage_bucket: "social-assets",
       storage_path: filePath,

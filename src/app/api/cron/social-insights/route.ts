@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   const metricDate = todayKey();
   const { data: posts } = await supabaseAdmin
     .from("social_posts")
-    .select("id, organization_id, published_at, social_post_channels(platform)")
+    .select("id, published_at, social_post_channels(platform)")
     .eq("workflow_state", "published")
     .order("published_at", { ascending: false })
     .limit(100);
@@ -41,7 +41,6 @@ export async function GET(request: Request) {
     for (const channel of channels) {
       await supabaseAdmin.from("social_post_metrics_daily").upsert(
         {
-          organization_id: post.organization_id,
           social_post_id: post.id,
           platform: channel.platform,
           metric_date: metricDate,
@@ -55,16 +54,15 @@ export async function GET(request: Request) {
           profile_actions: 4,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "organization_id,social_post_id,platform,metric_date" }
+        { onConflict: "social_post_id,platform,metric_date" }
       );
     }
   }
 
-  const { data: accounts } = await supabaseAdmin.from("social_accounts").select("id, organization_id, platform").limit(100);
+  const { data: accounts } = await supabaseAdmin.from("social_accounts").select("id, platform").limit(100);
   for (const account of (accounts ?? []) as any[]) {
     await supabaseAdmin.from("social_account_metrics_daily").upsert(
       {
-        organization_id: account.organization_id,
         social_account_id: account.id,
         platform: account.platform,
         metric_date: metricDate,
@@ -76,7 +74,7 @@ export async function GET(request: Request) {
         comments: 9,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "organization_id,social_account_id,platform,metric_date" }
+      { onConflict: "social_account_id,platform,metric_date" }
     );
   }
 

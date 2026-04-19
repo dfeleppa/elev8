@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
   const { data: publishedPosts } = await supabaseAdmin
     .from("social_posts")
-    .select("id, organization_id, title, caption, social_post_channels(platform, social_account_id)")
+    .select("id, title, caption, social_post_channels(platform, social_account_id)")
     .eq("workflow_state", "published")
     .order("published_at", { ascending: false })
     .limit(30);
@@ -38,7 +38,6 @@ export async function GET(request: Request) {
       const existing = await supabaseAdmin
         .from("social_comments")
         .select("id")
-        .eq("organization_id", post.organization_id)
         .eq("social_post_id", post.id)
         .eq("platform", channel.platform)
         .limit(1)
@@ -46,7 +45,6 @@ export async function GET(request: Request) {
 
       if (!existing.data) {
         await supabaseAdmin.from("social_comments").insert({
-          organization_id: post.organization_id,
           social_account_id: channel.social_account_id,
           social_post_id: post.id,
           platform: channel.platform,

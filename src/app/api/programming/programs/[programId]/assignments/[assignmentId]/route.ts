@@ -11,12 +11,12 @@ type RouteContext = { params: Promise<{ programId: string; assignmentId: string 
 async function resolveAssignment(programId: string, assignmentId: string) {
   const { data, error } = await supabaseAdmin
     .from("program_assignments")
-    .select("id, organization_id, assigned_member_id")
+    .select("id, assigned_member_id")
     .eq("id", assignmentId)
     .eq("program_id", programId)
     .single();
   if (error || !data) return null;
-  return data as { id: string; organization_id: string; assigned_member_id: string | null };
+  return data as { id: string; assigned_member_id: string | null };
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
@@ -30,7 +30,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const assignment = await resolveAssignment(programId, assignmentId);
   if (!assignment) return NextResponse.json({ error: "Assignment not found." }, { status: 404 });
 
-  const canWrite = await hasOrgRole(userId, assignment.organization_id, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json().catch(() => null);
@@ -50,7 +50,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     .from("program_assignments")
     .update(updates)
     .eq("id", assignmentId)
-    .select("id, program_id, organization_id, assigned_member_id, assigned_track_id, start_date, is_active, notes, created_at, updated_at")
+    .select("id, program_id, assigned_member_id, assigned_track_id, start_date, is_active, notes, created_at, updated_at")
     .single();
 
   if (updateError) {
@@ -71,7 +71,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const assignment = await resolveAssignment(programId, assignmentId);
   if (!assignment) return NextResponse.json({ error: "Assignment not found." }, { status: 404 });
 
-  const canWrite = await hasOrgRole(userId, assignment.organization_id, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { error: deleteError } = await supabaseAdmin

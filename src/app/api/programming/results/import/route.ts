@@ -128,19 +128,18 @@ function parseRoundsReps(score: unknown) {
   };
 }
 
-async function ensureTrack(organizationId: string, userId: string, trackName: string) {
+async function ensureTrack(userId: string, trackName: string) {
   const { data, error } = await supabaseAdmin
     .from("programming_tracks")
     .upsert(
       {
-        organization_id: organizationId,
         name: trackName,
         code: "legacy-import",
         description: "Imported historical workout results",
         created_by: userId,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "organization_id,name" }
+      { onConflict: "name" }
     )
     .select("id")
     .single();
@@ -152,12 +151,11 @@ async function ensureTrack(organizationId: string, userId: string, trackName: st
   return data.id as string;
 }
 
-async function ensureDay(organizationId: string, trackId: string, userId: string, dayDate: string) {
+async function ensureDay(trackId: string, userId: string, dayDate: string) {
   const { data, error } = await supabaseAdmin
     .from("programming_days")
     .upsert(
       {
-        organization_id: organizationId,
         track_id: trackId,
         day_date: dayDate,
         title: "Imported",
@@ -176,7 +174,7 @@ async function ensureDay(organizationId: string, trackId: string, userId: string
   return data.id as string;
 }
 
-async function ensureMovement(organizationId: string, movementName: string | null) {
+async function ensureMovement(movementName: string | null) {
   if (!movementName) {
     return null;
   }
@@ -185,11 +183,10 @@ async function ensureMovement(organizationId: string, movementName: string | nul
     .from("movement_library")
     .upsert(
       {
-        organization_id: organizationId,
         name: movementName,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "organization_id,name" }
+      { onConflict: "name" }
     )
     .select("id")
     .single();
@@ -203,7 +200,6 @@ async function ensureMovement(organizationId: string, movementName: string | nul
 
 async function createBlockIfNeeded(params: {
   dayId: string;
-  organizationId: string;
   trackId: string;
   userId: string;
   title: string;
@@ -221,7 +217,6 @@ async function createBlockIfNeeded(params: {
     .from("workout_blocks")
     .insert({
       programming_day_id: params.dayId,
-      organization_id: params.organizationId,
       track_id: params.trackId,
       block_order: params.cache.size,
       block_type: styleInfo.blockType,
@@ -246,7 +241,6 @@ async function createBlockIfNeeded(params: {
 }
 
 async function maybeUpsertPr(params: {
-  organizationId: string;
   memberId: string;
   movementId: string | null;
   resultId: string;
@@ -262,7 +256,6 @@ async function maybeUpsertPr(params: {
   const { data: existing } = await supabaseAdmin
     .from("member_movement_prs")
     .select("best_weight")
-    .eq("organization_id", params.organizationId)
     .eq("member_id", params.memberId)
     .eq("movement_id", params.movementId)
     .maybeSingle();
@@ -276,8 +269,7 @@ async function maybeUpsertPr(params: {
     .from("member_movement_prs")
     .upsert(
       {
-        organization_id: params.organizationId,
-        member_id: params.memberId,
+      member_id: params.memberId,
         movement_id: params.movementId,
         best_weight: params.weight,
         best_reps: params.reps,
@@ -286,7 +278,7 @@ async function maybeUpsertPr(params: {
         recorded_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "organization_id,member_id,movement_id" }
+      { onConflict: "member_id,movement_id" }
     );
 
   if (error) {
@@ -295,7 +287,7 @@ async function maybeUpsertPr(params: {
 }
 
 export async function POST(request: Request) {
-  const { error, userId, organizationIds } = await requireUserContext();
+  const { error, userId } = await requireUserContext();
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
@@ -311,17 +303,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "CSV content is required." }, { status: 400 });
   }
 
-  const organizationId = organizationIds[0] ?? null;
-  if (!organizationId) {
-    return NextResponse.json({ error: "No organization found for user." }, { status: 400 });
-  }
-
   const parsed = parseCsv(csvText);
   if (parsed.length === 0) {
     return NextResponse.json({ error: "CSV is empty." }, { status: 400 });
   }
 
-  const trackId = await ensureTrack(organizationId, userId, trackName);
+  const trackId = await ensureTrack(userId, trackName);
   const blockCache = new Map<string, { id: string; movement_id: string | null }>();
 
   let insertedResults = 0;
@@ -341,11 +328,10 @@ export async function POST(request: Request) {
         throw new Error(`Invalid date '${entry.row.Date ?? ""}'.`);
       }
 
-      const dayId = await ensureDay(organizationId, trackId, userId, date);
-      const movementId = await ensureMovement(organizationId, primaryMovement);
+      const dayId = await ensureDay(trackId, userId, date);
+      const movementId = await ensureMovement(primaryMovement);
       const block = await createBlockIfNeeded({
         dayId,
-        organizationId,
         trackId,
         userId,
         title,
@@ -356,7 +342,6 @@ export async function POST(request: Request) {
 
       const style = normalizeStyle(styleRaw);
       const resultPayload: Record<string, unknown> = {
-        organization_id: organizationId,
         track_id: trackId,
         block_id: block.id,
         day_date: date,
@@ -432,7 +417,6 @@ export async function POST(request: Request) {
           }
 
           await maybeUpsertPr({
-            organizationId,
             memberId: userId,
             movementId: movementId ?? block.movement_id,
             resultId: inserted.id,

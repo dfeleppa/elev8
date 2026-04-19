@@ -16,7 +16,7 @@ const uploadIcon = (
   </svg>
 );
 
-export default function MemberImportButton({ organizationId }: { organizationId?: string }) {
+export default function MemberImportButton() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -28,12 +28,9 @@ export default function MemberImportButton({ organizationId }: { organizationId?
     setErrorMsg(null);
 
     const text = await file.text();
-    const url = organizationId
-      ? `/api/owner/members/import?organizationId=${encodeURIComponent(organizationId)}`
-      : "/api/owner/members/import";
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch("/api/owner/members/import", {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
         body: text,

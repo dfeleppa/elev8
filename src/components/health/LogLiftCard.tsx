@@ -16,7 +16,6 @@ type Props = {
 };
 
 export default function LogLiftCard({ onSaved }: Props) {
-  const [orgId, setOrgId] = useState<string | null>(null);
   const [movements, setMovements] = useState<Movement[]>([]);
   const [movementsLoading, setMovementsLoading] = useState(true);
 
@@ -34,19 +33,11 @@ export default function LogLiftCard({ onSaved }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/me", { cache: "no-store" })
+    fetch(`/api/athlete/movements`, { cache: "no-store" })
       .then((r) => r.json())
-      .then((me) => {
-        const id: string | null = me?.organizationIds?.[0] ?? null;
-        setOrgId(id);
-        if (!id) { setMovementsLoading(false); return; }
-        fetch(`/api/athlete/movements?organizationId=${id}`, { cache: "no-store" })
-          .then((r) => r.json())
-          .then((d) => setMovements(d.movements ?? []))
-          .catch(() => {})
-          .finally(() => setMovementsLoading(false));
-      })
-      .catch(() => setMovementsLoading(false));
+      .then((d) => setMovements(d.movements ?? []))
+      .catch(() => {})
+      .finally(() => setMovementsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -89,7 +80,7 @@ export default function LogLiftCard({ onSaved }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected || !orgId) return;
+    if (!selected) return;
 
     const parsedSets = sets
       .map((s) => ({ reps: parseInt(s.reps, 10), weight: parseFloat(s.weight) }))
@@ -107,7 +98,6 @@ export default function LogLiftCard({ onSaved }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          organizationId: orgId,
           movementId: selected.id,
           dayDate: date,
           sets: parsedSets,

@@ -39,21 +39,17 @@ function parseSignedState(state: string) {
   }
 
   const decoded = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8")) as {
-    organizationId?: string;
     issuedAt?: number;
   };
 
-  const organizationId = decoded.organizationId?.trim() ?? "";
   const issuedAt = typeof decoded.issuedAt === "number" ? decoded.issuedAt : 0;
-  if (!organizationId || !issuedAt) {
+  if (!issuedAt) {
     throw new Error("Invalid OAuth state.");
   }
 
   if (Date.now() - issuedAt > 10 * 60 * 1000) {
     throw new Error("OAuth state expired. Please try connecting again.");
   }
-
-  return { organizationId };
 }
 
 export async function GET(request: NextRequest) {
@@ -71,7 +67,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Missing code." }, { status: 400 });
     }
 
-    const { organizationId } = parseSignedState(state);
+    parseSignedState(state);
 
     const token = await exchangeInstagramCode(code);
     const account = await fetchInstagramAccount(token.accessToken);
@@ -83,7 +79,6 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabaseAdmin.from("instagram_oauth_tokens").upsert(
       {
-        organization_id: organizationId,
         member_id: userId,
         ig_user_id: account.igUserId,
         page_id: account.pageId,
@@ -93,12 +88,12 @@ export async function GET(request: NextRequest) {
         expires_at: expiresAt,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "organization_id,ig_user_id" }
+      { onConflict: "ig_user_id" }
     );
 
     if (error) {
       console.error("Instagram token upsert failed:", error.message);
-      const response = NextResponse.redirect(new URL(`/organization/admin/content?socialError=${encodeURIComponent(`Legacy token save failed: ${error.message}`)}`, request.url));
+      const response = NextResponse.redirect(new URL(`/admin/content?socialError=${encodeURIComponent(`Legacy token save failed: ${error.message}`)}`, request.url));
       response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
       return response;
     }
@@ -114,7 +109,6 @@ export async function GET(request: NextRequest) {
       .from("social_accounts")
       .upsert(
         {
-          organization_id: organizationId,
           provider: "meta",
           platform: "instagram",
           account_type: "business",
@@ -128,7 +122,7 @@ export async function GET(request: NextRequest) {
           last_synced_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "organization_id,provider,platform,external_account_id" }
+        { onConflict: "provider,platform,external_account_id" }
       )
       .select("id")
       .single();
@@ -137,7 +131,6 @@ export async function GET(request: NextRequest) {
       .from("social_accounts")
       .upsert(
         {
-          organization_id: organizationId,
           provider: "meta",
           platform: "facebook",
           account_type: "page",
@@ -154,7 +147,7 @@ export async function GET(request: NextRequest) {
           last_synced_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "organization_id,provider,platform,external_account_id" }
+        { onConflict: "provider,platform,external_account_id" }
       )
       .select("id")
       .single();
@@ -162,7 +155,7 @@ export async function GET(request: NextRequest) {
     if (instagramAccountError || facebookAccountError || !instagramAccount || !facebookAccount) {
       console.error("Social account provisioning failed:", instagramAccountError?.message, facebookAccountError?.message);
       const message = instagramAccountError?.message || facebookAccountError?.message || "Failed to provision social accounts.";
-      const response = NextResponse.redirect(new URL(`/organization/admin/content?socialError=${encodeURIComponent(message)}`, request.url));
+      const response = NextResponse.redirect(new URL(`/admin/content?socialError=${encodeURIComponent(message)}`, request.url));
       response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
       return response;
     }
@@ -192,18 +185,18 @@ export async function GET(request: NextRequest) {
 
     if (tokenInsertError) {
       console.error("Social token provisioning failed:", tokenInsertError.message);
-      const response = NextResponse.redirect(new URL(`/organization/admin/content?socialError=${encodeURIComponent(`Token save failed: ${tokenInsertError.message}`)}`, request.url));
+      const response = NextResponse.redirect(new URL(`/admin/content?socialError=${encodeURIComponent(`Token save failed: ${tokenInsertError.message}`)}`, request.url));
       response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
       return response;
     }
 
-    const response = NextResponse.redirect(new URL("/organization/admin/content", request.url));
+    const response = NextResponse.redirect(new URL("/admin/content", request.url));
     response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
     return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error.";
     console.error("Instagram OAuth callback failed:", message);
-    const response = NextResponse.redirect(new URL(`/organization/admin/content?socialError=${encodeURIComponent(message)}`, request.url));
+    const response = NextResponse.redirect(new URL(`/admin/content?socialError=${encodeURIComponent(message)}`, request.url));
     response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
     return response;
   }

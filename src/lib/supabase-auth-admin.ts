@@ -10,8 +10,11 @@
  */
 
 import { supabaseAdmin } from "./supabase-admin";
-import { isOrganizationMemberEmailReserved, normalizeEmail } from "./organization-member-email";
 import type { User } from "@supabase/supabase-js";
+
+function normalizeEmail(value: string | null | undefined): string {
+  return value?.trim().toLowerCase() ?? "";
+}
 
 // ─── Registration ────────────────────────────────────────────────────────────
 
@@ -22,7 +25,6 @@ export interface RegisterResult {
 }
 
 export type RegisterError =
-  | { ok: false; code: "reserved_email" }
   | { ok: false; code: "already_exists" }
   | { ok: false; code: "supabase_error"; message: string }
   | { ok: false; code: "internal_error" };
@@ -39,11 +41,6 @@ export async function registerWithEmailPassword(
   const normalizedEmail = normalizeEmail(email);
   if (!normalizedEmail) {
     return { ok: false, code: "internal_error" };
-  }
-
-  // Reserved email check
-  if (await isOrganizationMemberEmailReserved(normalizedEmail)) {
-    return { ok: false, code: "reserved_email" };
   }
 
   // Check if already in app_users
@@ -192,11 +189,6 @@ export async function upsertSupabaseAuthOAuthUser(
   const normalizedEmail = normalizeEmail(email);
   if (!normalizedEmail) {
     return { ok: false, redirect: "/login?error=invalid_email" };
-  }
-
-  // Reserved email check
-  if (await isOrganizationMemberEmailReserved(normalizedEmail)) {
-    return { ok: false, redirect: "/login?error=reserved_email" };
   }
 
   // Upsert into app_users (existing logic, preserved)

@@ -26,7 +26,6 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const organizationId = typeof body?.organizationId === "string" ? body.organizationId : "";
   const trackId = typeof body?.trackId === "string" ? body.trackId : "";
   const dayDate = typeof body?.dayDate === "string" ? body.dayDate : "";
   const blockType = body?.blockType;
@@ -51,7 +50,7 @@ export async function POST(request: Request) {
       )
     : [];
 
-  if (!organizationId || !trackId || !isValidDate(dayDate) || !title) {
+  if (!trackId || !isValidDate(dayDate) || !title) {
     return NextResponse.json({ error: "Invalid workout block payload." }, { status: 400 });
   }
 
@@ -69,12 +68,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const isMember = await isOrgMember(userId, organizationId);
+  const isMember = await isOrgMember(userId);
   if (!isMember) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const canWrite = await hasOrgRole(userId, organizationId, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -90,7 +89,6 @@ export async function POST(request: Request) {
     .from("programming_days")
     .upsert(
       {
-        organization_id: organizationId,
         track_id: trackId,
         day_date: dayDate,
         created_by: userId,
@@ -109,7 +107,6 @@ export async function POST(request: Request) {
     .from("workout_blocks")
     .insert({
       programming_day_id: dayRow.id,
-      organization_id: organizationId,
       track_id: trackId,
       block_order: blockOrder,
       block_type: blockType,

@@ -10,109 +10,56 @@ type MemberRow = {
   tracks?: string | null;
 };
 
-function canAccessOrganization(organizationIds: string[], organizationId: string) {
-  return organizationIds.includes(organizationId);
-}
-
 function normalizeTrackList(value: string | null | undefined) {
-  if (!value) {
-    return [] as string[];
-  }
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
+  if (!value) return [] as string[];
+  return value.split(",").map((item) => item.trim()).filter(Boolean);
 }
 
 function toTrackString(values: string[]) {
   return values.join(", ");
 }
 
-async function getOrganizationMembers(organizationId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("organization_members")
+export async function GET() {
+  const { error, role } = await requireUserContext();
+  if (error) return NextResponse.json({ error }, { status: 401 });
+  if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { data, error: dbError } = await supabaseAdmin
+    .from("members")
     .select("email, first_name, last_name, tracks")
-    .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (dbError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
-  return (data ?? []) as MemberRow[];
-}
-
-export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
-  if (error) {
-    return NextResponse.json({ error }, { status: 401 });
-  }
-
-  if (!hasRole("owner", role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  if (!canAccessOrganization(organizationIds, organizationId)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  try {
-    const rows = await getOrganizationMembers(organizationId);
-    return NextResponse.json({
-      members: rows
-        .map((row) => {
-          const email = row.email?.trim().toLowerCase() ?? "";
-          if (!email) {
-            return null;
-          }
-          const fullName = `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim();
-          return {
-            email,
-            fullName: fullName || email,
-            tracks: normalizeTrackList(row.tracks),
-          };
-        })
-        .filter((row): row is { email: string; fullName: string; tracks: string[] } => Boolean(row)),
-    });
-  } catch {
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-  }
+  const rows = (data ?? []) as MemberRow[];
+  return NextResponse.json({
+    members: rows
+      .map((row) => {
+        const email = row.email?.trim().toLowerCase() ?? "";
+        if (!email) return null;
+        const fullName = `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim();
+        return {
+          email,
+          fullName: fullName || email,
+          tracks: normalizeTrackList(row.tracks),
+        };
+      })
+      .filter((row): row is { email: string; fullName: string; tracks: string[] } => Boolean(row)),
+  });
 }
 
 export async function PATCH(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
-  if (error) {
-    return NextResponse.json({ error }, { status: 401 });
-  }
-
-  if (!hasRole("owner", role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { error, role } = await requireUserContext();
+  if (error) return NextResponse.json({ error }, { status: 401 });
+  if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const payload = (await request.json().catch(() => null)) as {
-    organizationId?: string;
     email?: string;
     trackName?: string;
     assigned?: boolean;
   } | null;
 
-  if (!payload) {
-    return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
-  }
-
-  const organizationId = payload.organizationId?.trim() || organizationIds[0] || null;
-  if (!organizationId) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  if (!canAccessOrganization(organizationIds, organizationId)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  if (!payload) return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
 
   const email = payload.email?.trim().toLowerCase();
   const trackName = payload.trackName?.trim();
@@ -121,15 +68,12 @@ export async function PATCH(request: NextRequest) {
   }
 
   const { data: existing, error: lookupError } = await supabaseAdmin
-    .from("organization_members")
+    .from("members")
     .select("tracks")
-    .eq("organization_id", organizationId)
     .eq("email", email)
     .single();
 
-  if (lookupError) {
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-  }
+  if (lookupError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
   const current = normalizeTrackList(existing?.tracks ?? null);
   const next = payload.assigned
@@ -137,14 +81,11 @@ export async function PATCH(request: NextRequest) {
     : current.filter((name) => name !== trackName);
 
   const { error: updateError } = await supabaseAdmin
-    .from("organization_members")
+    .from("members")
     .update({ tracks: toTrackString(next), updated_at: new Date().toISOString() })
-    .eq("organization_id", organizationId)
     .eq("email", email);
 
-  if (updateError) {
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-  }
+  if (updateError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
   return NextResponse.json({ ok: true, tracks: next });
 }

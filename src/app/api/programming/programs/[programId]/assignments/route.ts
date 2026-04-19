@@ -18,7 +18,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { data: program, error: programError } = await supabaseAdmin
     .from("programs")
-    .select("organization_id")
+    .select("id")
     .eq("id", programId)
     .single();
 
@@ -26,7 +26,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Program not found." }, { status: 404 });
   }
 
-  const canRead = await hasOrgRole(userId, program.organization_id, "coach");
+  const canRead = await hasOrgRole(userId, "", "coach");
   if (!canRead) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -34,7 +34,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const { data, error: fetchError } = await supabaseAdmin
     .from("program_assignments")
     .select(`
-      id, program_id, organization_id, assigned_member_id, assigned_track_id,
+      id, program_id, assigned_member_id, assigned_track_id,
       start_date, is_active, notes, created_by, created_at, updated_at,
       app_users!program_assignments_assigned_member_id_fkey (id, first_name, last_name, email),
       programming_tracks!program_assignments_assigned_track_id_fkey (id, name)
@@ -59,7 +59,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   const { data: program, error: programError } = await supabaseAdmin
     .from("programs")
-    .select("organization_id")
+    .select("id")
     .eq("id", programId)
     .single();
 
@@ -67,7 +67,7 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Program not found." }, { status: 404 });
   }
 
-  const canWrite = await hasOrgRole(userId, program.organization_id, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -89,23 +89,15 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  // Verify the assignee belongs to this org
-  if (assignedMemberId) {
-    const memberInOrg = await isOrgMember(assignedMemberId, program.organization_id);
-    if (!memberInOrg) {
-      return NextResponse.json({ error: "Member not found in this organization." }, { status: 400 });
-    }
-  }
 
   if (assignedTrackId) {
     const { data: track } = await supabaseAdmin
       .from("programming_tracks")
       .select("id")
       .eq("id", assignedTrackId)
-      .eq("organization_id", program.organization_id)
       .single();
     if (!track) {
-      return NextResponse.json({ error: "Track not found in this organization." }, { status: 400 });
+      return NextResponse.json({ error: "Track not found." }, { status: 400 });
     }
   }
 
@@ -113,7 +105,6 @@ export async function POST(request: Request, context: RouteContext) {
     .from("program_assignments")
     .insert({
       program_id: programId,
-      organization_id: program.organization_id,
       assigned_member_id: assignedMemberId,
       assigned_track_id: assignedTrackId,
       start_date: startDate,
@@ -121,7 +112,7 @@ export async function POST(request: Request, context: RouteContext) {
       created_by: userId,
       updated_at: new Date().toISOString(),
     })
-    .select("id, program_id, organization_id, assigned_member_id, assigned_track_id, start_date, is_active, notes, created_by, created_at, updated_at")
+    .select("id, program_id, assigned_member_id, assigned_track_id, start_date, is_active, notes, created_by, created_at, updated_at")
     .single();
 
   if (insertError) {

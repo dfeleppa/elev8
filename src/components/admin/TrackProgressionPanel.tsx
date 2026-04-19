@@ -39,7 +39,6 @@ type Props = {
   blockId: string;
   blockType: string;
   trackId: string;
-  organizationId: string;
   selectedDay: string;
   onApplied: () => void;
 };
@@ -111,7 +110,6 @@ export default function TrackProgressionPanel({
   blockId,
   blockType,
   trackId,
-  organizationId,
   selectedDay,
   onApplied,
 }: Props) {
@@ -222,7 +220,6 @@ export default function TrackProgressionPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           blockId,
-          organizationId,
           trackId,
           category,
           startDate,

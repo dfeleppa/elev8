@@ -58,8 +58,8 @@ export default function LoginClient() {
         <div className="mb-8 flex flex-col items-center gap-3">
           <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/5">
             <Image
-              src="/Elev8rlogo (1).png"
-              alt="Elev8"
+              src="/lyfe-fitness-logo.png"
+              alt="Lyfe Fitness"
               width={40}
               height={40}
               className="object-contain"
@@ -68,7 +68,7 @@ export default function LoginClient() {
           <h1 className="font-[family-name:var(--font-brand-heading)] text-2xl font-bold text-slate-100">
             Welcome back
           </h1>
-          <p className="text-sm text-slate-400">Sign in to your Elev8 account</p>
+          <p className="text-sm text-slate-400">Sign in to your Lyfe Fitness account</p>
         </div>
 
         {/* Success banner */}

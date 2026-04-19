@@ -14,35 +14,28 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const runtime = "nodejs";
 
 type ScheduleClassRecord = ScheduleClassRow & {
-  organization_id: string;
   track_id: string | null;
   default_coach_user_id: string | null;
 };
 
 export async function GET(request: Request) {
-  const { error, userId, role, organizationIds } = await requireUserContext();
+  const { error, userId, role } = await requireUserContext();
   if (error || !userId || !hasRole("member", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized." }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
-  const organizationId = searchParams.get("organizationId") ?? organizationIds[0] ?? null;
   const dateKey = searchParams.get("date") ?? toLocalDateString(new Date());
-
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 403 });
-  }
 
   if (!isValidDateKey(dateKey)) {
     return NextResponse.json({ error: "Invalid date. Use YYYY-MM-DD." }, { status: 400 });
   }
 
   const { data: classes, error: classesError } = await supabaseAdmin
-    .from("organization_schedule_classes")
+    .from("schedule_classes")
     .select(
-      "id, organization_id, name, class_time, duration_minutes, class_days, start_date, end_date, track_id, default_coach_user_id, size_limit, reservation_cutoff_hours, calendar_color"
+      "id, name, class_time, duration_minutes, class_days, start_date, end_date, track_id, default_coach_user_id, size_limit, reservation_cutoff_hours, calendar_color"
     )
-    .eq("organization_id", organizationId)
     .order("class_time", { ascending: true });
 
   if (classesError) {
@@ -63,9 +56,8 @@ export async function GET(request: Request) {
       : Promise.resolve({ data: [] as { id: string; full_name: string | null; email: string | null }[] }),
     recurringClasses.length
       ? supabaseAdmin
-        .from("organization_class_reservations")
+        .from("class_reservations")
         .select("id, class_id, member_id, class_date, created_at")
-        .eq("organization_id", organizationId)
         .eq("class_date", dateKey)
         .in("class_id", recurringClasses.map((row) => row.id))
       : Promise.resolve({ data: [] as ReservationRow[], error: null }),

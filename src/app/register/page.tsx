@@ -1,7 +1,7 @@
 import RegisterClient from "./RegisterClient";
 
 export const metadata = {
-  title: "Create Account — Elev8",
+  title: "Create Account — Lyfe Fitness",
 };
 
 export default function RegisterPage() {

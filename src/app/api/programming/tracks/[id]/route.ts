@@ -8,7 +8,6 @@ export const runtime = "nodejs";
 
 type LegacyTrackRow = {
   id: string;
-  organization_id: string;
   name: string;
   code: string | null;
   description: string | null;
@@ -60,17 +59,13 @@ export async function PATCH(
   }
 
   const body = (await request.json().catch(() => null)) as TrackUpdatePayload | null;
-  const organizationId = typeof body?.organizationId === "string" ? body.organizationId : "";
-  if (!organizationId) {
-    return NextResponse.json({ error: "organizationId is required." }, { status: 400 });
-  }
 
-  const isMember = await isOrgMember(userId, organizationId);
+  const isMember = await isOrgMember(userId);
   if (!isMember) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const canWrite = await hasOrgRole(userId, organizationId, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -105,8 +100,7 @@ export async function PATCH(
     .from("programming_tracks")
     .update(payload)
     .eq("id", id)
-    .eq("organization_id", organizationId)
-    .select("id, organization_id, name, code, description, is_active, is_private, number_of_levels, hide_workouts_days_prior, hide_workouts_hour, hide_workouts_minute, created_at, updated_at")
+    .select("id, name, code, description, is_active, is_private, number_of_levels, hide_workouts_days_prior, hide_workouts_hour, hide_workouts_minute, created_at, updated_at")
     .single();
 
   if (updateError && isMissingColumnError(updateError.message)) {
@@ -122,8 +116,7 @@ export async function PATCH(
       .from("programming_tracks")
       .update(legacyPayload)
       .eq("id", id)
-      .eq("organization_id", organizationId)
-      .select("id, organization_id, name, code, description, is_active, created_at, updated_at")
+      .select("id, name, code, description, is_active, created_at, updated_at")
       .single();
 
     if (legacyError) {

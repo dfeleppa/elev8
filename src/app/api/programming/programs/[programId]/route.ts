@@ -18,7 +18,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { data: program, error: programError } = await supabaseAdmin
     .from("programs")
-    .select("id, organization_id, name, description, duration_weeks, days_per_week, status, created_by, created_at, updated_at")
+    .select("id, name, description, duration_weeks, days_per_week, status, created_by, created_at, updated_at")
     .eq("id", programId)
     .single();
 
@@ -26,10 +26,6 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Program not found." }, { status: 404 });
   }
 
-  const isMember = await isOrgMember(userId, program.organization_id);
-  if (!isMember) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   // Fetch all template days with nested blocks
   const { data: days, error: daysError } = await supabaseAdmin
@@ -62,7 +58,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   const { data: existing, error: existingError } = await supabaseAdmin
     .from("programs")
-    .select("organization_id")
+    .select("id")
     .eq("id", programId)
     .single();
 
@@ -70,7 +66,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Program not found." }, { status: 404 });
   }
 
-  const canWrite = await hasOrgRole(userId, existing.organization_id, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -98,7 +94,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     .from("programs")
     .update(updates)
     .eq("id", programId)
-    .select("id, organization_id, name, description, duration_weeks, days_per_week, status, created_by, created_at, updated_at")
+    .select("id, name, description, duration_weeks, days_per_week, status, created_by, created_at, updated_at")
     .single();
 
   if (updateError) {
@@ -118,7 +114,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   const { data: existing, error: existingError } = await supabaseAdmin
     .from("programs")
-    .select("organization_id")
+    .select("id")
     .eq("id", programId)
     .single();
 
@@ -126,7 +122,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Program not found." }, { status: 404 });
   }
 
-  const canWrite = await hasOrgRole(userId, existing.organization_id, "admin");
+  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

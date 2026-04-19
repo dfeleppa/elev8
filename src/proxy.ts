@@ -41,13 +41,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const orgIds = (token.organizationIds as string[] | undefined) ?? [];
-  const isJoinRoute = pathname === "/join" || pathname.startsWith("/api/auth/join-organization");
-
-  if (orgIds.length === 0 && !isJoinRoute) {
-    return NextResponse.redirect(new URL("/join", request.url));
-  }
-
   return NextResponse.next();
 }
 

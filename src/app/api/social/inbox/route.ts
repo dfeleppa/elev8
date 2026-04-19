@@ -7,29 +7,23 @@ import { supabaseAdmin } from "../../../../lib/supabase-admin";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const { error, role, organizationIds } = await requireUserContext();
+  const { error, role } = await requireUserContext();
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
-  const organizationId = request.nextUrl.searchParams.get("organizationId")?.trim() ?? organizationIds[0] ?? null;
-  if (!organizationId || !organizationIds.includes(organizationId)) {
-    return NextResponse.json({ error: "Organization not found." }, { status: 400 });
-  }
-
-  const inbox = await listInboxItems(organizationId);
+  const inbox = await listInboxItems();
   return NextResponse.json(inbox);
 }
 
 export async function PATCH(request: NextRequest) {
-  const { error, role, userId, organizationIds } = await requireUserContext();
+  const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }
 
   const body = (await request.json().catch(() => null)) as
     | {
-        organizationId?: string;
         itemType?: "comment" | "conversation";
         itemId?: string;
         status?: string;
@@ -38,8 +32,7 @@ export async function PATCH(request: NextRequest) {
       }
     | null;
 
-  const organizationId = body?.organizationId?.trim() ?? organizationIds[0] ?? null;
-  if (!body || !organizationId || !organizationIds.includes(organizationId) || !body.itemType || !body.itemId) {
+  if (!body || !body.itemType || !body.itemId) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
 
@@ -51,8 +44,7 @@ export async function PATCH(request: NextRequest) {
       priority: body.priority?.trim() || undefined,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", body.itemId)
-    .eq("organization_id", organizationId);
+    .eq("id", body.itemId);
 
   if (updateError) {
     return NextResponse.json({ error: "Failed to update inbox item." }, { status: 500 });
@@ -60,7 +52,6 @@ export async function PATCH(request: NextRequest) {
 
   if (body.assignedToUserId !== undefined) {
     await supabaseAdmin.from("social_inbox_assignments").insert({
-      organization_id: organizationId,
       item_type: body.itemType,
       item_id: body.itemId,
       assigned_to_user_id: body.assignedToUserId || null,
