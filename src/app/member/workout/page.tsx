@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../../../components/SidebarShell";
-import { hasRole, requireUserContext } from "../../../../lib/member";
+import SidebarShell from "@/components/SidebarShell";
+import { hasRole, requireUserContext } from "@/lib/member";
 import MemberWorkoutClient from "./MemberWorkoutClient";
 
 export default async function MemberWorkoutPage() {

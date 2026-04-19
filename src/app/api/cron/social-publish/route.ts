@@ -2,8 +2,8 @@ import { timingSafeEqual } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import { logSocialActivity, publishSocialChannel } from "../../../../lib/social";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import { logSocialActivity, publishSocialChannel } from "@/lib/social";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 

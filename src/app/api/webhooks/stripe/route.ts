@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
-import { stripe } from "../../../../lib/stripe";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { stripe } from "@/lib/stripe";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 

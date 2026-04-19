@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../../../components/SidebarShell";
-import { hasRole, requireUserContext } from "../../../../lib/member";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
-import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
-import MemberImportButton from "../../../../components/owner/MemberImportButton";
+import SidebarShell from "@/components/SidebarShell";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import OwnerSectionCard from "@/components/owner/OwnerSectionCard";
+import MemberImportButton from "@/components/owner/MemberImportButton";
 import OwnerMembersTable from "./OwnerMembersTable";
 
 export const dynamic = "force-dynamic";

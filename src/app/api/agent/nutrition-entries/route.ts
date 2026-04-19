@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getAgentConfig, isAuthorizedAgentRequest } from "../../../../lib/agent-auth";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import { getAgentConfig, isAuthorizedAgentRequest } from "@/lib/agent-auth";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 

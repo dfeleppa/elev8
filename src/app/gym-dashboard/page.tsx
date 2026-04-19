@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../../components/SidebarShell";
-import { hasRole, requireUserContext } from "../../../lib/member";
-import { supabaseAdmin } from "../../../lib/supabase-admin";
-import { getOrganizationBillingMetrics } from "../../../lib/billing-metrics";
+import SidebarShell from "@/components/SidebarShell";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getOrganizationBillingMetrics } from "@/lib/billing-metrics";
 import GymDashboardClient from "./GymDashboardClient";
 
 export const dynamic = "force-dynamic";

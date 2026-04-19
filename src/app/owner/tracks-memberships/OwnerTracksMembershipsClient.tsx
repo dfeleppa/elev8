@@ -6,7 +6,7 @@ import {
   ownerButtonPrimaryClass,
   ownerButtonSecondaryClass,
   ownerIconButtonNeutralClass,
-} from "../../../../components/owner/buttonStyles";
+} from "@/components/owner/buttonStyles";
 
 type TrackRow = {
   id: string;

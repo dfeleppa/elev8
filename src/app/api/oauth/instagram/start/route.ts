@@ -2,11 +2,11 @@ import { createHmac, randomBytes } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "../../../../../lib/member";
+import { hasRole, requireUserContext } from "@/lib/member";
 import {
   getInstagramAuthUrl,
   INSTAGRAM_OAUTH_STATE_COOKIE,
-} from "../../../../../lib/instagram";
+} from "@/lib/instagram";
 
 export const runtime = "nodejs";
 

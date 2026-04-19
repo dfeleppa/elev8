@@ -2,8 +2,8 @@ import { timingSafeEqual } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import { publishInstagramPost } from "../../../../lib/instagram";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import { publishInstagramPost } from "@/lib/instagram";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 const CRON_BATCH_CONCURRENCY = 3;

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import MemberImportButton from "../../../../components/owner/MemberImportButton";
+import MemberImportButton from "@/components/owner/MemberImportButton";
 import OwnerMembersTable from "./OwnerMembersTable";
 import type { OwnerMemberRow } from "./page";
 

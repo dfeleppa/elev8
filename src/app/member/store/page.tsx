@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../../../components/SidebarShell";
-import { hasRole, requireUserContext } from "../../../../lib/member";
+import SidebarShell from "@/components/SidebarShell";
+import { hasRole, requireUserContext } from "@/lib/member";
 import MemberStoreClient from "./MemberStoreClient";
 
 export const dynamic = "force-dynamic";

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Pencil, Plus, X } from "lucide-react";
 
-import SidebarShell from "../../../../components/SidebarShell";
+import SidebarShell from "@/components/SidebarShell";
 import { AccentCard, Chip, Panel, Micro } from "@/components/ui";
 
 type NutritionEntry = {

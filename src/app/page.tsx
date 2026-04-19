@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { hasRole, requireUserContext } from "../lib/member";
+import { hasRole, requireUserContext } from "@/lib/member";
 
 export default async function Home() {
   const { error, role } = await requireUserContext();

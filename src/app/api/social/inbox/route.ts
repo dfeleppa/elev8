@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "../../../../lib/member";
-import { listInboxItems } from "../../../../lib/social";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { listInboxItems } from "@/lib/social";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 

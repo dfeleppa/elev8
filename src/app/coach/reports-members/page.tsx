@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
-import AppPlaceholderPage from "../../../../components/AppPlaceholderPage";
-import SidebarShell from "../../../../components/SidebarShell";
-import { hasRole, requireUserContext } from "../../../../lib/member";
+import AppPlaceholderPage from "@/components/AppPlaceholderPage";
+import SidebarShell from "@/components/SidebarShell";
+import { hasRole, requireUserContext } from "@/lib/member";
 
 export default async function CoachReportsMembersPage() {
   const { error, role, userId } = await requireUserContext();

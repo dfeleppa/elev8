@@ -9,9 +9,9 @@ import {
   ownerIconButtonDangerClass,
   ownerIconButtonNeutralClass,
   ownerIconButtonSuccessClass,
-} from "../../../../components/owner/buttonStyles";
-import { ownerToolbarActionButtonClass, ownerToolbarSearchInputDarkClass } from "../../../../components/owner/controlStyles";
-import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
+} from "@/components/owner/buttonStyles";
+import { ownerToolbarActionButtonClass, ownerToolbarSearchInputDarkClass } from "@/components/owner/controlStyles";
+import OwnerSectionCard from "@/components/owner/OwnerSectionCard";
 
 type ScheduleTab = "current" | "future" | "past";
 type ScheduleView = "list" | "calendar";

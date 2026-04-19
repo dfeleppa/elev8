@@ -2,9 +2,9 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-import { ownerButtonPrimaryClass, ownerButtonSecondaryClass, ownerIconButtonCompactClass } from "../../../../components/owner/buttonStyles";
-import OwnerDataTable from "../../../../components/owner/OwnerDataTable";
-import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
+import { ownerButtonPrimaryClass, ownerButtonSecondaryClass, ownerIconButtonCompactClass } from "@/components/owner/buttonStyles";
+import OwnerDataTable from "@/components/owner/OwnerDataTable";
+import OwnerSectionCard from "@/components/owner/OwnerSectionCard";
 
 type StaffRole = "coach" | "admin";
 

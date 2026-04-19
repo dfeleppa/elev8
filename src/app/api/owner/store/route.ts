@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "../../../../lib/member";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // GET /api/owner/store — list all products
 export async function GET(request: NextRequest) {

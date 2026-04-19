@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { CalendarDays, Trash2, Users, X } from "lucide-react";
 
-import { calculateCurrentWeek } from "../../../lib/programs";
+import { calculateCurrentWeek } from "@/lib/programs";
 
 type Props = {
   programId: string;

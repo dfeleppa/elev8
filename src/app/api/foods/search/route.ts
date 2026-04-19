@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext, requireUserContextFromBearer } from "../../../../lib/member";
+import { requireUserContext, requireUserContextFromBearer } from "@/lib/member";
 
 export const runtime = "nodejs";
 
