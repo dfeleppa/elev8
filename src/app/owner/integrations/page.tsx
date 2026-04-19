@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../../../components/SidebarShell";
-import OwnerSettingsSubheader from "../../../../components/owner/OwnerSettingsSubheader";
-import { hasRole, requireUserContext } from "../../../../lib/member";
+import SidebarShell from "@/components/SidebarShell";
+import OwnerSettingsSubheader from "@/components/owner/OwnerSettingsSubheader";
+import { hasRole, requireUserContext } from "@/lib/member";
 
 export default async function OwnerIntegrationsPage() {
   const { error, role, userId } = await requireUserContext();

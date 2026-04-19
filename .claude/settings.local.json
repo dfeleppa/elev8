@@ -29,7 +29,13 @@
       "Bash(grep -l \"create table\\\\|alter table organization_schedule\" /c/Users/DFele/elev8/supabase/migrations/*.sql)",
       "Bash(grep -i \"enrollment\\\\|booking\\\\|reservation\\\\|member_class\\\\|class_enrollment\" /c/Users/DFele/elev8/supabase/migrations/*.sql)",
       "Bash(find /c/Users/DFele/elev8/supabase/migrations -type f -name \"*.sql\" -exec basename {} \\\\;)",
-      "Bash(grep -h \"references programming_tracks\\\\|references app_users\\\\|references organizations\" /c/Users/DFele/elev8/supabase/migrations/*.sql)"
+      "Bash(grep -h \"references programming_tracks\\\\|references app_users\\\\|references organizations\" /c/Users/DFele/elev8/supabase/migrations/*.sql)",
+      "Bash(git fetch *)",
+      "Bash(git status *)",
+      "Bash(cp \"/c/Users/DFele/.claude/projects/C--Users-DFele-elev8--claude-worktrees-amazing-hofstadter-688db5/4d86e265-b9a5-4245-9354-232c114ed3d1/tool-results/webfetch-1776625813947-wonxh7.bin\" /tmp/design.tgz)",
+      "Bash(mkdir -p /tmp/design_drop_2)",
+      "Bash(tar -xzf /tmp/design.tgz -C /tmp/design_drop_2)",
+      "Read(//tmp/**)"
     ],
     "additionalDirectories": [
       "c:\\Users\\DFele\\elev8\\src\\app\\api\\programming\\track-progressions\\[progressionId]"

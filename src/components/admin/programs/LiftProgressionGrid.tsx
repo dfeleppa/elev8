@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { CopyPlus } from "lucide-react";
 
-import type { LiftProgression, LiftProgressionType } from "../../../lib/programs";
-import { LIFT_PROGRESSION_TYPES } from "../../../lib/programs";
+import type { LiftProgression, LiftProgressionType } from "@/lib/programs";
+import { LIFT_PROGRESSION_TYPES } from "@/lib/programs";
 
 type Props = {
   programId: string;

@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUserContext } from "../../lib/member";
-import { supabaseAdmin } from "../../lib/supabase-admin";
-import { hasRole } from "../../lib/member";
+import { requireUserContext } from "@/lib/member";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { hasRole } from "@/lib/member";
 
 export async function createProject(formData: FormData) {
   const { error, role, userId } = await requireUserContext();

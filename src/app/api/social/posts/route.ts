@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "../../../../lib/member";
+import { hasRole, requireUserContext } from "@/lib/member";
 import {
   ensurePlannerSlot,
   listSocialPosts,
@@ -9,8 +9,8 @@ import {
   normalizePlatform,
   normalizePublishMode,
   normalizeWorkflowState,
-} from "../../../../lib/social";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+} from "@/lib/social";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 

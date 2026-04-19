@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext } from "../../../../lib/member";
-import { hasOrgRole, isOrgMember } from "../../../../lib/programming-access";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import { requireUserContext } from "@/lib/member";
+import { hasOrgRole, isOrgMember } from "@/lib/programming-access";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 

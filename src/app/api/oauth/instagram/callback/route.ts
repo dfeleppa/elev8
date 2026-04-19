@@ -2,14 +2,14 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "../../../../../lib/member";
-import { supabaseAdmin } from "../../../../../lib/supabase-admin";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import {
   exchangeInstagramCode,
   fetchInstagramAccount,
   INSTAGRAM_OAUTH_STATE_COOKIE,
   META_OAUTH_SCOPES,
-} from "../../../../../lib/instagram";
+} from "@/lib/instagram";
 
 export const runtime = "nodejs";
 

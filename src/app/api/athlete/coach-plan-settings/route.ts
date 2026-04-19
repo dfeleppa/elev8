@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { getCoachNutritionPlan } from "@/lib/coach-plan";
-import { requireUserContext, requireUserContextFromBearer } from "../../../../lib/member";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import { requireUserContext, requireUserContextFromBearer } from "@/lib/member";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 

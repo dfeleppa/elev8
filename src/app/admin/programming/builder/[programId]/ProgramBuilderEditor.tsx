@@ -15,12 +15,12 @@ import {
   X,
 } from "lucide-react";
 
-import ProgrammingSubheader from "../../../../../../components/admin/ProgrammingSubheader";
-import LiftProgressionGrid from "../../../../../../components/admin/programs/LiftProgressionGrid";
-import ConditioningProgressionGrid from "../../../../../../components/admin/programs/ConditioningProgressionGrid";
-import AssignmentPanel from "../../../../../../components/admin/programs/AssignmentPanel";
-import type { Program, ProgramTemplateBlock, ProgramTemplateDayWithBlocks } from "../../../../../../lib/programs";
-import { WORKOUT_BLOCK_TYPES } from "../../../../../../lib/programming";
+import ProgrammingSubheader from "@/components/admin/ProgrammingSubheader";
+import LiftProgressionGrid from "@/components/admin/programs/LiftProgressionGrid";
+import ConditioningProgressionGrid from "@/components/admin/programs/ConditioningProgressionGrid";
+import AssignmentPanel from "@/components/admin/programs/AssignmentPanel";
+import type { Program, ProgramTemplateBlock, ProgramTemplateDayWithBlocks } from "@/lib/programs";
+import { WORKOUT_BLOCK_TYPES } from "@/lib/programming";
 
 const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { registerWithEmailPassword } from "../../../../lib/supabase-auth-admin";
+import { registerWithEmailPassword } from "@/lib/supabase-auth-admin";
 
 export async function POST(request: Request) {
   try {

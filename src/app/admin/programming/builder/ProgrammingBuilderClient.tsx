@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Clock, Plus, Trash2 } from "lucide-react";
 
-import ProgrammingSubheader from "../../../../../components/admin/ProgrammingSubheader";
-import type { Program } from "../../../../../lib/programs";
+import ProgrammingSubheader from "@/components/admin/ProgrammingSubheader";
+import type { Program } from "@/lib/programs";
 
 const WEEK_PRESETS = [4, 8, 12, 16];
 const DAYS_PRESETS = [3, 4, 5, 6, 7];

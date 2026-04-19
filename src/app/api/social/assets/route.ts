@@ -2,9 +2,9 @@ import path from "node:path";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "../../../../lib/member";
-import { fingerprintBuffer, listSocialAssets } from "../../../../lib/social";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { fingerprintBuffer, listSocialAssets } from "@/lib/social";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 

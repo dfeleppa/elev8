@@ -4,17 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Trash2, Upload, X } from "lucide-react";
 
-import FitnessScoreCard from "../../../../components/health/FitnessScoreCard";
-import TodaysWorkoutCard from "../../../../components/health/TodaysWorkoutCard";
-import HealthStatsPanel from "../../../../components/health/HealthStatsPanel";
-import TotalWorkoutsLoggedCard from "../../../../components/health/TotalWorkoutsLoggedCard";
-import NutritionCoachCard from "../../../../components/health/NutritionCoachCard";
-import BodyCompTrendChart from "../../../../components/health/BodyCompTrendChart";
-import MovementResultsSearch from "../../../../components/health/MovementResultsSearch";
-import LogLiftCard from "../../../../components/health/LogLiftCard";
+import FitnessScoreCard from "@/components/health/FitnessScoreCard";
+import TodaysWorkoutCard from "@/components/health/TodaysWorkoutCard";
+import HealthStatsPanel from "@/components/health/HealthStatsPanel";
+import TotalWorkoutsLoggedCard from "@/components/health/TotalWorkoutsLoggedCard";
+import NutritionCoachCard from "@/components/health/NutritionCoachCard";
+import BodyCompTrendChart from "@/components/health/BodyCompTrendChart";
+import MovementResultsSearch from "@/components/health/MovementResultsSearch";
+import LogLiftCard from "@/components/health/LogLiftCard";
 import {
   STAT_GROUP_BY_SLUG,
-} from "../../../../components/health/health-stats-config";
+} from "@/components/health/health-stats-config";
 import { Micro, Panel } from "@/components/ui";
 
 type TabId = "dashboard" | "benchmarks" | "workouts" | "body-comp" | "movements";

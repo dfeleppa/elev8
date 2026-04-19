@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 
-import { hasOrgRole, isOrgMember } from "../../../../lib/programming-access";
+import { hasOrgRole, isOrgMember } from "@/lib/programming-access";
 import {
   isValidDate,
   isWorkoutBlockType,
   isWorkoutScoreType,
   WORKOUT_BLOCK_TYPES,
   WORKOUT_SCORE_TYPES,
-} from "../../../../lib/programming";
-import { requireUserContext } from "../../../../lib/member";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+} from "@/lib/programming";
+import { requireUserContext } from "@/lib/member";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 

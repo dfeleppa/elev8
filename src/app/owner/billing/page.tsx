@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../../../components/SidebarShell";
+import SidebarShell from "@/components/SidebarShell";
 import OwnerBillingClient from "./OwnerBillingClient";
-import { hasRole, requireUserContext } from "../../../../lib/member";
+import { hasRole, requireUserContext } from "@/lib/member";
 
 export default async function OwnerBillingPage() {
   const { error, role, userId } = await requireUserContext();

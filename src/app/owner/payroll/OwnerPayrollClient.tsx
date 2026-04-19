@@ -7,9 +7,9 @@ import {
   ownerButtonPrimaryClass,
   ownerIconButtonDangerClass,
   ownerIconButtonSuccessClass,
-} from "../../../../components/owner/buttonStyles";
-import OwnerDataTable from "../../../../components/owner/OwnerDataTable";
-import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
+} from "@/components/owner/buttonStyles";
+import OwnerDataTable from "@/components/owner/OwnerDataTable";
+import OwnerSectionCard from "@/components/owner/OwnerSectionCard";
 
 type StaffMember = {
   name: string;

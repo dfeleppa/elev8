@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-import type { ConditioningProgression, ConditioningModality, ConditioningProgressionType } from "../../../lib/programs";
-import { CONDITIONING_MODALITIES, CONDITIONING_PROGRESSION_TYPES, formatDuration } from "../../../lib/programs";
-import { parseDurationToSeconds } from "../../../lib/programming";
+import type { ConditioningProgression, ConditioningModality, ConditioningProgressionType } from "@/lib/programs";
+import { CONDITIONING_MODALITIES, CONDITIONING_PROGRESSION_TYPES, formatDuration } from "@/lib/programs";
+import { parseDurationToSeconds } from "@/lib/programming";
 
 type Props = {
   programId: string;

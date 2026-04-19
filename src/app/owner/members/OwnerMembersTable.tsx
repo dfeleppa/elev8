@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 
-import { ownerIconButtonCompactClass } from "../../../../components/owner/buttonStyles";
-import { ownerControlBarGridClass, ownerControlInputClass, ownerControlSelectClass } from "../../../../components/owner/controlStyles";
-import OwnerDataTable from "../../../../components/owner/OwnerDataTable";
+import { ownerIconButtonCompactClass } from "@/components/owner/buttonStyles";
+import { ownerControlBarGridClass, ownerControlInputClass, ownerControlSelectClass } from "@/components/owner/controlStyles";
+import OwnerDataTable from "@/components/owner/OwnerDataTable";
 import type { OwnerMemberRow } from "./page";
 
 type SortColumn = keyof OwnerMemberRow;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "../../../../lib/member";
-import { runSocialAi } from "../../../../lib/social";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { runSocialAi } from "@/lib/social";
 
 export const runtime = "nodejs";
 

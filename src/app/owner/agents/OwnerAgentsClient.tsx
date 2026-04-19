@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import OwnerSettingsSubheader from "../../../../components/owner/OwnerSettingsSubheader";
+import OwnerSettingsSubheader from "@/components/owner/OwnerSettingsSubheader";
 
 type PermissionRow = {
   key: string;

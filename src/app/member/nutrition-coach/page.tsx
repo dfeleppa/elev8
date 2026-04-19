@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../../../components/SidebarShell";
-import { hasRole, requireUserContext } from "../../../../lib/member";
+import SidebarShell from "@/components/SidebarShell";
+import { hasRole, requireUserContext } from "@/lib/member";
 import CoachSetupClient from "../../coach/CoachSetupClient";
 
 export default async function MemberNutritionCoachPage() {

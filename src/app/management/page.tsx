@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../components/SidebarShell";
-import ManagementPageClient from "../../components/owner/ManagementPageClient";
-import { hasRole, requireUserContext } from "../../lib/member";
-import { supabaseAdmin } from "../../lib/supabase-admin";
+import SidebarShell from "@/components/SidebarShell";
+import ManagementPageClient from "@/components/owner/ManagementPageClient";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 

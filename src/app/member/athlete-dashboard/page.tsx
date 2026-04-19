@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../../../components/SidebarShell";
-import { hasRole, requireUserContext } from "../../../../lib/member";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import SidebarShell from "@/components/SidebarShell";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import AthleteDashboardClient from "./AthleteDashboardClient";
 
 async function getTotalWorkoutsLogged(userId: string) {

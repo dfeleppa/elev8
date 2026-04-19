@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { hasOrgRole } from "../../../../../../../../lib/programming-access";
-import { requireUserContext } from "../../../../../../../../lib/member";
+import { hasOrgRole } from "@/lib/programming-access";
+import { requireUserContext } from "@/lib/member";
 import {
   isConditioningModality,
   isConditioningProgressionType,
   CONDITIONING_MODALITIES,
   CONDITIONING_PROGRESSION_TYPES,
-} from "../../../../../../../../lib/programs";
-import { supabaseAdmin } from "../../../../../../../../lib/supabase-admin";
+} from "@/lib/programs";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 

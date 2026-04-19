@@ -7,9 +7,9 @@ import { Camera, RefreshCw, Save } from "lucide-react";
 import {
   ownerButtonPrimaryClass,
   ownerButtonSecondaryClass,
-} from "../../../../components/owner/buttonStyles";
-import OwnerSectionCard from "../../../../components/owner/OwnerSectionCard";
-import OwnerSettingsSubheader from "../../../../components/owner/OwnerSettingsSubheader";
+} from "@/components/owner/buttonStyles";
+import OwnerSectionCard from "@/components/owner/OwnerSectionCard";
+import OwnerSettingsSubheader from "@/components/owner/OwnerSettingsSubheader";
 
 type OrgSettings = {
   id: string;

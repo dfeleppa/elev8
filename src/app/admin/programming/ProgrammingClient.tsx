@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import ProgrammingSubheader from "../../../../components/admin/ProgrammingSubheader";
-import TipTapEditor from "../../../../components/owner/TipTapEditor";
-import TrackProgressionPanel from "../../../../components/admin/TrackProgressionPanel";
+import ProgrammingSubheader from "@/components/admin/ProgrammingSubheader";
+import TipTapEditor from "@/components/owner/TipTapEditor";
+import TrackProgressionPanel from "@/components/admin/TrackProgressionPanel";
 
 type SessionEntry = {
   id: string;

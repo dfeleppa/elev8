@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasRole, requireUserContext } from "../../../../../lib/member";
-import { getOrganizationBillingMetrics } from "../../../../../lib/billing-metrics";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { getOrganizationBillingMetrics } from "@/lib/billing-metrics";
 
 export async function GET(request: NextRequest) {
   const { error, role } = await requireUserContext();

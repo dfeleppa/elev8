@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-import SidebarShell from "../../../../components/SidebarShell";
-import { hasRole, requireUserContext } from "../../../../lib/member";
+import SidebarShell from "@/components/SidebarShell";
+import { hasRole, requireUserContext } from "@/lib/member";
 import {
   buildSocialOverview,
   getSocialSettings,
@@ -13,8 +13,8 @@ import {
   listSocialPosts,
   startOfWeek,
   toDateKey,
-} from "../../../../lib/social";
-import { supabaseAdmin } from "../../../../lib/supabase-admin";
+} from "@/lib/social";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import SocialOsClient from "./SocialOsClient";
 
 export const dynamic = "force-dynamic";

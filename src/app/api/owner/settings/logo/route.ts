@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "../../../../../lib/member";
-import { supabaseAdmin } from "../../../../../lib/supabase-admin";
+import { hasRole, requireUserContext } from "@/lib/member";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
