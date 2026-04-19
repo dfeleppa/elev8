@@ -260,6 +260,23 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   }, []);
 
   useEffect(() => {
+    // Path takes priority: gym-role routes always show gym sidebar,
+    // member routes always show athlete sidebar.
+    if (
+      pathname?.startsWith("/owner") ||
+      pathname?.startsWith("/admin") ||
+      pathname?.startsWith("/coach") ||
+      pathname?.startsWith("/management")
+    ) {
+      setViewMode("gym");
+      return;
+    }
+    if (pathname?.startsWith("/member")) {
+      setViewMode("athlete");
+      return;
+    }
+
+    // For other paths fall back to localStorage, then role default.
     const storedMode = typeof window !== "undefined" ? window.localStorage.getItem("sidebar-view-mode") : null;
     if (storedMode === "gym" || storedMode === "athlete") {
       if (storedMode === "gym" && !canAccessGymView) {
@@ -269,16 +286,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         }
         return;
       }
-
       setViewMode(storedMode);
       return;
     }
 
-    if (!canAccessGymView || pathname?.startsWith("/member")) {
-      setViewMode("athlete");
-    } else {
-      setViewMode("gym");
-    }
+    setViewMode(canAccessGymView ? "gym" : "athlete");
   }, [canAccessGymView, pathname]);
 
   useEffect(() => {
