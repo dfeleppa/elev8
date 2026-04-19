@@ -115,7 +115,7 @@ function getSessionStatusCopy(session: ScheduleSession) {
     return {
       title: "Reserved",
       body: "Your spot is locked in for this class.",
-      tone: "text-emerald-300",
+      tone: "text-emerald-500",
     };
   }
 
@@ -125,7 +125,7 @@ function getSessionStatusCopy(session: ScheduleSession) {
       body: session.reservationCutoffAt
         ? `Reservations closed at ${formatCutoff(session.reservationCutoffAt)}.`
         : "Reservations are closed for this class.",
-      tone: "text-amber-200",
+      tone: "text-amber-500",
     };
   }
 
@@ -133,7 +133,7 @@ function getSessionStatusCopy(session: ScheduleSession) {
     return {
       title: "Class full",
       body: "This class has reached capacity.",
-      tone: "text-rose-300",
+      tone: "text-rose-500",
     };
   }
 
@@ -142,7 +142,7 @@ function getSessionStatusCopy(session: ScheduleSession) {
     body: session.size_limit > 0
       ? `${session.capacityRemaining} spot${session.capacityRemaining === 1 ? "" : "s"} remaining.`
       : "Unlimited spots available.",
-    tone: "text-cyan-200",
+    tone: "text-sky-500",
   };
 }
 
@@ -284,7 +284,7 @@ export default function MemberScheduleClient() {
             <button
               type="button"
               onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-[var(--text-muted)] transition hover:border-cyan-300/40 hover:text-cyan-100"
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--cyan)]/40 hover:text-[var(--text)]"
               aria-label="Choose a date"
             >
               <CalendarDays size={18} />
@@ -333,13 +333,13 @@ export default function MemberScheduleClient() {
       </div>
 
       {error ? (
-        <div className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+        <div className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-500">
           {error}
         </div>
       ) : null}
 
       {message ? (
-        <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+        <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500">
           {message}
         </div>
       ) : null}
@@ -369,7 +369,7 @@ export default function MemberScheduleClient() {
             return (
               <article
                 key={`${session.id}-${session.classDate}`}
-                className="relative overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--panel-2)] p-5 shadow-[0_28px_70px_rgba(0,0,0,0.28)]"
+                className="hover-lift relative overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--panel-2)] p-5 shadow-[0_8px_24px_rgba(0,0,0,0.1)]"
               >
                 <div
                   className="absolute inset-y-0 left-0 w-1.5 rounded-full"
@@ -428,7 +428,7 @@ export default function MemberScheduleClient() {
                         type="button"
                         onClick={() => void mutateReservation(session, "DELETE")}
                         disabled={isPending}
-                        className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-2xl border border-rose-300/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-500 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isPending ? <LoaderCircle size={16} className="animate-spin" /> : <XCircle size={16} />}
                         Cancel reservation
