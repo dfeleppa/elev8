@@ -266,7 +266,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       pathname?.startsWith("/owner") ||
       pathname?.startsWith("/admin") ||
       pathname?.startsWith("/coach") ||
-      pathname?.startsWith("/management")
+      pathname?.startsWith("/management") ||
+      pathname?.startsWith("/gym-dashboard")
     ) {
       setViewMode("gym");
       return;
