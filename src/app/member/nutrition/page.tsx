@@ -4,10 +4,10 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Pencil, X } from "lucide-react";
+import { Check, Pencil, Plus, X } from "lucide-react";
 
 import SidebarShell from "../../../../components/SidebarShell";
-import { AccentCard, Panel, Micro } from "@/components/ui";
+import { AccentCard, Chip, Panel, Micro } from "@/components/ui";
 
 type NutritionEntry = {
   id: string;
@@ -163,8 +163,6 @@ export default function HealthNutritionPage() {
   const [selectedDate, setSelectedDate] = useState(() => toLocalDateInputValue(new Date()));
   const [entries, setEntries] = useState<NutritionEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"consumed" | "remaining">("remaining");
-  const [showSubMacros, setShowSubMacros] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<FoodSearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -178,17 +176,10 @@ export default function HealthNutritionPage() {
   const [mealMenuOpen, setMealMenuOpen] = useState<MealKey | null>(null);
   const [copyTargetDate, setCopyTargetDate] = useState(() => toLocalDateInputValue(new Date()));
   const [copyTargetMeal, setCopyTargetMeal] = useState<MealKey>("breakfast");
-  const [coachMenuOpen, setCoachMenuOpen] = useState(false);
   const [coachSettingsOpen, setCoachSettingsOpen] = useState(false);
   const [coachSettingsGoal, setCoachSettingsGoal] = useState<GoalType>("lose_weight");
   const [coachSettingsSaving, setCoachSettingsSaving] = useState(false);
   const [coachSettingsError, setCoachSettingsError] = useState<string | null>(null);
-  const [coachCardExpanded, setCoachCardExpanded] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-    return window.matchMedia("(min-width: 1024px)").matches;
-  });
   const [foodDialogOpen, setFoodDialogOpen] = useState(false);
   const [activeMealDialog, setActiveMealDialog] = useState<MealKey | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
@@ -318,14 +309,6 @@ export default function HealthNutritionPage() {
   }, [selectedDate]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
-    setCoachCardExpanded(isDesktop);
-  }, []);
-
-  useEffect(() => {
     let isActive = true;
 
     fetch("/api/coach/nutrition-plan-status", { cache: "no-store" })
@@ -399,44 +382,35 @@ export default function HealthNutritionPage() {
     ? clampPercent((totals.fat / targetNumbers.fat) * 100)
     : 0;
 
-  const macroRows = [
-    {
-      label: "Protein",
-      value: totals.protein,
-      target: targetNumbers.protein,
-      remaining: remaining.protein,
-      dotClass: "bg-cyan-400",
-      gradientStart: "#67e8f9",
-      gradientEnd: "#0e7490",
-      progress: proteinProgress,
-      subRows: [],
-    },
-    {
-      label: "Carbs",
-      value: totals.carbs,
-      target: targetNumbers.carbs,
-      remaining: remaining.carbs,
-      dotClass: "bg-indigo-400",
-      gradientStart: "#a5b4fc",
-      gradientEnd: "#3730a3",
-      progress: carbsProgress,
-      subRows: [
-        { label: "Fiber", value: totals.fiber },
-        { label: "Sugar", value: totals.sugar },
-      ],
-    },
-    {
-      label: "Fat",
-      value: totals.fat,
-      target: targetNumbers.fat,
-      remaining: remaining.fat,
-      dotClass: "bg-amber-400",
-      gradientStart: "#fde68a",
-      gradientEnd: "#b45309",
-      progress: fatProgress,
-      subRows: [{ label: "Saturated Fat", value: totals.saturatedFat }],
-    },
+  const caloriesProgress = targetNumbers.calories
+    ? clampPercent((totals.calories / targetNumbers.calories) * 100)
+    : 0;
+
+  const FIBER_DEFAULT_TARGET = 30;
+  const fiberProgress = clampPercent((totals.fiber / FIBER_DEFAULT_TARGET) * 100);
+
+  const macroBars = [
+    { label: "Protein", value: totals.protein, target: targetNumbers.protein, progress: proteinProgress },
+    { label: "Carbs", value: totals.carbs, target: targetNumbers.carbs, progress: carbsProgress },
+    { label: "Fat", value: totals.fat, target: targetNumbers.fat, progress: fatProgress },
+    { label: "Fiber", value: totals.fiber, target: FIBER_DEFAULT_TARGET, progress: fiberProgress },
   ];
+
+  const selectedDateObj = new Date(`${selectedDate}T00:00:00`);
+  const isSelectedDateToday = toLocalDateInputValue(new Date()) === selectedDate;
+  const selectedDayName = selectedDateObj.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
+  const macroCardLabel = isSelectedDateToday
+    ? `TODAY · ${selectedDayName}`
+    : selectedDateObj
+        .toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
+        .toUpperCase();
+
+  const MEAL_CHIP_TONE: Record<MealKey, "pink" | "violet" | "lime" | "neutral"> = {
+    breakfast: "pink",
+    lunch: "violet",
+    dinner: "neutral",
+    snack: "lime",
+  };
 
   const coachWeights = {
     start: Number(coachPlanSummary?.startWeight ?? 0),
@@ -947,150 +921,70 @@ export default function HealthNutritionPage() {
 
         <section className="grid gap-6 lg:grid-cols-2">
           <AccentCard tone="pink">
-            <div className="mb-5 flex items-center justify-between">
-              <Micro onAccent as="p">Macros</Micro>
-              <div className="inline-flex rounded-full border border-black/10 bg-black/10 p-1">
-                {(["consumed", "remaining"] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setViewMode(mode)}
-                    className={`rounded-full px-4 py-1 text-xs font-semibold transition ${
-                      viewMode === mode
-                        ? "bg-black/20 text-current"
-                        : "text-current opacity-50"
-                    }`}
-                  >
-                    {mode === "consumed" ? "Consumed" : "Remaining"}
-                  </button>
-                ))}
-              </div>
+            <div className="flex items-start justify-between gap-3">
+              <Micro onAccent as="p">{macroCardLabel}</Micro>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-black/10 px-3.5 py-1.5 text-xs font-semibold">
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+                {roundToWhole(Math.max(0, remaining.calories))} kcal to go
+              </span>
             </div>
-            <div className="grid gap-6 md:grid-cols-[auto_1fr] md:items-center">
+
+            <div className="mt-6 grid gap-6 md:grid-cols-[auto_1fr] md:items-center">
               <div className="flex items-center justify-center">
-                <div className="relative grid h-48 w-48 place-items-center">
-                  <svg className="absolute inset-0" viewBox="0 0 192 192" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="proteinRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor={macroRows[0].gradientStart} />
-                        <stop offset="100%" stopColor={macroRows[0].gradientEnd} />
-                      </linearGradient>
-                      <linearGradient id="carbsRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor={macroRows[1].gradientStart} />
-                        <stop offset="100%" stopColor={macroRows[1].gradientEnd} />
-                      </linearGradient>
-                      <linearGradient id="fatRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor={macroRows[2].gradientStart} />
-                        <stop offset="100%" stopColor={macroRows[2].gradientEnd} />
-                      </linearGradient>
-                    </defs>
-
-                    <g transform="rotate(-90 96 96)">
-                      <circle cx="96" cy="96" r="84" fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="8" />
+                <div className="relative grid h-44 w-44 place-items-center">
+                  <svg className="absolute inset-0" viewBox="0 0 176 176" aria-hidden="true">
+                    <g transform="rotate(-90 88 88)">
+                      <circle cx="88" cy="88" r="76" fill="none" stroke="rgba(0,0,0,0.14)" strokeWidth="12" />
                       <circle
-                        cx="96"
-                        cy="96"
-                        r="84"
+                        cx="88"
+                        cy="88"
+                        r="76"
                         fill="none"
-                        stroke="url(#proteinRingGradient)"
-                        strokeWidth="8"
+                        stroke="#230012"
+                        strokeWidth="12"
                         strokeLinecap="round"
-                        strokeDasharray={ringDashArray(macroRows[0].progress, 84)}
-                      />
-
-                      <circle cx="96" cy="96" r="68" fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="8" />
-                      <circle
-                        cx="96"
-                        cy="96"
-                        r="68"
-                        fill="none"
-                        stroke="url(#carbsRingGradient)"
-                        strokeWidth="8"
-                        strokeLinecap="round"
-                        strokeDasharray={ringDashArray(macroRows[1].progress, 68)}
-                      />
-
-                      <circle cx="96" cy="96" r="52" fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="8" />
-                      <circle
-                        cx="96"
-                        cy="96"
-                        r="52"
-                        fill="none"
-                        stroke="url(#fatRingGradient)"
-                        strokeWidth="8"
-                        strokeLinecap="round"
-                        strokeDasharray={ringDashArray(macroRows[2].progress, 52)}
+                        strokeDasharray={ringDashArray(caloriesProgress, 76)}
                       />
                     </g>
                   </svg>
-
-                  <div
-                    className="relative z-10 grid h-[86px] w-[86px] place-items-center rounded-full border border-black/10 bg-black/10 text-center"
-                  >
-                    <div className="grid h-[74px] w-[74px] place-items-center rounded-full bg-black/10 text-center">
-                      <p className="text-xs uppercase tracking-[0.3em] opacity-60">Cal</p>
-                      <p className="text-2xl font-semibold">
-                        {roundToWhole(viewMode === "consumed" ? totals.calories : remaining.calories)}
-                      </p>
-                      <p className="text-xs opacity-40">
-                        {roundToWhole(targetNumbers.calories || 0)}
-                      </p>
-                    </div>
+                  <div className="text-center">
+                    <p className="text-4xl font-bold leading-none tracking-tight">
+                      {roundToWhole(totals.calories).toLocaleString()}
+                    </p>
+                    <p className="mt-1.5 text-[10px] uppercase tracking-[0.18em] opacity-60">
+                      of {roundToWhole(targetNumbers.calories || 0).toLocaleString()} kcal
+                    </p>
+                    <p className="mt-1 text-sm font-semibold">{Math.round(caloriesProgress)}%</p>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="grid gap-3">
-                  {macroRows.map((macro) => (
-                    <div key={macro.label} className="space-y-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <span className={`h-2.5 w-2.5 rounded-full ${macro.dotClass}`} />
-                          <p className="text-sm">{macro.label}</p>
-                        </div>
-                        <p
-                          className={`text-sm ${
-                            viewMode === "remaining" && macro.remaining < 0
-                              ? "font-semibold text-rose-400"
-                              : "opacity-70"
-                          }`}
-                        >
-                          {roundToWhole(viewMode === "consumed" ? macro.value : macro.remaining)} / {roundToWhole(macro.target)}
-                        </p>
-                      </div>
-                      {showSubMacros && macro.subRows.length > 0 ? (
-                        <div className="pl-6">
-                          {macro.subRows.map((sub) => (
-                            <div key={`${macro.label}-${sub.label}`} className="flex items-center justify-between">
-                              <p className="text-xs opacity-50">{sub.label}</p>
-                              <p className="text-xs opacity-50">{sub.value}</p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
+              <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                {macroBars.map((bar) => (
+                  <div key={bar.label}>
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="text-sm">{bar.label}</p>
+                      <p className="text-sm font-bold tabular-nums">
+                        {roundToWhole(bar.value)}/{roundToWhole(bar.target)}g
+                      </p>
                     </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowSubMacros((current) => !current)}
-                  className="inline-flex items-center gap-1 self-start rounded-md px-1 py-0.5 text-xs font-semibold opacity-60 transition hover:bg-black/10 hover:opacity-100"
-                  aria-pressed={showSubMacros}
-                  aria-label="Toggle nutrients"
-                >
-                  <span>Nutrients</span>
-                  <ChevronDown
-                    className={`h-3.5 w-3.5 transition-transform ${showSubMacros ? "rotate-180" : "rotate-0"}`}
-                    aria-hidden="true"
-                  />
-                </button>
+                    <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-black/15">
+                      <div
+                        className="h-full rounded-full bg-black/70 transition-[width] duration-500"
+                        style={{ width: `${bar.progress}%` }}
+                      />
+                    </div>
+                    <p className="mt-1 text-[11px] tabular-nums opacity-60">{Math.round(bar.progress)}%</p>
+                  </div>
+                ))}
               </div>
             </div>
           </AccentCard>
 
           {coachPlanStatus === "none" ? (
-            <Panel padding="lg" className="flex h-full flex-col items-center justify-center">
+            <Panel padding="lg" className="hover-lift flex h-full flex-col items-center justify-center">
               <Link
                         href="/member/nutrition-coach"
                 className="accent-pink rounded-full px-6 py-2.5 text-sm font-semibold transition hover:brightness-110"
@@ -1099,145 +993,58 @@ export default function HealthNutritionPage() {
               </Link>
             </Panel>
           ) : coachPlanStatus === "loading" ? (
-            <Panel padding="lg" className="flex h-full flex-col items-center justify-center">
+            <Panel padding="lg" className="hover-lift flex h-full flex-col items-center justify-center">
               <p className="text-sm text-[var(--text-muted)]">Loading coach plan...</p>
             </Panel>
           ) : (
-            <AccentCard tone="lime" className="flex h-full flex-col">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <Micro onAccent as="p">Coach</Micro>
-                <p className="mt-1 text-sm">{coachGoalLabel}</p>
+            <AccentCard tone="violet" className="flex h-full flex-col">
+              <div className="flex items-start justify-between gap-3">
+                <Micro onAccent as="p">
+                  COACH · {coachGoalLabel.toUpperCase()}
+                </Micro>
+                <span className="text-[11px] font-semibold opacity-70">
+                  {Math.round(weightProgressPercent)}% to goal
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCoachCardExpanded((expanded) => !expanded)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-black/10 opacity-70 transition hover:opacity-100"
-                  aria-expanded={coachCardExpanded}
-                  aria-label={coachCardExpanded ? "Collapse coach card" : "Expand coach card"}
-                >
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform ${coachCardExpanded ? "rotate-180" : "rotate-0"}`}
-                    aria-hidden="true"
+
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-4xl font-bold leading-none tracking-tight">
+                  {formatDecimal(coachWeights.trend)}
+                </span>
+                <span className="text-xs opacity-70">
+                  of {formatDecimal(coachWeights.goal)} lb goal
+                </span>
+              </div>
+
+              <div className="mt-5 grid grid-cols-10 gap-1.5">
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <div
+                    key={`coach-check-bar-${index}`}
+                    className={`h-10 rounded-[3px] ${
+                      index < checkInTimeline.filledBars ? "bg-[#140a2e]" : "bg-white/30"
+                    }`}
                   />
-                </button>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setCoachMenuOpen((open) => !open)}
-                    className="grid h-9 w-9 place-items-center rounded-full border border-black/10 bg-black/10 opacity-70 transition hover:opacity-100"
-                    aria-label="Coach card menu"
-                    aria-expanded={coachMenuOpen}
-                  >
-                    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                      <circle cx="12" cy="5" r="1.7" fill="currentColor" />
-                      <circle cx="12" cy="12" r="1.7" fill="currentColor" />
-                      <circle cx="12" cy="19" r="1.7" fill="currentColor" />
-                    </svg>
-                  </button>
-                  {coachMenuOpen ? (
-                    <div className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-black/10 bg-black/25 p-2 shadow-lg backdrop-blur">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCoachMenuOpen(false);
-                          setCoachSettingsOpen(true);
-                        }}
-                        className="block w-full rounded-lg px-3 py-2 text-left text-sm text-current transition hover:bg-black/10"
-                      >
-                        Coach settings
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
+                ))}
               </div>
-            </div>
 
-            {coachCardExpanded ? (
-              <>
-                <div className="mt-6 rounded-2xl border border-black/10 bg-black/10 p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="text-xs uppercase tracking-[0.2em] opacity-60">Weight Progress</p>
-                    <p className="text-xs font-semibold">{Math.round(weightProgressPercent)}% to goal</p>
-                  </div>
+              <p className="mt-2 text-[11px] opacity-70">
+                {checkInTimeline.daysUntilNext === 0
+                  ? "Check-in due today"
+                  : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until next check-in`}
+              </p>
 
-                  <div className="flex items-center">
-                    <div className="grid w-full grid-cols-[auto_1fr_auto_1fr_auto] items-center">
-                      <div className="flex min-w-[52px] flex-col items-center sm:min-w-[64px]">
-                        <span className="grid h-8 w-8 place-items-center rounded-full border-2 border-black/20 bg-black/10 text-[10px] font-semibold sm:h-10 sm:w-10 sm:text-xs">
-                          {formatDecimal(coachWeights.start)}
-                        </span>
-                        <span className="mt-1 text-[10px] opacity-40 sm:text-[11px]">Start</span>
-                      </div>
-
-                      <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-black/15 sm:mx-2">
-                        <span
-                          className="block h-full rounded-full bg-black/30"
-                          style={{ width: `${Math.min(100, weightProgressPercent * 2)}%` }}
-                        />
-                      </div>
-
-                      <div className="flex min-w-[52px] flex-col items-center sm:min-w-[64px]">
-                        <span
-                          className="grid h-8 w-8 place-items-center rounded-full border-2 border-black/20 bg-black/10 text-[10px] font-semibold sm:h-10 sm:w-10 sm:text-xs"
-                        >
-                          {formatDecimal(coachWeights.trend)}
-                        </span>
-                        <span className="mt-1 text-[10px] opacity-40 sm:text-[11px]">Current</span>
-                      </div>
-
-                      <div className="mx-1 h-1 flex-1 overflow-hidden rounded-full bg-black/15 sm:mx-2">
-                        <span
-                          className="block h-full rounded-full bg-black/30"
-                          style={{ width: `${Math.max(0, (weightProgressPercent - 50) * 2)}%` }}
-                        />
-                      </div>
-
-                      <div className="flex min-w-[52px] flex-col items-center sm:min-w-[64px]">
-                        <span
-                          className="grid h-8 w-8 place-items-center rounded-full border-2 border-black/20 bg-black/10 text-[10px] font-semibold sm:h-10 sm:w-10 sm:text-xs"
-                        >
-                          {formatDecimal(coachWeights.goal)}
-                        </span>
-                        <span className="mt-1 text-[10px] opacity-40 sm:text-[11px]">Goal</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 rounded-2xl border border-black/10 bg-black/10 p-4">
-                  <div className="mb-2 flex flex-col gap-1 text-xs font-medium opacity-60 sm:flex-row sm:items-center sm:justify-between">
-                    <p>Last check-in: {checkInTimeline.lastDateLabel}</p>
-                    <p>Next check-in: {checkInTimeline.nextDateLabel}</p>
-                  </div>
-
-                  <div className="grid grid-cols-10 gap-1">
-                    {Array.from({ length: 10 }).map((_, index) => (
-                      <span
-                        key={`check-bar-${index}`}
-                        className={`h-2 rounded-full ${
-                          index < checkInTimeline.filledBars
-                            ? "bg-black/30"
-                            : "bg-black/10"
-                        }`}
-                      />
-                    ))}
-                  </div>
-
-                  <p className="mt-2 text-xs opacity-60">
-                    {checkInTimeline.daysUntilNext === 0
-                      ? "Check-in due today"
-                      : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until next check-in`}
-                  </p>
-                </div>
-              </>
-            ) : null}
-          </AccentCard>
+              <button
+                type="button"
+                onClick={() => setCoachSettingsOpen(true)}
+                className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-[#140a2e] py-3 text-sm font-semibold text-white transition hover:opacity-90"
+              >
+                Coach settings
+              </button>
+            </AccentCard>
           )}
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-2">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {meals.map((meal) => {
             const mealEntries = entries.filter((entry) => entry.meal_type === meal.key);
             const mealTotals = mealEntries.reduce(
@@ -1251,21 +1058,17 @@ export default function HealthNutritionPage() {
               },
               { calories: 0, protein: 0, carbs: 0, fat: 0 }
             );
+            const hasEntries = mealEntries.length > 0;
 
             return (
-              <Panel key={meal.key} padding="none" className="p-4">
-                <div className="relative flex items-center justify-between">
-                  <div>
-                    <Micro as="p">{meal.label}</Micro>
-                    <p className="mt-2 text-sm text-[var(--text)]">
-                      {Math.round(mealTotals.calories)} Cal, {Math.round(mealTotals.protein)}p, {Math.round(mealTotals.carbs)}c, {Math.round(mealTotals.fat)}f
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
+              <Panel key={meal.key} padding="md" className="hover-lift relative flex flex-col">
+                <div className="flex items-start justify-between gap-2">
+                  <Chip tone={MEAL_CHIP_TONE[meal.key]}>{meal.label}</Chip>
+                  <div className="flex items-center gap-0.5">
                     <button
                       type="button"
                       onClick={() => setMealMenuOpen((current) => (current === meal.key ? null : meal.key))}
-                      className="grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
+                      className="grid h-8 w-8 place-items-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
                       aria-label={`Meal actions for ${meal.label}`}
                     >
                       <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -1280,23 +1083,25 @@ export default function HealthNutritionPage() {
                         setMealMenuOpen(null);
                         openMealDialog(meal.key);
                       }}
-                      className="accent-pink rounded-full px-5 py-2 text-sm font-semibold transition hover:brightness-110"
+                      className="grid h-8 w-8 place-items-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
+                      aria-label={`Add to ${meal.label}`}
                     >
-                      Add
+                      <Plus className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
+                </div>
 
-                  {mealMenuOpen === meal.key ? (
-                    <div className="absolute right-0 top-11 z-20 w-44 overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--panel-2)] shadow-lg">
-                      <button
-                        type="button"
-                        onClick={() => void deleteMealEntries(meal.key)}
-                        className="block w-full px-4 py-3 text-left text-base text-rose-400 transition hover:bg-white/5"
-                      >
-                        Delete meal
-                      </button>
-                      <button
-                        type="button"
+                {mealMenuOpen === meal.key ? (
+                  <div className="absolute right-3 top-12 z-20 w-44 overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--panel-2)] shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => void deleteMealEntries(meal.key)}
+                      className="block w-full px-4 py-3 text-left text-sm text-rose-400 transition hover:bg-white/5"
+                    >
+                      Delete meal
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => {
                         setMealMenuOpen(null);
                         setCopyDialogMeal(meal.key);
@@ -1304,87 +1109,116 @@ export default function HealthNutritionPage() {
                         setCopyTargetMeal(meal.key);
                       }}
                       disabled={copyingMeal === meal.key}
-                      className="block w-full px-4 py-3 text-left text-base text-[var(--text)] transition hover:bg-[var(--panel)] disabled:opacity-60"
+                      className="block w-full px-4 py-3 text-left text-sm text-[var(--text)] transition hover:bg-[var(--panel)] disabled:opacity-60"
                     >
                       {copyingMeal === meal.key ? "Copying..." : "Copy meal"}
                     </button>
-                    </div>
-                  ) : null}
-                </div>
+                  </div>
+                ) : null}
 
-                <div className="mt-4 space-y-3">
-                  {mealEntries.length === 0 ? (
-                    <p className="text-sm text-[var(--text-muted)]">No entries yet.</p>
-                  ) : (
-                    mealEntries.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="flex items-start justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-4"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold text-[var(--text)]">{entry.entry_name}</p>
-                          <p className="mt-1 text-xs text-[var(--text-muted)]">
-                            {roundToWhole((entry.calories ?? 0) * toEntryQuantity(entry.quantity))} cal · {roundToWhole((entry.protein ?? 0) * toEntryQuantity(entry.quantity))}p · {roundToWhole((entry.carbs ?? 0) * toEntryQuantity(entry.quantity))}c · {roundToWhole((entry.fat ?? 0) * toEntryQuantity(entry.quantity))}f
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1 rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-1">
-                            <span className="text-[11px] text-[var(--text-soft)]">Serving</span>
-                            {editingEntryId === entry.id ? (
-                              <>
-                                <input
-                                  value={editServingDraft}
-                                  onChange={(event) => setEditServingDraft(event.target.value)}
-                                  onKeyDown={(event) => {
-                                    if (event.key === "Enter") {
-                                      void saveServingSize(entry.id);
-                                    }
-                                    if (event.key === "Escape") {
-                                      setEditingEntryId(null);
-                                      setEditServingDraft("");
-                                    }
-                                  }}
-                                  className="w-14 rounded border border-[var(--line-strong)] bg-[var(--panel-2)] px-1.5 py-0.5 text-xs text-[var(--text)] focus:border-white/30 focus:outline-none"
-                                  inputMode="decimal"
-                                  aria-label="Edit serving size"
-                                />
+                {hasEntries ? (
+                  <>
+                    <div className="mt-3 flex items-baseline gap-1.5">
+                      <span className="text-4xl font-bold leading-none tracking-tight text-[var(--text)]">
+                        {Math.round(mealTotals.calories).toLocaleString()}
+                      </span>
+                      <span className="text-sm text-[var(--text-muted)]">kcal</span>
+                    </div>
+
+                    <div className="mt-5 space-y-4">
+                      {mealEntries.map((entry) => {
+                        const quantity = toEntryQuantity(entry.quantity);
+                        const entryCal = roundToWhole((entry.calories ?? 0) * quantity);
+                        const entryP = roundToWhole((entry.protein ?? 0) * quantity);
+                        const entryC = roundToWhole((entry.carbs ?? 0) * quantity);
+                        const entryF = roundToWhole((entry.fat ?? 0) * quantity);
+                        const isEditingServing = editingEntryId === entry.id;
+                        return (
+                          <div key={entry.id} className="group">
+                            <div className="flex items-baseline justify-between gap-3">
+                              <p className="text-sm text-[var(--text)]">{entry.entry_name}</p>
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-sm font-bold tabular-nums text-[var(--text)]">{entryCal}</p>
                                 <button
                                   type="button"
-                                  onClick={() => void saveServingSize(entry.id)}
-                                  className="rounded-full p-1 text-[var(--text-muted)] transition hover:bg-[var(--panel)]"
-                                  aria-label="Save serving size"
+                                  onClick={() => deleteEntry(entry.id)}
+                                  className="rounded-full p-0.5 text-[var(--text-soft)] opacity-0 transition hover:text-rose-400 group-hover:opacity-100"
+                                  aria-label="Remove entry"
                                 >
-                                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                                  <X className="h-3 w-3" aria-hidden="true" />
                                 </button>
-                              </>
-                            ) : (
-                              <>
-                                <span className="text-xs font-medium text-[var(--text)]">
-                                  {formatServingSize(toEntryQuantity(entry.quantity))}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => openServingSizeEditor(entry.id, entry.quantity)}
-                                  className="rounded-full p-1 text-[var(--text-muted)] transition hover:bg-[var(--panel)]"
-                                  aria-label="Edit serving size"
-                                >
-                                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                                </button>
-                              </>
-                            )}
+                              </div>
+                            </div>
+                            <div className="mt-0.5 flex items-baseline justify-between gap-3">
+                              <div className="flex items-center gap-1 text-[11px] text-[var(--text-soft)]">
+                                {isEditingServing ? (
+                                  <>
+                                    <input
+                                      value={editServingDraft}
+                                      onChange={(event) => setEditServingDraft(event.target.value)}
+                                      onKeyDown={(event) => {
+                                        if (event.key === "Enter") void saveServingSize(entry.id);
+                                        if (event.key === "Escape") {
+                                          setEditingEntryId(null);
+                                          setEditServingDraft("");
+                                        }
+                                      }}
+                                      className="w-12 rounded border border-[var(--line-strong)] bg-[var(--panel-2)] px-1 py-0.5 text-[11px] text-[var(--text)] focus:border-white/30 focus:outline-none"
+                                      inputMode="decimal"
+                                      aria-label="Edit serving size"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => void saveServingSize(entry.id)}
+                                      className="rounded-full p-0.5 text-[var(--text-muted)] transition hover:bg-[var(--panel)]"
+                                      aria-label="Save serving size"
+                                    >
+                                      <Check className="h-3 w-3" aria-hidden="true" />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span>{formatServingSize(quantity)}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => openServingSizeEditor(entry.id, entry.quantity)}
+                                      className="rounded-full p-0.5 text-[var(--text-soft)] opacity-0 transition hover:text-[var(--text)] group-hover:opacity-100"
+                                      aria-label="Edit serving size"
+                                    >
+                                      <Pencil className="h-2.5 w-2.5" aria-hidden="true" />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                              <p className="font-mono text-[11px] tabular-nums text-[var(--text-muted)]">
+                                P{entryP} · C{entryC} · F{entryF}
+                              </p>
+                            </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => deleteEntry(entry.id)}
-                            className="text-xs text-[var(--text-soft)] transition hover:text-rose-400"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-3">
+                      <Micro as="p">Planned</Micro>
+                    </div>
+                    <div className="mt-auto flex flex-1 flex-col justify-end pt-8">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMealMenuOpen(null);
+                          openMealDialog(meal.key);
+                        }}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[var(--line)] bg-[var(--panel-2)] py-3 text-sm text-[var(--text-muted)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+                      >
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        Log {meal.label.toLowerCase()}
+                      </button>
+                    </div>
+                  </>
+                )}
               </Panel>
             );
           })}
