@@ -32,7 +32,7 @@
   background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
   background-size: 18px 18px;
 }
-:root[data-theme="light"] .dotgrid {
+:root[data-theme="light"] .dotgrid:not(.accent-pink):not(.accent-violet):not(.accent-lime):not(.accent-ink) {
   background-image: radial-gradient(rgba(20, 17, 15, 0.08) 1px, transparent 1px);
 }
 
