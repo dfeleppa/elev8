@@ -44,6 +44,7 @@ export async function GET() {
     bodyFatPercent: data?.body_fat_percent ?? null,
     createdAt: data?.created_at ?? null,
     role,
+    memberships: [{ role, memberSince: data?.created_at ?? null }],
   });
 }
 
