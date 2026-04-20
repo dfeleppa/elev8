@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, CheckCircle2, Clock3, LoaderCircle, User, Users, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, LoaderCircle, User, Users, XCircle } from "lucide-react";
 
 type ReservedMember = {
   id: string;
@@ -78,8 +78,9 @@ function formatDuration(minutes: number) {
 function formatRailDay(dateKey: string) {
   const date = parseDateKey(dateKey);
   return {
-    weekday: DAY_NAMES_SHORT[date.getDay()],
-    monthDay: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    weekday: DAY_NAMES_SHORT[date.getDay()].toUpperCase(),
+    dayNum: date.getDate(),
+    month: date.toLocaleDateString("en-US", { month: "short" }),
   };
 }
 
@@ -172,11 +173,19 @@ export default function MemberScheduleClient() {
   const [rosterSession, setRosterSession] = useState<ScheduleSession | null>(null);
   const dateInputRef = useRef<HTMLInputElement | null>(null);
   const todayKey = toLocalDateString(new Date());
+  const [railStart, setRailStart] = useState(() => addDays(toLocalDateString(new Date()), -7));
 
   const dayRail = useMemo(
-    () => Array.from({ length: 15 }, (_, index) => addDays(selectedDate, index - 7)),
-    [selectedDate]
+    () => Array.from({ length: 14 }, (_, index) => addDays(railStart, index)),
+    [railStart]
   );
+
+  useEffect(() => {
+    const railEnd = addDays(railStart, 13);
+    if (selectedDate < railStart || selectedDate > railEnd) {
+      setRailStart(addDays(selectedDate, -7));
+    }
+  }, [selectedDate, railStart]);
 
   useEffect(() => {
     let ignore = false;
@@ -260,75 +269,100 @@ export default function MemberScheduleClient() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold text-[var(--text)]">Class Schedule</h1>
-            <p className="mt-1 text-sm text-[var(--text-soft)]">
-              {loading ? "Loading daily schedule..." : `${formatLongDate(selectedDate)} · ${sessionsLabel}`}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 self-start rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-2 py-2">
-            <button
-              type="button"
-              onClick={() => setSelectedDate(todayKey)}
-              className={`rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition ${
-                selectedDate === todayKey
-                  ? "bg-[linear-gradient(135deg,#ff4a8d,#8b5cf6)] text-white shadow-sm"
-                  : "text-[var(--text-muted)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
-              }`}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
-              aria-label="Choose a date"
-            >
-              <CalendarDays size={16} />
-            </button>
-            <input
-              ref={dateInputRef}
-              type="date"
-              value={selectedDate}
-              onChange={(event) => setSelectedDate(event.target.value)}
-              className="sr-only"
-              aria-hidden="true"
-              tabIndex={-1}
-            />
-          </div>
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-3xl font-semibold text-[var(--text)]">Class Schedule</h1>
+          <p className="mt-1 text-sm text-[var(--text-soft)]">
+            {loading ? "Loading daily schedule..." : `${formatLongDate(selectedDate)} · ${sessionsLabel}`}
+          </p>
         </div>
 
-        <div className="overflow-x-auto pb-2">
-          <div className="flex min-w-max gap-2">
-            {dayRail.map((dateKey) => {
-              const isSelected = dateKey === selectedDate;
-              const isToday = dateKey === todayKey;
-              const label = formatRailDay(dateKey);
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setRailStart((prev) => addDays(prev, -7))}
+            className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+            aria-label="Previous week"
+          >
+            <ChevronLeft size={16} />
+          </button>
 
-              return (
-                <button
-                  key={dateKey}
-                  type="button"
-                  onClick={() => setSelectedDate(dateKey)}
-                  className={`group flex min-w-[80px] flex-col items-center rounded-2xl border px-3 py-3 text-center transition ${
-                    isSelected
-                      ? "border-transparent bg-[linear-gradient(135deg,#ff4a8d,#8b5cf6)] text-white shadow-[0_8px_24px_rgba(255,74,141,0.35)]"
-                      : isToday
-                        ? "border-[var(--cyan)]/30 bg-[var(--cyan)]/8 text-[var(--text)]"
-                        : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
-                  }`}
-                >
-                  <span className={`text-[10px] font-bold uppercase tracking-[0.24em] ${isSelected ? "text-white/80" : isToday && !isSelected ? "text-[var(--cyan)]" : ""}`}>
-                    {isToday && !isSelected ? "Today" : label.weekday}
-                  </span>
-                  <span className={`mt-1 text-sm font-semibold ${isSelected ? "text-white" : ""}`}>{label.monthDay}</span>
-                </button>
-              );
-            })}
+          <div className="min-w-0 flex-1 overflow-x-auto">
+            <div className="flex gap-1.5 min-w-max">
+              {dayRail.map((dateKey) => {
+                const isSelected = dateKey === selectedDate;
+                const isToday = dateKey === todayKey;
+                const label = formatRailDay(dateKey);
+
+                return (
+                  <button
+                    key={dateKey}
+                    type="button"
+                    onClick={() => setSelectedDate(dateKey)}
+                    className={`flex w-[62px] shrink-0 flex-col items-center rounded-2xl border px-1.5 py-2.5 text-center transition ${
+                      isSelected
+                        ? "border-transparent bg-[linear-gradient(160deg,#ff4a8d,#8b5cf6)] shadow-[0_8px_24px_rgba(255,74,141,0.40)]"
+                        : "border-[var(--line)] bg-[var(--panel-2)] hover:border-[var(--line-strong)] hover:bg-[var(--panel)]"
+                    }`}
+                  >
+                    <span className={`whitespace-nowrap text-[8px] font-bold uppercase leading-none ${
+                      isSelected ? "tracking-[0.12em] text-white/80" : isToday ? "tracking-[0.12em] text-[var(--cyan)]" : "tracking-[0.16em] text-[var(--text-muted)]"
+                    }`}>
+                      {isToday ? `${label.weekday} TODAY` : label.weekday}
+                    </span>
+                    <span className={`mt-1.5 text-[22px] font-bold leading-none ${
+                      isSelected ? "text-white" : "text-[var(--text)]"
+                    }`}>
+                      {label.dayNum}
+                    </span>
+                    <span className={`mt-1 text-[10px] font-medium leading-none ${
+                      isSelected ? "text-white/70" : "text-[var(--text-muted)]"
+                    }`}>
+                      {label.month}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setRailStart((prev) => addDays(prev, 7))}
+            className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+            aria-label="Next week"
+          >
+            <ChevronRight size={16} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedDate(todayKey);
+              setRailStart(addDays(todayKey, -7));
+            }}
+            className="shrink-0 rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--panel)]"
+          >
+            Today
+          </button>
+
+          <button
+            type="button"
+            onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
+            className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
+            aria-label="Choose a date"
+          >
+            <CalendarDays size={16} />
+          </button>
+          <input
+            ref={dateInputRef}
+            type="date"
+            value={selectedDate}
+            onChange={(event) => setSelectedDate(event.target.value)}
+            className="sr-only"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
         </div>
       </div>
 
