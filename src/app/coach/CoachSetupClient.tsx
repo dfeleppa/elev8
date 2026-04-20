@@ -20,6 +20,8 @@ type PlanPreview = {
 type LatestPlanPayload = {
   weeklyRatePercentOverride?: number | null;
   reverseDietWeeklyKcalOverride?: number | null;
+  weightLbs?: number | null;
+  bodyFatPercentage?: number | null;
 };
 
 type LatestPlan = {
@@ -38,6 +40,21 @@ type LatestPlan = {
   sessions_per_week?: number | null;
   effective_date?: string | null;
   plan_payload?: LatestPlanPayload | null;
+};
+
+type Profile = {
+  sex?: "male" | "female" | null;
+  birth_date?: string | null;
+  height_cm?: number | null;
+  current_weight_kg?: number | null;
+  body_fat_percent?: number | null;
+};
+
+const GOAL_LABELS: Record<GoalType, string> = {
+  lose_weight: "Lose Weight",
+  gain_weight: "Gain Weight",
+  maintain_weight: "Maintain Weight",
+  performance_reverse_diet: "Performance / Reverse Diet",
 };
 
 const GOAL_OPTIONS: Array<{ value: GoalType; label: string; description: string }> = [
@@ -77,13 +94,39 @@ function toDisplayNumber(value: number) {
   return Number.isFinite(value) ? value.toFixed(1).replace(/\.0$/, "") : "0";
 }
 
+function formatDate(isoDate: string) {
+  const d = new Date(`${isoDate}T00:00:00`);
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function daysSince(isoDate: string) {
+  const start = new Date(`${isoDate}T00:00:00`).getTime();
+  const now = Date.now();
+  return Math.max(0, Math.floor((now - start) / 86_400_000));
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
+      <p className="mt-1 text-xl font-semibold text-slate-100">{value}</p>
+    </div>
+  );
+}
+
 export default function CoachSetupClient() {
-  const [step, setStep] = useState(1);
+  const [viewMode, setViewMode] = useState<"dashboard" | "setup">("setup");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [hasPlan, setHasPlan] = useState(false);
+  const [activePlan, setActivePlan] = useState<LatestPlan | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  // Wizard state
+  const [step, setStep] = useState(1);
   const [goalType, setGoalType] = useState<GoalType>("lose_weight");
   const [sex, setSex] = useState<"male" | "female">("male");
   const [birthDate, setBirthDate] = useState("");
@@ -92,12 +135,10 @@ export default function CoachSetupClient() {
   const [heightCm, setHeightCm] = useState("178");
   const [bodyFatPercentage, setBodyFatPercentage] = useState("");
   const [sessionsPerWeek, setSessionsPerWeek] = useState("4");
-
   const [intensityPreset, setIntensityPreset] = useState<IntensityPreset>("moderate");
   const [useAdvancedOverride, setUseAdvancedOverride] = useState(false);
   const [weeklyRatePercentOverride, setWeeklyRatePercentOverride] = useState("");
   const [reverseDietWeeklyKcalOverride, setReverseDietWeeklyKcalOverride] = useState("");
-
   const [effectiveDate, setEffectiveDate] = useState(() => todayIsoDate());
   const [planPreview, setPlanPreview] = useState<PlanPreview | null>(null);
 
@@ -110,76 +151,31 @@ export default function CoachSetupClient() {
         if (!response.ok) {
           throw new Error(payload?.error ?? "Failed to load nutrition coach data.");
         }
-        if (!active) {
-          return;
-        }
+        if (!active) return;
 
-        const profile = payload?.profile;
+        const prof = payload?.profile as Profile | null;
         const latestPlan = (payload?.latestPlan ?? null) as LatestPlan | null;
+        const planExists = Boolean(payload?.hasPlan);
 
-        if (profile?.sex === "male" || profile?.sex === "female") {
-          setSex(profile.sex);
+        setProfile(prof ?? null);
+        setActivePlan(latestPlan);
+        setHasPlan(planExists);
+
+        if (prof?.sex === "male" || prof?.sex === "female") setSex(prof.sex);
+        if (typeof prof?.birth_date === "string") setBirthDate(prof.birth_date);
+        if (typeof prof?.height_cm === "number") setHeightCm(String(prof.height_cm));
+        if (typeof prof?.current_weight_kg === "number") {
+          setCurrentWeightLbs(String(Math.round(prof.current_weight_kg * 2.20462 * 10) / 10));
         }
-        if (typeof profile?.birth_date === "string") {
-          setBirthDate(profile.birth_date);
-        }
-        if (typeof profile?.height_cm === "number") {
-          setHeightCm(String(profile.height_cm));
-        }
-        if (typeof profile?.current_weight_kg === "number") {
-          setCurrentWeightLbs(String(Math.round(profile.current_weight_kg * 2.20462 * 10) / 10));
-        }
-        if (typeof profile?.body_fat_percent === "number") {
-          setBodyFatPercentage(String(profile.body_fat_percent));
+        if (typeof prof?.body_fat_percent === "number") {
+          setBodyFatPercentage(String(prof.body_fat_percent));
         }
 
-        if (latestPlan?.goal_type) {
-          setGoalType(latestPlan.goal_type as GoalType);
-        }
-        if (latestPlan?.intensity_preset) {
-          setIntensityPreset(latestPlan.intensity_preset as IntensityPreset);
-        }
-        if (typeof latestPlan?.target_weight_lbs === "number") {
-          setTargetWeightLbs(String(latestPlan.target_weight_lbs));
-        }
-        if (typeof latestPlan?.sessions_per_week === "number") {
-          setSessionsPerWeek(String(latestPlan.sessions_per_week));
-        }
-        if (typeof latestPlan?.effective_date === "string") {
-          setEffectiveDate(latestPlan.effective_date);
-        }
-        if (
-          typeof latestPlan?.target_calories === "number" &&
-          typeof latestPlan?.protein_grams === "number" &&
-          typeof latestPlan?.carbs_grams === "number" &&
-          typeof latestPlan?.fat_grams === "number" &&
-          typeof latestPlan?.maintenance_calories === "number" &&
-          typeof latestPlan?.activity_multiplier === "number" &&
-          (latestPlan?.formula_used === "katch_mcardle" ||
-            latestPlan?.formula_used === "mifflin_st_jeor")
-        ) {
-          setPlanPreview({
-            formulaUsed: latestPlan.formula_used,
-            bmr:
-              latestPlan.activity_multiplier > 0
-                ? Math.round(latestPlan.maintenance_calories / latestPlan.activity_multiplier)
-                : 0,
-            activityMultiplier: latestPlan.activity_multiplier,
-            maintenanceCalories: latestPlan.maintenance_calories,
-            targetCalories: latestPlan.target_calories,
-            proteinGrams: latestPlan.protein_grams,
-            carbsGrams: latestPlan.carbs_grams,
-            fatGrams: latestPlan.fat_grams,
-            weeklyRatePercent: latestPlan.weekly_rate_percent ?? 0,
-            reverseDietWeeklyKcal: latestPlan.reverse_diet_weekly_kcal ?? 0,
-          });
-          setStep(5);
-          setMessage(
-            latestPlan.effective_date
-              ? `Loaded your active plan from ${latestPlan.effective_date}.`
-              : "Loaded your active nutrition plan."
-          );
-        }
+        if (latestPlan?.goal_type) setGoalType(latestPlan.goal_type as GoalType);
+        if (latestPlan?.intensity_preset) setIntensityPreset(latestPlan.intensity_preset as IntensityPreset);
+        if (typeof latestPlan?.target_weight_lbs === "number") setTargetWeightLbs(String(latestPlan.target_weight_lbs));
+        if (typeof latestPlan?.sessions_per_week === "number") setSessionsPerWeek(String(latestPlan.sessions_per_week));
+        if (typeof latestPlan?.effective_date === "string") setEffectiveDate(latestPlan.effective_date);
         if (typeof latestPlan?.plan_payload?.weeklyRatePercentOverride === "number") {
           setUseAdvancedOverride(true);
           setWeeklyRatePercentOverride(String(latestPlan.plan_payload.weeklyRatePercentOverride));
@@ -188,37 +184,24 @@ export default function CoachSetupClient() {
           setUseAdvancedOverride(true);
           setReverseDietWeeklyKcalOverride(String(latestPlan.plan_payload.reverseDietWeeklyKcalOverride));
         }
+
+        if (planExists && latestPlan) {
+          setViewMode("dashboard");
+        }
       })
       .catch((err) => {
-        if (active) {
-          setError(err instanceof Error ? err.message : "Failed to load nutrition coach data.");
-        }
+        if (active) setError(err instanceof Error ? err.message : "Failed to load nutrition coach data.");
       })
       .finally(() => {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       });
 
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
   const stepTitle = useMemo(() => {
-    if (step === 1) {
-      return "Step 1: Goal";
-    }
-    if (step === 2) {
-      return "Step 2: Metrics";
-    }
-    if (step === 3) {
-      return "Step 3: Macro Calculation";
-    }
-    if (step === 4) {
-      return "Step 4: Intensity";
-    }
-    return "Step 5: Review";
+    const titles = ["", "Step 1: Goal", "Step 2: Metrics", "Step 3: Macro Calculation", "Step 4: Intensity", "Step 5: Review"];
+    return titles[step] ?? "Review";
   }, [step]);
 
   async function runPlan(action: "preview" | "apply") {
@@ -241,13 +224,9 @@ export default function CoachSetupClient() {
         sessionsPerWeek: sessionsPerWeek ? Number(sessionsPerWeek) : null,
         intensityPreset,
         weeklyRatePercentOverride:
-          useAdvancedOverride && weeklyRatePercentOverride
-            ? Number(weeklyRatePercentOverride)
-            : null,
+          useAdvancedOverride && weeklyRatePercentOverride ? Number(weeklyRatePercentOverride) : null,
         reverseDietWeeklyKcalOverride:
-          useAdvancedOverride && reverseDietWeeklyKcalOverride
-            ? Number(reverseDietWeeklyKcalOverride)
-            : null,
+          useAdvancedOverride && reverseDietWeeklyKcalOverride ? Number(reverseDietWeeklyKcalOverride) : null,
         effectiveDate,
       }),
     });
@@ -260,9 +239,43 @@ export default function CoachSetupClient() {
       return;
     }
 
-    setPlanPreview(payload.plan as PlanPreview);
+    const newPlan = payload.plan as PlanPreview;
+    setPlanPreview(newPlan);
 
     if (action === "apply") {
+      const updatedPlan: LatestPlan = {
+        goal_type: goalType,
+        intensity_preset: intensityPreset,
+        weekly_rate_percent: newPlan.weeklyRatePercent,
+        reverse_diet_weekly_kcal: newPlan.reverseDietWeeklyKcal,
+        target_weight_lbs: targetWeightLbs ? Number(targetWeightLbs) : null,
+        maintenance_calories: newPlan.maintenanceCalories,
+        target_calories: newPlan.targetCalories,
+        protein_grams: newPlan.proteinGrams,
+        carbs_grams: newPlan.carbsGrams,
+        fat_grams: newPlan.fatGrams,
+        formula_used: newPlan.formulaUsed,
+        activity_multiplier: newPlan.activityMultiplier,
+        sessions_per_week: sessionsPerWeek ? Number(sessionsPerWeek) : null,
+        effective_date: effectiveDate,
+        plan_payload: {
+          weeklyRatePercentOverride: useAdvancedOverride && weeklyRatePercentOverride ? Number(weeklyRatePercentOverride) : null,
+          reverseDietWeeklyKcalOverride: useAdvancedOverride && reverseDietWeeklyKcalOverride ? Number(reverseDietWeeklyKcalOverride) : null,
+          weightLbs: currentWeightLbs ? Number(currentWeightLbs) : null,
+          bodyFatPercentage: bodyFatPercentage ? Number(bodyFatPercentage) : null,
+        },
+      };
+      setActivePlan(updatedPlan);
+      setProfile((prev) => ({
+        ...prev,
+        current_weight_kg: currentWeightLbs ? Number(currentWeightLbs) / 2.20462 : prev?.current_weight_kg,
+        body_fat_percent: bodyFatPercentage ? Number(bodyFatPercentage) : prev?.body_fat_percent,
+        sex,
+        birth_date: birthDate || prev?.birth_date,
+        height_cm: heightCm ? Number(heightCm) : prev?.height_cm,
+      }));
+      setHasPlan(true);
+      setViewMode("dashboard");
       setMessage("Plan saved and nutrition targets applied.");
     } else {
       setMessage("Plan generated. Review and continue.");
@@ -272,11 +285,9 @@ export default function CoachSetupClient() {
   }
 
   function goNext() {
-    if (step === 2) {
-      if (!currentWeightLbs || !heightCm || !birthDate) {
-        setError("Current weight, height, and birth date are required.");
-        return;
-      }
+    if (step === 2 && (!currentWeightLbs || !heightCm || !birthDate)) {
+      setError("Current weight, height, and birth date are required.");
+      return;
     }
     if (step === 3 && !planPreview) {
       setError("Generate plan before continuing.");
@@ -286,17 +297,160 @@ export default function CoachSetupClient() {
     setStep((current) => Math.min(5, current + 1));
   }
 
+  function startChangePlan() {
+    setStep(1);
+    setPlanPreview(null);
+    setMessage(null);
+    setError(null);
+    setViewMode("setup");
+  }
+
   if (loading) {
     return <p className="text-sm text-slate-400">Loading nutrition coach...</p>;
   }
 
+  // ── Dashboard (active plan exists) ───────────────────────────────────────
+  if (viewMode === "dashboard" && hasPlan && activePlan) {
+    const startWeightLbs = activePlan.plan_payload?.weightLbs ?? null;
+    const startBf = activePlan.plan_payload?.bodyFatPercentage ?? null;
+    const currentWeightKg = profile?.current_weight_kg ?? null;
+    const currentBf = profile?.body_fat_percent ?? null;
+    const currentLbs = currentWeightKg !== null ? Math.round(currentWeightKg * 2.20462 * 10) / 10 : null;
+
+    const weightDelta =
+      startWeightLbs !== null && currentLbs !== null
+        ? Math.round((currentLbs - startWeightLbs) * 10) / 10
+        : null;
+
+    const daysOnPlan = activePlan.effective_date ? daysSince(activePlan.effective_date) : null;
+
+    return (
+      <section className="space-y-6">
+        <header className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-slate-100">Nutrition Coach</h1>
+            <p className="mt-1 text-sm text-slate-400">Your active plan and progress.</p>
+          </div>
+          <button
+            type="button"
+            onClick={startChangePlan}
+            className="shrink-0 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-white/25 transition"
+          >
+            Change Plan
+          </button>
+        </header>
+
+        {message ? <p className="text-sm text-emerald-400">{message}</p> : null}
+
+        {/* Plan Overview */}
+        <div className="glass-panel rounded-3xl border border-white/10 p-5 space-y-4">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Plan Overview</p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <StatCard
+              label="Goal"
+              value={activePlan.goal_type ? GOAL_LABELS[activePlan.goal_type] : "—"}
+            />
+            <StatCard
+              label="Plan Started"
+              value={activePlan.effective_date ? formatDate(activePlan.effective_date) : "—"}
+            />
+            <StatCard
+              label="Days on Plan"
+              value={daysOnPlan !== null ? String(daysOnPlan) : "—"}
+            />
+            <StatCard
+              label="Daily Calories"
+              value={activePlan.target_calories !== null && activePlan.target_calories !== undefined ? `${activePlan.target_calories} kcal` : "—"}
+            />
+            <StatCard
+              label="Protein Target"
+              value={activePlan.protein_grams !== null && activePlan.protein_grams !== undefined ? `${toDisplayNumber(activePlan.protein_grams)} g` : "—"}
+            />
+            <StatCard
+              label="Intensity"
+              value={activePlan.intensity_preset
+                ? activePlan.intensity_preset.charAt(0).toUpperCase() + activePlan.intensity_preset.slice(1)
+                : "—"}
+            />
+          </div>
+        </div>
+
+        {/* Starting Stats */}
+        <div className="glass-panel rounded-3xl border border-white/10 p-5 space-y-4">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Starting Stats</p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <StatCard
+              label="Start Weight"
+              value={startWeightLbs !== null ? `${startWeightLbs} lbs` : "—"}
+            />
+            <StatCard
+              label="Start Body Fat"
+              value={startBf !== null ? `${startBf}%` : "—"}
+            />
+            <StatCard
+              label="Target Weight"
+              value={activePlan.target_weight_lbs !== null && activePlan.target_weight_lbs !== undefined ? `${activePlan.target_weight_lbs} lbs` : "—"}
+            />
+          </div>
+        </div>
+
+        {/* Current Stats & Progress */}
+        <div className="glass-panel rounded-3xl border border-white/10 p-5 space-y-4">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Current Stats & Progress</p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <StatCard
+              label="Current Weight"
+              value={currentLbs !== null ? `${currentLbs} lbs` : "—"}
+            />
+            <StatCard
+              label="Current Body Fat"
+              value={currentBf !== null ? `${currentBf}%` : "—"}
+            />
+            <StatCard
+              label="Weight Change"
+              value={
+                weightDelta !== null
+                  ? `${weightDelta > 0 ? "+" : ""}${weightDelta} lbs`
+                  : "—"
+              }
+            />
+            <StatCard
+              label="Maintenance Calories"
+              value={activePlan.maintenance_calories !== null && activePlan.maintenance_calories !== undefined ? `${activePlan.maintenance_calories} kcal` : "—"}
+            />
+            <StatCard
+              label="Carbs Target"
+              value={activePlan.carbs_grams !== null && activePlan.carbs_grams !== undefined ? `${toDisplayNumber(activePlan.carbs_grams)} g` : "—"}
+            />
+            <StatCard
+              label="Fat Target"
+              value={activePlan.fat_grams !== null && activePlan.fat_grams !== undefined ? `${toDisplayNumber(activePlan.fat_grams)} g` : "—"}
+            />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ── Setup Wizard ─────────────────────────────────────────────────────────
   return (
     <section className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-semibold text-slate-100">Nutrition Coach</h1>
-        <p className="mt-3 text-sm text-slate-400">
-          Build a nutrition plan in 5 steps, then apply today&apos;s targets.
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-100">Nutrition Coach</h1>
+          <p className="mt-3 text-sm text-slate-400">
+            {hasPlan ? "Update your nutrition plan." : "Build a nutrition plan in 5 steps, then apply today's targets."}
+          </p>
+        </div>
+        {hasPlan ? (
+          <button
+            type="button"
+            onClick={() => { setMessage(null); setError(null); setViewMode("dashboard"); }}
+            className="shrink-0 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-white/25 transition"
+          >
+            Back to Plan
+          </button>
+        ) : null}
       </header>
 
       <div className="glass-panel rounded-3xl border border-white/10 p-5">
@@ -505,13 +659,14 @@ export default function CoachSetupClient() {
         {step === 5 ? (
           <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4">
             <p className="text-sm font-semibold text-slate-100">Review</p>
-            <p className="text-sm text-slate-300">Goal: {goalType.replaceAll("_", " ")}</p>
+            <p className="text-sm text-slate-300">Goal: {goalType ? GOAL_LABELS[goalType] : "—"}</p>
             <p className="text-sm text-slate-300">Current Weight: {currentWeightLbs} lbs</p>
-            <p className="text-sm text-slate-300">Target Weight: {targetWeightLbs || "-"} lbs</p>
+            <p className="text-sm text-slate-300">Target Weight: {targetWeightLbs || "—"} lbs</p>
             <p className="text-sm text-slate-300">Intensity: {intensityPreset}</p>
             {planPreview ? (
               <p className="text-sm text-slate-300">
-                Targets: {planPreview.targetCalories} kcal, {toDisplayNumber(planPreview.proteinGrams)}p, {toDisplayNumber(planPreview.carbsGrams)}c, {toDisplayNumber(planPreview.fatGrams)}f
+                Targets: {planPreview.targetCalories} kcal, {toDisplayNumber(planPreview.proteinGrams)}p,{" "}
+                {toDisplayNumber(planPreview.carbsGrams)}c, {toDisplayNumber(planPreview.fatGrams)}f
               </p>
             ) : (
               <p className="text-sm text-amber-400">Generate targets before applying.</p>
