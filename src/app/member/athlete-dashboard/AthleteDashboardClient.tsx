@@ -9,6 +9,7 @@ import TodaysWorkoutCard from "@/components/health/TodaysWorkoutCard";
 import HealthStatsPanel from "@/components/health/HealthStatsPanel";
 import TotalWorkoutsLoggedCard from "@/components/health/TotalWorkoutsLoggedCard";
 import NutritionCoachCard from "@/components/health/NutritionCoachCard";
+import ConsistencyCard from "@/components/health/ConsistencyCard";
 import BodyCompTrendChart from "@/components/health/BodyCompTrendChart";
 import MovementResultsSearch from "@/components/health/MovementResultsSearch";
 import LogLiftCard from "@/components/health/LogLiftCard";
@@ -232,7 +233,10 @@ export default function AthleteDashboardClient({ initialTab, totalWorkoutsLogged
             description="Track key performance markers across body composition, strength, and conditioning."
             groups={[STAT_GROUP_BY_SLUG["body-comp"], STAT_GROUP_BY_SLUG["strength"], STAT_GROUP_BY_SLUG["conditioning"]]}
           />
-          <TotalWorkoutsLoggedCard totalWorkouts={totalWorkoutsLogged} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ConsistencyCard />
+            <TotalWorkoutsLoggedCard totalWorkouts={totalWorkoutsLogged} />
+          </div>
         </>
       )}
 
