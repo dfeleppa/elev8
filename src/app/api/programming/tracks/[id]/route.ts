@@ -44,6 +44,42 @@ type TrackUpdatePayload = {
   hideWorkoutsMinute?: number;
 };
 
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { error, userId } = await requireUserContext();
+  if (error || !userId) {
+    return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await context.params;
+  if (!id) {
+    return NextResponse.json({ error: "Track id is required." }, { status: 400 });
+  }
+
+  const isMember = await isOrgMember(userId);
+  if (!isMember) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const canWrite = await hasOrgRole(userId, "", "admin");
+  if (!canWrite) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { error: deleteError } = await supabaseAdmin
+    .from("programming_tracks")
+    .delete()
+    .eq("id", id);
+
+  if (deleteError) {
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
