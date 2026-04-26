@@ -198,6 +198,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  // Idempotency claim. Stripe retries any non-2xx response (and any response
+  // it didn't get back fast enough), so the same event id can hit this
+  // handler more than once. The stripe_transactions row is already deduped by
+  // event_id, but side-effects like the read-modify-write of
+  // stripe_customers.total_spent are not — so a duplicate delivery used to
+  // double-count revenue. Take the claim here and bail out cleanly on the
+  // unique-violation path.
+  const { error: claimError } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .insert({ stripe_event_id: event.id, event_type: event.type });
+
+  if (claimError) {
+    // Postgres unique violation = we've already processed this event.
+    if ((claimError as { code?: string }).code === "23505") {
+      return NextResponse.json({ received: true, idempotent: true });
+    }
+    console.error("Failed to claim webhook event:", claimError.message);
+    return NextResponse.json({ error: "Failed to record event." }, { status: 500 });
+  }
+
   try {
     switch (event.type) {
       case "customer.created":
@@ -439,6 +459,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (err: any) {
     console.error("Webhook processing error:", err);
+    // Release the idempotency claim so Stripe's retry can take effect.
+    // Without this, a transient processing failure would silently drop the
+    // event because the next delivery would hit the duplicate-event path.
+    await supabaseAdmin
+      .from("stripe_webhook_events")
+      .delete()
+      .eq("stripe_event_id", event.id);
     return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 }
