@@ -540,8 +540,8 @@ class _Step1Goal extends StatelessWidget {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFF0EA5E9).withOpacity(0.15)
-                      : Colors.white.withOpacity(0.04),
+                      ? const Color(0xFF0EA5E9).withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected
@@ -557,7 +557,7 @@ class _Step1Goal extends StatelessWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFF0EA5E9).withOpacity(0.3)
+                            ? const Color(0xFF0EA5E9).withValues(alpha: 0.3)
                             : Colors.white10,
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -704,7 +704,7 @@ class _Step2Body extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white12),
               ),
@@ -799,8 +799,8 @@ class _SexButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: selected
-                ? const Color(0xFF0EA5E9).withOpacity(0.15)
-                : Colors.white.withOpacity(0.05),
+                ? const Color(0xFF0EA5E9).withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected ? const Color(0xFF63f7ff) : Colors.white12,
@@ -947,7 +947,7 @@ class _Step3Training extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white12),
               ),
@@ -981,8 +981,8 @@ class _Step3Training extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: selected
-                      ? const Color(0xFF0EA5E9).withOpacity(0.15)
-                      : Colors.white.withOpacity(0.04),
+                      ? const Color(0xFF0EA5E9).withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: selected ? const Color(0xFF63f7ff) : Colors.white12,
@@ -1053,7 +1053,7 @@ class _CounterButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: onTap != null
               ? Colors.white10
-              : Colors.white.withOpacity(0.03),
+              : Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white12),
         ),
@@ -1220,7 +1220,7 @@ class _Step4Preview extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white10),
             ),
@@ -1397,7 +1397,7 @@ class _NumField extends StatelessWidget {
         suffixText: suffix,
         suffixStyle: const TextStyle(color: Colors.white38),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
+        fillColor: Colors.white.withValues(alpha: 0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.white12),

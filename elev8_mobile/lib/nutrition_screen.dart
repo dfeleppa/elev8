@@ -674,7 +674,7 @@ class _CoachCardState extends ConsumerState<_CoachCard> {
           ),
         ),
       ),
-      error: (_, __) => _NoCoachCard(),
+      error: (_, _) => _NoCoachCard(),
     );
   }
 
