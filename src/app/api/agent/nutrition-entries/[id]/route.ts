@@ -155,10 +155,14 @@ export async function PATCH(
     .eq("id", id)
     .eq("member_id", memberId)
     .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, created_at")
-    .single();
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+  }
+
+  if (!entry) {
+    return NextResponse.json({ error: "Entry not found." }, { status: 404 });
   }
 
   return NextResponse.json({ entry });

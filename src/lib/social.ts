@@ -352,7 +352,7 @@ export async function buildSocialOverview(): Promise<SocialOverviewPayload> {
   };
 }
 
-export async function listSocialPosts(options?: { workflowState?: string; weekOf?: string | null; limit?: number }) {
+export async function listSocialPosts(options?: { workflowState?: string; weekOf?: string | null; limit?: number; id?: string }) {
   const limit = Math.min(Math.max(options?.limit ?? 80, 1), 200);
   let query = supabaseAdmin
     .from("social_posts")
@@ -363,6 +363,10 @@ export async function listSocialPosts(options?: { workflowState?: string; weekOf
 
   if (options?.workflowState) {
     query = query.eq("workflow_state", options.workflowState);
+  }
+
+  if (options?.id) {
+    query = query.eq("id", options.id);
   }
 
   const { data, error } = await query;

@@ -180,6 +180,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
+  let postAssets: Array<{ id: string; post_id: string; media_url: string; media_type: string; sort_order: number }> = [];
+
   if (assets.length > 0) {
     const rows = assets
       .map((asset, index) => ({
@@ -191,18 +193,17 @@ export async function POST(request: NextRequest) {
       .filter((row) => row.media_url.length > 0);
 
     if (rows.length > 0) {
-      const { error: assetError } = await supabaseAdmin.from("instagram_post_assets").insert(rows);
+      const { data: insertedAssets, error: assetError } = await supabaseAdmin
+        .from("instagram_post_assets")
+        .insert(rows)
+        .select("id, post_id, media_url, media_type, sort_order")
+        .order("sort_order", { ascending: true });
       if (assetError) {
         return NextResponse.json({ error: "Post created but assets failed to save." }, { status: 500 });
       }
+      postAssets = insertedAssets ?? [];
     }
   }
 
-  const { data: postAssets } = await supabaseAdmin
-    .from("instagram_post_assets")
-    .select("id, post_id, media_url, media_type, sort_order")
-    .eq("post_id", post.id)
-    .order("sort_order", { ascending: true });
-
-  return NextResponse.json({ post: { ...post, assets: postAssets ?? [] } });
+  return NextResponse.json({ post: { ...post, assets: postAssets } });
 }

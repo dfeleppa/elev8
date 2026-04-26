@@ -64,7 +64,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   }
 
   if (body.action === "duplicate") {
-    const existing = (await listSocialPosts({ limit: 200 })).find((item) => item.id === id);
+    const existing = (await listSocialPosts({ id, limit: 1 }))[0];
     if (!existing) {
       return NextResponse.json({ error: "Post not found." }, { status: 404 });
     }
@@ -123,7 +123,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       payload: { sourcePostId: id },
     });
 
-    const duplicated = (await listSocialPosts({ limit: 200 })).find((item) => item.id === clone.id);
+    const duplicated = (await listSocialPosts({ id: clone.id, limit: 1 }))[0];
     return NextResponse.json({ post: duplicated ?? { id: clone.id } });
   }
 
@@ -191,7 +191,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     summary: body.title?.trim() || body.caption?.trim() || "Social post updated",
   });
 
-  const updated = (await listSocialPosts({ limit: 200 })).find((item) => item.id === id);
+  const updated = (await listSocialPosts({ id, limit: 1 }))[0];
   return NextResponse.json({ post: updated });
 }
 

@@ -129,22 +129,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Reservations are closed for this class." }, { status: 409 });
   }
 
-  const existingResult = await supabaseAdmin
-    .from("class_reservations")
-    .select("id")
-    .eq("class_id", classId)
-    .eq("class_date", dateKey)
-    .eq("member_id", userId)
-    .maybeSingle();
-
-  if (existingResult.error) {
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-  }
-
-  if (existingResult.data?.id) {
-    return NextResponse.json({ error: "You already reserved a spot for this class." }, { status: 409 });
-  }
-
+  // Fetch all current reservations once; derive both "user already reserved"
+  // and "class full" from the same row set instead of round-tripping twice.
   const reservationsResult = await supabaseAdmin
     .from("class_reservations")
     .select("id, member_id")
@@ -155,8 +141,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 
-  const currentCount = reservationsResult.data?.length ?? 0;
-  if (classRow.size_limit > 0 && currentCount >= classRow.size_limit) {
+  const currentReservations = reservationsResult.data ?? [];
+  if (currentReservations.some((r) => r.member_id === userId)) {
+    return NextResponse.json({ error: "You already reserved a spot for this class." }, { status: 409 });
+  }
+
+  if (classRow.size_limit > 0 && currentReservations.length >= classRow.size_limit) {
     return NextResponse.json({ error: "This class is already full." }, { status: 409 });
   }
 
