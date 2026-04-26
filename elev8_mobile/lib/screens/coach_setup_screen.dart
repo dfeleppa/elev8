@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../data/repositories/nutrition_repository.dart';
@@ -147,6 +148,7 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
   // ── Navigation ───────────────────────────────────────────────────────────────
   void _next() {
     if (_step < 3) {
+      FocusManager.instance.primaryFocus?.unfocus();
       setState(() => _step++);
       _pages.animateToPage(
         _step,
@@ -158,6 +160,7 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
   }
 
   void _back() {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (_step > 0) {
       setState(() => _step--);
       _pages.animateToPage(
@@ -166,7 +169,11 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.of(context).pop(false);
+      if (context.canPop()) {
+        context.pop(false);
+      } else {
+        context.go('/nutrition');
+      }
     }
   }
 
@@ -236,13 +243,18 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
 
   // ── Apply ─────────────────────────────────────────────────────────────────────
   Future<void> _applyPlan() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _applying = true);
     try {
       await CoachApiService.applyPlan(_apiInputs);
       if (!mounted) return;
       ref.invalidate(coachPlanStatusProvider);
       ref.invalidate(nutritionDayProvider);
-      Navigator.of(context).pop(true);
+      if (context.canPop()) {
+        context.pop(true);
+      } else {
+        context.go('/nutrition');
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -275,63 +287,67 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
         ),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          _StepIndicator(step: _step),
-          Expanded(
-            child: PageView(
-              controller: _pages,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _Step1Goal(
-                  selected: _goalType,
-                  onSelect: (g) => setState(() => _goalType = g),
-                ),
-                _Step2Body(
-                  sex: _sex,
-                  birthDate: _birthDate,
-                  weightCtrl: _weightCtrl,
-                  feetCtrl: _feetCtrl,
-                  inchesCtrl: _inchesCtrl,
-                  targetWeightCtrl: _targetWeightCtrl,
-                  bodyFatCtrl: _bodyFatCtrl,
-                  onSexChanged: (s) => setState(() => _sex = s),
-                  onBirthDateChanged: (d) => setState(() => _birthDate = d),
-                ),
-                _Step3Training(
-                  sessionsPerWeek: _sessionsPerWeek,
-                  effectiveDate: _effectiveDate,
-                  intensityPreset: _intensityPreset,
-                  onSessionsChanged: (v) =>
-                      setState(() => _sessionsPerWeek = v),
-                  onEffectiveDateChanged: (d) =>
-                      setState(() => _effectiveDate = d),
-                  onIntensityChanged: (i) =>
-                      setState(() => _intensityPreset = i),
-                ),
-                _Step4Preview(
-                  preview: _preview,
-                  loading: _loadingPreview,
-                  error: _previewError,
-                  applying: _applying,
-                  onRetry: _generatePreview,
-                  onApply: _applyPlan,
-                ),
-              ],
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
+          children: [
+            _StepIndicator(step: _step),
+            Expanded(
+              child: PageView(
+                controller: _pages,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _Step1Goal(
+                    selected: _goalType,
+                    onSelect: (g) => setState(() => _goalType = g),
+                  ),
+                  _Step2Body(
+                    sex: _sex,
+                    birthDate: _birthDate,
+                    weightCtrl: _weightCtrl,
+                    feetCtrl: _feetCtrl,
+                    inchesCtrl: _inchesCtrl,
+                    targetWeightCtrl: _targetWeightCtrl,
+                    bodyFatCtrl: _bodyFatCtrl,
+                    onSexChanged: (s) => setState(() => _sex = s),
+                    onBirthDateChanged: (d) => setState(() => _birthDate = d),
+                  ),
+                  _Step3Training(
+                    sessionsPerWeek: _sessionsPerWeek,
+                    effectiveDate: _effectiveDate,
+                    intensityPreset: _intensityPreset,
+                    onSessionsChanged: (v) =>
+                        setState(() => _sessionsPerWeek = v),
+                    onEffectiveDateChanged: (d) =>
+                        setState(() => _effectiveDate = d),
+                    onIntensityChanged: (i) =>
+                        setState(() => _intensityPreset = i),
+                  ),
+                  _Step4Preview(
+                    preview: _preview,
+                    loading: _loadingPreview,
+                    error: _previewError,
+                    applying: _applying,
+                    onRetry: _generatePreview,
+                    onApply: _applyPlan,
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (_step < 3)
-            _BottomNav(
-              step: _step,
-              canNext: _step == 0
-                  ? _step1Valid
-                  : _step == 1
-                  ? _step2Valid
-                  : _step3Valid,
-              onBack: _back,
-              onNext: _next,
-            ),
-        ],
+            if (_step < 3)
+              _BottomNav(
+                step: _step,
+                canNext: _step == 0
+                    ? _step1Valid
+                    : _step == 1
+                    ? _step2Valid
+                    : _step3Valid,
+                onBack: _back,
+                onNext: _next,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1392,6 +1408,7 @@ class _NumField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: ctrl,
+      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       keyboardType: TextInputType.numberWithOptions(decimal: decimal),
       inputFormatters: [
         FilteringTextInputFormatter.allow(
