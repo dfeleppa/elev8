@@ -1626,7 +1626,7 @@ class _FoodEntryRow extends ConsumerStatefulWidget {
   final dynamic entry;
   final DateTime selectedDate;
 
-  const _FoodEntryRow({required this.entry, required this.selectedDate});
+  const _FoodEntryRow({super.key, required this.entry, required this.selectedDate});
 
   @override
   ConsumerState<_FoodEntryRow> createState() => _FoodEntryRowState();
