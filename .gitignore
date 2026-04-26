@@ -43,4 +43,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
+# claude code worktrees (transient working copies; should never be tracked)
+.claude/worktrees/
