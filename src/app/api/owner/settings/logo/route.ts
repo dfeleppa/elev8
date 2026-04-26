@@ -3,7 +3,11 @@ import { NextResponse } from "next/server";
 import { hasRole, requireUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
+const ALLOWED_TYPES: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+};
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
 export async function POST(request: Request) {
@@ -24,7 +28,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
+  const ext = ALLOWED_TYPES[file.type];
+  if (!ext) {
     return NextResponse.json(
       { error: "File must be PNG, JPG, or WebP." },
       { status: 400 }
@@ -38,7 +43,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const ext = file.name.split(".").pop() ?? "png";
   const filePath = `lyfe-fitness/logo.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 

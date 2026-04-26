@@ -220,7 +220,7 @@ export default function LiftProgressionGrid({ programId, blockId, durationWeeks 
                   type="number"
                   min={1}
                   value={row.sets}
-                  onChange={(e) => updateRow(row.weekNumber, { sets: Math.max(1, parseInt(e.target.value) || 1) })}
+                  onChange={(e) => updateRow(row.weekNumber, { sets: Math.max(1, parseInt(e.target.value, 10) || 1) })}
                   className={inputSm}
                 />
               </div>

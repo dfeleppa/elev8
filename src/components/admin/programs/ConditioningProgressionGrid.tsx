@@ -133,7 +133,7 @@ export default function ConditioningProgressionGrid({ programId, blockId, durati
             progressionType: r.progressionType,
             distanceMeters: r.distanceMeters !== "" ? Number(r.distanceMeters) : null,
             durationSeconds: durationSec,
-            intervalCount: r.intervalCount !== "" ? parseInt(r.intervalCount) : null,
+            intervalCount: r.intervalCount !== "" ? parseInt(r.intervalCount, 10) : null,
             intervalDistanceMeters: r.intervalDistanceMeters !== "" ? Number(r.intervalDistanceMeters) : null,
             intervalRestSeconds: restSec,
             targetPacePer500m: paceSec,
