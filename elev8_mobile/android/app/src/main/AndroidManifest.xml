@@ -24,12 +24,17 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- OAuth redirect handling -->
+            <!-- OAuth redirect handling. The host is constrained to
+                 "login-callback" so a malicious app on the same device
+                 can't craft a phishing intent for any io.supabase.flutter://
+                 URL and have it routed here. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="io.supabase.flutter"/>
+                <data
+                    android:scheme="io.supabase.flutter"
+                    android:host="login-callback"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

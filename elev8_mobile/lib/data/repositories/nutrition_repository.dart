@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -209,7 +210,9 @@ class NutritionRepository {
             .maybeSingle();
         _cachedAppUserId = byEmail?['id'] as String?;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NutritionRepo] _resolveAppUserId failed: $e');
+    }
     return _cachedAppUserId;
   }
 
@@ -250,7 +253,8 @@ class NutritionRepository {
         'carbs_target': _parseNumeric(plan['carbs_grams']),
         'fat_target': _parseNumeric(plan['fat_grams']),
       };
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] _getCoachPlanTargets failed: $e');
       return null;
     }
   }
@@ -308,7 +312,8 @@ class NutritionRepository {
       }
 
       return Map<String, dynamic>.from(day);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] _ensureNutritionDay failed: $e');
       return null;
     }
   }
@@ -326,7 +331,8 @@ class NutritionRepository {
           .eq('member_id', appUserId)
           .eq('day_date', dateStr)
           .maybeSingle();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchNutritionDay failed: $e');
       return null;
     }
   }
@@ -502,7 +508,8 @@ class NutritionRepository {
         if (results.length >= limit) break;
       }
       return results;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchRecentFoods failed: $e');
       return [];
     }
   }
@@ -517,7 +524,8 @@ class NutritionRepository {
           .eq('member_id', appUserId)
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchMyFoods failed: $e');
       return [];
     }
   }
@@ -581,7 +589,9 @@ class NutritionRepository {
         final List<dynamic> results = response.data['results'] ?? [];
         return results.map((r) => Map<String, dynamic>.from(r)).toList();
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NutritionRepo] searchUsdaFoods (edge function) failed: $e');
+    }
     try {
       final session = _client.auth.currentSession;
       if (session == null) return [];
@@ -590,7 +600,9 @@ class NutritionRepository {
         params: {'query_text': query.trim(), 'limit_count': 12},
       );
       return List<Map<String, dynamic>>.from(resp ?? []);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NutritionRepo] searchUsdaFoods (rpc fallback) failed: $e');
+    }
     return [];
   }
 
@@ -698,7 +710,8 @@ class NutritionRepository {
         profile: profile,
         currentWeightOverride: _parseNumeric(currentWeightEntry?['value']),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] _fetchCoachPlanStatusFromSupabase failed: $e');
       return null;
     }
   }
@@ -734,7 +747,8 @@ class NutritionRepository {
             ? DateTime.tryParse(summary['nextCheckInDate'] as String)
             : null,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchCoachPlanStatus (API) failed, falling back to Supabase: $e');
       return _fetchCoachPlanStatusFromSupabase();
     }
   }

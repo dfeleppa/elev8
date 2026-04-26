@@ -1675,6 +1675,8 @@ class _FoodEntryRowState extends ConsumerState<_FoodEntryRow> {
     await ref
         .read(nutritionRepositoryProvider)
         .updateEntryQuantity(_id, parsed);
+    // Avoid touching `ref` if the row was dismissed mid-save.
+    if (!mounted) return;
     ref.invalidate(nutritionDayProvider(widget.selectedDate));
   }
 
@@ -2635,6 +2637,9 @@ class _EditFoodSheetState extends State<_EditFoodSheet> {
                 onPressed: _saving
                     ? null
                     : () async {
+                        // Capture the navigator before awaiting so we don't
+                        // use a stale BuildContext after the async gap.
+                        final navigator = Navigator.of(context);
                         setState(() => _saving = true);
                         await widget.onSave({
                           'name': _name.text.trim(),
@@ -2643,7 +2648,7 @@ class _EditFoodSheetState extends State<_EditFoodSheet> {
                           'carbs': num.tryParse(_carb.text),
                           'fat': num.tryParse(_fat.text),
                         });
-                        if (mounted) Navigator.pop(context);
+                        if (mounted) navigator.pop();
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0EA5E9),
