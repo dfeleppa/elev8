@@ -4,7 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Minus, Plus, Search, X } from "lucide-react";
 
 type Movement = { id: string; name: string };
-type LiftSet = { reps: string; weight: string };
+type LiftSet = { id: string; reps: string; weight: string };
+
+let nextSetId = 0;
+function newSet(): LiftSet {
+  nextSetId += 1;
+  return { id: `s-${nextSetId}`, reps: "", weight: "" };
+}
 
 function todayKey() {
   const d = new Date();
@@ -24,7 +30,7 @@ export default function LogLiftCard({ onSaved }: Props) {
   const [selected, setSelected] = useState<Movement | null>(null);
 
   const [date, setDate] = useState(todayKey);
-  const [sets, setSets] = useState<LiftSet[]>([{ reps: "", weight: "" }]);
+  const [sets, setSets] = useState<LiftSet[]>(() => [newSet()]);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -36,7 +42,9 @@ export default function LogLiftCard({ onSaved }: Props) {
     fetch(`/api/athlete/movements`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setMovements(d.movements ?? []))
-      .catch(() => {})
+      .catch((err) => {
+        console.error("Failed to load movements:", err);
+      })
       .finally(() => setMovementsLoading(false));
   }, []);
 
@@ -67,15 +75,15 @@ export default function LogLiftCard({ onSaved }: Props) {
   }
 
   function addSet() {
-    setSets((prev) => [...prev, { reps: "", weight: "" }]);
+    setSets((prev) => [...prev, newSet()]);
   }
 
-  function removeSet(i: number) {
-    setSets((prev) => prev.filter((_, j) => j !== i));
+  function removeSet(id: string) {
+    setSets((prev) => prev.filter((s) => s.id !== id));
   }
 
-  function updateSet(i: number, field: "reps" | "weight", value: string) {
-    setSets((prev) => prev.map((s, j) => (j === i ? { ...s, [field]: value } : s)));
+  function updateSet(id: string, field: "reps" | "weight", value: string) {
+    setSets((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -107,7 +115,7 @@ export default function LogLiftCard({ onSaved }: Props) {
       const payload = await res.json();
       if (!res.ok) throw new Error(payload?.error ?? "Failed to save.");
       setSuccess(true);
-      setSets([{ reps: "", weight: "" }]);
+      setSets([newSet()]);
       setNotes("");
       onSaved?.();
       setTimeout(() => setSuccess(false), 3000);
@@ -202,7 +210,7 @@ export default function LogLiftCard({ onSaved }: Props) {
           </div>
           <div className="space-y-2">
             {sets.map((s, i) => (
-              <div key={i} className="flex items-center gap-2">
+              <div key={s.id} className="flex items-center gap-2">
                 <span className="w-5 shrink-0 text-center text-xs text-slate-500">{i + 1}</span>
                 <input
                   type="number"
@@ -210,7 +218,7 @@ export default function LogLiftCard({ onSaved }: Props) {
                   min="1"
                   placeholder="Reps"
                   value={s.reps}
-                  onChange={(e) => updateSet(i, "reps", e.target.value)}
+                  onChange={(e) => updateSet(s.id, "reps", e.target.value)}
                   className="w-20 rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-white/30"
                 />
                 <input
@@ -220,13 +228,13 @@ export default function LogLiftCard({ onSaved }: Props) {
                   min="0"
                   placeholder="Weight (lb)"
                   value={s.weight}
-                  onChange={(e) => updateSet(i, "weight", e.target.value)}
+                  onChange={(e) => updateSet(s.id, "weight", e.target.value)}
                   className="flex-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-white/30"
                 />
                 {sets.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => removeSet(i)}
+                    onClick={() => removeSet(s.id)}
                     className="text-slate-600 transition hover:text-rose-400"
                   >
                     <Minus className="h-4 w-4" />

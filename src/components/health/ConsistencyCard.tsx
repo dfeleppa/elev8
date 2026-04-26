@@ -26,7 +26,9 @@ export default function ConsistencyCard() {
       .then((payload) => {
         if (payload?.days) setData(payload as ConsistencyData);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Failed to load consistency data:", err);
+      });
   }, []);
 
   // Pad to 35 cells so the grid is always full
