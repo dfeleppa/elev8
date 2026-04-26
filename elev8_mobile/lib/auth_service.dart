@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
@@ -8,8 +7,6 @@ class AuthService {
 
   Future<void> signInWithGoogle() async {
     final redirectUri = dotenv.env['SUPABASE_REDIRECT_URI'] ?? 'io.supabase.flutter://login-callback';
-    print('🔥 signInWithGoogle called');
-    print('🔑 redirectUri: $redirectUri');
     await _client.auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: redirectUri,

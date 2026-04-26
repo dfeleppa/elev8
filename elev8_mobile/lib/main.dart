@@ -24,25 +24,26 @@ Future<void> main() async {
 
   // Stamp the Supabase Auth UID onto the existing app_users row (created by
   // NextAuth on the web) so that mobile_app_user_id() can resolve
-  // auth.uid() → app_users.id for all RLS policies.
+  // auth.uid() → app_users.id for all RLS policies. Only run on initial
+  // sign-in events — onAuthStateChange also fires on every silent token
+  // refresh (~hourly), and we don't need to re-write the same value forever.
   final auth = Supabase.instance.client.auth;
   auth.onAuthStateChange.listen((data) async {
-    final session = data.session;
-    final user = session?.user;
-    if (user != null) {
-      final email = user.email;
-      if (email == null) return;
-      try {
-        await Supabase.instance.client
-            .from('app_users')
-            .update({
-              'supabase_auth_uid': user.id,
-              'updated_at': DateTime.now().toIso8601String(),
-            })
-            .eq('email', email);
-      } catch (e) {
-        debugPrint('Failed to claim app_user with supabase_auth_uid: $e');
-      }
+    if (data.event != AuthChangeEvent.signedIn) return;
+    final user = data.session?.user;
+    if (user == null) return;
+    final email = user.email;
+    if (email == null) return;
+    try {
+      await Supabase.instance.client
+          .from('app_users')
+          .update({
+            'supabase_auth_uid': user.id,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('email', email);
+    } catch (e) {
+      debugPrint('Failed to claim app_user with supabase_auth_uid: $e');
     }
   });
 

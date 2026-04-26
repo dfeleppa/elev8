@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:elev8_mobile/components/elev8_background.dart';
 
 // ----------------------------------------------------------------------
@@ -116,32 +118,50 @@ const List<NavItem> navItems = [
 // PROVIDERS
 // ----------------------------------------------------------------------
 
+UserRole _parseUserRole(String? value) {
+  switch (value) {
+    case 'owner':
+      return UserRole.owner;
+    case 'admin':
+      return UserRole.admin;
+    case 'coach':
+      return UserRole.coach;
+    case 'member':
+    default:
+      return UserRole.member;
+  }
+}
+
 final userRoleProvider = FutureProvider<UserRole>((ref) async {
-  // Hardcoded for testing purposes
-  return UserRole.owner;
-  /*
   final user = Supabase.instance.client.auth.currentUser;
   if (user == null) return UserRole.member;
 
+  // app_users.id is set by the web's NextAuth flow, not by Supabase Auth, so
+  // we resolve via supabase_auth_uid first (stamped by main.dart on sign-in)
+  // and fall back to email for the brief window before that stamp lands.
   try {
-    final response = await Supabase.instance.client
+    final byUid = await Supabase.instance.client
         .from('app_users')
         .select('role')
-        .eq('id', user.id)
+        .eq('supabase_auth_uid', user.id)
         .maybeSingle();
-
-    final roleStr = response?['role'] as String?;
-    switch (roleStr) {
-      case 'owner': return UserRole.owner;
-      case 'admin': return UserRole.admin;
-      case 'coach': return UserRole.coach;
-      case 'member':
-      default: return UserRole.member;
+    if (byUid != null) {
+      return _parseUserRole(byUid['role'] as String?);
     }
-  } catch (_) {
+
+    final email = user.email;
+    if (email == null || email.isEmpty) return UserRole.member;
+
+    final byEmail = await Supabase.instance.client
+        .from('app_users')
+        .select('role')
+        .eq('email', email)
+        .maybeSingle();
+    return _parseUserRole(byEmail?['role'] as String?);
+  } catch (e) {
+    debugPrint('userRoleProvider failed: $e');
     return UserRole.member;
   }
-  */
 });
 
 // ----------------------------------------------------------------------

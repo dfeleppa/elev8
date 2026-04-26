@@ -373,7 +373,16 @@ class NutritionRepository {
   }
 
   Future<void> deleteNutritionEntry(String entryId) async {
-    await _client.from('nutrition_entries').delete().eq('id', entryId);
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    // Defense-in-depth: scope the delete to this user. RLS should already
+    // enforce this, but a misconfigured policy would otherwise allow a
+    // cross-user IDOR.
+    await _client
+        .from('nutrition_entries')
+        .delete()
+        .eq('id', entryId)
+        .eq('member_id', appUserId);
   }
 
   Future<void> updateEntryQuantity(String entryId, double newQuantity) async {
@@ -549,7 +558,13 @@ class NutritionRepository {
   }
 
   Future<void> deleteCustomFood(String id) async {
-    await _client.from('nutrition_custom_foods').delete().eq('id', id);
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    await _client
+        .from('nutrition_custom_foods')
+        .delete()
+        .eq('id', id)
+        .eq('member_id', appUserId);
   }
 
   // ---- USDA Search ----
