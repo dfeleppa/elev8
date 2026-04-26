@@ -490,12 +490,17 @@ class NutritionRepository {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return [];
     try {
+      // Over-fetch by ~8x to give the in-Dart dedupe enough variety to
+      // hit `limit` unique names. The right long-term fix is a server-side
+      // `DISTINCT ON (entry_name)` RPC, but until that exists this scales
+      // the scan with the request rather than always paging 400 rows.
+      final scanCap = (limit * 8).clamp(80, 400);
       final response = await _client
           .from('nutrition_entries')
           .select('entry_name, calories, protein, carbs, fat, quantity')
           .eq('member_id', appUserId)
           .order('created_at', ascending: false)
-          .limit(400);
+          .limit(scanCap);
       final seen = <String>{};
       final results = <Map<String, dynamic>>[];
       for (var row in response as List<dynamic>) {
@@ -514,15 +519,18 @@ class NutritionRepository {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchMyFoods() async {
+  Future<List<Map<String, dynamic>>> fetchMyFoods({int limit = 100}) async {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return [];
     try {
+      // Cap at `limit` (default 100) so a power user with thousands of
+      // saved custom foods doesn't blow up the round-trip or memory.
       final response = await _client
           .from('nutrition_custom_foods')
           .select('id, name, calories, protein, carbs, fat, created_at')
           .eq('member_id', appUserId)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(limit);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       debugPrint('[NutritionRepo] fetchMyFoods failed: $e');

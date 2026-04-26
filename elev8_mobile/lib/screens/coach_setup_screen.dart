@@ -218,11 +218,19 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
     });
     try {
       final preview = await CoachApiService.previewPlan(_apiInputs);
-      if (mounted) setState(() => _preview = preview);
+      if (!mounted) return;
+      // Set the result and clear the loading flag in one rebuild instead
+      // of two (was: a setState here, then another in the finally block).
+      setState(() {
+        _preview = preview;
+        _loadingPreview = false;
+      });
     } catch (e) {
-      if (mounted) setState(() => _previewError = e.toString());
-    } finally {
-      if (mounted) setState(() => _loadingPreview = false);
+      if (!mounted) return;
+      setState(() {
+        _previewError = e.toString();
+        _loadingPreview = false;
+      });
     }
   }
 

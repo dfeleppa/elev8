@@ -296,25 +296,19 @@ class _Dashboard extends ConsumerWidget {
 
     final entries = (data?['nutrition_entries'] as List<dynamic>?) ?? [];
 
-    double sumCal() => entries.fold(
-      0.0,
-      (s, e) => s + _num(e['calories']) * _qty(e['quantity']),
-    );
-    double sumPro() => entries.fold(
-      0.0,
-      (s, e) => s + _num(e['protein']) * _qty(e['quantity']),
-    );
-    double sumCarb() =>
-        entries.fold(0.0, (s, e) => s + _num(e['carbs']) * _qty(e['quantity']));
-    double sumFat() =>
-        entries.fold(0.0, (s, e) => s + _num(e['fat']) * _qty(e['quantity']));
+    // Single pass over entries — previously this was four separate
+    // `.fold()` calls, scanning the list four times per build. With ~50
+    // entries that's 200 iterations on every viewMode toggle.
+    double cal = 0, pro = 0, carb = 0, fat = 0;
+    for (final e in entries) {
+      final q = _qty(e['quantity']);
+      cal += _num(e['calories']) * q;
+      pro += _num(e['protein']) * q;
+      carb += _num(e['carbs']) * q;
+      fat += _num(e['fat']) * q;
+    }
 
-    final consumed = (
-      calories: sumCal(),
-      protein: sumPro(),
-      carbs: sumCarb(),
-      fat: sumFat(),
-    );
+    final consumed = (calories: cal, protein: pro, carbs: carb, fat: fat);
     final remaining = (
       calories: targets.calories - consumed.calories,
       protein: targets.protein - consumed.protein,
@@ -1494,9 +1488,15 @@ class _MealRow extends ConsumerWidget {
           // Entry list
           if (entries.isNotEmpty) ...[
             const SizedBox(height: 12),
+            // Stable key on each entry so Flutter reuses the State of
+            // _FoodEntryRow across parent rebuilds instead of disposing +
+            // reconstructing on every viewMode toggle / data refresh.
             ...entries.map(
-              (entry) =>
-                  _FoodEntryRow(entry: entry, selectedDate: selectedDate),
+              (entry) => _FoodEntryRow(
+                key: ValueKey(entry['id']),
+                entry: entry,
+                selectedDate: selectedDate,
+              ),
             ),
           ] else ...[
             const SizedBox(height: 12),
