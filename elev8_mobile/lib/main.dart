@@ -11,6 +11,7 @@ import 'athlete_dashboard_screen.dart';
 import 'messenger_screen.dart';
 import 'auth_screen.dart';
 import 'screens/coach_setup_screen.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -121,14 +122,7 @@ class Elev8App extends ConsumerWidget {
     
     return MaterialApp.router(
       title: 'Elev8',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0F172A), // Tailwind slate-900 
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFF020617), // slate-950
-      ),
+      theme: AppTheme.dark(),
       routerConfig: router,
     );
   }
