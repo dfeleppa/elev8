@@ -188,7 +188,7 @@ class CoachStatsCard extends StatelessWidget {
                   style: AppText.eyebrow.copyWith(letterSpacing: 1.8),
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
           const SizedBox(height: 12),

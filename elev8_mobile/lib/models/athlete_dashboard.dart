@@ -1,7 +1,7 @@
-/// DTOs for the athlete dashboard.
-///
-/// Hand-rolled to match the existing convention in `lib/models/`. Each
-/// type is the minimal shape needed by one dashboard card.
+// DTOs for the athlete dashboard.
+//
+// Hand-rolled to match the existing convention in `lib/models/`. Each
+// type is the minimal shape needed by one dashboard card.
 
 enum ConsistencyDayStatus { empty, logged, pr }
 
@@ -87,7 +87,7 @@ class HealthStatsSnapshot {
       );
     }
 
-    final body = <HealthStat>[
+    final body = <HealthStat?>[
       readStat('body_weight', 'Body Weight'),
       readStat('body_fat', 'Body Fat'),
       readStat('lean_body_mass', 'Lean Mass'),
@@ -95,7 +95,7 @@ class HealthStatsSnapshot {
 
     // Top three lifts most users care about. Falls back gracefully if any
     // are missing — the dashboard card just shows what we have.
-    final lifts = <HealthStat>[
+    final lifts = <HealthStat?>[
       readStat('back_squat', 'Back Squat'),
       readStat('bench_press', 'Bench Press'),
       readStat('deadlift', 'Deadlift'),
