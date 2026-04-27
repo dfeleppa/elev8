@@ -81,9 +81,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      // Root redirects to the athlete dashboard. The legacy DashboardScreen
+      // is still imported only because deep links / external launchers can
+      // hit it; phase E removes the file once the dashboard is shipped.
       GoRoute(
         path: '/',
-        builder: (context, state) => const DashboardScreen(),
+        redirect: (context, state) => '/athlete-dashboard',
       ),
       GoRoute(
         path: '/auth',
@@ -105,9 +108,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/messenger',
         builder: (context, state) => const MessengerScreen(),
       ),
+      // /coach is the new top-level coach screen. Until phase D builds the
+      // "view current plan" UI it just forwards to the existing wizard.
+      GoRoute(
+        path: '/coach',
+        redirect: (context, state) => '/coach-setup',
+      ),
       GoRoute(
         path: '/coach-setup',
         builder: (context, state) => const CoachSetupScreen(),
+      ),
+      // Legacy /dashboard route preserved for deep links (e.g. push
+      // notifications) that may still reference it.
+      GoRoute(
+        path: '/dashboard',
+        builder: (context, state) => const DashboardScreen(),
       ),
     ],
   );

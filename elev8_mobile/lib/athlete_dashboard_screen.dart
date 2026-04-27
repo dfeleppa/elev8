@@ -28,7 +28,7 @@ class AthleteDashboardScreen extends ConsumerWidget {
             ),
           ),
         ),
-        bottomNavigationBar: const Elev8BottomNavBar(selectedIndex: 2),
+        bottomNavigationBar: const Elev8BottomNavBar(selectedIndex: 0),
       ),
     );
   }

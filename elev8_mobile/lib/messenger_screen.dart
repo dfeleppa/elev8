@@ -28,7 +28,10 @@ class MessengerScreen extends ConsumerWidget {
             ),
           ),
         ),
-        bottomNavigationBar: const Elev8BottomNavBar(selectedIndex: 4),
+        // Messenger is not a top-level tab in the new 4-tab layout — only
+        // reachable via deep link. Default to Home so the bottom bar isn't
+        // showing a stale "Coach" selection.
+        bottomNavigationBar: const Elev8BottomNavBar(selectedIndex: 0),
       ),
     );
   }
