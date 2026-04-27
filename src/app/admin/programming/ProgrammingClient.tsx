@@ -178,13 +178,14 @@ export default function ProgrammingClient() {
   const [creatingType, setCreatingType] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"details" | "progression">("details");
 
-  const [selectMode, setSelectMode] = useState(false);
   const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(() => new Set());
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferMode, setTransferMode] = useState<"copy" | "move">("copy");
   const [transferTargetTrackId, setTransferTargetTrackId] = useState<string>("");
   const [transferring, setTransferring] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
+
+  const selectionActive = selectedBlockIds.size > 0;
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentDate);
@@ -488,17 +489,8 @@ export default function ProgrammingClient() {
     }
   };
 
-  const toggleSelectMode = () => {
-    setSelectMode((prev) => {
-      if (prev) {
-        setSelectedBlockIds(new Set());
-      }
-      return !prev;
-    });
-    setEditorOpen(false);
-  };
-
   const toggleBlockSelection = (blockId: string) => {
+    setEditorOpen(false);
     setSelectedBlockIds((prev) => {
       const next = new Set(prev);
       if (next.has(blockId)) {
@@ -541,7 +533,6 @@ export default function ProgrammingClient() {
 
       setTransferOpen(false);
       setSelectedBlockIds(new Set());
-      setSelectMode(false);
 
       if (transferMode === "move") {
         // The blocks are gone from the current track — refetch the current week.
@@ -655,24 +646,11 @@ export default function ProgrammingClient() {
               ))}
             </select>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={toggleSelectMode}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-                selectMode
-                  ? "border-cyan-400 bg-cyan-500/15 text-cyan-200"
-                  : "border-white/15 bg-white/5 text-slate-300 hover:border-cyan-400 hover:text-cyan-200"
-              }`}
-            >
-              {selectMode ? "Exit Select" : "Select"}
-            </button>
-            <span className="text-xs text-slate-500">{loading ? "Loading programming..." : "Ready"}</span>
-          </div>
+          <span className="text-xs text-slate-500">{loading ? "Loading programming..." : "Ready"}</span>
         </div>
       </header>
 
-      {selectMode ? (
+      {selectionActive ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-slate-100">
           <p className="font-medium">
             {selectedBlockIds.size} workout{selectedBlockIds.size === 1 ? "" : "s"} selected
@@ -680,16 +658,8 @@ export default function ProgrammingClient() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setSelectedBlockIds(new Set())}
-              disabled={selectedBlockIds.size === 0}
-              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-white/25 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Clear
-            </button>
-            <button
-              type="button"
               onClick={() => openTransferDialog("copy")}
-              disabled={selectedBlockIds.size === 0 || tracks.length < 2}
+              disabled={tracks.length < 2}
               className="rounded-lg border border-cyan-400 bg-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Copy to track
@@ -697,23 +667,23 @@ export default function ProgrammingClient() {
             <button
               type="button"
               onClick={() => openTransferDialog("move")}
-              disabled={selectedBlockIds.size === 0 || tracks.length < 2}
+              disabled={tracks.length < 2}
               className="rounded-lg border border-pink-400 bg-pink-500/20 px-3 py-1.5 text-xs font-semibold text-pink-100 transition hover:bg-pink-500/30 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Move to track
             </button>
             <button
               type="button"
-              onClick={toggleSelectMode}
+              onClick={() => setSelectedBlockIds(new Set())}
               className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-white/25"
             >
-              Cancel
+              Clear
             </button>
           </div>
         </div>
       ) : null}
 
-      <div className={`relative grid gap-4 transition-[padding] duration-300 ${editorOpen && !selectMode ? "lg:pr-[26rem]" : ""}`}>
+      <div className={`relative grid gap-4 transition-[padding] duration-300 ${editorOpen && !selectionActive ? "lg:pr-[26rem]" : ""}`}>
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5/5">
           {viewMode === "month" ? (
             <>
@@ -805,11 +775,12 @@ export default function ProgrammingClient() {
                           const isSelected = selectedSessionId === session.id;
                           const isChecked = selectedBlockIds.has(session.id);
                           return (
-                            <button
+                            <div
                               key={session.id}
-                              type="button"
+                              role="button"
+                              tabIndex={0}
                               onClick={() => {
-                                if (selectMode) {
+                                if (selectionActive) {
                                   toggleBlockSelection(session.id);
                                   return;
                                 }
@@ -817,31 +788,48 @@ export default function ProgrammingClient() {
                                 setSelectedSessionId(session.id);
                                 setEditorOpen(true);
                               }}
-                              className={`relative w-full rounded-xl border px-2.5 py-2 text-left text-white transition ${
-                                selectMode && isChecked
+                              onKeyDown={(event) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                if (selectionActive) {
+                                  toggleBlockSelection(session.id);
+                                  return;
+                                }
+                                setSelectedDay(day.date);
+                                setSelectedSessionId(session.id);
+                                setEditorOpen(true);
+                              }}
+                              className={`group relative w-full cursor-pointer rounded-xl border px-2.5 py-2 text-left text-white transition ${
+                                isChecked
                                   ? "border-cyan-400 bg-[#1c2730] ring-2 ring-cyan-400/60"
-                                  : isSelected && !selectMode
+                                  : isSelected && !selectionActive
                                     ? "border-slate-800 bg-[#22262f] ring-2 ring-slate-500/50"
                                     : "border-slate-700 bg-[#2f3136] hover:border-slate-500"
                               }`}
                             >
-                              {selectMode ? (
-                                <span
-                                  aria-hidden="true"
-                                  className={`absolute right-2 top-2 inline-flex h-5 w-5 items-center justify-center rounded-md border text-[12px] font-bold transition ${
-                                    isChecked
-                                      ? "border-cyan-300 bg-cyan-400 text-slate-900"
-                                      : "border-white/30 bg-white/10 text-transparent"
-                                  }`}
-                                >
-                                  ✓
-                                </span>
-                              ) : null}
-                              <p className={`text-[20px] font-semibold leading-none ${selectMode ? "pr-7" : ""}`}>
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  toggleBlockSelection(session.id);
+                                }}
+                                aria-label={isChecked ? "Deselect workout" : "Select workout"}
+                                aria-pressed={isChecked}
+                                className={`absolute left-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[12px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
+                                  isChecked
+                                    ? "border-cyan-300 bg-cyan-400 text-slate-900 opacity-100 shadow-[0_0_0_2px_rgba(11,18,32,0.85)]"
+                                    : selectionActive
+                                      ? "border-white/40 bg-slate-900/70 text-white/50 opacity-100 hover:text-white"
+                                      : "border-white/40 bg-slate-900/70 text-white/60 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-white"
+                                }`}
+                              >
+                                ✓
+                              </button>
+                              <p className="pl-8 text-[20px] font-semibold leading-none">
                                 {session.title}
                               </p>
                               {scoreLabel ? (
-                                <span className="mt-1 inline-flex rounded-full border border-white/10/40 bg-white/10/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-100">
+                                <span className="ml-8 mt-1 inline-flex rounded-full border border-white/10/40 bg-white/10/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-100">
                                   {scoreLabel}
                                 </span>
                               ) : null}
@@ -852,7 +840,7 @@ export default function ProgrammingClient() {
                                   ))}
                                 </div>
                               ) : null}
-                            </button>
+                            </div>
                           );
                         })}
 
