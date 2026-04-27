@@ -10,6 +10,7 @@ import 'schedule_screen.dart';
 import 'athlete_dashboard_screen.dart';
 import 'messenger_screen.dart';
 import 'auth_screen.dart';
+import 'coach_screen.dart';
 import 'screens/coach_setup_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -108,15 +109,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/messenger',
         builder: (context, state) => const MessengerScreen(),
       ),
-      // /coach is the new top-level coach screen. Until phase D builds the
-      // "view current plan" UI it just forwards to the existing wizard.
+      // /coach is the new top-level coach screen. Shows the active plan
+      // (with a "Start new plan" CTA) when one exists, or an empty-state
+      // CTA that opens the wizard when one doesn't.
       GoRoute(
         path: '/coach',
-        redirect: (context, state) => '/coach-setup',
+        builder: (context, state) => const CoachScreen(),
       ),
       GoRoute(
         path: '/coach-setup',
-        builder: (context, state) => const CoachSetupScreen(),
+        builder: (context, state) => CoachSetupScreen(
+          fresh: state.uri.queryParameters['fresh'] == 'true',
+        ),
       ),
       // Legacy /dashboard route preserved for deep links (e.g. push
       // notifications) that may still reference it.

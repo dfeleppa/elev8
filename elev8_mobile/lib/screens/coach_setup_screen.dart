@@ -10,7 +10,12 @@ import '../services/coach_api_service.dart';
 // ─── Entry point ─────────────────────────────────────────────────────────────
 
 class CoachSetupScreen extends ConsumerStatefulWidget {
-  const CoachSetupScreen({super.key});
+  /// When true, the wizard skips pre-filling form fields from the user's
+  /// previous plan. The Start-New-Plan flow on /coach passes
+  /// `?fresh=true` to land here.
+  final bool fresh;
+
+  const CoachSetupScreen({super.key, this.fresh = false});
 
   @override
   ConsumerState<CoachSetupScreen> createState() => _CoachSetupScreenState();
@@ -48,7 +53,12 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
   @override
   void initState() {
     super.initState();
-    _loadExisting();
+    // Skip pre-fill when the user explicitly chose "Start New Plan" from
+    // the coach screen — they want a blank wizard, not a re-edit of the
+    // existing plan.
+    if (!widget.fresh) {
+      _loadExisting();
+    }
   }
 
   @override
