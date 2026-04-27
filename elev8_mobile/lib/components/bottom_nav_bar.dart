@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../theme/app_colors.dart';
+import '../theme/app_text.dart';
+
 /// Provider for the signed-in user's profile (name + avatar).
-///
-/// Used by the bottom-nav avatar tab and the dashboard greeting header.
 final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final user = Supabase.instance.client.auth.currentUser;
   if (user == null) return null;
@@ -37,9 +38,9 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 
 /// Bottom navigation bar — 5 tabs.
 ///
-///   0. Home      → /athlete-dashboard
+///   0. Workout   → /workout         (today's programming + track selector)
 ///   1. Schedule  → /schedule
-///   2. You       → /account   (renders avatar image when available)
+///   2. You       → opens a sheet with [Athlete Dashboard, Account]
 ///   3. Nutrition → /nutrition
 ///   4. Coach     → /coach
 class Elev8BottomNavBar extends ConsumerWidget {
@@ -60,13 +61,13 @@ class Elev8BottomNavBar extends ConsumerWidget {
       onDestinationSelected: (index) {
         switch (index) {
           case 0:
-            context.go('/athlete-dashboard');
+            context.go('/workout');
             break;
           case 1:
             context.go('/schedule');
             break;
           case 2:
-            context.go('/account');
+            _showYouSheet(context);
             break;
           case 3:
             context.go('/nutrition');
@@ -78,9 +79,9 @@ class Elev8BottomNavBar extends ConsumerWidget {
       },
       destinations: [
         const NavigationDestination(
-          icon: Icon(Icons.home_outlined, color: Colors.white54),
-          selectedIcon: Icon(Icons.home, color: Colors.white),
-          label: 'Home',
+          icon: Icon(Icons.fitness_center_outlined, color: Colors.white54),
+          selectedIcon: Icon(Icons.fitness_center, color: Colors.white),
+          label: 'Workout',
         ),
         const NavigationDestination(
           icon: Icon(Icons.calendar_month_outlined, color: Colors.white54),
@@ -115,9 +116,109 @@ class Elev8BottomNavBar extends ConsumerWidget {
   }
 }
 
-/// Circular avatar tab icon. Shows the user's avatar image when one is on
-/// their app_users row; falls back to a colored circle with their initial,
-/// or a generic person icon if no name is known.
+void _showYouSheet(BuildContext context) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) {
+      return Container(
+        decoration: const BoxDecoration(
+          color: AppColors.glassFill,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.glassBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                _SheetTile(
+                  icon: Icons.dashboard_customize_outlined,
+                  label: 'Athlete Dashboard',
+                  description: "Today's stats, streak, coach plan",
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    ctx.go('/athlete-dashboard');
+                  },
+                ),
+                _SheetTile(
+                  icon: Icons.person_outline,
+                  label: 'Account Dashboard',
+                  description: 'Profile, settings, sign out',
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    ctx.go('/account');
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _SheetTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String description;
+  final VoidCallback onTap;
+
+  const _SheetTile({
+    required this.icon,
+    required this.label,
+    required this.description,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: AppColors.accent),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: AppText.value),
+                  const SizedBox(height: 2),
+                  Text(description, style: AppText.caption),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.textMutedOnGlass),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Circular avatar tab icon. Uses the user's avatar image when available,
+/// otherwise a colored circle with their initial, or a person icon.
 class _AvatarIcon extends StatelessWidget {
   final String? avatarUrl;
   final String? fullName;
@@ -132,7 +233,7 @@ class _AvatarIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderColor = selected ? Colors.white : Colors.white54;
-    final size = 26.0;
+    const size = 26.0;
 
     Widget content;
     if (avatarUrl != null && avatarUrl!.isNotEmpty) {

@@ -60,7 +60,9 @@ class AthleteDashboardScreen extends ConsumerWidget {
             ),
           ),
         ),
-        bottomNavigationBar: const Elev8BottomNavBar(selectedIndex: 0),
+        // Athlete dashboard is reachable via the center "You" sheet, so the
+        // You tab (index 2) stays highlighted while we're on this screen.
+        bottomNavigationBar: const Elev8BottomNavBar(selectedIndex: 2),
       ),
     );
   }

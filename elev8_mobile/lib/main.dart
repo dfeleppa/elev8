@@ -12,6 +12,7 @@ import 'account_screen.dart';
 import 'messenger_screen.dart';
 import 'auth_screen.dart';
 import 'coach_screen.dart';
+import 'workout_screen.dart';
 import 'screens/coach_setup_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -83,12 +84,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // Root redirects to the athlete dashboard. The legacy DashboardScreen
-      // is still imported only because deep links / external launchers can
-      // hit it; phase E removes the file once the dashboard is shipped.
+      // Root redirects to the Workout tab — the new "Home" landing screen.
       GoRoute(
         path: '/',
-        redirect: (context, state) => '/athlete-dashboard',
+        redirect: (context, state) => '/workout',
+      ),
+      GoRoute(
+        path: '/workout',
+        builder: (context, state) => const WorkoutScreen(),
       ),
       GoRoute(
         path: '/auth',
