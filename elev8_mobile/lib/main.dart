@@ -8,6 +8,7 @@ import 'dashboard_screen.dart';
 import 'nutrition_screen.dart';
 import 'schedule_screen.dart';
 import 'athlete_dashboard_screen.dart';
+import 'account_screen.dart';
 import 'messenger_screen.dart';
 import 'auth_screen.dart';
 import 'coach_screen.dart';
@@ -104,6 +105,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/athlete-dashboard',
         builder: (context, state) => const AthleteDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/account',
+        builder: (context, state) => const AccountScreen(),
       ),
       GoRoute(
         path: '/messenger',

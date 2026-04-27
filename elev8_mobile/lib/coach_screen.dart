@@ -64,7 +64,7 @@ class CoachScreen extends ConsumerWidget {
             ),
           ),
         ),
-        bottomNavigationBar: const Elev8BottomNavBar(selectedIndex: 3),
+        bottomNavigationBar: const Elev8BottomNavBar(selectedIndex: 4),
       ),
     );
   }
