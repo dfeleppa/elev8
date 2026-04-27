@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const { error, role, userId } = await requireUserContext();
+export async function GET(request: Request) {
+  const { error, role, userId } = await requireRequestUserContext(request);
   if (error || !userId || !hasRole("member", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

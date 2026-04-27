@@ -173,3 +173,19 @@ export async function requireUserContext(): Promise<UserContext> {
 
   return { userId: userRow.id, role: normalizeRole(userRow.role), error: null };
 }
+
+/**
+ * Auth resolver that picks Bearer-token (mobile) or NextAuth session
+ * (web) based on whether the request carries an Authorization header.
+ *
+ * Use this in API routes that need to be callable from both surfaces.
+ * Two prior copies of this helper lived inline in the coach API routes;
+ * they now import this one.
+ */
+export async function requireRequestUserContext(request: Request): Promise<UserContext> {
+  const auth = request.headers.get("Authorization") ?? request.headers.get("authorization");
+  if (auth?.startsWith("Bearer ")) {
+    return requireUserContextFromBearer(request);
+  }
+  return requireUserContext();
+}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext, requireUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -80,8 +80,8 @@ type PrRow = {
   movement_library: { name: string | null } | Array<{ name: string | null }> | null;
 };
 
-export async function GET() {
-  const { error, userId } = await requireUserContext();
+export async function GET(request: Request) {
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error }, { status: 401 });
   }
