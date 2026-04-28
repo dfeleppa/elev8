@@ -61,19 +61,19 @@ class Elev8BottomNavBar extends ConsumerWidget {
       onDestinationSelected: (index) {
         switch (index) {
           case 0:
-            context.go('/workout');
+            context.go('/member/workout');
             break;
           case 1:
-            context.go('/schedule');
+            context.go('/member/class-schedule');
             break;
           case 2:
             _showYouSheet(context);
             break;
           case 3:
-            context.go('/nutrition');
+            context.go('/member/nutrition');
             break;
           case 4:
-            context.go('/coach');
+            context.go('/member/nutrition-coach');
             break;
         }
       },
@@ -148,7 +148,7 @@ void _showYouSheet(BuildContext context) {
                   description: "Today's stats, streak, coach plan",
                   onTap: () {
                     Navigator.of(ctx).pop();
-                    ctx.go('/athlete-dashboard');
+                    ctx.go('/member/athlete-dashboard');
                   },
                 ),
                 _SheetTile(
@@ -157,7 +157,7 @@ void _showYouSheet(BuildContext context) {
                   description: 'Profile, settings, sign out',
                   onTap: () {
                     Navigator.of(ctx).pop();
-                    ctx.go('/account');
+                    ctx.go('/member/account-dashboard');
                   },
                 ),
               ],

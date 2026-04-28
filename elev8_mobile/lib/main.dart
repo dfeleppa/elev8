@@ -14,6 +14,7 @@ import 'auth_screen.dart';
 import 'coach_screen.dart';
 import 'workout_screen.dart';
 import 'screens/coach_setup_screen.dart';
+import 'screens/placeholder_screen.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -84,58 +85,202 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // Root redirects to the Workout tab — the new "Home" landing screen.
-      GoRoute(
-        path: '/',
-        redirect: (context, state) => '/workout',
-      ),
-      GoRoute(
-        path: '/workout',
-        builder: (context, state) => const WorkoutScreen(),
-      ),
+      // Root → workout (today's programming) for backwards compat.
+      GoRoute(path: '/', redirect: (_, _) => '/member/workout'),
+
       GoRoute(
         path: '/auth',
         builder: (context, state) => const AuthScreen(),
       ),
+
+      // ── Athlete (member) routes ────────────────────────────────────────
       GoRoute(
-        path: '/schedule',
-        builder: (context, state) => const ScheduleScreen(),
-      ),
-      GoRoute(
-        path: '/nutrition',
-        builder: (context, state) => const NutritionScreen(),
-      ),
-      GoRoute(
-        path: '/athlete-dashboard',
+        path: '/member/athlete-dashboard',
         builder: (context, state) => const AthleteDashboardScreen(),
       ),
       GoRoute(
-        path: '/account',
+        path: '/member/workout',
+        builder: (context, state) => const WorkoutScreen(),
+      ),
+      GoRoute(
+        path: '/member/class-schedule',
+        builder: (context, state) => const ScheduleScreen(),
+      ),
+      GoRoute(
+        path: '/member/nutrition',
+        builder: (context, state) => const NutritionScreen(),
+      ),
+      // /member/nutrition-coach → existing CoachScreen (member-facing
+      // nutrition coach landing page).
+      GoRoute(
+        path: '/member/nutrition-coach',
+        builder: (context, state) => const CoachScreen(),
+      ),
+      GoRoute(
+        path: '/member/account-dashboard',
         builder: (context, state) => const AccountScreen(),
       ),
       GoRoute(
-        path: '/messenger',
-        builder: (context, state) => const MessengerScreen(),
+        path: '/member/store',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Store',
+          section: 'Account',
+          icon: Icons.shopping_bag_outlined,
+        ),
       ),
-      // /coach is the new top-level coach screen. Shows the active plan
-      // (with a "Start new plan" CTA) when one exists, or an empty-state
-      // CTA that opens the wizard when one doesn't.
+
+      // ── Gym view: Overview ─────────────────────────────────────────────
       GoRoute(
-        path: '/coach',
-        builder: (context, state) => const CoachScreen(),
+        path: '/gym-dashboard',
+        builder: (context, state) => const DashboardScreen(),
       ),
+
+      // ── Gym view: Owner / Management ───────────────────────────────────
+      GoRoute(
+        path: '/owner/staff',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Staff',
+          section: 'Management',
+          icon: Icons.groups_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/owner/schedule',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Class Setup',
+          section: 'Management',
+          icon: Icons.calendar_month,
+        ),
+      ),
+      GoRoute(
+        path: '/owner/payroll',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Payroll',
+          section: 'Management',
+          icon: Icons.account_balance_wallet_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/owner/billing',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Billing',
+          section: 'Management',
+          icon: Icons.receipt_long_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/owner/tracks-memberships',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Tracks & Memberships',
+          section: 'Management',
+          icon: Icons.verified_user_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/owner/members',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Members',
+          section: 'Management',
+          icon: Icons.people_alt_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/owner/settings',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Gym Settings',
+          section: 'Management',
+          icon: Icons.settings_outlined,
+        ),
+      ),
+
+      // ── Gym view: Admin / Operations ───────────────────────────────────
+      GoRoute(
+        path: '/management',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Management',
+          section: 'Operations',
+          icon: Icons.work_outline,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/content',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Content',
+          section: 'Operations',
+          icon: Icons.article_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/analytics',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Business Analytics',
+          section: 'Operations',
+          icon: Icons.insights_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/programming',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Programming',
+          section: 'Operations',
+          icon: Icons.fitness_center,
+        ),
+      ),
+
+      // ── Gym view: Coach / Coaching ─────────────────────────────────────
+      GoRoute(
+        path: '/coach/nutrition-coach',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Nutrition Coach',
+          section: 'Coaching',
+          icon: Icons.monitor_heart,
+        ),
+      ),
+      GoRoute(
+        path: '/coach/schedule',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Coach Schedule',
+          section: 'Coaching',
+          icon: Icons.calendar_month,
+        ),
+      ),
+      GoRoute(
+        path: '/coach/reports-members',
+        builder: (context, state) => const PlaceholderScreen(
+          title: 'Reports - Members',
+          section: 'Coaching',
+          icon: Icons.assignment_outlined,
+        ),
+      ),
+
+      // ── Coach plan wizard (member-facing) ──────────────────────────────
       GoRoute(
         path: '/coach-setup',
         builder: (context, state) => CoachSetupScreen(
           fresh: state.uri.queryParameters['fresh'] == 'true',
         ),
       ),
-      // Legacy /dashboard route preserved for deep links (e.g. push
-      // notifications) that may still reference it.
+
+      // ── Misc / supporting ──────────────────────────────────────────────
       GoRoute(
-        path: '/dashboard',
-        builder: (context, state) => const DashboardScreen(),
+        path: '/messenger',
+        builder: (context, state) => const MessengerScreen(),
       ),
+
+      // ── Legacy route aliases (preserved for deep links / push notifs) ──
+      GoRoute(path: '/workout', redirect: (_, _) => '/member/workout'),
+      GoRoute(path: '/schedule', redirect: (_, _) => '/member/class-schedule'),
+      GoRoute(path: '/nutrition', redirect: (_, _) => '/member/nutrition'),
+      GoRoute(
+        path: '/athlete-dashboard',
+        redirect: (_, _) => '/member/athlete-dashboard',
+      ),
+      GoRoute(
+        path: '/account',
+        redirect: (_, _) => '/member/account-dashboard',
+      ),
+      GoRoute(path: '/coach', redirect: (_, _) => '/member/nutrition-coach'),
+      GoRoute(path: '/dashboard', redirect: (_, _) => '/gym-dashboard'),
     ],
   );
 });
@@ -146,7 +291,7 @@ class Elev8App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    
+
     return MaterialApp.router(
       title: 'Elev8',
       theme: AppTheme.dark(),
@@ -154,7 +299,3 @@ class Elev8App extends ConsumerWidget {
     );
   }
 }
-
-
-
-
