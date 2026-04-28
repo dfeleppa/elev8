@@ -8,6 +8,18 @@ import FloatingCreateButton from "./FloatingCreateButton";
 import TaskSidePanel from "./TaskSidePanel";
 import ProjectItem from "./ProjectItem";
 import { createProject, updateProject, deleteProject } from "./projectActions";
+import {
+  uiButtonPrimaryClass,
+  uiEmptyStateClass,
+  uiFieldClass,
+  uiKickerClass,
+  uiPillClass,
+  uiSurfaceClass,
+  uiSurfaceMutedClass,
+  uiTabActiveClass,
+  uiTabClass,
+  uiTitleSmClass,
+} from "@/components/ui";
 
 type ViewMode = "list" | "kanban" | "calendar" | "gantt";
 type KanbanColumnKey = "planned" | "in-progress" | "blocked" | "done";
@@ -71,13 +83,13 @@ function getStatusLabel(status: string | null, isComplete?: boolean | null) {
 }
 
 function getStatusStyles(status: string | null, isComplete?: boolean | null) {
-  if (isComplete) return "border-violet-400/30 bg-violet-500/10 text-violet-300";
+  if (isComplete) return "ds-pill border-violet-400/30 bg-violet-500/10 text-violet-300";
   const normalized = normalizeStatus(status);
-  if (normalized === "doing" || normalized === "in-progress" || normalized === "ongoing") return "border-emerald-400/30 bg-emerald-500/10 text-emerald-300";
-  if (normalized === "blocked" || normalized === "on-hold") return "border-rose-400/30 bg-rose-500/10 text-rose-300";
-  if (normalized === "planned" || normalized === "open") return "border-sky-400/30 bg-sky-500/10 text-sky-300";
-  if (normalized === "done" || normalized === "complete") return "border-violet-400/30 bg-violet-500/10 text-violet-300";
-  return "border-white/10 bg-white/5 text-slate-300";
+  if (normalized === "doing" || normalized === "in-progress" || normalized === "ongoing") return "ds-pill border-emerald-400/30 bg-emerald-500/10 text-emerald-300";
+  if (normalized === "blocked" || normalized === "on-hold") return "ds-pill border-rose-400/30 bg-rose-500/10 text-rose-300";
+  if (normalized === "planned" || normalized === "open") return "ds-pill border-sky-400/30 bg-sky-500/10 text-sky-300";
+  if (normalized === "done" || normalized === "complete") return "ds-pill border-violet-400/30 bg-violet-500/10 text-violet-300";
+  return uiPillClass;
 }
 
 function getInitials(value: string) {
@@ -176,19 +188,19 @@ export default function ManagementPageClient({
               type="text"
               name="name"
               placeholder="Project name"
-              className="h-10 w-72 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+              className={`${uiFieldClass} h-10 w-72`}
               required
             />
             <button
               type="submit"
-              className="rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white active:scale-95 transition-transform shadow-[0_4px_20px_rgba(255,177,196,0.2)]"
+              className={`${uiButtonPrimaryClass} min-h-10 text-xs uppercase tracking-widest`}
             >
               Create Project
             </button>
           </form>
           <div className="mt-4 flex flex-wrap gap-2">
             {projects.length === 0 ? (
-              <p className="text-sm text-slate-500">No projects yet.</p>
+              <p className="text-sm text-[var(--text-soft)]">No projects yet.</p>
             ) : (
               projects.map((project) => (
                 <ProjectItem
@@ -216,19 +228,17 @@ export default function ManagementPageClient({
 
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Task Views</p>
-          <h2 className="mt-2 text-xl font-semibold text-slate-100">Execution hub</h2>
+          <p className={uiKickerClass}>Task Views</p>
+          <h2 className={`mt-2 ${uiTitleSmClass}`}>Execution hub</h2>
         </div>
-        <div className="inline-flex rounded-xl border border-white/10 bg-white/5 p-1">
+        <div className={`${uiSurfaceClass} inline-flex rounded-xl p-1`}>
           {viewModes.map((mode) => {
             const isActive = activeView === mode.key;
             return (
               <Link
                 key={mode.key}
                 href={`/management?view=${mode.key}`}
-                className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                  isActive ? "bg-[#ffb1c4]/20 text-[#ffb1c4]" : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
-                }`}
+                className={isActive ? uiTabActiveClass : uiTabClass}
               >
                 {mode.label}
               </Link>
@@ -240,21 +250,21 @@ export default function ManagementPageClient({
       <div>
         {activeView === "list" ? (
           <div className="space-y-4">
-            <div className="min-w-[760px] overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
-              <table className="w-full">
+            <div className="app-table-shell min-w-[760px]">
+              <table className="app-table">
                 <thead>
-                  <tr className="border-b border-white/10 bg-white/5 text-left text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-300">
-                    <th className="px-4 py-2.5">Task</th>
-                    <th className="px-4 py-2.5">Status</th>
-                    <th className="px-4 py-2.5">Project</th>
-                    <th className="px-4 py-2.5">Due</th>
-                    <th className="px-4 py-2.5">Priority</th>
+                  <tr>
+                    <th>Task</th>
+                    <th>Status</th>
+                    <th>Project</th>
+                    <th>Due</th>
+                    <th>Priority</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10">
+                <tbody>
                   {tasks.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-5 text-sm text-slate-400">
+                      <td colSpan={5} className="px-4 py-5 text-sm text-[var(--text-soft)]">
                         No tasks yet. Create your first task above.
                       </td>
                     </tr>
@@ -262,27 +272,27 @@ export default function ManagementPageClient({
                     tasks.map((task) => (
                       <tr
                         key={task.id}
-                        className="cursor-pointer transition hover:bg-white/5"
+                        className="cursor-pointer transition hover:bg-[var(--input-bg-strong)]"
                         onClick={() => handleTaskClick(task)}
                       >
                         <td className="px-4 py-2.5 align-middle">
                           <div className="flex items-center gap-3">
-                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 text-[10px] font-semibold text-slate-300">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--input-bg-strong)] text-[10px] font-semibold text-[var(--text-muted)]">
                               {getInitials(task.title)}
                             </span>
                             <div>
-                              <p className="text-[13px] font-semibold text-slate-100">{task.title}</p>
+                              <p className="text-[13px] font-semibold text-[var(--text)]">{task.title}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-4 py-2.5 align-middle">
-                          <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${getStatusStyles(task.status, task.is_complete)}`}>
+                          <span className={`px-2.5 py-0.5 text-[10px] font-semibold ${getStatusStyles(task.status, task.is_complete)}`}>
                             {getStatusLabel(task.status, task.is_complete)}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 align-middle text-[13px] text-slate-300">{task.project?.name ?? "Unassigned"}</td>
-                        <td className="px-4 py-2.5 align-middle text-[13px] text-slate-300">{formatDate(task.due_date)}</td>
-                        <td className="px-4 py-2.5 align-middle text-[13px] text-slate-300">{task.priority ?? "TBD"}</td>
+                        <td className="px-4 py-2.5 align-middle text-[13px] text-[var(--text-muted)]">{task.project?.name ?? "Unassigned"}</td>
+                        <td className="px-4 py-2.5 align-middle text-[13px] text-[var(--text-muted)]">{formatDate(task.due_date)}</td>
+                        <td className="px-4 py-2.5 align-middle text-[13px] text-[var(--text-muted)]">{task.priority ?? "TBD"}</td>
                       </tr>
                     ))
                   )}
@@ -296,33 +306,33 @@ export default function ManagementPageClient({
           <div className="overflow-x-auto">
             <div className="flex min-h-[55vh] gap-4 items-stretch">
               {taskCountByColumn.map((column) => (
-                <div key={column.key} className="flex h-full w-72 flex-shrink-0 flex-col rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div key={column.key} className={`${uiSurfaceClass} flex h-full w-72 flex-shrink-0 flex-col p-4`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.28em] text-slate-400">{column.label}</p>
-                      <p className="mt-1 text-xs text-slate-500">{column.hint}</p>
+                      <p className={uiKickerClass}>{column.label}</p>
+                      <p className="mt-1 text-xs text-[var(--text-soft)]">{column.hint}</p>
                     </div>
-                    <span className="text-xs text-slate-400">{column.tasks.length}</span>
+                    <span className="text-xs text-[var(--text-muted)]">{column.tasks.length}</span>
                   </div>
                   <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
                     {column.tasks.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-white/10 bg-white/5 px-3 py-4 text-xs text-slate-400">Nothing here yet.</div>
+                      <div className={`${uiEmptyStateClass} text-xs`}>Nothing here yet.</div>
                     ) : (
                       column.tasks.map((task) => (
                         <article
                           key={task.id}
-                          className="cursor-pointer rounded-xl border border-white/10 bg-white/5 px-3 py-3 transition hover:border-white/20 hover:bg-white/10"
+                          className={`${uiSurfaceMutedClass} cursor-pointer px-3 py-3 transition hover:border-[var(--line-focus)] hover:bg-[var(--input-bg-strong)]`}
                           onClick={() => handleTaskClick(task)}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">Task</span>
-                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getStatusStyles(task.status, task.is_complete)}`}>
+                            <span className={uiKickerClass}>Task</span>
+                            <span className={`px-2 py-0.5 text-[10px] font-semibold ${getStatusStyles(task.status, task.is_complete)}`}>
                               {getStatusLabel(task.status, task.is_complete)}
                             </span>
                           </div>
-                          <p className="mt-2 text-sm font-semibold text-slate-100">{task.title}</p>
-                          <p className="mt-1 text-xs text-slate-400">{task.project?.name ?? "Unassigned"}</p>
-                          <p className="mt-1 text-[11px] text-slate-400">{formatDate(task.due_date)}</p>
+                          <p className="mt-2 text-sm font-semibold text-[var(--text)]">{task.title}</p>
+                          <p className="mt-1 text-xs text-[var(--text-muted)]">{task.project?.name ?? "Unassigned"}</p>
+                          <p className="mt-1 text-[11px] text-[var(--text-muted)]">{formatDate(task.due_date)}</p>
                         </article>
                       ))
                     )}
@@ -336,23 +346,23 @@ export default function ManagementPageClient({
         {activeView === "calendar" ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {calendarBuckets.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-slate-400">No tasks available.</div>
+              <div className={uiEmptyStateClass}>No tasks available.</div>
             ) : (
               calendarBuckets.map((bucket) => (
-                <article key={bucket.date} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <h3 className="text-sm font-semibold text-slate-100">
+                <article key={bucket.date} className={`${uiSurfaceClass} p-4`}>
+                  <h3 className="text-sm font-semibold text-[var(--text)]">
                     {bucket.date === "unscheduled" ? "No due date" : formatDate(bucket.date)}
                   </h3>
-                  <p className="mt-1 text-xs text-slate-400">{bucket.tasks.length} task{bucket.tasks.length === 1 ? "" : "s"}</p>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">{bucket.tasks.length} task{bucket.tasks.length === 1 ? "" : "s"}</p>
                   <div className="mt-3 space-y-2">
                     {bucket.tasks.map((task) => (
                       <div
                         key={task.id}
-                        className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2 transition hover:border-white/20 hover:bg-white/10"
+                        className={`${uiSurfaceMutedClass} cursor-pointer px-3 py-2 transition hover:border-[var(--line-focus)] hover:bg-[var(--input-bg-strong)]`}
                         onClick={() => handleTaskClick(task)}
                       >
-                        <p className="text-sm font-medium text-slate-100">{task.title}</p>
-                        <p className="mt-1 text-xs text-slate-400">{task.project?.name ?? "Unassigned"}</p>
+                        <p className="text-sm font-medium text-[var(--text)]">{task.title}</p>
+                        <p className="mt-1 text-xs text-[var(--text-muted)]">{task.project?.name ?? "Unassigned"}</p>
                       </div>
                     ))}
                   </div>
@@ -363,13 +373,13 @@ export default function ManagementPageClient({
         ) : null}
 
         {activeView === "gantt" ? (
-          <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="flex items-center justify-between text-xs text-slate-400">
+          <div className={`${uiSurfaceClass} space-y-3 p-4`}>
+            <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
               <span>{formatDate(timelineStart.toISOString())}</span>
               <span>{formatDate(timelineEnd.toISOString())}</span>
             </div>
             {datedTasks.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/10 bg-white/5 px-3 py-4 text-sm text-slate-400">
+              <div className={uiEmptyStateClass}>
                 Add due dates to tasks to populate the gantt timeline.
               </div>
             ) : (
@@ -381,16 +391,16 @@ export default function ManagementPageClient({
                 return (
                   <div
                     key={task.id}
-                    className="grid grid-cols-[240px_1fr] items-center gap-3 cursor-pointer transition hover:bg-white/5 rounded-lg px-2 py-1"
+                    className="grid cursor-pointer grid-cols-[240px_1fr] items-center gap-3 rounded-lg px-2 py-1 transition hover:bg-[var(--input-bg)]"
                     onClick={() => handleTaskClick(task)}
                   >
                     <div>
-                      <p className="truncate text-sm font-medium text-slate-100">{task.title}</p>
-                      <p className="text-xs text-slate-400">{task.project?.name ?? "Unassigned"}</p>
+                      <p className="truncate text-sm font-medium text-[var(--text)]">{task.title}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{task.project?.name ?? "Unassigned"}</p>
                     </div>
-                    <div className="relative h-7 rounded-lg bg-white/10">
+                    <div className="relative h-7 rounded-lg bg-[var(--input-bg-strong)]">
                       <div
-                        className="absolute top-1 h-5 rounded-md bg-gradient-to-r from-sky-400 to-blue-500 cursor-pointer"
+                        className="absolute top-1 h-5 cursor-pointer rounded-md bg-gradient-to-r from-[var(--cyan)] to-[var(--violet)]"
                         style={{ left: `${Math.min(left, 98)}%`, width: `${Math.max(width, 2)}%` }}
                         title={`${formatDate(task.created_at)} -> ${formatDate(task.due_date)}`}
                       />

@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  uiButtonGhostClass,
+  uiButtonPrimaryClass,
+  uiFieldClass,
+  uiSelectClass,
+  uiSurfaceClass,
+} from "@/components/ui";
 
 type ProjectOption = {
   id: string;
@@ -56,21 +63,21 @@ export default function FloatingCreateButton({ projects }: FloatingCreateButtonP
   return (
     <div className="fixed bottom-6 right-6 z-30">
       {isExpanded && (
-        <div className="absolute bottom-16 right-0 w-80 rounded-xl border border-white/10 bg-white/5 p-4 shadow-lg">
+        <div className={`${uiSurfaceClass} absolute bottom-16 right-0 w-80 p-4`}>
           <form onSubmit={handleSubmit} className="space-y-3">
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Task title"
-              className="w-full h-10 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+              className={`${uiFieldClass} h-10`}
               autoFocus
               required
             />
             <select
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
-              className="w-full h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100"
+              className={`${uiSelectClass} h-9`}
             >
               <option value="">No project</option>
               {projects.map((project) => (
@@ -84,12 +91,12 @@ export default function FloatingCreateButton({ projects }: FloatingCreateButtonP
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="flex-1 h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100"
+                className={`${uiFieldClass} h-9 flex-1`}
               />
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="flex-1 h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-slate-100"
+                className={`${uiSelectClass} h-9 flex-1`}
               >
                 <option value="">Priority</option>
                 <option value="low">Low</option>
@@ -101,14 +108,14 @@ export default function FloatingCreateButton({ projects }: FloatingCreateButtonP
               <button
                 type="submit"
                 disabled={isSubmitting || !title.trim()}
-                className="flex-1 rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-4 py-2 text-sm font-bold uppercase tracking-widest text-white transition hover:brightness-110 active:scale-95 shadow-[0_4px_20px_rgba(255,177,196,0.2)] disabled:cursor-not-allowed disabled:opacity-60"
+                className={`${uiButtonPrimaryClass} flex-1`}
               >
                 Create
               </button>
               <button
                 type="button"
                 onClick={() => setIsExpanded(false)}
-                className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
+                className={uiButtonGhostClass}
               >
                 Cancel
               </button>
@@ -119,14 +126,14 @@ export default function FloatingCreateButton({ projects }: FloatingCreateButtonP
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all ${
+        className={`flex h-14 w-14 items-center justify-center rounded-full border transition-all ${
           isExpanded
-            ? "bg-slate-500 hover:bg-slate-600 rotate-45"
-            : "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500"
+            ? "border-[var(--line-strong)] bg-[var(--panel-3)] text-[var(--text)] rotate-45"
+            : "border-[color:color-mix(in_srgb,var(--pink)_36%,transparent)] bg-gradient-to-r from-[var(--pink)] to-[color:color-mix(in_srgb,var(--pink)_65%,white_35%)] text-[var(--text-inverse)] shadow-[0_14px_30px_color-mix(in_srgb,var(--pink)_26%,transparent)]"
         }`}
       >
         <svg
-          className={`h-6 w-6 text-white transition-transform ${isExpanded ? "rotate-0" : ""}`}
+          className={`h-6 w-6 transition-transform ${isExpanded ? "rotate-0" : ""}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

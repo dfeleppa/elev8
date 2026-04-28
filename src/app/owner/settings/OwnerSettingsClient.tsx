@@ -10,6 +10,15 @@ import {
 } from "@/components/owner/buttonStyles";
 import OwnerSectionCard from "@/components/owner/OwnerSectionCard";
 import OwnerSettingsSubheader from "@/components/owner/OwnerSettingsSubheader";
+import {
+  uiBannerErrorClass,
+  uiBannerSuccessClass,
+  uiCopyClass,
+  uiLabelClass,
+  uiPageClass,
+  uiPageHeaderClass,
+  uiTitleClass,
+} from "@/components/ui";
 
 type OrgSettings = {
   id: string;
@@ -31,9 +40,8 @@ function generateCode(): string {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--pink)]/60 focus:outline-none";
-const labelClass =
-  "mb-1.5 block text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]";
+  "ds-field";
+const labelClass = uiLabelClass;
 
 export default function OwnerSettingsClient() {
   const [settings, setSettings] = useState<OrgSettings | null>(null);
@@ -167,8 +175,8 @@ export default function OwnerSettingsClient() {
     return (
       <>
         <OwnerSettingsSubheader />
-        <section className="space-y-8 px-5 py-10 lg:px-8 lg:py-16">
-          <h1 className="text-3xl font-semibold text-[var(--text)]">General Settings</h1>
+        <section className={`${uiPageClass} px-5 py-10 lg:px-8 lg:py-16`}>
+          <h1 className={uiTitleClass}>General Settings</h1>
           <p className="text-sm text-[var(--text-soft)]">Loading...</p>
         </section>
       </>
@@ -178,24 +186,24 @@ export default function OwnerSettingsClient() {
   return (
     <>
       <OwnerSettingsSubheader />
-      <section className="space-y-8 px-5 py-10 lg:px-8 lg:py-16">
-      <header>
-        <h1 className="text-3xl font-semibold text-[var(--text)]">General Settings</h1>
-        <p className="mt-3 text-sm text-[var(--text-muted)]">
+      <section className={`${uiPageClass} px-5 py-10 lg:px-8 lg:py-16`}>
+      <header className={uiPageHeaderClass}>
+        <h1 className={uiTitleClass}>General Settings</h1>
+        <p className={uiCopyClass}>
           Manage your organization profile, branding, and invitation code.
         </p>
       </header>
 
       {/* Success banner */}
       {success && (
-        <div className="flex items-center justify-between rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-300">
+        <div className={`${uiBannerSuccessClass} flex items-center justify-between`}>
           <span>{success}</span>
         </div>
       )}
 
       {/* Error banner */}
       {pageError && (
-        <div className="flex items-center justify-between rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-300">
+        <div className={`${uiBannerErrorClass} flex items-center justify-between`}>
           <span>{pageError}</span>
           <button
             type="button"

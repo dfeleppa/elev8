@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ownerButtonPrimaryClass } from "./buttonStyles";
+import { uiFieldClass, uiSelectClass, uiSurfaceMutedClass } from "@/components/ui";
 
 type ProjectOption = {
   id: string;
@@ -56,24 +57,22 @@ export default function TaskCreateForm({ projects, onCreated, compact = false }:
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`flex flex-wrap items-end gap-3 ${compact ? "" : "rounded-xl border border-white/10 bg-white/5 px-4 py-3"}`}>
+    <form onSubmit={handleSubmit} className={`flex flex-wrap items-end gap-3 ${compact ? "" : `${uiSurfaceMutedClass} px-4 py-3`}`}>
       <div className="flex items-center">
-        <span className="text-lg text-slate-400">+</span>
+        <span className="text-lg text-[var(--text-muted)]">+</span>
       </div>
       <input
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="New task title"
-        className={`rounded-lg border border-white/15 bg-white/5 text-slate-100 placeholder:text-slate-500 ${
-          compact ? "h-9 w-64 text-[13px]" : "h-9 w-64 text-[13px]"
-        }`}
+        className={`${uiFieldClass} h-9 w-64 px-3 py-2 text-[13px]`}
         required
       />
       <select
         value={projectId}
         onChange={(e) => setProjectId(e.target.value)}
-        className="h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-[12px] text-slate-100"
+        className={`${uiSelectClass} h-9 px-3 py-2 text-[12px]`}
       >
         <option value="">No project</option>
         {projects.map((project) => (
@@ -86,12 +85,12 @@ export default function TaskCreateForm({ projects, onCreated, compact = false }:
         type="date"
         value={dueDate}
         onChange={(e) => setDueDate(e.target.value)}
-        className="h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-[12px] text-slate-100"
+        className={`${uiFieldClass} h-9 px-3 py-2 text-[12px]`}
       />
       <select
         value={priority}
         onChange={(e) => setPriority(e.target.value)}
-        className="h-9 rounded-lg border border-white/15 bg-white/5 px-3 text-[12px] text-slate-100"
+        className={`${uiSelectClass} h-9 px-3 py-2 text-[12px]`}
       >
         <option value="">Priority</option>
         <option value="low">Low</option>
