@@ -15,6 +15,7 @@ import 'auth_screen.dart';
 import 'coach_screen.dart';
 import 'workout_screen.dart';
 import 'screens/coach_setup_screen.dart';
+import 'screens/owner_billing_screen.dart';
 import 'screens/owner_members_screen.dart';
 import 'screens/owner_payroll_screen.dart';
 import 'screens/owner_schedule_screen.dart';
@@ -157,11 +158,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/owner/billing',
-        builder: (context, state) => const PlaceholderScreen(
-          title: 'Billing',
-          section: 'Management',
-          icon: Icons.receipt_long_outlined,
-        ),
+        builder: (context, state) => const OwnerBillingScreen(),
       ),
       GoRoute(
         path: '/owner/tracks-memberships',

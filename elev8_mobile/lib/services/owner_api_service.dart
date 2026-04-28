@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/env.dart';
+import '../models/owner_billing.dart';
 import '../models/owner_member.dart';
 import '../models/owner_payroll_entry.dart';
 import '../models/owner_schedule_class.dart';
@@ -73,6 +74,57 @@ class OwnerApiService {
     return list
         .map(
           (e) => OwnerPayrollEntry.fromJson(e as Map<String, dynamic>),
+        )
+        .toList();
+  }
+
+  /// Billing metrics — MRR, ARR, LTV, churn, totals. Backed by Stripe.
+  static Future<BillingMetrics> fetchBillingMetrics() async {
+    final uri = Uri.parse('$_baseUrl/api/owner/billing/metrics');
+    final resp = await http.get(uri, headers: _headers);
+    if (resp.statusCode != 200) {
+      _throwApiError('Load billing metrics', resp);
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    return BillingMetrics.fromJson(body);
+  }
+
+  /// Top-spending customers (default `limit=10`).
+  static Future<List<BillingCustomer>> fetchBillingCustomers({
+    int limit = 10,
+  }) async {
+    final uri = Uri.parse(
+      '$_baseUrl/api/owner/billing/customers?limit=$limit',
+    );
+    final resp = await http.get(uri, headers: _headers);
+    if (resp.statusCode != 200) {
+      _throwApiError('Load billing customers', resp);
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final list = (body['customers'] as List<dynamic>?) ?? const [];
+    return list
+        .map(
+          (c) => BillingCustomer.fromJson(c as Map<String, dynamic>),
+        )
+        .toList();
+  }
+
+  /// Recent payments + refunds (default `limit=50`).
+  static Future<List<BillingTransaction>> fetchBillingTransactions({
+    int limit = 50,
+  }) async {
+    final uri = Uri.parse(
+      '$_baseUrl/api/owner/billing/transactions?limit=$limit',
+    );
+    final resp = await http.get(uri, headers: _headers);
+    if (resp.statusCode != 200) {
+      _throwApiError('Load billing transactions', resp);
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final list = (body['transactions'] as List<dynamic>?) ?? const [];
+    return list
+        .map(
+          (t) => BillingTransaction.fromJson(t as Map<String, dynamic>),
         )
         .toList();
   }

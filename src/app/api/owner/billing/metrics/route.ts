@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { getOrganizationBillingMetrics } from "@/lib/billing-metrics";
 
 export async function GET(request: NextRequest) {
-  const { error, role } = await requireUserContext();
+  const { error, role } = await requireRequestUserContext(request);
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
