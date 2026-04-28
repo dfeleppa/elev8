@@ -64,7 +64,9 @@ class CoachScreen extends ConsumerWidget {
             ),
           ),
         ),
-        bottomNavigationBar: const Elev8BottomNavBar(selectedIndex: 4),
+        // Nutrition Coach lives under Nutrition in the sidebar — keep the
+        // Nutrition tab highlighted so the user knows where they are.
+        bottomNavigationBar: const Elev8BottomNavBar(selectedIndex: 3),
       ),
     );
   }
