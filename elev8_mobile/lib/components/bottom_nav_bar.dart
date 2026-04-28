@@ -38,11 +38,11 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 
 /// Bottom navigation bar — 5 tabs.
 ///
-///   0. Workout   → /workout         (today's programming + track selector)
-///   1. Schedule  → /schedule
+///   0. Workout   → /member/workout         (today's programming + track selector)
+///   1. Schedule  → /member/class-schedule
 ///   2. You       → opens a sheet with [Athlete Dashboard, Account]
-///   3. Nutrition → /nutrition
-///   4. Coach     → /coach
+///   3. Nutrition → /member/nutrition
+///   4. Messages  → /messenger              (coming soon)
 class Elev8BottomNavBar extends ConsumerWidget {
   final int selectedIndex;
 
@@ -73,7 +73,7 @@ class Elev8BottomNavBar extends ConsumerWidget {
             context.go('/member/nutrition');
             break;
           case 4:
-            context.go('/member/nutrition-coach');
+            context.go('/messenger');
             break;
         }
       },
@@ -107,9 +107,9 @@ class Elev8BottomNavBar extends ConsumerWidget {
           label: 'Nutrition',
         ),
         const NavigationDestination(
-          icon: Icon(Icons.monitor_heart_outlined, color: Colors.white54),
-          selectedIcon: Icon(Icons.monitor_heart, color: Colors.white),
-          label: 'Coach',
+          icon: Icon(Icons.forum_outlined, color: Colors.white54),
+          selectedIcon: Icon(Icons.forum, color: Colors.white),
+          label: 'Messages',
         ),
       ],
     );
