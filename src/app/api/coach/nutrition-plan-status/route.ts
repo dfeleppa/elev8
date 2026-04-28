@@ -1,18 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { getCoachNutritionPlan, hasCoachNutritionPlan } from "@/lib/coach-plan";
-import { requireUserContext, requireUserContextFromBearer } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
-
-async function requireRequestUserContext(request: Request) {
-  const authHeader = request.headers.get("Authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    return requireUserContextFromBearer(request);
-  }
-  return requireUserContext();
-}
 
 export async function GET(request: Request) {
   const { error, userId } = await requireRequestUserContext(request);

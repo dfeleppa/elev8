@@ -7,7 +7,7 @@ import {
   type IntensityPreset,
 } from "@/lib/nutrition-calculations";
 import { getCoachNutritionPlan, hasCoachNutritionPlan } from "@/lib/coach-plan";
-import { hasRole, requireUserContext, requireUserContextFromBearer } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -95,14 +95,6 @@ function canManageMember(role: string, currentUserId: string, memberId: string) 
     return true;
   }
   return role === "admin" || role === "owner";
-}
-
-async function requireRequestUserContext(request: Request) {
-  const authHeader = request.headers.get("Authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    return requireUserContextFromBearer(request);
-  }
-  return requireUserContext();
 }
 
 export async function GET(request: Request) {

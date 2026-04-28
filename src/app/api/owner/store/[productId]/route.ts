@@ -5,6 +5,13 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type RouteContext = { params: Promise<{ productId: string }> };
 
+function parseNonNegativeNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = typeof value === "number" ? value : parseFloat(String(value));
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return parsed;
+}
+
 // PATCH /api/owner/store/[productId] — update product
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const { error, role } = await requireUserContext();
@@ -30,8 +37,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   if (body.name !== undefined) updates.name = String(body.name).trim();
   if (body.description !== undefined) updates.description = body.description?.trim() || null;
   if (body.category !== undefined) updates.category = body.category?.trim() || null;
-  if (body.price !== undefined) updates.price = parseFloat(body.price) || 0;
-  if (body.coachesPrice !== undefined) updates.coaches_price = body.coachesPrice != null ? parseFloat(body.coachesPrice) || null : null;
+  if (body.price !== undefined) {
+    const price = parseNonNegativeNumber(body.price);
+    if (price === null) {
+      return NextResponse.json({ error: "price must be a non-negative number." }, { status: 400 });
+    }
+    updates.price = price;
+  }
+  if (body.coachesPrice !== undefined) updates.coaches_price = parseNonNegativeNumber(body.coachesPrice);
   if (body.taxRate !== undefined) updates.tax_rate = body.taxRate?.trim() || null;
   if (body.taxIncludedInPrice !== undefined) updates.tax_included_in_price = Boolean(body.taxIncludedInPrice);
   if (body.inventoryCount !== undefined) updates.inventory_count = body.inventoryCount != null ? parseInt(body.inventoryCount, 10) || null : null;

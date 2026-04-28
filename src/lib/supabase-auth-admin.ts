@@ -16,6 +16,24 @@ function normalizeEmail(value: string | null | undefined): string {
   return value?.trim().toLowerCase() ?? "";
 }
 
+/**
+ * Lookup a Supabase Auth user id for an email address without listing the
+ * entire users table on every call. We rely on app_users mirroring the
+ * Supabase Auth uid (either as the PK for password-registered users or via
+ * the supabase_auth_uid column for OAuth users).
+ */
+async function findAuthUserIdByEmail(email: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("app_users")
+    .select("id, supabase_auth_uid")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (!data) return null;
+  const row = data as { id: string | null; supabase_auth_uid: string | null };
+  return row.supabase_auth_uid ?? row.id ?? null;
+}
+
 // ─── Registration ────────────────────────────────────────────────────────────
 
 export interface RegisterResult {
@@ -198,14 +216,18 @@ export async function upsertSupabaseAuthOAuthUser(
     .eq("email", normalizedEmail)
     .maybeSingle();
 
-  if (existingAppUser) {
+  const appUserRow = existingAppUser as
+    | { id: string; email: string; supabase_auth_uid?: string | null }
+    | null;
+
+  if (appUserRow) {
     await supabaseAdmin
       .from("app_users")
       .update({
         full_name: fullName,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", existingAppUser.id);
+      .eq("id", appUserRow.id);
   } else {
     await supabaseAdmin.from("app_users").insert({
       email: normalizedEmail,
@@ -214,31 +236,60 @@ export async function upsertSupabaseAuthOAuthUser(
     });
   }
 
-  // Check if user already exists in Supabase Auth
-  // (they may have registered via email/password on another platform)
-  const { data: existingAuthUsers } = await supabaseAdmin.auth.admin.listUsers();
-  const existingAuthUser = existingAuthUsers?.users.find((u) => u.email === normalizedEmail);
-
-  if (existingAuthUser) {
-    return { ok: true, supabaseUserId: existingAuthUser.id };
+  // Cached path: if app_users already knows the Supabase Auth uid (set by a
+  // prior login or password registration where app_users.id IS the auth uid),
+  // reuse it instead of paginating the entire users table.
+  const cachedAuthUid = await findAuthUserIdByEmail(normalizedEmail);
+  if (cachedAuthUid) {
+    return { ok: true, supabaseUserId: cachedAuthUid };
   }
 
-  // Create user in Supabase Auth (OAuth-only, no password)
+  // Cold path: create the Supabase Auth user. If they already exist
+  // (e.g. registered via password before our cache was populated),
+  // createUser returns an "already_exists" style error; we then fall back
+  // to a paginated lookup so subsequent logins are fast.
   const { data: newUser, error } = await supabaseAdmin.auth.admin.createUser({
     email: normalizedEmail,
     email_confirm: true,
     user_metadata: { full_name: fullName },
   });
 
-  if (error || !newUser.user) {
-    // If Supabase Auth creation fails (e.g. user already exists from another flow),
-    // look up the existing user
-    const retry = existingAuthUsers?.users.find((u) => u.email === normalizedEmail);
-    if (retry) {
-      return { ok: true, supabaseUserId: retry.id };
+  let supabaseUserId: string | null = newUser?.user?.id ?? null;
+
+  if (error || !supabaseUserId) {
+    // Slow fallback: scan auth users for this email. This only runs once per
+    // user (we cache the uid below) and only when the user pre-existed in
+    // Supabase Auth without a synced app_users row.
+    let page = 1;
+    while (page <= 50) {
+      const { data: list, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage: 200,
+      });
+      if (listError || !list?.users?.length) break;
+      const match = list.users.find((u) => u.email === normalizedEmail);
+      if (match) {
+        supabaseUserId = match.id;
+        break;
+      }
+      if (list.users.length < 200) break;
+      page += 1;
     }
+  }
+
+  if (!supabaseUserId) {
     return { ok: false, redirect: "/login?error=oauth_create_failed" };
   }
 
-  return { ok: true, supabaseUserId: newUser.user.id };
+  // Cache the auth uid back to app_users so the next OAuth login skips the
+  // expensive listUsers fallback entirely.
+  await supabaseAdmin
+    .from("app_users")
+    .update({
+      supabase_auth_uid: supabaseUserId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("email", normalizedEmail);
+
+  return { ok: true, supabaseUserId };
 }

@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     userId = user.id;
   }
 
-  const { error: updateError } = await supabaseAdmin
+  const { data: updatedUser, error: updateError } = await supabaseAdmin
     .from("app_users")
     .update({
       role: payload.role,
@@ -148,15 +148,11 @@ export async function POST(request: NextRequest) {
       office_payrate: officePayrate,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", userId);
+    .eq("id", userId)
+    .select("id, full_name, email, role, coaching_payrate, office_payrate")
+    .single();
 
   if (updateError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
-
-  const { data: updatedUser } = await supabaseAdmin
-    .from("app_users")
-    .select("id, full_name, email, role, coaching_payrate, office_payrate")
-    .eq("id", userId)
-    .single();
 
   return NextResponse.json({
     staff: {

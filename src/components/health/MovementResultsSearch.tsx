@@ -60,7 +60,9 @@ export default function MovementResultsSearch() {
     fetch("/api/athlete/movement-results", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setMovements(d.movements ?? []))
-      .catch(() => {})
+      .catch((err) => {
+        console.error("Failed to load movements:", err);
+      })
       .finally(() => setMovementsLoading(false));
   }, []);
 
@@ -71,7 +73,9 @@ export default function MovementResultsSearch() {
     fetch(`/api/athlete/movement-results?movementId=${selected.id}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setResults(d.results ?? []))
-      .catch(() => {})
+      .catch((err) => {
+        console.error("Failed to load movement results:", err);
+      })
       .finally(() => setResultsLoading(false));
   }, [selected]);
 

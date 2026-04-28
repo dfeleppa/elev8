@@ -11,26 +11,27 @@ export async function GET() {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
 
-  const { data: userRow } = await supabaseAdmin
-    .from("app_users")
-    .select("full_name, email")
-    .eq("id", userId)
-    .maybeSingle();
-
-  const { data: gymRow } = await supabaseAdmin
-    .from("gym_settings")
-    .select("name, logo_url")
-    .eq("id", 1)
-    .maybeSingle();
-
-  const { data: latestResult } = await supabaseAdmin
-    .from("workout_results")
-    .select("track_id")
-    .eq("member_id", userId)
-    .order("day_date", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // These three queries are independent — fan them out in parallel.
+  const [{ data: userRow }, { data: gymRow }, { data: latestResult }] = await Promise.all([
+    supabaseAdmin
+      .from("app_users")
+      .select("full_name, email")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("gym_settings")
+      .select("name, logo_url")
+      .eq("id", 1)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("workout_results")
+      .select("track_id")
+      .eq("member_id", userId)
+      .order("day_date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const latestTrackId =
     latestResult && typeof latestResult.track_id === "string" ? latestResult.track_id : null;

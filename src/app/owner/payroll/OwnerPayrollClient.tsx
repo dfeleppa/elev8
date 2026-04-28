@@ -175,7 +175,9 @@ export default function OwnerPayrollClient() {
           .sort((a: StaffMember, b: StaffMember) => a.name.localeCompare(b.name));
         setStaffList(members);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Failed to load staff list:", err);
+      });
   }, []);
 
   // Load payroll entries

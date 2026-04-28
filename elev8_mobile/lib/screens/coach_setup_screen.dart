@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../data/repositories/nutrition_repository.dart';
@@ -9,7 +10,12 @@ import '../services/coach_api_service.dart';
 // ─── Entry point ─────────────────────────────────────────────────────────────
 
 class CoachSetupScreen extends ConsumerStatefulWidget {
-  const CoachSetupScreen({super.key});
+  /// When true, the wizard skips pre-filling form fields from the user's
+  /// previous plan. The Start-New-Plan flow on /coach passes
+  /// `?fresh=true` to land here.
+  final bool fresh;
+
+  const CoachSetupScreen({super.key, this.fresh = false});
 
   @override
   ConsumerState<CoachSetupScreen> createState() => _CoachSetupScreenState();
@@ -47,7 +53,12 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
   @override
   void initState() {
     super.initState();
-    _loadExisting();
+    // Skip pre-fill when the user explicitly chose "Start New Plan" from
+    // the coach screen — they want a blank wizard, not a re-edit of the
+    // existing plan.
+    if (!widget.fresh) {
+      _loadExisting();
+    }
   }
 
   @override
@@ -147,6 +158,7 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
   // ── Navigation ───────────────────────────────────────────────────────────────
   void _next() {
     if (_step < 3) {
+      FocusManager.instance.primaryFocus?.unfocus();
       setState(() => _step++);
       _pages.animateToPage(
         _step,
@@ -158,6 +170,7 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
   }
 
   void _back() {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (_step > 0) {
       setState(() => _step--);
       _pages.animateToPage(
@@ -166,7 +179,11 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.of(context).pop(false);
+      if (context.canPop()) {
+        context.pop(false);
+      } else {
+        context.go('/nutrition');
+      }
     }
   }
 
@@ -218,23 +235,36 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
     });
     try {
       final preview = await CoachApiService.previewPlan(_apiInputs);
-      if (mounted) setState(() => _preview = preview);
+      if (!mounted) return;
+      // Set the result and clear the loading flag in one rebuild instead
+      // of two (was: a setState here, then another in the finally block).
+      setState(() {
+        _preview = preview;
+        _loadingPreview = false;
+      });
     } catch (e) {
-      if (mounted) setState(() => _previewError = e.toString());
-    } finally {
-      if (mounted) setState(() => _loadingPreview = false);
+      if (!mounted) return;
+      setState(() {
+        _previewError = e.toString();
+        _loadingPreview = false;
+      });
     }
   }
 
   // ── Apply ─────────────────────────────────────────────────────────────────────
   Future<void> _applyPlan() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _applying = true);
     try {
       await CoachApiService.applyPlan(_apiInputs);
       if (!mounted) return;
       ref.invalidate(coachPlanStatusProvider);
       ref.invalidate(nutritionDayProvider);
-      Navigator.of(context).pop(true);
+      if (context.canPop()) {
+        context.pop(true);
+      } else {
+        context.go('/nutrition');
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -267,63 +297,67 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
         ),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          _StepIndicator(step: _step),
-          Expanded(
-            child: PageView(
-              controller: _pages,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _Step1Goal(
-                  selected: _goalType,
-                  onSelect: (g) => setState(() => _goalType = g),
-                ),
-                _Step2Body(
-                  sex: _sex,
-                  birthDate: _birthDate,
-                  weightCtrl: _weightCtrl,
-                  feetCtrl: _feetCtrl,
-                  inchesCtrl: _inchesCtrl,
-                  targetWeightCtrl: _targetWeightCtrl,
-                  bodyFatCtrl: _bodyFatCtrl,
-                  onSexChanged: (s) => setState(() => _sex = s),
-                  onBirthDateChanged: (d) => setState(() => _birthDate = d),
-                ),
-                _Step3Training(
-                  sessionsPerWeek: _sessionsPerWeek,
-                  effectiveDate: _effectiveDate,
-                  intensityPreset: _intensityPreset,
-                  onSessionsChanged: (v) =>
-                      setState(() => _sessionsPerWeek = v),
-                  onEffectiveDateChanged: (d) =>
-                      setState(() => _effectiveDate = d),
-                  onIntensityChanged: (i) =>
-                      setState(() => _intensityPreset = i),
-                ),
-                _Step4Preview(
-                  preview: _preview,
-                  loading: _loadingPreview,
-                  error: _previewError,
-                  applying: _applying,
-                  onRetry: _generatePreview,
-                  onApply: _applyPlan,
-                ),
-              ],
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
+          children: [
+            _StepIndicator(step: _step),
+            Expanded(
+              child: PageView(
+                controller: _pages,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _Step1Goal(
+                    selected: _goalType,
+                    onSelect: (g) => setState(() => _goalType = g),
+                  ),
+                  _Step2Body(
+                    sex: _sex,
+                    birthDate: _birthDate,
+                    weightCtrl: _weightCtrl,
+                    feetCtrl: _feetCtrl,
+                    inchesCtrl: _inchesCtrl,
+                    targetWeightCtrl: _targetWeightCtrl,
+                    bodyFatCtrl: _bodyFatCtrl,
+                    onSexChanged: (s) => setState(() => _sex = s),
+                    onBirthDateChanged: (d) => setState(() => _birthDate = d),
+                  ),
+                  _Step3Training(
+                    sessionsPerWeek: _sessionsPerWeek,
+                    effectiveDate: _effectiveDate,
+                    intensityPreset: _intensityPreset,
+                    onSessionsChanged: (v) =>
+                        setState(() => _sessionsPerWeek = v),
+                    onEffectiveDateChanged: (d) =>
+                        setState(() => _effectiveDate = d),
+                    onIntensityChanged: (i) =>
+                        setState(() => _intensityPreset = i),
+                  ),
+                  _Step4Preview(
+                    preview: _preview,
+                    loading: _loadingPreview,
+                    error: _previewError,
+                    applying: _applying,
+                    onRetry: _generatePreview,
+                    onApply: _applyPlan,
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (_step < 3)
-            _BottomNav(
-              step: _step,
-              canNext: _step == 0
-                  ? _step1Valid
-                  : _step == 1
-                  ? _step2Valid
-                  : _step3Valid,
-              onBack: _back,
-              onNext: _next,
-            ),
-        ],
+            if (_step < 3)
+              _BottomNav(
+                step: _step,
+                canNext: _step == 0
+                    ? _step1Valid
+                    : _step == 1
+                    ? _step2Valid
+                    : _step3Valid,
+                onBack: _back,
+                onNext: _next,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -540,8 +574,8 @@ class _Step1Goal extends StatelessWidget {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFF0EA5E9).withOpacity(0.15)
-                      : Colors.white.withOpacity(0.04),
+                      ? const Color(0xFF0EA5E9).withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected
@@ -557,7 +591,7 @@ class _Step1Goal extends StatelessWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFF0EA5E9).withOpacity(0.3)
+                            ? const Color(0xFF0EA5E9).withValues(alpha: 0.3)
                             : Colors.white10,
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -704,7 +738,7 @@ class _Step2Body extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white12),
               ),
@@ -799,8 +833,8 @@ class _SexButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: selected
-                ? const Color(0xFF0EA5E9).withOpacity(0.15)
-                : Colors.white.withOpacity(0.05),
+                ? const Color(0xFF0EA5E9).withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected ? const Color(0xFF63f7ff) : Colors.white12,
@@ -947,7 +981,7 @@ class _Step3Training extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white12),
               ),
@@ -981,8 +1015,8 @@ class _Step3Training extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: selected
-                      ? const Color(0xFF0EA5E9).withOpacity(0.15)
-                      : Colors.white.withOpacity(0.04),
+                      ? const Color(0xFF0EA5E9).withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: selected ? const Color(0xFF63f7ff) : Colors.white12,
@@ -1053,7 +1087,7 @@ class _CounterButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: onTap != null
               ? Colors.white10
-              : Colors.white.withOpacity(0.03),
+              : Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white12),
         ),
@@ -1220,7 +1254,7 @@ class _Step4Preview extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white10),
             ),
@@ -1384,6 +1418,7 @@ class _NumField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: ctrl,
+      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       keyboardType: TextInputType.numberWithOptions(decimal: decimal),
       inputFormatters: [
         FilteringTextInputFormatter.allow(
@@ -1397,7 +1432,7 @@ class _NumField extends StatelessWidget {
         suffixText: suffix,
         suffixStyle: const TextStyle(color: Colors.white38),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
+        fillColor: Colors.white.withValues(alpha: 0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.white12),

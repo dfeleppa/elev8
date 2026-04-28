@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("Instagram token upsert failed:", error.message);
-      const response = NextResponse.redirect(new URL(`/admin/content?socialError=${encodeURIComponent(`Legacy token save failed: ${error.message}`)}`, request.url));
+      const response = NextResponse.redirect(new URL(`/admin/content?socialError=token_save_failed`, request.url));
       response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
       return response;
     }
@@ -154,8 +154,7 @@ export async function GET(request: NextRequest) {
 
     if (instagramAccountError || facebookAccountError || !instagramAccount || !facebookAccount) {
       console.error("Social account provisioning failed:", instagramAccountError?.message, facebookAccountError?.message);
-      const message = instagramAccountError?.message || facebookAccountError?.message || "Failed to provision social accounts.";
-      const response = NextResponse.redirect(new URL(`/admin/content?socialError=${encodeURIComponent(message)}`, request.url));
+      const response = NextResponse.redirect(new URL(`/admin/content?socialError=account_provisioning_failed`, request.url));
       response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
       return response;
     }
@@ -185,7 +184,7 @@ export async function GET(request: NextRequest) {
 
     if (tokenInsertError) {
       console.error("Social token provisioning failed:", tokenInsertError.message);
-      const response = NextResponse.redirect(new URL(`/admin/content?socialError=${encodeURIComponent(`Token save failed: ${tokenInsertError.message}`)}`, request.url));
+      const response = NextResponse.redirect(new URL(`/admin/content?socialError=token_save_failed`, request.url));
       response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
       return response;
     }
@@ -196,7 +195,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unexpected error.";
     console.error("Instagram OAuth callback failed:", message);
-    const response = NextResponse.redirect(new URL(`/admin/content?socialError=${encodeURIComponent(message)}`, request.url));
+    const response = NextResponse.redirect(new URL(`/admin/content?socialError=oauth_failed`, request.url));
     response.cookies.delete(INSTAGRAM_OAUTH_STATE_COOKIE);
     return response;
   }

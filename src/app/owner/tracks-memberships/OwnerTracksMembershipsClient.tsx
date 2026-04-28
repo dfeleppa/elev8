@@ -6,6 +6,7 @@ import {
   ownerButtonPrimaryClass,
   ownerButtonSecondaryClass,
   ownerIconButtonNeutralClass,
+  ownerIconButtonDangerClass,
 } from "@/components/owner/buttonStyles";
 
 type TrackRow = {
@@ -31,7 +32,7 @@ type TrackDraft = {
   description: string;
 };
 
-type TrackColumnKey = "trackName" | "private" | "settings" | "copy" | "members";
+type TrackColumnKey = "trackName" | "private" | "settings" | "copy" | "members" | "delete";
 
 type MemberAssignmentRow = {
   email: string;
@@ -47,6 +48,7 @@ const trackColumnDefs: Array<{ key: TrackColumnKey; label: string }> = [
   { key: "settings", label: "Settings" },
   { key: "copy", label: "Copy" },
   { key: "members", label: "Members" },
+  { key: "delete", label: "Delete" },
 ];
 
 const defaultVisibleTrackColumns: Record<TrackColumnKey, boolean> = {
@@ -55,6 +57,7 @@ const defaultVisibleTrackColumns: Record<TrackColumnKey, boolean> = {
   settings: true,
   copy: true,
   members: true,
+  delete: true,
 };
 
 const emptyDraft: TrackDraft = {
@@ -87,6 +90,15 @@ const membersIcon = (
     <circle cx="16" cy="10" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
     <path d="M3.5 20a5.5 5.5 0 0 1 11 0" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     <path d="M13 20a4.3 4.3 0 0 1 7.5-2.7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+);
+
+const trashIcon = (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+    <path d="M3 6h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M8 6V4h8v2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10 11v4M14 11v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
   </svg>
 );
 
@@ -147,6 +159,7 @@ export default function OwnerTracksMembershipsClient() {
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const [activeMembersTrack, setActiveMembersTrack] = useState<TrackRow | null>(null);
   const [draft, setDraft] = useState<TrackDraft>(emptyDraft);
+  const [confirmDeleteTrack, setConfirmDeleteTrack] = useState<TrackRow | null>(null);
 
   const loadTracks = useCallback(async () => {
     setLoading(true);
@@ -377,6 +390,27 @@ export default function OwnerTracksMembershipsClient() {
     }
   };
 
+  const deleteTrack = async (track: TrackRow) => {
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    setConfirmDeleteTrack(null);
+    try {
+      const response = await fetch(`/api/programming/tracks/${track.id}`, { method: "DELETE" });
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setError(payload.error ?? "Failed to delete track.");
+        return;
+      }
+      setTracks((prev) => prev.filter((t) => t.id !== track.id));
+      setMessage(`Track "${track.name}" deleted.`);
+    } catch {
+      setError("Failed to delete track.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const copyTrack = async (track: TrackRow) => {
     setSaving(true);
     setError(null);
@@ -551,6 +585,7 @@ export default function OwnerTracksMembershipsClient() {
                     {visibleColumns.settings ? <th className="px-3 py-3 text-center font-medium">Settings</th> : null}
                     {visibleColumns.copy ? <th className="px-3 py-3 text-center font-medium">Copy</th> : null}
                     {visibleColumns.members ? <th className="px-3 py-3 text-center font-medium">Members</th> : null}
+                    {visibleColumns.delete ? <th className="px-3 py-3 text-center font-medium">Delete</th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -600,6 +635,17 @@ export default function OwnerTracksMembershipsClient() {
                               {memberCounts[track.name] ?? 0}
                             </span>
                           </div>
+                        </td> : null}
+                        {visibleColumns.delete ? <td className="px-3 py-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteTrack(track)}
+                            title="Delete"
+                            disabled={saving}
+                            className={ownerIconButtonDangerClass}
+                          >
+                            {trashIcon}
+                          </button>
                         </td> : null}
                       </tr>
                     ))
@@ -735,6 +781,36 @@ export default function OwnerTracksMembershipsClient() {
                   className={ownerButtonPrimaryClass}
                 >
                   {saving ? "Saving..." : "Save Track"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {confirmDeleteTrack ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg)]/80 p-6">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--line)] bg-[var(--panel)] shadow-2xl backdrop-blur">
+            <div className="px-6 py-6">
+              <h2 className="text-xl font-semibold text-[var(--text)]">Delete Track</h2>
+              <p className="mt-3 text-sm text-[var(--text-muted)]">
+                Are you sure you want to delete <span className="font-semibold text-[var(--text)]">{confirmDeleteTrack.name}</span>? This cannot be undone.
+              </p>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteTrack(null)}
+                  className={ownerButtonSecondaryClass}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteTrack(confirmDeleteTrack)}
+                  disabled={saving}
+                  className="rounded-xl border border-rose-400/30 bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(225,29,72,0.3)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? "Deleting..." : "Delete Track"}
                 </button>
               </div>
             </div>

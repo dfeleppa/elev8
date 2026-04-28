@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -162,11 +163,20 @@ class CoachApiService {
     }
   }
 
+  /// Throw a user-safe exception while keeping the raw response body in
+  /// debug logs only — server responses can include internal error details
+  /// (stack traces, table names, env hints) we don't want surfacing in
+  /// snackbars or crash reports.
+  static Never _throwApiError(String operation, http.Response resp) {
+    debugPrint('[CoachApi] $operation failed (${resp.statusCode}): ${resp.body}');
+    throw Exception('$operation failed (HTTP ${resp.statusCode}).');
+  }
+
   static Future<CoachPlanStatusResponse> fetchCoachPlanStatus() async {
     final uri = Uri.parse('$_baseUrl/api/coach/nutrition-plan-status');
     final resp = await http.get(uri, headers: _headers);
     if (resp.statusCode != 200) {
-      throw Exception('Failed to load coach plan status: ${resp.body}');
+      _throwApiError('Load coach plan status', resp);
     }
     final body = jsonDecode(resp.body) as Map<String, dynamic>;
     return CoachPlanStatusResponse(
@@ -183,7 +193,7 @@ class CoachApiService {
       body: jsonEncode({'goalType': goalType}),
     );
     if (resp.statusCode != 200) {
-      throw Exception('Failed to update coach goal: ${resp.body}');
+      _throwApiError('Update coach goal', resp);
     }
   }
 
@@ -198,7 +208,7 @@ class CoachApiService {
       body: jsonEncode({...inputs, 'action': 'preview'}),
     );
     if (resp.statusCode != 200) {
-      throw Exception('Preview failed: ${resp.body}');
+      _throwApiError('Preview plan', resp);
     }
     final body = jsonDecode(resp.body) as Map<String, dynamic>;
     return CoachPlanPreview.fromJson(body['plan'] as Map<String, dynamic>);
@@ -213,7 +223,7 @@ class CoachApiService {
       body: jsonEncode({...inputs, 'action': 'apply'}),
     );
     if (resp.statusCode != 200) {
-      throw Exception('Apply failed: ${resp.body}');
+      _throwApiError('Apply plan', resp);
     }
   }
 }

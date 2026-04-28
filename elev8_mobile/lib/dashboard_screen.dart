@@ -73,7 +73,7 @@ class DashboardScreen extends ConsumerWidget {
                    ),
                  ),
                  loading: () => const CircularProgressIndicator(),
-                 error: (_, __) => const Text('Hello, Athlete', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                 error: (_, _) => const Text('Hello, Athlete', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                ),
                const SizedBox(height: 8),
                Text(

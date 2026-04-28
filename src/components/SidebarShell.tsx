@@ -299,9 +299,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
     const loadRole = async () => {
       try {
-        const response = await fetch("/api/me", { cache: "no-store" });
-        const payload = await response.json();
-        if (!response.ok || !payload?.role) {
+        // Fetch role + tracks in parallel — they don't depend on each other.
+        const [meResponse, tracksResponse] = await Promise.all([
+          fetch("/api/me", { cache: "no-store" }),
+          fetch("/api/programming/tracks", { cache: "no-store" }).catch(() => null),
+        ]);
+
+        const payload = await meResponse.json();
+        if (!meResponse.ok || !payload?.role) {
           return;
         }
         if (
@@ -330,10 +335,9 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           setCurrentTrack(payload.currentTrack.trim());
         }
 
-        if (isMounted) {
+        if (isMounted && tracksResponse && tracksResponse.ok) {
           try {
-            const tr = await fetch(`/api/programming/tracks`, { cache: "no-store" });
-            const tp = await tr.json();
+            const tp = await tracksResponse.json();
             const fetchedTracks: { id: string; name: string }[] = (tp?.tracks ?? []).map(
               (t: { id: string; name: string }) => ({ id: t.id, name: t.name })
             );

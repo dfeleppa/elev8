@@ -1,148 +1,297 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:elev8_mobile/components/elev8_background.dart';
 
 // ----------------------------------------------------------------------
 // DATA MODELS
 // ----------------------------------------------------------------------
-enum UserRole {
-  member,
-  coach,
-  admin,
-  owner,
-}
+
+enum UserRole { member, coach, admin, owner }
 
 extension UserRoleRank on UserRole {
   int get rank {
     switch (this) {
-      case UserRole.member: return 1;
-      case UserRole.coach: return 2;
-      case UserRole.admin: return 3;
-      case UserRole.owner: return 4;
+      case UserRole.member:
+        return 1;
+      case UserRole.coach:
+        return 2;
+      case UserRole.admin:
+        return 3;
+      case UserRole.owner:
+        return 4;
     }
   }
 }
 
-class NavChild {
-  final String label;
-  final String href;
-  final UserRole minRole;
-  final List<NavChild>? children;
+enum ViewMode { gym, athlete }
 
-  const NavChild({
-    required this.label,
-    required this.href,
-    this.minRole = UserRole.member,
-    this.children,
-  });
-}
-
-class NavItem {
+class NavEntry {
   final String label;
   final String href;
   final IconData icon;
   final UserRole minRole;
-  final List<NavChild>? children;
 
-  const NavItem({
+  const NavEntry({
     required this.label,
     required this.href,
     required this.icon,
     this.minRole = UserRole.member,
-    this.children,
   });
 }
 
-// ----------------------------------------------------------------------
-// NAVIGATION DATA
-// ----------------------------------------------------------------------
+class NavSection {
+  final String label;
+  final List<NavEntry> entries;
 
-const List<NavItem> navItems = [
-  NavItem(
-    label: "Owner",
-    href: "/organization/owner",
-    icon: Icons.admin_panel_settings_outlined,
-    minRole: UserRole.owner,
-    children: [
-      NavChild(label: "Staff", href: "/organization/owner/staff", minRole: UserRole.owner),
-      NavChild(label: "Schedule", href: "/organization/owner/schedule", minRole: UserRole.owner),
-      NavChild(label: "Payroll", href: "/organization/owner/payroll", minRole: UserRole.owner),
-      NavChild(label: "Billing", href: "/organization/owner/billing", minRole: UserRole.owner),
-      NavChild(label: "Tracks & Memberships", href: "/organization/owner/tracks-memberships", minRole: UserRole.owner),
-      NavChild(label: "Integrations", href: "/organization/owner/integrations", minRole: UserRole.owner),
-      NavChild(label: "Members", href: "/organization/owner/members", minRole: UserRole.owner),
+  const NavSection({required this.label, required this.entries});
+}
+
+// ----------------------------------------------------------------------
+// NAVIGATION DATA — mirrors src/components/SidebarShell.tsx
+// ----------------------------------------------------------------------
+//
+// Athlete view sections (visible to all roles).
+// Maps 1:1 to ATHLETE_SECTIONS in the web SidebarShell.
+const List<NavSection> athleteSections = [
+  NavSection(
+    label: 'Today',
+    entries: [
+      NavEntry(
+        label: 'Athlete Dashboard',
+        href: '/member/athlete-dashboard',
+        icon: Icons.show_chart,
+      ),
     ],
   ),
-  NavItem(
-    label: "Admin",
-    href: "/organization/admin",
-    icon: Icons.manage_accounts_outlined,
-    minRole: UserRole.admin,
-    children: [
-      NavChild(label: "Management", href: "/management", minRole: UserRole.admin),
-      NavChild(label: "Content", href: "/content", minRole: UserRole.admin),
-      NavChild(label: "Business Analytics", href: "/organization/admin/analytics", minRole: UserRole.admin),
-      NavChild(label: "Programming", href: "/organization/admin/programming", minRole: UserRole.admin),
+  NavSection(
+    label: 'Train',
+    entries: [
+      NavEntry(
+        label: 'Workout',
+        href: '/member/workout',
+        icon: Icons.fitness_center,
+      ),
     ],
   ),
-  NavItem(
-    label: "Coach",
-    href: "/organization/coach",
-    icon: Icons.sports_outlined,
-    minRole: UserRole.coach,
-    children: [
-      NavChild(label: "Schedule", href: "/organization/coach/schedule", minRole: UserRole.coach),
-      NavChild(label: "Reports - Members", href: "/organization/coach/reports-members", minRole: UserRole.coach),
+  NavSection(
+    label: 'Schedule',
+    entries: [
+      NavEntry(
+        label: 'Class Schedule',
+        href: '/member/class-schedule',
+        icon: Icons.calendar_month,
+      ),
     ],
   ),
-  NavItem(
-    label: "Member",
-    href: "/organization/member",
-    icon: Icons.person_outline,
-    minRole: UserRole.member,
-    children: [
-      NavChild(label: "Workout", href: "/organization/member/workout", minRole: UserRole.member),
-      NavChild(label: "Nutrition", href: "/organization/member/nutrition", minRole: UserRole.member),
-      NavChild(label: "Class Schedule", href: "/organization/member/class-schedule", minRole: UserRole.member),
-      NavChild(label: "Account Dashboard", href: "/organization/member/account-dashboard", minRole: UserRole.member),
-      NavChild(label: "Athlete Dashboard", href: "/organization/member/athlete-dashboard", minRole: UserRole.member),
-      NavChild(label: "Store", href: "/organization/member/store", minRole: UserRole.member),
+  NavSection(
+    label: 'Nutrition',
+    entries: [
+      NavEntry(
+        label: 'Nutrition',
+        href: '/member/nutrition',
+        icon: Icons.restaurant,
+      ),
+      NavEntry(
+        label: 'Nutrition Coach',
+        href: '/member/nutrition-coach',
+        icon: Icons.monitor_heart,
+      ),
+    ],
+  ),
+  NavSection(
+    label: 'Account',
+    entries: [
+      NavEntry(
+        label: 'Account Dashboard',
+        href: '/member/account-dashboard',
+        icon: Icons.person_outline,
+      ),
+      NavEntry(
+        label: 'Store',
+        href: '/member/store',
+        icon: Icons.shopping_bag_outlined,
+      ),
     ],
   ),
 ];
+
+// Gym view sections — only role-appropriate sections render. Mirrors the
+// Overview / Management / Operations / Coaching grouping the web shell uses
+// when viewMode === 'gym'.
+const NavEntry gymDashboardEntry = NavEntry(
+  label: 'Gym Dashboard',
+  href: '/gym-dashboard',
+  icon: Icons.bar_chart,
+  minRole: UserRole.coach,
+);
+
+const NavSection ownerSection = NavSection(
+  label: 'Management',
+  entries: [
+    NavEntry(
+      label: 'Staff',
+      href: '/owner/staff',
+      icon: Icons.groups_outlined,
+      minRole: UserRole.owner,
+    ),
+    NavEntry(
+      label: 'Class Setup',
+      href: '/owner/schedule',
+      icon: Icons.calendar_month,
+      minRole: UserRole.owner,
+    ),
+    NavEntry(
+      label: 'Payroll',
+      href: '/owner/payroll',
+      icon: Icons.account_balance_wallet_outlined,
+      minRole: UserRole.owner,
+    ),
+    NavEntry(
+      label: 'Billing',
+      href: '/owner/billing',
+      icon: Icons.receipt_long_outlined,
+      minRole: UserRole.owner,
+    ),
+    NavEntry(
+      label: 'Tracks & Memberships',
+      href: '/owner/tracks-memberships',
+      icon: Icons.verified_user_outlined,
+      minRole: UserRole.owner,
+    ),
+    NavEntry(
+      label: 'Members',
+      href: '/owner/members',
+      icon: Icons.people_alt_outlined,
+      minRole: UserRole.owner,
+    ),
+    NavEntry(
+      label: 'Gym Settings',
+      href: '/owner/settings',
+      icon: Icons.settings_outlined,
+      minRole: UserRole.owner,
+    ),
+  ],
+);
+
+const NavSection adminSection = NavSection(
+  label: 'Operations',
+  entries: [
+    NavEntry(
+      label: 'Management',
+      href: '/management',
+      icon: Icons.work_outline,
+      minRole: UserRole.admin,
+    ),
+    NavEntry(
+      label: 'Content',
+      href: '/admin/content',
+      icon: Icons.article_outlined,
+      minRole: UserRole.admin,
+    ),
+    NavEntry(
+      label: 'Business Analytics',
+      href: '/admin/analytics',
+      icon: Icons.insights_outlined,
+      minRole: UserRole.admin,
+    ),
+    NavEntry(
+      label: 'Programming',
+      href: '/admin/programming',
+      icon: Icons.fitness_center,
+      minRole: UserRole.admin,
+    ),
+  ],
+);
+
+const NavSection coachSection = NavSection(
+  label: 'Coaching',
+  entries: [
+    NavEntry(
+      label: 'Nutrition Coach',
+      href: '/coach/nutrition-coach',
+      icon: Icons.monitor_heart,
+      minRole: UserRole.coach,
+    ),
+    NavEntry(
+      label: 'Schedule',
+      href: '/coach/schedule',
+      icon: Icons.calendar_month,
+      minRole: UserRole.coach,
+    ),
+    NavEntry(
+      label: 'Reports - Members',
+      href: '/coach/reports-members',
+      icon: Icons.assignment_outlined,
+      minRole: UserRole.coach,
+    ),
+  ],
+);
 
 // ----------------------------------------------------------------------
 // PROVIDERS
 // ----------------------------------------------------------------------
 
+UserRole _parseUserRole(String? value) {
+  switch (value) {
+    case 'owner':
+      return UserRole.owner;
+    case 'admin':
+      return UserRole.admin;
+    case 'coach':
+      return UserRole.coach;
+    case 'member':
+    default:
+      return UserRole.member;
+  }
+}
+
 final userRoleProvider = FutureProvider<UserRole>((ref) async {
-  // Hardcoded for testing purposes
-  return UserRole.owner;
-  /*
   final user = Supabase.instance.client.auth.currentUser;
   if (user == null) return UserRole.member;
 
+  // app_users.id is set by the web's NextAuth flow, not by Supabase Auth, so
+  // we resolve via supabase_auth_uid first (stamped by main.dart on sign-in)
+  // and fall back to email for the brief window before that stamp lands.
   try {
-    final response = await Supabase.instance.client
+    final byUid = await Supabase.instance.client
         .from('app_users')
         .select('role')
-        .eq('id', user.id)
+        .eq('supabase_auth_uid', user.id)
         .maybeSingle();
-
-    final roleStr = response?['role'] as String?;
-    switch (roleStr) {
-      case 'owner': return UserRole.owner;
-      case 'admin': return UserRole.admin;
-      case 'coach': return UserRole.coach;
-      case 'member':
-      default: return UserRole.member;
+    if (byUid != null) {
+      return _parseUserRole(byUid['role'] as String?);
     }
-  } catch (_) {
+
+    final email = user.email;
+    if (email == null || email.isEmpty) return UserRole.member;
+
+    final byEmail = await Supabase.instance.client
+        .from('app_users')
+        .select('role')
+        .eq('email', email)
+        .maybeSingle();
+    return _parseUserRole(byEmail?['role'] as String?);
+  } catch (e) {
+    debugPrint('userRoleProvider failed: $e');
     return UserRole.member;
   }
-  */
 });
+
+/// Selected view mode (gym vs athlete). Coach+ users default to gym; members
+/// are locked to athlete. Persisted in memory only for now — mirrors the
+/// `viewMode` state in the web SidebarShell.
+class ViewModeNotifier extends Notifier<ViewMode> {
+  @override
+  ViewMode build() => ViewMode.athlete;
+
+  void set(ViewMode mode) => state = mode;
+}
+
+final viewModeProvider = NotifierProvider<ViewModeNotifier, ViewMode>(
+  ViewModeNotifier.new,
+);
 
 // ----------------------------------------------------------------------
 // SIDEBAR SHELL WIDGET
@@ -158,307 +307,397 @@ class SidebarShell extends ConsumerStatefulWidget {
 }
 
 class _SidebarShellState extends ConsumerState<SidebarShell> {
-  // Equivalent to `openSubnav` object in React for tracking expanded folders
-  final Set<String> _expandedRoutes = {};
+  bool _viewModeInitialised = false;
 
-  bool _canViewRole(UserRole? minRole, UserRole currentRole) {
-    if (minRole == null) return true;
+  bool _canViewRole(UserRole minRole, UserRole currentRole) {
     return currentRole.rank >= minRole.rank;
   }
 
-  void _toggleExpanded(String href) {
-    setState(() {
-      if (_expandedRoutes.contains(href)) {
-        _expandedRoutes.remove(href);
-      } else {
-        _expandedRoutes.add(href);
-      }
+  /// Auto-pick a sensible default view mode the first time we know the role:
+  ///   - coach/admin/owner → gym
+  ///   - member            → athlete
+  /// After that, the user controls it via the toggle in the drawer.
+  void _ensureDefaultViewMode(UserRole role) {
+    if (_viewModeInitialised) return;
+    final canAccessGym = role.rank >= UserRole.coach.rank;
+    final next = canAccessGym ? ViewMode.gym : ViewMode.athlete;
+    // Defer to next frame to avoid mutating provider state during build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(viewModeProvider.notifier).set(next);
+      setState(() => _viewModeInitialised = true);
     });
   }
 
-  void _handleNavigation(String href) {
-    if (href.contains('nutrition')) {
-      context.go('/nutrition');
-    } else if (href.contains('schedule')) {
-      context.go('/schedule');
-    } else {
-      context.go('/');
-    }
-
-    if (!mounted) return;
+  void _navigate(BuildContext context, String href) {
+    // Close the drawer (if open) before navigating so the current page
+    // doesn't briefly flash behind the open drawer.
     final scaffold = Scaffold.maybeOf(context);
     if (scaffold != null && scaffold.hasDrawer && scaffold.isDrawerOpen) {
-      Navigator.of(context).pop(); // close drawer
+      Navigator.of(context).pop();
     }
+    context.go(href);
   }
 
   String _getPageTitle(String path) {
-    if (path.isEmpty || path == '/') return 'Dashboard';
-    for (var item in navItems) {
-      if (item.href == path) return item.label;
-      if (item.children != null) {
-        for (var child in item.children!) {
-          if (child.href == path) return child.label;
+    if (path.isEmpty || path == '/') return 'Lyfe Fitness';
+    for (final s in [
+      ...athleteSections,
+      gymDashboardWrapper,
+      ownerSection,
+      adminSection,
+      coachSection,
+    ]) {
+      for (final e in s.entries) {
+        if (e.href == path || path.startsWith('${e.href}/')) {
+          return e.label;
         }
       }
     }
-    final segments = Uri.parse(path).pathSegments;
-    if (segments.isEmpty) return 'Dashboard';
-    final last = segments.last;
-    return last.split('-').map((s) => s.isNotEmpty ? '${s[0].toUpperCase()}${s.substring(1).toLowerCase()}' : '').join(' ');
+    return 'Lyfe Fitness';
   }
 
   @override
   Widget build(BuildContext context) {
     final roleAsync = ref.watch(userRoleProvider);
-    final isDesktop = MediaQuery.of(context).size.width >= 1024; // lg breakpoint 
-    
-    // In Flutter, since we have routing (GoRouter), we check the current path
+    final role = roleAsync.value ?? UserRole.member;
+    final viewMode = ref.watch(viewModeProvider);
+    final canAccessGym = role.rank >= UserRole.coach.rank;
+
+    _ensureDefaultViewMode(role);
+
     final currentPath = GoRouterState.of(context).uri.toString();
 
     return Scaffold(
-      backgroundColor: Colors.transparent, // Let gradient show through
-      // If it's desktop, show side drawer, else show bottom/hamburger logic (Using Drawer for simplicity here)
-      drawer: isDesktop ? null : _buildDrawer(roleAsync.value ?? UserRole.member, currentPath),
+      backgroundColor: Colors.transparent,
+      drawer: _buildDrawer(role, viewMode, canAccessGym, currentPath),
       body: Elev8Background(
-        child: Row(
+        child: Column(
           children: [
-          // Fixed Sidebar for Desktop
-          if (isDesktop)
-            Container(
-              width: 220, // narrower sidebar width
-              decoration: BoxDecoration(
-                color: const Color(0xFF020617).withValues(alpha: 0.95),
-                border: const Border(
-                  right: BorderSide(color: Colors.white10),
+            // Top bar with hamburger + page title.
+            SafeArea(
+              bottom: false,
+              child: Container(
+                height: 56,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    Builder(
+                      builder: (ctx) => IconButton(
+                        icon: const Icon(Icons.menu, color: Color(0xFF020617)),
+                        onPressed: () => Scaffold.of(ctx).openDrawer(),
+                        tooltip: 'Open menu',
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        _getPageTitle(currentPath),
+                        style: const TextStyle(
+                          color: Color(0xFF020617),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: _buildSidebarContent(roleAsync.value ?? UserRole.member, currentPath),
             ),
-          
-          // Main Content
-          Expanded(
-            child: Column(
-              children: [
-                // Mobile Header
-                if (!isDesktop)
-                  Container(
-                    height: 60,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      border: Border(bottom: BorderSide(color: Colors.black12)),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Builder(
-                            builder: (ctx) => IconButton(
-                              icon: const Icon(Icons.menu, color: Color(0xFF020617)),
-                              onPressed: () => Scaffold.of(ctx).openDrawer(),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          _getPageTitle(currentPath),
-                          style: const TextStyle(color: Color(0xFF020617), fontWeight: FontWeight.bold, fontSize: 16),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                // The actual injected page content
-                Expanded(child: widget.child),
-              ],
+            Expanded(child: widget.child),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Drawer ─────────────────────────────────────────────────────────────
+
+  Widget _buildDrawer(
+    UserRole role,
+    ViewMode viewMode,
+    bool canAccessGym,
+    String currentPath,
+  ) {
+    return Drawer(
+      backgroundColor: const Color(0xFF020617).withValues(alpha: 0.97),
+      child: SafeArea(
+        child: Column(
+          children: [
+            _buildDrawerHeader(),
+            if (canAccessGym) _buildViewToggle(viewMode),
+            const Divider(color: Colors.white12, height: 1),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: viewMode == ViewMode.athlete
+                    ? _athleteNav(role, currentPath)
+                    : _gymNav(role, currentPath),
+              ),
             ),
+            const Divider(color: Colors.white12, height: 1),
+            _buildSignOutTile(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Lyfe Fitness',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                'Gym OS',
+                style: TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildViewToggle(ViewMode current) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white10,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.all(4),
+        child: Row(
+          children: [
+            _viewToggleButton(
+              label: 'Gym',
+              icon: Icons.work_outline,
+              selected: current == ViewMode.gym,
+              onTap: () =>
+                  ref.read(viewModeProvider.notifier).set(ViewMode.gym),
+            ),
+            _viewToggleButton(
+              label: 'Athlete',
+              icon: Icons.directions_run,
+              selected: current == ViewMode.athlete,
+              onTap: () =>
+                  ref.read(viewModeProvider.notifier).set(ViewMode.athlete),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDrawer(UserRole currentRole, String currentPath) {
-    return Drawer(
-      backgroundColor: const Color(0xFF020617).withValues(alpha: 0.95), // slate-950
-      child: SafeArea(
-        child: _buildSidebarContent(currentRole, currentPath),
-      ),
-    );
-  }
-
-  Widget _buildSidebarContent(UserRole currentRole, String currentPath) {
-    // Filter items recursively based on role
-    final visibleItems = navItems.where((item) => _canViewRole(item.minRole, currentRole)).toList();
-
-    return Column(
-      children: [
-        // Sidebar Header
-        Padding(
-          padding: const EdgeInsets.all(16.0),
+  Widget _viewToggleButton({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+              Icon(
+                icon,
+                size: 16,
+                color: selected ? const Color(0xFF020617) : Colors.white70,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? const Color(0xFF020617) : Colors.white70,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 ),
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("Elev8", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text("Control Center", style: TextStyle(color: Colors.white54, fontSize: 12)),
-                ],
-              )
             ],
           ),
         ),
-        
-        // Navigation Tree
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            itemCount: visibleItems.length,
-            itemBuilder: (context, index) {
-              final item = visibleItems[index];
-              return _buildNavItem(item, currentRole, currentPath);
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildNavItem(NavItem item, UserRole currentRole, String currentPath) {
-    // Top-Level Item (e.g., Organization)
-    bool isActive = currentPath.startsWith(item.href);
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ListTile(
-          leading: Icon(item.icon, color: isActive ? Colors.blueAccent : Colors.white54, size: 20),
-          title: Text(
-            item.label,
-            style: TextStyle(
-              color: isActive ? Colors.white : Colors.white70,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          tileColor: isActive ? Colors.white10 : Colors.transparent,
-          onTap: () {
-            // Ideally we navigate, but for now we'll just toggle expansion if it has children
-            if (item.children != null && item.children!.isNotEmpty) {
-               _toggleExpanded(item.href);
-            } else {
-               _handleNavigation(item.href);
-            }
-          },
+  // ── Nav builders ───────────────────────────────────────────────────────
+
+  List<Widget> _athleteNav(UserRole role, String currentPath) {
+    final widgets = <Widget>[];
+    for (final section in athleteSections) {
+      final visible = section.entries
+          .where((e) => _canViewRole(e.minRole, role))
+          .toList();
+      if (visible.isEmpty) continue;
+      widgets.add(_sectionHeader(section.label));
+      for (final entry in visible) {
+        widgets.add(_navTile(entry, currentPath));
+      }
+    }
+    return widgets;
+  }
+
+  List<Widget> _gymNav(UserRole role, String currentPath) {
+    final widgets = <Widget>[];
+
+    // Overview — always shown for coach+ since gymDashboardEntry is coach+ only.
+    if (_canViewRole(gymDashboardEntry.minRole, role)) {
+      widgets
+        ..add(_sectionHeader('Overview'))
+        ..add(_navTile(gymDashboardEntry, currentPath));
+    }
+
+    // Owner > Admin > Coach (highest privilege first, matching web).
+    final orderedSections = <NavSection>[];
+    if (role == UserRole.owner) {
+      orderedSections.addAll([ownerSection, adminSection, coachSection]);
+    } else if (role == UserRole.admin) {
+      orderedSections.addAll([adminSection, coachSection]);
+    } else if (role == UserRole.coach) {
+      orderedSections.add(coachSection);
+    }
+
+    for (final section in orderedSections) {
+      final visible = section.entries
+          .where((e) => _canViewRole(e.minRole, role))
+          .toList();
+      if (visible.isEmpty) continue;
+      widgets.add(_sectionHeader(section.label));
+      for (final entry in visible) {
+        widgets.add(_navTile(entry, currentPath));
+      }
+    }
+
+    return widgets;
+  }
+
+  Widget _sectionHeader(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 16, 6),
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          color: Colors.white38,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.4,
         ),
-        
-        // Render immediate children (e.g., Coach, Admin, Member)
-        if (item.children != null && (_expandedRoutes.contains(item.href) || isActive)) ...[
-          Padding(
-            padding: const EdgeInsets.only(left: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: item.children!
-                  .where((child) => _canViewRole(child.minRole, currentRole))
-                  .map((child) => _buildNavChild(child, currentRole, currentPath))
-                  .toList(),
-            ),
-          )
-        ]
-      ],
+      ),
     );
   }
 
-  Widget _buildNavChild(NavChild child, UserRole currentRole, String currentPath) {
-    bool isExpanded = _expandedRoutes.contains(child.href);
-    bool isActive = currentPath.startsWith(child.href);
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: () {
-            if (child.children != null && child.children!.isNotEmpty) {
-              _toggleExpanded(child.href);
-            } else {
-              _handleNavigation(child.href);
-            }
-          },
+  Widget _navTile(NavEntry entry, String currentPath) {
+    final isActive =
+        currentPath == entry.href || currentPath.startsWith('${entry.href}/');
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+      child: Material(
+        color: isActive ? Colors.white10 : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
           borderRadius: BorderRadius.circular(8),
+          onTap: () => _navigate(context, entry.href),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
+                Icon(
+                  entry.icon,
+                  size: 18,
+                  color: isActive ? Colors.white : Colors.white54,
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    child.label,
+                    entry.label,
                     style: TextStyle(
                       color: isActive ? Colors.white : Colors.white70,
                       fontSize: 13,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
                 ),
-                if (child.children != null)
-                  Icon(
-                    isExpanded ? Icons.expand_more : Icons.chevron_right,
-                    color: Colors.white54,
-                    size: 16,
-                  )
               ],
             ),
           ),
         ),
-        
-        // Render Grandchildren (e.g., Schedule, Workout, Details)
-        if (child.children != null && isExpanded) ...[
-          Padding(
-            padding: const EdgeInsets.only(left: 12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: child.children!
-                  .where((gc) => _canViewRole(gc.minRole, currentRole))
-                  .map((gc) => _buildNavGrandchild(gc, currentPath))
-                  .toList(),
-            ),
-          )
-        ]
-      ],
+      ),
     );
   }
 
-  Widget _buildNavGrandchild(NavChild grandchild, String currentPath) {
-    bool isActive = currentPath == grandchild.href;
-    return InkWell(
-      onTap: () {
-        _handleNavigation(grandchild.href);
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-        child: Text(
-          grandchild.label,
-          style: TextStyle(
-            color: isActive ? Colors.white : Colors.white60,
-            fontSize: 12,
+  Widget _buildSignOutTile() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () async {
+          await Supabase.instance.client.auth.signOut();
+          if (mounted) context.go('/auth');
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white10,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.logout, size: 18, color: Colors.white70),
+              SizedBox(width: 12),
+              Text(
+                'Sign out',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 }
+
+/// Internal wrapper so [_getPageTitle] can iterate gym dashboard alongside
+/// the section lists.
+const NavSection gymDashboardWrapper = NavSection(
+  label: 'Overview',
+  entries: [gymDashboardEntry],
+);

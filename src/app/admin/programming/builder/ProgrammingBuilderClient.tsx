@@ -207,7 +207,7 @@ export default function ProgrammingBuilderClient() {
                     min={1}
                     max={52}
                     value={durationWeeks}
-                    onChange={(e) => setDurationWeeks(Math.max(1, Math.min(52, parseInt(e.target.value) || 1)))}
+                    onChange={(e) => setDurationWeeks(Math.max(1, Math.min(52, parseInt(e.target.value, 10) || 1)))}
                     className="w-20 rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-center text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
                   />
                 </div>

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -209,7 +210,9 @@ class NutritionRepository {
             .maybeSingle();
         _cachedAppUserId = byEmail?['id'] as String?;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NutritionRepo] _resolveAppUserId failed: $e');
+    }
     return _cachedAppUserId;
   }
 
@@ -250,7 +253,8 @@ class NutritionRepository {
         'carbs_target': _parseNumeric(plan['carbs_grams']),
         'fat_target': _parseNumeric(plan['fat_grams']),
       };
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] _getCoachPlanTargets failed: $e');
       return null;
     }
   }
@@ -308,7 +312,8 @@ class NutritionRepository {
       }
 
       return Map<String, dynamic>.from(day);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] _ensureNutritionDay failed: $e');
       return null;
     }
   }
@@ -326,7 +331,8 @@ class NutritionRepository {
           .eq('member_id', appUserId)
           .eq('day_date', dateStr)
           .maybeSingle();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchNutritionDay failed: $e');
       return null;
     }
   }
@@ -373,7 +379,16 @@ class NutritionRepository {
   }
 
   Future<void> deleteNutritionEntry(String entryId) async {
-    await _client.from('nutrition_entries').delete().eq('id', entryId);
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    // Defense-in-depth: scope the delete to this user. RLS should already
+    // enforce this, but a misconfigured policy would otherwise allow a
+    // cross-user IDOR.
+    await _client
+        .from('nutrition_entries')
+        .delete()
+        .eq('id', entryId)
+        .eq('member_id', appUserId);
   }
 
   Future<void> updateEntryQuantity(String entryId, double newQuantity) async {
@@ -475,12 +490,17 @@ class NutritionRepository {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return [];
     try {
+      // Over-fetch by ~8x to give the in-Dart dedupe enough variety to
+      // hit `limit` unique names. The right long-term fix is a server-side
+      // `DISTINCT ON (entry_name)` RPC, but until that exists this scales
+      // the scan with the request rather than always paging 400 rows.
+      final scanCap = (limit * 8).clamp(80, 400);
       final response = await _client
           .from('nutrition_entries')
           .select('entry_name, calories, protein, carbs, fat, quantity')
           .eq('member_id', appUserId)
           .order('created_at', ascending: false)
-          .limit(400);
+          .limit(scanCap);
       final seen = <String>{};
       final results = <Map<String, dynamic>>[];
       for (var row in response as List<dynamic>) {
@@ -493,22 +513,27 @@ class NutritionRepository {
         if (results.length >= limit) break;
       }
       return results;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchRecentFoods failed: $e');
       return [];
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchMyFoods() async {
+  Future<List<Map<String, dynamic>>> fetchMyFoods({int limit = 100}) async {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return [];
     try {
+      // Cap at `limit` (default 100) so a power user with thousands of
+      // saved custom foods doesn't blow up the round-trip or memory.
       final response = await _client
           .from('nutrition_custom_foods')
           .select('id, name, calories, protein, carbs, fat, created_at')
           .eq('member_id', appUserId)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(limit);
       return List<Map<String, dynamic>>.from(response);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchMyFoods failed: $e');
       return [];
     }
   }
@@ -549,7 +574,13 @@ class NutritionRepository {
   }
 
   Future<void> deleteCustomFood(String id) async {
-    await _client.from('nutrition_custom_foods').delete().eq('id', id);
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    await _client
+        .from('nutrition_custom_foods')
+        .delete()
+        .eq('id', id)
+        .eq('member_id', appUserId);
   }
 
   // ---- USDA Search ----
@@ -566,7 +597,9 @@ class NutritionRepository {
         final List<dynamic> results = response.data['results'] ?? [];
         return results.map((r) => Map<String, dynamic>.from(r)).toList();
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NutritionRepo] searchUsdaFoods (edge function) failed: $e');
+    }
     try {
       final session = _client.auth.currentSession;
       if (session == null) return [];
@@ -575,7 +608,9 @@ class NutritionRepository {
         params: {'query_text': query.trim(), 'limit_count': 12},
       );
       return List<Map<String, dynamic>>.from(resp ?? []);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NutritionRepo] searchUsdaFoods (rpc fallback) failed: $e');
+    }
     return [];
   }
 
@@ -683,7 +718,8 @@ class NutritionRepository {
         profile: profile,
         currentWeightOverride: _parseNumeric(currentWeightEntry?['value']),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] _fetchCoachPlanStatusFromSupabase failed: $e');
       return null;
     }
   }
@@ -719,7 +755,8 @@ class NutritionRepository {
             ? DateTime.tryParse(summary['nextCheckInDate'] as String)
             : null,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchCoachPlanStatus (API) failed, falling back to Supabase: $e');
       return _fetchCoachPlanStatusFromSupabase();
     }
   }
