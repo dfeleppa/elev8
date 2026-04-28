@@ -282,7 +282,16 @@ final userRoleProvider = FutureProvider<UserRole>((ref) async {
 /// Selected view mode (gym vs athlete). Coach+ users default to gym; members
 /// are locked to athlete. Persisted in memory only for now — mirrors the
 /// `viewMode` state in the web SidebarShell.
-final viewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.athlete);
+class ViewModeNotifier extends Notifier<ViewMode> {
+  @override
+  ViewMode build() => ViewMode.athlete;
+
+  void set(ViewMode mode) => state = mode;
+}
+
+final viewModeProvider = NotifierProvider<ViewModeNotifier, ViewMode>(
+  ViewModeNotifier.new,
+);
 
 // ----------------------------------------------------------------------
 // SIDEBAR SHELL WIDGET
@@ -315,7 +324,7 @@ class _SidebarShellState extends ConsumerState<SidebarShell> {
     // Defer to next frame to avoid mutating provider state during build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(viewModeProvider.notifier).state = next;
+      ref.read(viewModeProvider.notifier).set(next);
       setState(() => _viewModeInitialised = true);
     });
   }
@@ -491,14 +500,14 @@ class _SidebarShellState extends ConsumerState<SidebarShell> {
               icon: Icons.work_outline,
               selected: current == ViewMode.gym,
               onTap: () =>
-                  ref.read(viewModeProvider.notifier).state = ViewMode.gym,
+                  ref.read(viewModeProvider.notifier).set(ViewMode.gym),
             ),
             _viewToggleButton(
               label: 'Athlete',
               icon: Icons.directions_run,
               selected: current == ViewMode.athlete,
               onTap: () =>
-                  ref.read(viewModeProvider.notifier).state = ViewMode.athlete,
+                  ref.read(viewModeProvider.notifier).set(ViewMode.athlete),
             ),
           ],
         ),
