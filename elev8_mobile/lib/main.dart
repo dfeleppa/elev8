@@ -20,6 +20,7 @@ import 'screens/owner_members_screen.dart';
 import 'screens/owner_payroll_screen.dart';
 import 'screens/owner_schedule_screen.dart';
 import 'screens/owner_staff_screen.dart';
+import 'screens/owner_tracks_memberships_screen.dart';
 import 'screens/placeholder_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -162,11 +163,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/owner/tracks-memberships',
-        builder: (context, state) => const PlaceholderScreen(
-          title: 'Tracks & Memberships',
-          section: 'Management',
-          icon: Icons.verified_user_outlined,
-        ),
+        builder: (context, state) => const OwnerTracksMembershipsScreen(),
       ),
       GoRoute(
         path: '/owner/members',

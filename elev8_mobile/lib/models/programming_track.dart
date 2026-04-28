@@ -8,6 +8,10 @@ class ProgrammingTrack {
   final String? description;
   final bool isActive;
   final bool isPrivate;
+  final int numberOfLevels;
+  final int hideWorkoutsDaysPrior;
+  final int hideWorkoutsHour;
+  final int hideWorkoutsMinute;
 
   const ProgrammingTrack({
     required this.id,
@@ -16,9 +20,20 @@ class ProgrammingTrack {
     required this.description,
     required this.isActive,
     required this.isPrivate,
+    this.numberOfLevels = 1,
+    this.hideWorkoutsDaysPrior = 0,
+    this.hideWorkoutsHour = 0,
+    this.hideWorkoutsMinute = 0,
   });
 
   factory ProgrammingTrack.fromJson(Map<String, dynamic> json) {
+    int parseInt(Object? v, {int fallback = 0}) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse(v.toString()) ?? fallback;
+    }
+
     return ProgrammingTrack(
       id: json['id'] as String,
       name: (json['name'] as String?) ?? 'Untitled',
@@ -26,6 +41,10 @@ class ProgrammingTrack {
       description: json['description'] as String?,
       isActive: (json['is_active'] as bool?) ?? true,
       isPrivate: (json['is_private'] as bool?) ?? false,
+      numberOfLevels: parseInt(json['number_of_levels'], fallback: 1),
+      hideWorkoutsDaysPrior: parseInt(json['hide_workouts_days_prior']),
+      hideWorkoutsHour: parseInt(json['hide_workouts_hour']),
+      hideWorkoutsMinute: parseInt(json['hide_workouts_minute']),
     );
   }
 }

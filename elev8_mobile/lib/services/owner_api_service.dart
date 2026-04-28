@@ -5,11 +5,13 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/env.dart';
+import '../models/member_track_assignment.dart';
 import '../models/owner_billing.dart';
 import '../models/owner_member.dart';
 import '../models/owner_payroll_entry.dart';
 import '../models/owner_schedule_class.dart';
 import '../models/owner_staff.dart';
+import '../models/programming_track.dart';
 
 /// Owner-only API client. Same bearer-auth pattern as
 /// [AthleteApiService] / [CoachApiService] — hits the web app's
@@ -125,6 +127,40 @@ class OwnerApiService {
     return list
         .map(
           (t) => BillingTransaction.fromJson(t as Map<String, dynamic>),
+        )
+        .toList();
+  }
+
+  /// Every programming track, including inactive ones. AthleteApiService
+  /// has its own fetchTracks() that filters to active — keep both.
+  static Future<List<ProgrammingTrack>> fetchAllTracks() async {
+    final uri = Uri.parse('$_baseUrl/api/programming/tracks');
+    final resp = await http.get(uri, headers: _headers);
+    if (resp.statusCode != 200) {
+      _throwApiError('Load tracks', resp);
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final list = (body['tracks'] as List<dynamic>?) ?? const [];
+    return list
+        .map(
+          (t) => ProgrammingTrack.fromJson(t as Map<String, dynamic>),
+        )
+        .toList();
+  }
+
+  /// Member → tracks assignments for the Tracks & Memberships screen.
+  static Future<List<MemberTrackAssignment>>
+      fetchTrackMemberAssignments() async {
+    final uri = Uri.parse('$_baseUrl/api/owner/tracks-memberships/members');
+    final resp = await http.get(uri, headers: _headers);
+    if (resp.statusCode != 200) {
+      _throwApiError('Load track assignments', resp);
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final list = (body['members'] as List<dynamic>?) ?? const [];
+    return list
+        .map(
+          (m) => MemberTrackAssignment.fromJson(m as Map<String, dynamic>),
         )
         .toList();
   }
