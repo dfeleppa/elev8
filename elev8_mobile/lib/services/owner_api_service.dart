@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/env.dart';
 import '../models/owner_member.dart';
+import '../models/owner_schedule_class.dart';
 import '../models/owner_staff.dart';
 
 /// Owner-only API client. Same bearer-auth pattern as
@@ -56,6 +57,23 @@ class OwnerApiService {
     final list = (body['staff'] as List<dynamic>?) ?? const [];
     return list
         .map((s) => OwnerStaff.fromJson(s as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Class Setup — every recurring class on the gym schedule, hydrated
+  /// with its track + default coach.
+  static Future<List<OwnerScheduleClass>> fetchScheduleClasses() async {
+    final uri = Uri.parse('$_baseUrl/api/owner/schedule/classes');
+    final resp = await http.get(uri, headers: _headers);
+    if (resp.statusCode != 200) {
+      _throwApiError('Load classes', resp);
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final list = (body['classes'] as List<dynamic>?) ?? const [];
+    return list
+        .map(
+          (c) => OwnerScheduleClass.fromJson(c as Map<String, dynamic>),
+        )
         .toList();
   }
 }

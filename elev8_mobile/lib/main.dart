@@ -16,6 +16,7 @@ import 'coach_screen.dart';
 import 'workout_screen.dart';
 import 'screens/coach_setup_screen.dart';
 import 'screens/owner_members_screen.dart';
+import 'screens/owner_schedule_screen.dart';
 import 'screens/owner_staff_screen.dart';
 import 'screens/placeholder_screen.dart';
 import 'theme/app_theme.dart';
@@ -147,11 +148,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/owner/schedule',
-        builder: (context, state) => const PlaceholderScreen(
-          title: 'Class Setup',
-          section: 'Management',
-          icon: Icons.calendar_month,
-        ),
+        builder: (context, state) => const OwnerScheduleScreen(),
       ),
       GoRoute(
         path: '/owner/payroll',
