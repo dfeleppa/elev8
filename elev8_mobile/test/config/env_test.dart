@@ -6,7 +6,10 @@ import 'package:elev8_mobile/config/env.dart';
 void main() {
   group('Env', () {
     setUp(() {
-      dotenv.testLoad(fileInput: '');
+      // loadFromString resets _envMap *and* flips the dotenv "initialized"
+      // flag, so a subsequent maybeGet returns null instead of throwing
+      // NotInitializedError on the first test in the run.
+      dotenv.loadFromString(envString: '', isOptional: true);
     });
 
     test('throws StateError when SUPABASE_URL is missing', () {
@@ -14,12 +17,12 @@ void main() {
     });
 
     test('throws StateError when SUPABASE_ANON_KEY is empty', () {
-      dotenv.testLoad(fileInput: 'SUPABASE_ANON_KEY=');
+      dotenv.loadFromString(envString: 'SUPABASE_ANON_KEY=');
       expect(() => Env.supabaseAnonKey, throwsA(isA<StateError>()));
     });
 
     test('returns value when WEB_APP_URL is set', () {
-      dotenv.testLoad(fileInput: 'WEB_APP_URL=https://example.test');
+      dotenv.loadFromString(envString: 'WEB_APP_URL=https://example.test');
       expect(Env.webAppUrl, 'https://example.test');
     });
 
@@ -28,7 +31,9 @@ void main() {
     });
 
     test('redirect uri honors override', () {
-      dotenv.testLoad(fileInput: 'SUPABASE_REDIRECT_URI=app.elev8://auth');
+      dotenv.loadFromString(
+        envString: 'SUPABASE_REDIRECT_URI=app.elev8://auth',
+      );
       expect(Env.supabaseRedirectUri, 'app.elev8://auth');
     });
   });
