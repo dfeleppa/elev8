@@ -1,7 +1,22 @@
 import { NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 import { registerWithEmailPassword } from "@/lib/supabase-auth-admin";
 
+// 5 attempts per IP per 15 minutes. Caps brute-force account creation and
+// the email-enumeration attack vector (probing whether a given email already
+// has an account by reading the 409 vs 200 response).
+const REGISTER_LIMIT = 5;
+const REGISTER_WINDOW_MS = 15 * 60 * 1000;
+
 export async function POST(request: Request) {
+  const limit = rateLimit(request, "register", REGISTER_LIMIT, REGISTER_WINDOW_MS);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const fullName = (body.fullName ?? "").trim();

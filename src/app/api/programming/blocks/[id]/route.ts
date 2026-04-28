@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasOrgRole, isOrgMember } from "@/lib/programming-access";
+import { hasOrgRole } from "@/lib/programming-access";
 import {
   isWorkoutBlockType,
   isWorkoutScoreType,
@@ -32,19 +32,23 @@ export async function PATCH(
     return NextResponse.json({ error: "Missing block id." }, { status: 400 });
   }
 
-  const { data: existing, error: existingError } = await supabaseAdmin
-    .from("workout_blocks")
-    .select("id, block_type")
-    .eq("id", id)
-    .single();
+  // Block lookup and role check are independent — fan them out in parallel.
+  const [existingResult, canWrite] = await Promise.all([
+    supabaseAdmin
+      .from("workout_blocks")
+      .select("id, block_type")
+      .eq("id", id)
+      .single(),
+    hasOrgRole(userId, "", "admin"),
+  ]);
 
-  if (existingError || !existing?.id) {
-    return NextResponse.json({ error: existingError?.message ?? "Block not found." }, { status: 404 });
-  }
-
-  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { data: existing, error: existingError } = existingResult;
+  if (existingError || !existing?.id) {
+    return NextResponse.json({ error: existingError?.message ?? "Block not found." }, { status: 404 });
   }
 
   const body = await request.json().catch(() => null);
@@ -171,19 +175,22 @@ export async function DELETE(
     return NextResponse.json({ error: "Missing block id." }, { status: 400 });
   }
 
-  const { data: existing, error: existingError } = await supabaseAdmin
-    .from("workout_blocks")
-    .select("id")
-    .eq("id", id)
-    .single();
+  const [existingResult, canWrite] = await Promise.all([
+    supabaseAdmin
+      .from("workout_blocks")
+      .select("id")
+      .eq("id", id)
+      .single(),
+    hasOrgRole(userId, "", "admin"),
+  ]);
 
-  if (existingError || !existing?.id) {
-    return NextResponse.json({ error: existingError?.message ?? "Block not found." }, { status: 404 });
-  }
-
-  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { data: existing, error: existingError } = existingResult;
+  if (existingError || !existing?.id) {
+    return NextResponse.json({ error: existingError?.message ?? "Block not found." }, { status: 404 });
   }
 
   const { error: deleteError } = await supabaseAdmin.from("workout_blocks").delete().eq("id", id);

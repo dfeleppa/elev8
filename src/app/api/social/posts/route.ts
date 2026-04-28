@@ -150,7 +150,6 @@ export async function POST(request: NextRequest) {
     payload: { workflowState, platforms: channelRows.map((row) => row.platform) },
   });
 
-  const created = await listSocialPosts({ limit: 200 });
-  const hydrated = created.find((item) => item.id === post.id);
+  const hydrated = (await listSocialPosts({ id: post.id, limit: 1 }))[0];
   return NextResponse.json({ post: hydrated ?? { id: post.id } });
 }

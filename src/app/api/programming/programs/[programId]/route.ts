@@ -56,19 +56,21 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   const { programId } = await context.params;
 
-  const { data: existing, error: existingError } = await supabaseAdmin
-    .from("programs")
-    .select("id")
-    .eq("id", programId)
-    .single();
+  const [existingResult, canWrite] = await Promise.all([
+    supabaseAdmin
+      .from("programs")
+      .select("id")
+      .eq("id", programId)
+      .single(),
+    hasOrgRole(userId, "", "admin"),
+  ]);
 
-  if (existingError || !existing) {
-    return NextResponse.json({ error: "Program not found." }, { status: 404 });
-  }
-
-  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  if (existingResult.error || !existingResult.data) {
+    return NextResponse.json({ error: "Program not found." }, { status: 404 });
   }
 
   const body = await request.json().catch(() => null);
@@ -112,19 +114,21 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   const { programId } = await context.params;
 
-  const { data: existing, error: existingError } = await supabaseAdmin
-    .from("programs")
-    .select("id")
-    .eq("id", programId)
-    .single();
+  const [existingResult, canWrite] = await Promise.all([
+    supabaseAdmin
+      .from("programs")
+      .select("id")
+      .eq("id", programId)
+      .single(),
+    hasOrgRole(userId, "", "admin"),
+  ]);
 
-  if (existingError || !existing) {
-    return NextResponse.json({ error: "Program not found." }, { status: 404 });
-  }
-
-  const canWrite = await hasOrgRole(userId, "", "admin");
   if (!canWrite) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  if (existingResult.error || !existingResult.data) {
+    return NextResponse.json({ error: "Program not found." }, { status: 404 });
   }
 
   const { error: deleteError } = await supabaseAdmin

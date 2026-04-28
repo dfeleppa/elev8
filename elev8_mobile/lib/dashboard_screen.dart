@@ -4,24 +4,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'components/sidebar_shell.dart';
 import 'components/bottom_nav_bar.dart';
+import 'services/app_user_service.dart';
 import 'workout_repository.dart';
 
 final userNameProvider = FutureProvider<String?>((ref) async {
-  final client = Supabase.instance.client;
-  final authUser = client.auth.currentUser;
+  final authUser = Supabase.instance.client.auth.currentUser;
   if (authUser == null) return 'Athlete';
 
   // Prefer the name stored in app_users (kept in sync with Google on every login).
-  try {
-    final response = await client
-        .from('app_users')
-        .select('full_name')
-        .eq('supabase_auth_uid', authUser.id)
-        .maybeSingle();
-
-    final dbName = response?['full_name'] as String?;
-    if (dbName != null && dbName.trim().isNotEmpty) return dbName.trim();
-  } catch (_) {}
+  final row = await ref.read(appUserServiceProvider).currentRow();
+  final dbName = (row?['full_name'] as String?)?.trim();
+  if (dbName != null && dbName.isNotEmpty) return dbName;
 
   // Fall back to the name Google put in the auth token metadata.
   final meta = authUser.userMetadata;
@@ -73,7 +66,7 @@ class DashboardScreen extends ConsumerWidget {
                    ),
                  ),
                  loading: () => const CircularProgressIndicator(),
-                 error: (_, __) => const Text('Hello, Athlete', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                 error: (_, _) => const Text('Hello, Athlete', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                ),
                const SizedBox(height: 8),
                Text(
@@ -267,7 +260,13 @@ class _TodaysProgrammingSection extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Text('Error loading programming: $error', style: const TextStyle(color: Colors.redAccent)),
+      error: (error, _) {
+        debugPrint('[DashboardScreen] programming load failed: $error');
+        return const Text(
+          "Couldn't load today's programming.",
+          style: TextStyle(color: Colors.redAccent),
+        );
+      },
     );
   }
 

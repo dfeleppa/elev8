@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../services/app_user_service.dart';
 import '../../services/coach_api_service.dart';
 
 enum NutritionGoal {
@@ -38,7 +40,10 @@ final selectedDateProvider = NotifierProvider<SelectedDateNotifier, DateTime>(
 );
 
 final nutritionRepositoryProvider = Provider<NutritionRepository>((ref) {
-  return NutritionRepository(Supabase.instance.client);
+  return NutritionRepository(
+    Supabase.instance.client,
+    ref.read(appUserServiceProvider),
+  );
 });
 
 final nutritionDayProvider =
@@ -168,50 +173,14 @@ class _CheckInTimelineData {
 
 class NutritionRepository {
   final SupabaseClient _client;
-  String? _cachedAppUserId;
+  final AppUserService _appUsers;
 
-  NutritionRepository(this._client) {
-    // Clear the resolved ID on sign-out so re-login gets a fresh lookup.
-    _client.auth.onAuthStateChange.listen((data) {
-      if (data.event == AuthChangeEvent.signedOut) {
-        _cachedAppUserId = null;
-      }
-    });
-  }
+  NutritionRepository(this._client, this._appUsers);
 
-  /// Resolves the internal app_users.id for the signed-in user.
-  ///
-  /// The web app creates app_users rows via NextAuth (no Supabase Auth), so
-  /// app_users.id is a plain UUID unrelated to auth.uid().  The mobile app
-  /// stamps supabase_auth_uid on every login so we can bridge the two systems.
-  Future<String?> _resolveAppUserId() async {
-    if (_cachedAppUserId != null) return _cachedAppUserId;
-    final authUser = _client.auth.currentUser;
-    if (authUser == null) return null;
-    try {
-      final byAuthUid = await _client
-          .from('app_users')
-          .select('id')
-          .eq('supabase_auth_uid', authUser.id)
-          .maybeSingle();
-
-      _cachedAppUserId = byAuthUid?['id'] as String?;
-      if (_cachedAppUserId != null) {
-        return _cachedAppUserId;
-      }
-
-      final email = authUser.email;
-      if (email != null && email.isNotEmpty) {
-        final byEmail = await _client
-            .from('app_users')
-            .select('id')
-            .eq('email', email)
-            .maybeSingle();
-        _cachedAppUserId = byEmail?['id'] as String?;
-      }
-    } catch (_) {}
-    return _cachedAppUserId;
-  }
+  /// Resolves the internal app_users.id for the signed-in user. Delegates
+  /// to [AppUserService] which centralizes the supabase_auth_uid → email
+  /// fallback and caches the row across repos.
+  Future<String?> _resolveAppUserId() => _appUsers.currentId();
 
   String _formatDate(DateTime date) => date.toIso8601String().split('T').first;
 
@@ -250,7 +219,8 @@ class NutritionRepository {
         'carbs_target': _parseNumeric(plan['carbs_grams']),
         'fat_target': _parseNumeric(plan['fat_grams']),
       };
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] _getCoachPlanTargets failed: $e');
       return null;
     }
   }
@@ -308,7 +278,8 @@ class NutritionRepository {
       }
 
       return Map<String, dynamic>.from(day);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] _ensureNutritionDay failed: $e');
       return null;
     }
   }
@@ -326,7 +297,8 @@ class NutritionRepository {
           .eq('member_id', appUserId)
           .eq('day_date', dateStr)
           .maybeSingle();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchNutritionDay failed: $e');
       return null;
     }
   }
@@ -373,15 +345,30 @@ class NutritionRepository {
   }
 
   Future<void> deleteNutritionEntry(String entryId) async {
-    await _client.from('nutrition_entries').delete().eq('id', entryId);
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    // Defense-in-depth: scope the delete to this user. RLS should already
+    // enforce this, but a misconfigured policy would otherwise allow a
+    // cross-user IDOR.
+    await _client
+        .from('nutrition_entries')
+        .delete()
+        .eq('id', entryId)
+        .eq('member_id', appUserId);
   }
 
   Future<void> updateEntryQuantity(String entryId, double newQuantity) async {
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
     final q = newQuantity < 0.01 ? 0.01 : newQuantity;
+    // Defense-in-depth: scope the update to this user. RLS should already
+    // enforce this, but a misconfigured policy would otherwise allow a
+    // cross-user IDOR write.
     await _client
         .from('nutrition_entries')
         .update({'quantity': q, 'updated_at': DateTime.now().toIso8601String()})
-        .eq('id', entryId);
+        .eq('id', entryId)
+        .eq('member_id', appUserId);
   }
 
   Future<void> updateNutritionEntry(
@@ -475,12 +462,17 @@ class NutritionRepository {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return [];
     try {
+      // Over-fetch by ~8x to give the in-Dart dedupe enough variety to
+      // hit `limit` unique names. The right long-term fix is a server-side
+      // `DISTINCT ON (entry_name)` RPC, but until that exists this scales
+      // the scan with the request rather than always paging 400 rows.
+      final scanCap = (limit * 8).clamp(80, 400);
       final response = await _client
           .from('nutrition_entries')
           .select('entry_name, calories, protein, carbs, fat, quantity')
           .eq('member_id', appUserId)
           .order('created_at', ascending: false)
-          .limit(400);
+          .limit(scanCap);
       final seen = <String>{};
       final results = <Map<String, dynamic>>[];
       for (var row in response as List<dynamic>) {
@@ -493,22 +485,27 @@ class NutritionRepository {
         if (results.length >= limit) break;
       }
       return results;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchRecentFoods failed: $e');
       return [];
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchMyFoods() async {
+  Future<List<Map<String, dynamic>>> fetchMyFoods({int limit = 100}) async {
     final appUserId = await _resolveAppUserId();
     if (appUserId == null) return [];
     try {
+      // Cap at `limit` (default 100) so a power user with thousands of
+      // saved custom foods doesn't blow up the round-trip or memory.
       final response = await _client
           .from('nutrition_custom_foods')
           .select('id, name, calories, protein, carbs, fat, created_at')
           .eq('member_id', appUserId)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(limit);
       return List<Map<String, dynamic>>.from(response);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchMyFoods failed: $e');
       return [];
     }
   }
@@ -549,7 +546,13 @@ class NutritionRepository {
   }
 
   Future<void> deleteCustomFood(String id) async {
-    await _client.from('nutrition_custom_foods').delete().eq('id', id);
+    final appUserId = await _resolveAppUserId();
+    if (appUserId == null) return;
+    await _client
+        .from('nutrition_custom_foods')
+        .delete()
+        .eq('id', id)
+        .eq('member_id', appUserId);
   }
 
   // ---- USDA Search ----
@@ -566,7 +569,9 @@ class NutritionRepository {
         final List<dynamic> results = response.data['results'] ?? [];
         return results.map((r) => Map<String, dynamic>.from(r)).toList();
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NutritionRepo] searchUsdaFoods (edge function) failed: $e');
+    }
     try {
       final session = _client.auth.currentSession;
       if (session == null) return [];
@@ -575,7 +580,9 @@ class NutritionRepository {
         params: {'query_text': query.trim(), 'limit_count': 12},
       );
       return List<Map<String, dynamic>>.from(resp ?? []);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NutritionRepo] searchUsdaFoods (rpc fallback) failed: $e');
+    }
     return [];
   }
 
@@ -683,7 +690,8 @@ class NutritionRepository {
         profile: profile,
         currentWeightOverride: _parseNumeric(currentWeightEntry?['value']),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] _fetchCoachPlanStatusFromSupabase failed: $e');
       return null;
     }
   }
@@ -719,7 +727,8 @@ class NutritionRepository {
             ? DateTime.tryParse(summary['nextCheckInDate'] as String)
             : null,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[NutritionRepo] fetchCoachPlanStatus (API) failed, falling back to Supabase: $e');
       return _fetchCoachPlanStatusFromSupabase();
     }
   }

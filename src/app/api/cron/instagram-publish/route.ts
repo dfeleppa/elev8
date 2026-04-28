@@ -221,13 +221,11 @@ export async function GET(request: Request) {
   }
 
   const ids = ((duePosts ?? []) as Array<{ id: string }>).map((row) => row.id);
-  const acquired: DuePostRow[] = [];
-  for (const id of ids) {
-    const post = await acquirePost(id);
-    if (post) {
-      acquired.push(post);
-    }
-  }
+  // acquirePost is independent per id (each is a separate row UPDATE) — fan
+  // them out instead of round-tripping serially.
+  const acquired = (await Promise.all(ids.map(acquirePost))).filter(
+    (post): post is DuePostRow => post !== null
+  );
 
   const processed: Array<Record<string, unknown>> = [];
   for (let i = 0; i < acquired.length; i += CRON_BATCH_CONCURRENCY) {

@@ -178,6 +178,15 @@ export default function ProgrammingClient() {
   const [creatingType, setCreatingType] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"details" | "progression">("details");
 
+  const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(() => new Set());
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferMode, setTransferMode] = useState<"copy" | "move">("copy");
+  const [transferTargetTrackId, setTransferTargetTrackId] = useState<string>("");
+  const [transferring, setTransferring] = useState(false);
+  const [transferError, setTransferError] = useState<string | null>(null);
+
+  const selectionActive = selectedBlockIds.size > 0;
+
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentDate);
     return Array.from({ length: 7 }, (_, index) => {
@@ -285,21 +294,22 @@ export default function ProgrammingClient() {
           { cache: "no-store" }
         );
         const payload = await response.json();
-        if (!response.ok) {
+        if (!isMounted || !response.ok) {
           return;
         }
 
         const nextSessions = mapWeekResponse(payload?.days ?? []);
-        if (!isMounted || Object.keys(nextSessions).length === 0) {
-          return;
-        }
-
         setSessions(nextSessions);
 
-        const preferredDay = formatDateKey(currentDate);
-        const firstDay = nextSessions[preferredDay] ? preferredDay : Object.keys(nextSessions)[0];
-        setSelectedDay(firstDay);
-        setSelectedSessionId(nextSessions[firstDay]?.[0]?.id ?? null);
+        const dayKeys = Object.keys(nextSessions);
+        if (dayKeys.length === 0) {
+          setSelectedSessionId(null);
+        } else {
+          const preferredDay = formatDateKey(currentDate);
+          const firstDay = nextSessions[preferredDay] ? preferredDay : dayKeys[0];
+          setSelectedDay(firstDay);
+          setSelectedSessionId(nextSessions[firstDay]?.[0]?.id ?? null);
+        }
       } catch {
         // Keep state when fetch fails.
       } finally {
@@ -319,6 +329,10 @@ export default function ProgrammingClient() {
   useEffect(() => {
     setActiveTab("details");
   }, [selectedSessionId]);
+
+  useEffect(() => {
+    setSelectedBlockIds(new Set());
+  }, [selectedTrackId]);
 
   useEffect(() => {
     if (!selectedDay) {
@@ -475,6 +489,62 @@ export default function ProgrammingClient() {
     }
   };
 
+  const toggleBlockSelection = (blockId: string) => {
+    setEditorOpen(false);
+    setSelectedBlockIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(blockId)) {
+        next.delete(blockId);
+      } else {
+        next.add(blockId);
+      }
+      return next;
+    });
+  };
+
+  const openTransferDialog = (mode: "copy" | "move") => {
+    if (selectedBlockIds.size === 0) return;
+    const firstOther = tracks.find((track) => track.id !== selectedTrackId);
+    setTransferMode(mode);
+    setTransferTargetTrackId(firstOther?.id ?? "");
+    setTransferError(null);
+    setTransferOpen(true);
+  };
+
+  const submitTransfer = async () => {
+    if (!transferTargetTrackId || selectedBlockIds.size === 0) return;
+    setTransferring(true);
+    setTransferError(null);
+    try {
+      const response = await fetch("/api/programming/blocks/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          blockIds: Array.from(selectedBlockIds),
+          targetTrackId: transferTargetTrackId,
+          mode: transferMode,
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        setTransferError(payload?.error ?? "Failed to transfer workouts.");
+        return;
+      }
+
+      setTransferOpen(false);
+      setSelectedBlockIds(new Set());
+
+      if (transferMode === "move") {
+        // The blocks are gone from the current track — refetch the current week.
+        setCurrentDate((prev) => new Date(prev));
+      }
+    } catch {
+      setTransferError("Failed to transfer workouts.");
+    } finally {
+      setTransferring(false);
+    }
+  };
+
   return (
     <>
       <ProgrammingSubheader />
@@ -580,7 +650,40 @@ export default function ProgrammingClient() {
         </div>
       </header>
 
-      <div className={`relative grid gap-4 transition-[padding] duration-300 ${editorOpen ? "lg:pr-[26rem]" : ""}`}>
+      {selectionActive ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-slate-100">
+          <p className="font-medium">
+            {selectedBlockIds.size} workout{selectedBlockIds.size === 1 ? "" : "s"} selected
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => openTransferDialog("copy")}
+              disabled={tracks.length < 2}
+              className="rounded-lg border border-cyan-400 bg-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Copy to track
+            </button>
+            <button
+              type="button"
+              onClick={() => openTransferDialog("move")}
+              disabled={tracks.length < 2}
+              className="rounded-lg border border-pink-400 bg-pink-500/20 px-3 py-1.5 text-xs font-semibold text-pink-100 transition hover:bg-pink-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Move to track
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedBlockIds(new Set())}
+              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-white/25"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className={`relative grid gap-4 transition-[padding] duration-300 ${editorOpen && !selectionActive ? "lg:pr-[26rem]" : ""}`}>
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5/5">
           {viewMode === "month" ? (
             <>
@@ -670,24 +773,63 @@ export default function ProgrammingClient() {
                           const scoreLabel = getScoreLabel(session.block);
                           const visibleLines = showDetails ? session.lines : session.lines.slice(0, 2);
                           const isSelected = selectedSessionId === session.id;
+                          const isChecked = selectedBlockIds.has(session.id);
                           return (
-                            <button
+                            <div
                               key={session.id}
-                              type="button"
+                              role="button"
+                              tabIndex={0}
                               onClick={() => {
+                                if (selectionActive) {
+                                  toggleBlockSelection(session.id);
+                                  return;
+                                }
                                 setSelectedDay(day.date);
                                 setSelectedSessionId(session.id);
                                 setEditorOpen(true);
                               }}
-                              className={`w-full rounded-xl border px-2.5 py-2 text-left text-white transition ${
-                                isSelected
-                                  ? "border-slate-800 bg-[#22262f] ring-2 ring-slate-500/50"
-                                  : "border-slate-700 bg-[#2f3136] hover:border-slate-500"
+                              onKeyDown={(event) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                if (selectionActive) {
+                                  toggleBlockSelection(session.id);
+                                  return;
+                                }
+                                setSelectedDay(day.date);
+                                setSelectedSessionId(session.id);
+                                setEditorOpen(true);
+                              }}
+                              className={`group relative w-full cursor-pointer rounded-xl border px-2.5 py-2 text-left text-white transition ${
+                                isChecked
+                                  ? "border-cyan-400 bg-[#1c2730] ring-2 ring-cyan-400/60"
+                                  : isSelected && !selectionActive
+                                    ? "border-slate-800 bg-[#22262f] ring-2 ring-slate-500/50"
+                                    : "border-slate-700 bg-[#2f3136] hover:border-slate-500"
                               }`}
                             >
-                              <p className="text-[20px] font-semibold leading-none">{session.title}</p>
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  toggleBlockSelection(session.id);
+                                }}
+                                aria-label={isChecked ? "Deselect workout" : "Select workout"}
+                                aria-pressed={isChecked}
+                                className={`absolute left-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[12px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
+                                  isChecked
+                                    ? "border-cyan-300 bg-cyan-400 text-slate-900 opacity-100 shadow-[0_0_0_2px_rgba(11,18,32,0.85)]"
+                                    : selectionActive
+                                      ? "border-white/40 bg-slate-900/70 text-white/50 opacity-100 hover:text-white"
+                                      : "border-white/40 bg-slate-900/70 text-white/60 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-white"
+                                }`}
+                              >
+                                ✓
+                              </button>
+                              <p className="pl-8 text-[20px] font-semibold leading-none">
+                                {session.title}
+                              </p>
                               {scoreLabel ? (
-                                <span className="mt-1 inline-flex rounded-full border border-white/10/40 bg-white/10/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-100">
+                                <span className="ml-8 mt-1 inline-flex rounded-full border border-white/10/40 bg-white/10/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-100">
                                   {scoreLabel}
                                 </span>
                               ) : null}
@@ -698,7 +840,7 @@ export default function ProgrammingClient() {
                                   ))}
                                 </div>
                               ) : null}
-                            </button>
+                            </div>
                           );
                         })}
 
@@ -901,6 +1043,88 @@ export default function ProgrammingClient() {
           </div>
         </aside>
       </div>
+
+      {transferOpen ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !transferring) {
+              setTransferOpen(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#12151c] p-5 shadow-2xl">
+            <h3 className="text-lg font-semibold text-slate-100">
+              {transferMode === "copy" ? "Copy" : "Move"} {selectedBlockIds.size} workout
+              {selectedBlockIds.size === 1 ? "" : "s"}
+            </h3>
+            <p className="mt-1 text-xs text-slate-400">
+              {transferMode === "copy"
+                ? "Copies of these workouts will be added to the target track on the same dates."
+                : "These workouts will be removed from the current track and placed on the target track on the same dates."}
+            </p>
+
+            <label
+              className="mt-4 block text-xs uppercase tracking-[0.2em] text-slate-500"
+              htmlFor="transfer-target-track"
+            >
+              Target track
+            </label>
+            <select
+              id="transfer-target-track"
+              value={transferTargetTrackId}
+              onChange={(event) => setTransferTargetTrackId(event.target.value)}
+              className="mt-2 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 focus:border-cyan-500 focus:outline-none"
+            >
+              {tracks
+                .filter((track) => track.id !== selectedTrackId)
+                .map((track) => (
+                  <option key={track.id} value={track.id}>
+                    {track.name}
+                  </option>
+                ))}
+              {tracks.filter((track) => track.id !== selectedTrackId).length === 0 ? (
+                <option value="">No other tracks available</option>
+              ) : null}
+            </select>
+
+            {transferError ? (
+              <p className="mt-3 text-xs text-pink-300">{transferError}</p>
+            ) : null}
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setTransferOpen(false)}
+                disabled={transferring}
+                className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-white/25 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitTransfer}
+                disabled={transferring || !transferTargetTrackId}
+                className={`rounded-lg px-4 py-2 text-xs font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  transferMode === "copy"
+                    ? "bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500"
+                    : "bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500"
+                }`}
+              >
+                {transferring
+                  ? transferMode === "copy"
+                    ? "Copying..."
+                    : "Moving..."
+                  : transferMode === "copy"
+                    ? "Copy"
+                    : "Move"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
     </>
   );

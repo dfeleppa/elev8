@@ -194,12 +194,15 @@ class NutritionScreen extends ConsumerWidget {
                       _Dashboard(data: data, selectedDate: selectedDate),
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(
-                    child: Text(
-                      'Error: $e',
-                      style: const TextStyle(color: Colors.redAccent),
-                    ),
-                  ),
+                  error: (e, _) {
+                    debugPrint('[NutritionScreen] day load failed: $e');
+                    return const Center(
+                      child: Text(
+                        "Couldn't load nutrition. Pull to retry.",
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -296,25 +299,19 @@ class _Dashboard extends ConsumerWidget {
 
     final entries = (data?['nutrition_entries'] as List<dynamic>?) ?? [];
 
-    double sumCal() => entries.fold(
-      0.0,
-      (s, e) => s + _num(e['calories']) * _qty(e['quantity']),
-    );
-    double sumPro() => entries.fold(
-      0.0,
-      (s, e) => s + _num(e['protein']) * _qty(e['quantity']),
-    );
-    double sumCarb() =>
-        entries.fold(0.0, (s, e) => s + _num(e['carbs']) * _qty(e['quantity']));
-    double sumFat() =>
-        entries.fold(0.0, (s, e) => s + _num(e['fat']) * _qty(e['quantity']));
+    // Single pass over entries — previously this was four separate
+    // `.fold()` calls, scanning the list four times per build. With ~50
+    // entries that's 200 iterations on every viewMode toggle.
+    double cal = 0, pro = 0, carb = 0, fat = 0;
+    for (final e in entries) {
+      final q = _qty(e['quantity']);
+      cal += _num(e['calories']) * q;
+      pro += _num(e['protein']) * q;
+      carb += _num(e['carbs']) * q;
+      fat += _num(e['fat']) * q;
+    }
 
-    final consumed = (
-      calories: sumCal(),
-      protein: sumPro(),
-      carbs: sumCarb(),
-      fat: sumFat(),
-    );
+    final consumed = (calories: cal, protein: pro, carbs: carb, fat: fat);
     final remaining = (
       calories: targets.calories - consumed.calories,
       protein: targets.protein - consumed.protein,
@@ -674,7 +671,7 @@ class _CoachCardState extends ConsumerState<_CoachCard> {
           ),
         ),
       ),
-      error: (_, __) => _NoCoachCard(),
+      error: (_, _) => _NoCoachCard(),
     );
   }
 
@@ -1494,9 +1491,15 @@ class _MealRow extends ConsumerWidget {
           // Entry list
           if (entries.isNotEmpty) ...[
             const SizedBox(height: 12),
+            // Stable key on each entry so Flutter reuses the State of
+            // _FoodEntryRow across parent rebuilds instead of disposing +
+            // reconstructing on every viewMode toggle / data refresh.
             ...entries.map(
-              (entry) =>
-                  _FoodEntryRow(entry: entry, selectedDate: selectedDate),
+              (entry) => _FoodEntryRow(
+                key: ValueKey(entry['id']),
+                entry: entry,
+                selectedDate: selectedDate,
+              ),
             ),
           ] else ...[
             const SizedBox(height: 12),
@@ -1626,7 +1629,7 @@ class _FoodEntryRow extends ConsumerStatefulWidget {
   final dynamic entry;
   final DateTime selectedDate;
 
-  const _FoodEntryRow({required this.entry, required this.selectedDate});
+  const _FoodEntryRow({super.key, required this.entry, required this.selectedDate});
 
   @override
   ConsumerState<_FoodEntryRow> createState() => _FoodEntryRowState();
@@ -1675,6 +1678,8 @@ class _FoodEntryRowState extends ConsumerState<_FoodEntryRow> {
     await ref
         .read(nutritionRepositoryProvider)
         .updateEntryQuantity(_id, parsed);
+    // Avoid touching `ref` if the row was dismissed mid-save.
+    if (!mounted) return;
     ref.invalidate(nutritionDayProvider(widget.selectedDate));
   }
 
@@ -2635,6 +2640,9 @@ class _EditFoodSheetState extends State<_EditFoodSheet> {
                 onPressed: _saving
                     ? null
                     : () async {
+                        // Capture the navigator before awaiting so we don't
+                        // use a stale BuildContext after the async gap.
+                        final navigator = Navigator.of(context);
                         setState(() => _saving = true);
                         await widget.onSave({
                           'name': _name.text.trim(),
@@ -2643,7 +2651,7 @@ class _EditFoodSheetState extends State<_EditFoodSheet> {
                           'carbs': num.tryParse(_carb.text),
                           'fat': num.tryParse(_fat.text),
                         });
-                        if (mounted) Navigator.pop(context);
+                        if (mounted) navigator.pop();
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0EA5E9),
