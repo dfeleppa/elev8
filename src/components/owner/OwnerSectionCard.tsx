@@ -10,11 +10,11 @@ type OwnerSectionCardProps = {
 
 export default function OwnerSectionCard({ title, meta, headerRight, headerClassName, children }: OwnerSectionCardProps) {
   return (
-    <section className="app-card overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--panel-2)] p-0">
-      <div className={`flex items-center justify-between px-6 py-4 ${headerClassName ?? "bg-[var(--pink)]"}`}>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white">{title}</p>
+    <section className="ds-surface overflow-hidden p-0">
+      <div className={`flex items-center justify-between border-b border-[var(--line)] px-6 py-4 ${headerClassName ?? "bg-[color:color-mix(in_srgb,var(--pink)_12%,transparent)]"}`}>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text)]">{title}</p>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-white/80">{meta}</span>
+          <span className="text-xs text-[var(--text-muted)]">{meta}</span>
           {headerRight}
         </div>
       </div>
