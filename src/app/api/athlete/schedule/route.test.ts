@@ -15,10 +15,10 @@ vi.mock("@/lib/supabase-admin", () => ({
 }));
 
 type Database = {
-  organization_schedule_classes: Array<Record<string, unknown>>;
+  schedule_classes: Array<Record<string, unknown>>;
   programming_tracks: Array<Record<string, unknown>>;
   app_users: Array<Record<string, unknown>>;
-  organization_class_reservations: Array<Record<string, unknown>>;
+  class_reservations: Array<Record<string, unknown>>;
 };
 
 let db: Database;
@@ -128,14 +128,24 @@ class MockQueryBuilder {
 }
 
 describe("athlete schedule routes", () => {
+  const buildReservationRequest = () =>
+    new Request("http://localhost/api/athlete/schedule/reservations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        organizationId: "org-1",
+        classId: "class-1",
+        date: "2026-04-06",
+      }),
+    });
+
   beforeEach(() => {
     vi.clearAllMocks();
 
     db = {
-      organization_schedule_classes: [
+      schedule_classes: [
         {
           id: "class-1",
-          organization_id: "org-1",
           name: "Strength",
           class_time: "09:00:00",
           duration_minutes: 60,
@@ -150,7 +160,6 @@ describe("athlete schedule routes", () => {
         },
         {
           id: "class-2",
-          organization_id: "org-1",
           name: "Mobility",
           class_time: "11:00:00",
           duration_minutes: 45,
@@ -187,10 +196,9 @@ describe("athlete schedule routes", () => {
           email: "coach@example.com",
         },
       ],
-      organization_class_reservations: [
+      class_reservations: [
         {
           id: "reservation-1",
-          organization_id: "org-1",
           class_id: "class-1",
           member_id: "member-2",
           class_date: "2026-04-06",
@@ -285,32 +293,20 @@ describe("athlete schedule routes", () => {
     vi.useFakeTimers();
     const reservationsRoute = await import("./reservations/route");
 
-    db.organization_class_reservations.push({
+    db.class_reservations.push({
       id: "reservation-self",
-      organization_id: "org-1",
       class_id: "class-1",
       member_id: "member-1",
       class_date: "2026-04-06",
       created_at: "2026-04-05T16:00:00.000Z",
     });
 
-    const duplicateRequest = new Request("http://localhost/api/athlete/schedule/reservations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        organizationId: "org-1",
-        classId: "class-1",
-        date: "2026-04-06",
-      }),
-    });
-
-    const duplicateResponse = await reservationsRoute.POST(duplicateRequest);
+    const duplicateResponse = await reservationsRoute.POST(buildReservationRequest());
     expect(duplicateResponse.status).toBe(409);
 
-    db.organization_class_reservations = [
+    db.class_reservations = [
       {
         id: "reservation-1",
-        organization_id: "org-1",
         class_id: "class-1",
         member_id: "member-2",
         class_date: "2026-04-06",
@@ -318,7 +314,6 @@ describe("athlete schedule routes", () => {
       },
       {
         id: "reservation-2",
-        organization_id: "org-1",
         class_id: "class-1",
         member_id: "coach-1",
         class_date: "2026-04-06",
@@ -327,12 +322,12 @@ describe("athlete schedule routes", () => {
     ];
 
     vi.setSystemTime(new Date("2026-04-06T07:00:00.000Z"));
-    const fullResponse = await reservationsRoute.POST(duplicateRequest);
+    const fullResponse = await reservationsRoute.POST(buildReservationRequest());
     expect(fullResponse.status).toBe(409);
 
-    db.organization_class_reservations = [];
-    vi.setSystemTime(new Date("2026-04-06T08:30:00.000Z"));
-    const closedResponse = await reservationsRoute.POST(duplicateRequest);
+    db.class_reservations = [];
+    vi.setSystemTime(new Date("2026-04-06T12:30:00.000Z"));
+    const closedResponse = await reservationsRoute.POST(buildReservationRequest());
     expect(closedResponse.status).toBe(409);
 
     vi.useRealTimers();

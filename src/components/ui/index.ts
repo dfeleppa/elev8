@@ -6,3 +6,4 @@ export { Chip } from "./Chip";
 export { Ring } from "./Ring";
 export { Sparkline } from "./Sparkline";
 export { BarChart } from "./BarChart";
+export * from "./styles";

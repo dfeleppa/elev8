@@ -716,7 +716,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           <button
             type="button"
             onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
-            className="rounded-full border border-white/15 p-2 text-slate-300 transition hover:border-white/35 hover:text-slate-100"
+            className="rounded-full border border-[var(--line-strong)] p-2 text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:text-[var(--text)]"
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {hamburgerIcon}
@@ -802,7 +802,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 <button
                   type="button"
                   onClick={() => handleSwitchView("gym")}
-                  className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                  className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
                   aria-label="Gym view"
                 >
                   {gymViewIcon}
@@ -810,7 +810,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 <button
                   type="button"
                   onClick={() => handleSwitchView("athlete")}
-                  className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ffb1c4]/35 bg-[#ffb1c4]/12 text-[#ffdbe4] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-slate-300 transition hover:border-white/30 hover:bg-white/10 hover:text-white"}
+                  className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
                   aria-label="Athlete view"
                 >
                   {athleteViewIcon}

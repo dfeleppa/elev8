@@ -14,15 +14,18 @@
   --bg-2: #14171c;
   --panel: #181c22;
   --panel-2: #1f242b;
+  --panel-3: #252b34;
 
   /* Lines */
   --line: rgba(255, 255, 255, 0.07);
   --line-strong: rgba(255, 255, 255, 0.12);
+  --line-focus: rgba(255, 74, 141, 0.45);
 
   /* Text */
   --text: #ecedf1;
   --text-muted: #9aa2b1;
   --text-soft: #6b7280;
+  --text-inverse: #11141a;
 
   /* Brand accents */
   --pink: #ff4a8d;
@@ -32,6 +35,23 @@
   --lime: #b6ff4a;
   --amber: #ffb347;
   --cyan: #63f7ff;
+
+  /* Interactive / feedback */
+  --overlay: rgba(4, 7, 11, 0.7);
+  --input-bg: rgba(255, 255, 255, 0.03);
+  --input-bg-strong: rgba(255, 255, 255, 0.05);
+  --success-bg: rgba(52, 211, 153, 0.14);
+  --success-line: rgba(52, 211, 153, 0.28);
+  --success-text: #7ef0bd;
+  --warning-bg: rgba(251, 191, 36, 0.14);
+  --warning-line: rgba(251, 191, 36, 0.26);
+  --warning-text: #ffd670;
+  --danger-bg: rgba(251, 113, 133, 0.14);
+  --danger-line: rgba(251, 113, 133, 0.28);
+  --danger-text: #ff9db0;
+  --info-bg: rgba(99, 247, 255, 0.13);
+  --info-line: rgba(99, 247, 255, 0.25);
+  --info-text: #8cfaff;
 
   /* Shadows */
   --shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.45);
@@ -73,20 +93,40 @@
   --bg-2: #efece2;
   --panel: #ffffff;
   --panel-2: #fbf8f1;
+  --panel-3: #f1ebdc;
 
   --line: rgba(20, 17, 15, 0.08);
   --line-strong: rgba(20, 17, 15, 0.14);
+  --line-focus: rgba(225, 48, 108, 0.35);
 
   --text: #17181c;
   --text-muted: #5a6271;
   --text-soft: #8a8f99;
+  --text-inverse: #fffaf2;
 
   --pink: #e1306c;
+  --pink-soft: #f09ab8;
   --violet: #6d3dd4;
 
   --shadow-lg: 0 24px 60px rgba(118, 95, 61, 0.16);
   --shadow-md: 0 14px 34px rgba(118, 95, 61, 0.12);
   --shadow-sm: 0 8px 18px rgba(118, 95, 61, 0.09);
+
+  --overlay: rgba(69, 56, 44, 0.24);
+  --input-bg: rgba(23, 24, 28, 0.025);
+  --input-bg-strong: rgba(23, 24, 28, 0.045);
+  --success-bg: rgba(14, 159, 110, 0.12);
+  --success-line: rgba(14, 159, 110, 0.24);
+  --success-text: #0d7d56;
+  --warning-bg: rgba(217, 119, 6, 0.11);
+  --warning-line: rgba(217, 119, 6, 0.2);
+  --warning-text: #9b5b08;
+  --danger-bg: rgba(225, 48, 108, 0.11);
+  --danger-line: rgba(225, 48, 108, 0.22);
+  --danger-text: #b91c51;
+  --info-bg: rgba(34, 197, 246, 0.12);
+  --info-line: rgba(34, 197, 246, 0.2);
+  --info-text: #0f6b9f;
 
   color-scheme: light;
 }

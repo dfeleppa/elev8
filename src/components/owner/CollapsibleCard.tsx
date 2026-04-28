@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, ReactNode } from "react";
+import { uiKickerClass, uiSurfaceClass, uiTitleSmClass } from "@/components/ui";
 
 type CollapsibleCardProps = {
   title: string;
@@ -40,7 +41,7 @@ export default function CollapsibleCard({
   };
 
   return (
-    <div className={`glass-panel rounded-2xl border border-white/10 p-4 ${className}`}>
+    <div className={`${uiSurfaceClass} p-4 ${className}`}>
       <button
         type="button"
         onClick={toggle}
@@ -48,12 +49,12 @@ export default function CollapsibleCard({
       >
         <div className="flex items-center gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{meta}</p>
-            <h2 className="mt-1 text-lg font-semibold text-slate-100">{title}</h2>
+            {meta ? <p className={uiKickerClass}>{meta}</p> : null}
+            <h2 className={`mt-1 ${uiTitleSmClass}`}>{title}</h2>
           </div>
         </div>
         <svg
-          className={`h-5 w-5 text-slate-400 transition-transform duration-200 ${
+          className={`h-5 w-5 text-[var(--text-muted)] transition-transform duration-200 ${
             isCollapsed ? "-rotate-90" : "rotate-0"
           }`}
           fill="none"
