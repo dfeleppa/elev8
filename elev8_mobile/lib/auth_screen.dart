@@ -100,9 +100,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       // The OAuth flow will redirect; no need to manually navigate.
       // When the user returns, the auth state change listener in initState will navigate.
     } catch (e) {
+      debugPrint('[AuthScreen] Google sign-in failed: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google sign-in failed: $e'), backgroundColor: Colors.redAccent),
+        const SnackBar(
+          content: Text('Google sign-in failed. Please try again.'),
+          backgroundColor: Colors.redAccent,
+        ),
       );
       setState(() {
         _isLoading = false;

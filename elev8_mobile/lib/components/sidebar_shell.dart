@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:elev8_mobile/components/elev8_background.dart';
+
+import '../services/app_user_service.dart';
 
 // ----------------------------------------------------------------------
 // DATA MODELS
@@ -248,35 +249,8 @@ UserRole _parseUserRole(String? value) {
 }
 
 final userRoleProvider = FutureProvider<UserRole>((ref) async {
-  final user = Supabase.instance.client.auth.currentUser;
-  if (user == null) return UserRole.member;
-
-  // app_users.id is set by the web's NextAuth flow, not by Supabase Auth, so
-  // we resolve via supabase_auth_uid first (stamped by main.dart on sign-in)
-  // and fall back to email for the brief window before that stamp lands.
-  try {
-    final byUid = await Supabase.instance.client
-        .from('app_users')
-        .select('role')
-        .eq('supabase_auth_uid', user.id)
-        .maybeSingle();
-    if (byUid != null) {
-      return _parseUserRole(byUid['role'] as String?);
-    }
-
-    final email = user.email;
-    if (email == null || email.isEmpty) return UserRole.member;
-
-    final byEmail = await Supabase.instance.client
-        .from('app_users')
-        .select('role')
-        .eq('email', email)
-        .maybeSingle();
-    return _parseUserRole(byEmail?['role'] as String?);
-  } catch (e) {
-    debugPrint('userRoleProvider failed: $e');
-    return UserRole.member;
-  }
+  final role = await ref.read(appUserServiceProvider).currentRole();
+  return _parseUserRole(role);
 });
 
 /// Selected view mode (gym vs athlete). Coach+ users default to gym; members

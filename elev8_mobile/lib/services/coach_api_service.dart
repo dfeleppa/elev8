@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../config/env.dart';
 
 class CoachPlanPreview {
   final double maintenanceCalories;
@@ -60,8 +61,7 @@ class CoachPlanStatusResponse {
 }
 
 class CoachApiService {
-  static String get _baseUrl =>
-      dotenv.env['WEB_APP_URL'] ?? 'https://www.daneff.com';
+  static String get _baseUrl => Env.webAppUrl;
 
   static String? get _accessToken =>
       Supabase.instance.client.auth.currentSession?.accessToken;
@@ -71,6 +71,11 @@ class CoachApiService {
     if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
   };
 
+  // Static duplicate of AppUserService.currentId(). Lives here because
+  // CoachApiService is an all-static API client and can't easily depend
+  // on a Riverpod-scoped service. Only called from the fallback path of
+  // [fetchExistingPlan] when the HTTP call fails — so the lack of cache
+  // sharing with AppUserService is acceptable.
   static Future<String?> _resolveAppUserId() async {
     final authUser = Supabase.instance.client.auth.currentUser;
     if (authUser == null) return null;

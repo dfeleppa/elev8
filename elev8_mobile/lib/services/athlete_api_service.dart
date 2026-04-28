@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../config/env.dart';
 import '../models/athlete_dashboard.dart';
 import '../models/programming_track.dart';
 
@@ -12,8 +12,7 @@ import '../models/programming_track.dart';
 /// updated in phase C.1 to accept Supabase Auth Bearer tokens via
 /// `requireRequestUserContext` on the server.
 class AthleteApiService {
-  static String get _baseUrl =>
-      dotenv.env['WEB_APP_URL'] ?? 'https://www.daneff.com';
+  static String get _baseUrl => Env.webAppUrl;
 
   static String? get _accessToken =>
       Supabase.instance.client.auth.currentSession?.accessToken;

@@ -1,39 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../services/app_user_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 
-/// Provider for the signed-in user's profile (name + avatar).
+/// Provider for the signed-in user's profile (name + avatar). Backed by
+/// the shared [AppUserService] so the lookup is shared with role / id /
+/// repo callers.
 final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
-  final user = Supabase.instance.client.auth.currentUser;
-  if (user == null) return null;
-
-  try {
-    final byAuthUid = await Supabase.instance.client
-        .from('app_users')
-        .select('full_name, avatar_url')
-        .eq('supabase_auth_uid', user.id)
-        .maybeSingle();
-
-    if (byAuthUid != null) {
-      return byAuthUid;
-    }
-
-    final email = user.email;
-    if (email == null || email.isEmpty) return null;
-
-    final byEmail = await Supabase.instance.client
-        .from('app_users')
-        .select('full_name, avatar_url')
-        .eq('email', email)
-        .maybeSingle();
-    return byEmail;
-  } catch (_) {
-    return null;
-  }
+  return ref.read(appUserServiceProvider).currentRow();
 });
 
 /// Bottom navigation bar — 5 tabs.

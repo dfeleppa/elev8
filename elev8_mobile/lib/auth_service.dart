@@ -1,15 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'config/env.dart';
 
 class AuthService {
   final SupabaseClient _client = Supabase.instance.client;
 
   Future<void> signInWithGoogle() async {
-    final redirectUri = dotenv.env['SUPABASE_REDIRECT_URI'] ?? 'io.supabase.flutter://login-callback';
     await _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: redirectUri,
+      redirectTo: Env.supabaseRedirectUri,
       authScreenLaunchMode: LaunchMode.externalApplication,
     );
   }

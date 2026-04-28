@@ -1,0 +1,14 @@
+# Copy this file to `android/key.properties` and fill in the real values.
+# `key.properties` is gitignored — never commit it.
+#
+# Generate a keystore once per app:
+#   keytool -genkey -v -keystore ~/elev8-upload-keystore.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# Then point storeFile at that .jks (absolute path or path relative to
+# android/app/) and fill in the passwords + alias you used above.
+
+storePassword=
+keyPassword=
+keyAlias=upload
+storeFile=
