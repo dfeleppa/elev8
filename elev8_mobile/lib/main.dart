@@ -15,6 +15,7 @@ import 'auth_screen.dart';
 import 'coach_screen.dart';
 import 'workout_screen.dart';
 import 'screens/coach_setup_screen.dart';
+import 'screens/owner_members_screen.dart';
 import 'screens/placeholder_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -181,11 +182,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/owner/members',
-        builder: (context, state) => const PlaceholderScreen(
-          title: 'Members',
-          section: 'Management',
-          icon: Icons.people_alt_outlined,
-        ),
+        builder: (context, state) => const OwnerMembersScreen(),
       ),
       GoRoute(
         path: '/owner/settings',
