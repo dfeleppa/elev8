@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/env.dart';
 import '../models/owner_member.dart';
+import '../models/owner_payroll_entry.dart';
 import '../models/owner_schedule_class.dart';
 import '../models/owner_staff.dart';
 
@@ -57,6 +58,22 @@ class OwnerApiService {
     final list = (body['staff'] as List<dynamic>?) ?? const [];
     return list
         .map((s) => OwnerStaff.fromJson(s as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Payroll — every entry in payroll_entries, sorted newest week first.
+  static Future<List<OwnerPayrollEntry>> fetchPayrollEntries() async {
+    final uri = Uri.parse('$_baseUrl/api/owner/payroll');
+    final resp = await http.get(uri, headers: _headers);
+    if (resp.statusCode != 200) {
+      _throwApiError('Load payroll', resp);
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final list = (body['entries'] as List<dynamic>?) ?? const [];
+    return list
+        .map(
+          (e) => OwnerPayrollEntry.fromJson(e as Map<String, dynamic>),
+        )
         .toList();
   }
 

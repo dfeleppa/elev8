@@ -16,6 +16,7 @@ import 'coach_screen.dart';
 import 'workout_screen.dart';
 import 'screens/coach_setup_screen.dart';
 import 'screens/owner_members_screen.dart';
+import 'screens/owner_payroll_screen.dart';
 import 'screens/owner_schedule_screen.dart';
 import 'screens/owner_staff_screen.dart';
 import 'screens/placeholder_screen.dart';
@@ -152,11 +153,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/owner/payroll',
-        builder: (context, state) => const PlaceholderScreen(
-          title: 'Payroll',
-          section: 'Management',
-          icon: Icons.account_balance_wallet_outlined,
-        ),
+        builder: (context, state) => const OwnerPayrollScreen(),
       ),
       GoRoute(
         path: '/owner/billing',
