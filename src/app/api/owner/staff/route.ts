@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type AllowedStaffRole = "coach" | "admin";
@@ -31,8 +31,8 @@ function normalizePayrate(value: unknown): number | null {
   return parsed;
 }
 
-export async function GET() {
-  const { error, role } = await requireUserContext();
+export async function GET(request: NextRequest) {
+  const { error, role } = await requireRequestUserContext(request);
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -88,7 +88,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const { error, role } = await requireUserContext();
+  const { error, role } = await requireRequestUserContext(request);
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const { error, role } = await requireUserContext();
+  const { error, role } = await requireRequestUserContext(request);
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

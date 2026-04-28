@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/env.dart';
 import '../models/owner_member.dart';
+import '../models/owner_staff.dart';
 
 /// Owner-only API client. Same bearer-auth pattern as
 /// [AthleteApiService] / [CoachApiService] — hits the web app's
@@ -39,6 +40,22 @@ class OwnerApiService {
     final list = (body['members'] as List<dynamic>?) ?? const [];
     return list
         .map((m) => OwnerMember.fromJson(m as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Staff roster — every app_user with role coach/admin/owner. Server
+  /// returns `{ staff, promotableMembers }`; we only surface staff in
+  /// this read-only first cut.
+  static Future<List<OwnerStaff>> fetchStaff() async {
+    final uri = Uri.parse('$_baseUrl/api/owner/staff');
+    final resp = await http.get(uri, headers: _headers);
+    if (resp.statusCode != 200) {
+      _throwApiError('Load staff', resp);
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final list = (body['staff'] as List<dynamic>?) ?? const [];
+    return list
+        .map((s) => OwnerStaff.fromJson(s as Map<String, dynamic>))
         .toList();
   }
 }
