@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'config/env.dart';
 import 'dashboard_screen.dart';
 import 'nutrition_screen.dart';
 import 'schedule_screen.dart';
@@ -20,10 +21,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
-  // Initialize Supabase
+  // Initialize Supabase. `Env.*` throws if the values are missing so
+  // we surface the misconfig immediately instead of booting the app
+  // with empty credentials and failing at first request.
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    url: Env.supabaseUrl,
+    anonKey: Env.supabaseAnonKey,
   );
 
   // Stamp the Supabase Auth UID onto the existing app_users row (created by

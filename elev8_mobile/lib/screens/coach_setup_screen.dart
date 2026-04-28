@@ -266,10 +266,11 @@ class _CoachSetupScreenState extends ConsumerState<CoachSetupScreen> {
         context.go('/nutrition');
       }
     } catch (e) {
+      debugPrint('[CoachSetup] applyPlan failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to apply plan: $e'),
+          const SnackBar(
+            content: Text("Couldn't save your plan. Please try again."),
             backgroundColor: Colors.redAccent,
           ),
         );

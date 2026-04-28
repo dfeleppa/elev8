@@ -194,12 +194,15 @@ class NutritionScreen extends ConsumerWidget {
                       _Dashboard(data: data, selectedDate: selectedDate),
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(
-                    child: Text(
-                      'Error: $e',
-                      style: const TextStyle(color: Colors.redAccent),
-                    ),
-                  ),
+                  error: (e, _) {
+                    debugPrint('[NutritionScreen] day load failed: $e');
+                    return const Center(
+                      child: Text(
+                        "Couldn't load nutrition. Pull to retry.",
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
