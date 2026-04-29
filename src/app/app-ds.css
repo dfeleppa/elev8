@@ -123,6 +123,10 @@
   border-radius: 0 6px 6px 0;
 }
 
+:root[data-theme="light"] .app-nav-link-active {
+  color: #0a0b0d;
+}
+
 .app-shell-sidebar {
   background: var(--bg-2);
   border-right: 1px solid var(--line);

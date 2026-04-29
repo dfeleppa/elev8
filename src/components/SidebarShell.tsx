@@ -710,7 +710,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             </span>
             <div className={sidebarCollapsed ? "sr-only" : "block"}>
               <p className="text-sm font-semibold text-[var(--text)]">Lyfe Fitness</p>
-              <p className="text-xs text-[var(--text-soft)]">Gym OS</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-soft)]">Gym OS</p>
             </div>
           </button>
           <button
@@ -759,7 +759,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                       <Link
                         key={entry.href}
                         href={entry.href}
-                        className={`app-nav-link flex items-center rounded-lg px-3 py-2 text-xs ${
+                        className={`app-nav-link flex items-center rounded-lg px-3 py-2 text-sm font-medium ${
                           isActive ? "app-nav-link-active" : ""
                         }`}
                         aria-current={isActive ? "page" : undefined}
