@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, RefreshCw, Save } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { RefreshCw, Save } from "lucide-react";
 
 import {
   ownerButtonPrimaryClass,
@@ -20,16 +19,6 @@ import {
   uiTitleClass,
 } from "@/components/ui";
 
-type OrgSettings = {
-  id: string;
-  name: string;
-  logoUrl: string | null;
-  address: string | null;
-  phone: string | null;
-  email: string | null;
-  invitationCode: string | null;
-};
-
 function generateCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
@@ -44,12 +33,10 @@ const inputClass =
 const labelClass = uiLabelClass;
 
 export default function OwnerSettingsClient() {
-  const [settings, setSettings] = useState<OrgSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   // Form fields
   const [name, setName] = useState("");
@@ -57,8 +44,6 @@ export default function OwnerSettingsClient() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [invitationCode, setInvitationCode] = useState("");
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadSettings = useCallback(async () => {
     setLoading(true);
@@ -68,7 +53,6 @@ export default function OwnerSettingsClient() {
     if (!res.ok) {
       setPageError(data.error ?? "Failed to load settings.");
     } else {
-      setSettings(data);
       setName(data.name ?? "");
       setAddress(data.address ?? "");
       setPhone(data.phone ?? "");
@@ -106,7 +90,6 @@ export default function OwnerSettingsClient() {
       return;
     }
 
-    setSettings(data);
     showSuccess("Organization profile saved.");
   }
 
@@ -129,46 +112,8 @@ export default function OwnerSettingsClient() {
       return;
     }
 
-    setSettings(data);
     setInvitationCode(data.invitationCode ?? "");
     showSuccess("Invitation code saved.");
-  }
-
-  async function handleLogoUpload(file: File) {
-    setUploading(true);
-    setPageError(null);
-
-    const formData = new FormData();
-    formData.append("logo", file);
-
-    const res = await fetch("/api/owner/settings/logo", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    setUploading(false);
-
-    if (!res.ok) {
-      setPageError(data.error ?? "Failed to upload logo.");
-      return;
-    }
-
-    setSettings((prev) => (prev ? { ...prev, logoUrl: data.logoUrl } : prev));
-    showSuccess("Logo uploaded.");
-  }
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) handleLogoUpload(file);
-    // Reset input so same file can be re-selected
-    e.target.value = "";
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleLogoUpload(file);
   }
 
   if (loading) {
@@ -190,7 +135,7 @@ export default function OwnerSettingsClient() {
       <header className={uiPageHeaderClass}>
         <h1 className={uiTitleClass}>General Settings</h1>
         <p className={uiCopyClass}>
-          Manage your organization profile, branding, and invitation code.
+          Manage your organization profile and invitation code.
         </p>
       </header>
 
@@ -284,50 +229,6 @@ export default function OwnerSettingsClient() {
             </button>
           </div>
         </form>
-      </OwnerSectionCard>
-
-      {/* Branding / Logo */}
-      <OwnerSectionCard title="Branding" meta="">
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-          {/* Logo preview */}
-          <div
-            className="group relative flex h-32 w-32 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-[var(--line-strong)] bg-[var(--panel)] transition hover:border-[var(--pink-soft)]/40"
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-          >
-            {settings?.logoUrl ? (
-              <Image
-                src={settings.logoUrl}
-                alt="Organization logo"
-                fill
-                className="object-contain p-3"
-              />
-            ) : (
-              <Camera size={32} className="text-[var(--text-soft)]" />
-            )}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
-              <p className="text-xs font-medium text-white">
-                {uploading ? "Uploading..." : "Change Logo"}
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <p className="text-sm text-[var(--text-muted)]">
-              Upload a square gym logo to display across the app. Supports PNG, JPG, or WebP up to 2MB.
-            </p>
-            <p className="text-xs text-[var(--text-soft)]">
-              Click the preview or drag and drop an image file. Transparent backgrounds work well.
-            </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </div>
-        </div>
       </OwnerSectionCard>
 
       {/* Invitation Code */}

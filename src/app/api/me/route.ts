@@ -20,7 +20,7 @@ export async function GET() {
       .maybeSingle(),
     supabaseAdmin
       .from("gym_settings")
-      .select("name, logo_url")
+      .select("name")
       .eq("id", 1)
       .maybeSingle(),
     supabaseAdmin
@@ -49,7 +49,6 @@ export async function GET() {
     role,
     userName: userRow?.full_name ?? userRow?.email ?? "User",
     gymName: gymRow?.name ?? "Lyfe Fitness",
-    gymLogoUrl: gymRow?.logo_url ?? null,
     trackId: latestTrackId,
     currentTrack: trackRow?.name ?? "Main",
   });

@@ -11,7 +11,7 @@ export async function GET() {
 
   const { data: gym, error: fetchError } = await supabaseAdmin
     .from("gym_settings")
-    .select("name, logo_url, address, phone, email")
+    .select("name, address, phone, email")
     .eq("id", 1)
     .single();
 
@@ -21,7 +21,6 @@ export async function GET() {
 
   return NextResponse.json({
     name: gym.name,
-    logoUrl: gym.logo_url,
     address: gym.address,
     phone: gym.phone,
     email: gym.email,
@@ -47,7 +46,7 @@ export async function PATCH(request: Request) {
     .from("gym_settings")
     .update(updates)
     .eq("id", 1)
-    .select("name, logo_url, address, phone, email")
+    .select("name, address, phone, email")
     .single();
 
   if (updateError) {
@@ -56,7 +55,6 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({
     name: gym.name,
-    logoUrl: gym.logo_url,
     address: gym.address,
     phone: gym.phone,
     email: gym.email,
