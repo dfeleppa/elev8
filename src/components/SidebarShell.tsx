@@ -222,7 +222,6 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const [userRole, setUserRole] = useState<UserRole>("member");
   const [userName, setUserName] = useState("User");
   const [gymName, setGymName] = useState("Lyfe Fitness");
-  const [gymLogoUrl, setGymLogoUrl] = useState<string | null>(null);
   const [currentTrack, setCurrentTrack] = useState("Main");
   const [tracks, setTracks] = useState<{ id: string; name: string }[]>([]);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
@@ -323,13 +322,6 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         }
         if (isMounted && typeof payload.gymName === "string" && payload.gymName.trim()) {
           setGymName(payload.gymName.trim());
-        }
-        if (isMounted) {
-          setGymLogoUrl(
-            typeof payload.gymLogoUrl === "string" && payload.gymLogoUrl.trim()
-              ? payload.gymLogoUrl.trim()
-              : null
-          );
         }
         if (isMounted && typeof payload.currentTrack === "string" && payload.currentTrack.trim()) {
           setCurrentTrack(payload.currentTrack.trim());
@@ -531,7 +523,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   };
 
   const themeToggleLabel = theme === "dark" ? "Light mode" : "Dark mode";
-  const brandLogoSrc = gymLogoUrl ?? null;
+  const brandLogoSrc = "/logo.png";
   const brandLogoAlt = gymName + " logo";
   const themeIcon = theme === "dark" ? (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -562,11 +554,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               aria-label="Open menu"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-                {brandLogoSrc ? (
-                  <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
-                ) : (
-                  <span className="text-[11px] font-bold text-[var(--text-muted)]">LF</span>
-                )}
+                <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
               </span>
             </button>
             <div className="flex min-w-0 items-center justify-end gap-2">
@@ -630,11 +618,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-6">
             <div className="flex items-center justify-between gap-2 px-2">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-                {brandLogoSrc ? (
-                  <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
-                ) : (
-                  <span className="text-[11px] font-bold text-[var(--text-muted)]">LF</span>
-                )}
+                <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
               </span>
               <button
                 type="button"
@@ -702,11 +686,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Sidebar logo"}
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-              {brandLogoSrc ? (
-                <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
-              ) : (
-                <span className="text-[11px] font-bold text-[var(--text-muted)]">LF</span>
-              )}
+              <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
             </span>
             <div className={sidebarCollapsed ? "sr-only" : "block"}>
               <p className="text-sm font-semibold text-[var(--text)]">Lyfe Fitness</p>
