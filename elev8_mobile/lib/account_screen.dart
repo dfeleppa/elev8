@@ -12,17 +12,13 @@ import 'theme/app_colors.dart';
 import 'theme/app_text.dart';
 
 /// Account / profile landing screen behind the center "You" tab.
-///
-/// Shows the signed-in user's avatar, name, and email, plus a sign-out
-/// button. Future settings (notifications, units, integrations) can land
-/// in additional GlassCards on this screen.
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
-    final email = Supabase.instance.client.auth.currentUser?.email;
+    final authUser = Supabase.instance.client.auth.currentUser;
 
     return SidebarShell(
       child: Scaffold(
@@ -36,41 +32,8 @@ class AccountScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
                 profileAsync.when(
                   loading: () => const _Loading(),
-                  error: (_, _) => _ProfileCard(name: 'Athlete', email: email, avatarUrl: null),
-                  data: (data) {
-                    final name = (data?['full_name'] as String?)?.trim();
-                    final avatarUrl = (data?['avatar_url'] as String?)?.trim();
-                    return _ProfileCard(
-                      name: name?.isNotEmpty == true ? name! : 'Athlete',
-                      email: email,
-                      avatarUrl: avatarUrl?.isNotEmpty == true ? avatarUrl : null,
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                GlassCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Column(
-                    children: [
-                      _MenuRow(
-                        icon: Icons.local_dining_outlined,
-                        label: 'Nutrition',
-                        onTap: () => context.go('/nutrition'),
-                      ),
-                      const _Divider(),
-                      _MenuRow(
-                        icon: Icons.monitor_heart_outlined,
-                        label: 'Coach plan',
-                        onTap: () => context.go('/coach'),
-                      ),
-                      const _Divider(),
-                      _MenuRow(
-                        icon: Icons.calendar_month_outlined,
-                        label: 'Schedule',
-                        onTap: () => context.go('/schedule'),
-                      ),
-                    ],
-                  ),
+                  error: (e, _) => _ErrorCard(message: e.toString()),
+                  data: (data) => _AccountBody(row: data, authUser: authUser),
                 ),
                 const SizedBox(height: 24),
                 GhostButton(
@@ -120,24 +83,75 @@ class AccountScreen extends ConsumerWidget {
 
     if (confirmed == true) {
       await Supabase.instance.client.auth.signOut();
-      // Router redirect rule on `/` and other authed routes will push the
-      // user to /auth automatically.
     }
+  }
+}
+
+class _AccountBody extends StatelessWidget {
+  final Map<String, dynamic>? row;
+  final User? authUser;
+  const _AccountBody({required this.row, required this.authUser});
+
+  @override
+  Widget build(BuildContext context) {
+    final fullName = (row?['full_name'] as String?)?.trim();
+    final emailFromRow = (row?['email'] as String?)?.trim();
+    final emailFromAuth = authUser?.email;
+    final email = emailFromRow?.isNotEmpty == true ? emailFromRow : emailFromAuth;
+    final displayName = fullName?.isNotEmpty == true
+        ? fullName!
+        : (authUser?.userMetadata?['full_name'] as String?) ??
+            (authUser?.userMetadata?['name'] as String?) ??
+            'Athlete';
+
+    return Column(
+      children: [
+        _ProfileCard(name: displayName, email: email),
+        const SizedBox(height: 16),
+        _ProfileFieldsCard(row: row),
+        const SizedBox(height: 16),
+        _AuthDebugCard(row: row, authUser: authUser),
+        const SizedBox(height: 16),
+        GlassCard(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Column(
+            children: [
+              _MenuRow(
+                icon: Icons.local_dining_outlined,
+                label: 'Nutrition',
+                onTap: () => context.go('/nutrition'),
+              ),
+              const _Divider(),
+              _MenuRow(
+                icon: Icons.monitor_heart_outlined,
+                label: 'Coach plan',
+                onTap: () => context.go('/coach'),
+              ),
+              const _Divider(),
+              _MenuRow(
+                icon: Icons.calendar_month_outlined,
+                label: 'Schedule',
+                onTap: () => context.go('/schedule'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
 class _ProfileCard extends StatelessWidget {
   final String name;
   final String? email;
-  final String? avatarUrl;
-  const _ProfileCard({required this.name, required this.email, required this.avatarUrl});
+  const _ProfileCard({required this.name, required this.email});
 
   @override
   Widget build(BuildContext context) {
     return GlassCard(
       child: Row(
         children: [
-          _LargeAvatar(name: name, avatarUrl: avatarUrl),
+          _LargeAvatar(name: name),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -157,20 +171,182 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
-class _LargeAvatar extends StatelessWidget {
-  final String name;
-  final String? avatarUrl;
-  const _LargeAvatar({required this.name, required this.avatarUrl});
+class _ProfileFieldsCard extends StatelessWidget {
+  final Map<String, dynamic>? row;
+  const _ProfileFieldsCard({required this.row});
 
   @override
   Widget build(BuildContext context) {
-    if (avatarUrl != null && avatarUrl!.isNotEmpty) {
-      return CircleAvatar(
-        radius: 32,
-        backgroundImage: NetworkImage(avatarUrl!),
-        backgroundColor: AppColors.accent.withValues(alpha: 0.15),
-      );
+    final role = (row?['role'] as String?)?.trim();
+    final sex = (row?['sex'] as String?)?.trim();
+    final birthDate = row?['birth_date'] as String?;
+    final age = _computeAge(birthDate);
+    final heightCm = (row?['height_cm'] as num?)?.toDouble();
+    final weightKg = (row?['current_weight_kg'] as num?)?.toDouble();
+    final bodyFat = (row?['body_fat_percent'] as num?)?.toDouble();
+    final createdAt = row?['created_at'] as String?;
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('PROFILE', style: AppText.eyebrow),
+          const SizedBox(height: 12),
+          _Field(label: 'Role', value: role ?? '—'),
+          _Field(label: 'Sex', value: sex ?? '—'),
+          _Field(
+            label: 'Birth date',
+            value: birthDate ?? '—',
+            trailing: age != null ? '($age yrs)' : null,
+          ),
+          _Field(label: 'Height', value: _formatHeight(heightCm)),
+          _Field(label: 'Weight', value: _formatWeight(weightKg)),
+          _Field(
+            label: 'Body fat',
+            value: bodyFat != null ? '${bodyFat.toStringAsFixed(1)}%' : '—',
+          ),
+          _Field(label: 'Member since', value: _formatDate(createdAt)),
+        ],
+      ),
+    );
+  }
+
+  static int? _computeAge(String? isoDate) {
+    if (isoDate == null || isoDate.isEmpty) return null;
+    final dob = DateTime.tryParse(isoDate);
+    if (dob == null) return null;
+    final now = DateTime.now();
+    var years = now.year - dob.year;
+    if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+      years--;
     }
+    return years >= 0 ? years : null;
+  }
+
+  static String _formatHeight(double? cm) {
+    if (cm == null) return '—';
+    final totalInches = cm / 2.54;
+    final feet = totalInches ~/ 12;
+    final inches = (totalInches - feet * 12).round();
+    return '${cm.toStringAsFixed(0)} cm  ·  $feet′ $inches″';
+  }
+
+  static String _formatWeight(double? kg) {
+    if (kg == null) return '—';
+    final lbs = kg * 2.2046226218;
+    return '${kg.toStringAsFixed(1)} kg  ·  ${lbs.toStringAsFixed(1)} lb';
+  }
+
+  static String _formatDate(String? iso) {
+    if (iso == null || iso.isEmpty) return '—';
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return '—';
+    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+}
+
+class _AuthDebugCard extends StatelessWidget {
+  final Map<String, dynamic>? row;
+  final User? authUser;
+  const _AuthDebugCard({required this.row, required this.authUser});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasRow = row != null;
+    final appUserId = row?['id'] as String?;
+    final stampedUid = row?['supabase_auth_uid'] as String?;
+    final authUid = authUser?.id;
+    final jwtEmail = authUser?.email;
+    final rowEmail = (row?['email'] as String?)?.trim();
+    final provider = (authUser?.appMetadata['provider'] as String?) ??
+        (authUser?.appMetadata['providers'] is List
+            ? (authUser!.appMetadata['providers'] as List).join(', ')
+            : null);
+    final stampMatch = stampedUid != null && stampedUid == authUid;
+    final emailMatch = rowEmail != null &&
+        jwtEmail != null &&
+        rowEmail.toLowerCase() == jwtEmail.toLowerCase();
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('AUTH DEBUG', style: AppText.eyebrow),
+          const SizedBox(height: 12),
+          _Field(
+            label: 'app_users row',
+            value: hasRow ? 'found' : 'NOT FOUND',
+            warn: !hasRow,
+          ),
+          _Field(
+            label: 'supabase_auth_uid',
+            value: stampedUid ?? '— (not stamped)',
+            warn: stampedUid == null,
+          ),
+          _Field(
+            label: 'uid match',
+            value: stampMatch ? 'yes' : 'no',
+            warn: !stampMatch,
+          ),
+          _Field(
+            label: 'email match',
+            value: emailMatch ? 'yes' : 'no',
+            warn: !emailMatch,
+          ),
+          _Field(label: 'provider', value: provider ?? '—'),
+          _Field(label: 'auth.uid()', value: authUid ?? '—'),
+          _Field(label: 'app_users.id', value: appUserId ?? '—'),
+          _Field(label: 'jwt email', value: jwtEmail ?? '—'),
+          _Field(label: 'row email', value: rowEmail ?? '—'),
+        ],
+      ),
+    );
+  }
+}
+
+class _Field extends StatelessWidget {
+  final String label;
+  final String value;
+  final String? trailing;
+  final bool warn;
+  const _Field({
+    required this.label,
+    required this.value,
+    this.trailing,
+    this.warn = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: Text(label, style: AppText.label),
+          ),
+          Expanded(
+            child: Text(
+              trailing == null ? value : '$value  $trailing',
+              style: AppText.value.copyWith(
+                color: warn ? Colors.orangeAccent : AppColors.textOnGlass,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LargeAvatar extends StatelessWidget {
+  final String name;
+  const _LargeAvatar({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
     final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : 'A';
     return CircleAvatar(
       radius: 32,
@@ -235,6 +411,24 @@ class _Loading extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ErrorCard extends StatelessWidget {
+  final String message;
+  const _ErrorCard({required this.message});
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('LOAD ERROR', style: AppText.eyebrow.copyWith(color: Colors.orangeAccent)),
+          const SizedBox(height: 8),
+          Text(message, style: AppText.value),
+        ],
       ),
     );
   }

@@ -40,10 +40,13 @@ class AppUserService {
   /// Coalesces concurrent first-time fetches into one network request.
   Future<Map<String, dynamic>?>? _inflight;
 
-  /// Columns we always read so derived getters (id, full_name, avatar_url,
-  /// role) can be served from cache. Adjust here if a new derived getter
-  /// needs more columns.
-  static const _selectColumns = 'id, full_name, avatar_url, role';
+  /// Columns we always read so derived getters can be served from cache.
+  /// Must match the actual app_users schema — querying a column that does
+  /// not exist makes the entire SELECT fail (silently, via the catch in
+  /// _fetch) and every screen falls back to "Athlete" / empty.
+  static const _selectColumns =
+      'id, email, full_name, role, sex, birth_date, height_cm, '
+      'current_weight_kg, body_fat_percent, supabase_auth_uid, created_at';
 
   void dispose() {
     _authSub?.cancel();
