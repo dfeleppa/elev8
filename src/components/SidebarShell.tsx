@@ -523,7 +523,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   };
 
   const themeToggleLabel = theme === "dark" ? "Light mode" : "Dark mode";
-  const brandLogoSrc = "/logo.png";
+  const stackedLogoSrc = theme === "dark" ? "/light_stacked.png" : "/dark_stacked.png";
+  const wideLogoSrc = theme === "dark" ? "/light_wide.png" : "/dark_wide.png";
   const brandLogoAlt = gymName + " logo";
   const themeIcon = theme === "dark" ? (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -554,7 +555,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               aria-label="Open menu"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-                <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
+                <Image src={stackedLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
               </span>
             </button>
             <div className="flex min-w-0 items-center justify-end gap-2">
@@ -618,7 +619,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-6">
             <div className="flex items-center justify-between gap-2 px-2">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-                <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
+                <Image src={stackedLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
               </span>
               <button
                 type="button"
@@ -678,29 +679,46 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         }`}
         style={{ animationDelay: "0.05s" }}
       >
-        <div className="flex items-center justify-between gap-2 px-2">
-          <button
-            type="button"
-            onClick={() => sidebarCollapsed && setSidebarCollapsed(false)}
-            className={`flex items-center gap-3 ${sidebarCollapsed ? "justify-center" : ""}`}
-            aria-label={sidebarCollapsed ? "Expand sidebar" : "Sidebar logo"}
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-              <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
-            </span>
-            <div className={sidebarCollapsed ? "sr-only" : "block"}>
-              <p className="text-sm font-semibold text-[var(--text)]">Lyfe Fitness</p>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-soft)]">Gym OS</p>
-            </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
-            className="rounded-full border border-[var(--line-strong)] p-2 text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:text-[var(--text)]"
-            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {hamburgerIcon}
-          </button>
+        <div className="px-2">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => sidebarCollapsed && setSidebarCollapsed(false)}
+              className={`flex items-center ${sidebarCollapsed ? "justify-center" : "flex-1"}`}
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Sidebar logo"}
+            >
+              {sidebarCollapsed ? (
+                <Image
+                  src={stackedLogoSrc}
+                  alt={brandLogoAlt}
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 object-contain"
+                />
+              ) : (
+                <Image
+                  src={wideLogoSrc}
+                  alt={brandLogoAlt}
+                  width={160}
+                  height={40}
+                  className="h-10 w-auto object-contain"
+                />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+              className="rounded-full border border-[var(--line-strong)] p-2 text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:text-[var(--text)]"
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {hamburgerIcon}
+            </button>
+          </div>
+          {!sidebarCollapsed && (
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-[var(--text-soft)]">
+              Gym OS
+            </p>
+          )}
         </div>
 
         {sidebarCollapsed ? (
