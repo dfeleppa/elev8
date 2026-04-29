@@ -222,7 +222,6 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const [userRole, setUserRole] = useState<UserRole>("member");
   const [userName, setUserName] = useState("User");
   const [gymName, setGymName] = useState("Lyfe Fitness");
-  const [gymLogoUrl, setGymLogoUrl] = useState<string | null>(null);
   const [currentTrack, setCurrentTrack] = useState("Main");
   const [tracks, setTracks] = useState<{ id: string; name: string }[]>([]);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
@@ -323,13 +322,6 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         }
         if (isMounted && typeof payload.gymName === "string" && payload.gymName.trim()) {
           setGymName(payload.gymName.trim());
-        }
-        if (isMounted) {
-          setGymLogoUrl(
-            typeof payload.gymLogoUrl === "string" && payload.gymLogoUrl.trim()
-              ? payload.gymLogoUrl.trim()
-              : null
-          );
         }
         if (isMounted && typeof payload.currentTrack === "string" && payload.currentTrack.trim()) {
           setCurrentTrack(payload.currentTrack.trim());
@@ -531,7 +523,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   };
 
   const themeToggleLabel = theme === "dark" ? "Light mode" : "Dark mode";
-  const brandLogoSrc = gymLogoUrl ?? null;
+  const brandLogoSrc = theme === "dark" ? "/light_stacked.png" : "/dark_stacked.png";
+  const brandLogoWideSrc = theme === "dark" ? "/light_wide.png" : "/dark_wide.png";
   const brandLogoAlt = gymName + " logo";
   const themeIcon = theme === "dark" ? (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -701,17 +694,13 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             className={`flex items-center gap-3 ${sidebarCollapsed ? "justify-center" : ""}`}
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Sidebar logo"}
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-              {brandLogoSrc ? (
+            {sidebarCollapsed ? (
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
                 <Image src={brandLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
-              ) : (
-                <span className="text-[11px] font-bold text-[var(--text-muted)]">LF</span>
-              )}
-            </span>
-            <div className={sidebarCollapsed ? "sr-only" : "block"}>
-              <p className="text-sm font-semibold text-[var(--text)]">Lyfe Fitness</p>
-              <p className="text-xs text-[var(--text-soft)]">Gym OS</p>
-            </div>
+              </span>
+            ) : (
+              <Image src={brandLogoWideSrc} alt={brandLogoAlt} width={160} height={42} className="h-9 w-auto object-contain" priority />
+            )}
           </button>
           <button
             type="button"
