@@ -188,6 +188,9 @@ export default function HealthNutritionPage() {
   const [dialogSearch, setDialogSearch] = useState("");
   const [dialogLoading, setDialogLoading] = useState(false);
   const [dialogSaving, setDialogSaving] = useState(false);
+  const [quantityDrafts, setQuantityDrafts] = useState<Record<string, string>>({});
+  const [addingFoodKey, setAddingFoodKey] = useState<string | null>(null);
+  const [addedFlashKey, setAddedFlashKey] = useState<string | null>(null);
   const [recentFoods, setRecentFoods] = useState<LibraryFood[]>([]);
   const [myFoods, setMyFoods] = useState<LibraryFood[]>([]);
   const recentFoodsFetchedAtRef = useRef(0);
@@ -731,31 +734,42 @@ export default function HealthNutritionPage() {
     }
   }
 
-  async function addLibraryFood(food: LibraryFood, mealKey: MealKey) {
+  async function addLibraryFood(food: LibraryFood, mealKey: MealKey, quantityOverride?: number) {
     setError(null);
-    const response = await fetch("/api/nutrition-entries", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        dayDate: selectedDate,
-        mealType: mealKey,
-        name: food.name,
-        quantity: toEntryQuantity(food.quantity),
-        calories: food.calories,
-        protein: food.protein,
-        carbs: food.carbs,
-        fat: food.fat,
-      }),
-    });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) {
-      setError(payload?.error ?? "Failed to add entry.");
-      return;
-    }
+    const rowKey = `${dialogTab}-${food.id}`;
+    const quantity = toEntryQuantity(
+      quantityOverride !== undefined ? quantityOverride : food.quantity,
+    );
+    setAddingFoodKey(rowKey);
+    try {
+      const response = await fetch("/api/nutrition-entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dayDate: selectedDate,
+          mealType: mealKey,
+          name: food.name,
+          quantity,
+          calories: food.calories,
+          protein: food.protein,
+          carbs: food.carbs,
+          fat: food.fat,
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        setError(payload?.error ?? "Failed to add entry.");
+        return;
+      }
 
-    setEntries((prev) => [...prev, payload.entry]);
-    setFoodDialogOpen(false);
-    setActiveMealDialog(null);
+      setEntries((prev) => [...prev, payload.entry]);
+      setAddedFlashKey(rowKey);
+      setTimeout(() => {
+        setAddedFlashKey((current) => (current === rowKey ? null : current));
+      }, 1200);
+    } finally {
+      setAddingFoodKey((current) => (current === rowKey ? null : current));
+    }
   }
 
   async function createCustomFood() {
@@ -1440,9 +1454,15 @@ export default function HealthNutritionPage() {
                     ) : dialogFoods.length === 0 ? (
                       <p className="rounded-lg border border-[var(--line)] px-4 py-4 text-sm text-[var(--text-muted)]">No foods found. Try a different search.</p>
                     ) : (
-                      dialogFoods.map((food) => (
+                      dialogFoods.map((food) => {
+                        const rowKey = `${dialogTab}-${food.id}`;
+                        const defaultQty = formatServingSize(toEntryQuantity(food.quantity));
+                        const draftValue = quantityDrafts[rowKey] ?? defaultQty;
+                        const isAdding = addingFoodKey === rowKey;
+                        const justAdded = addedFlashKey === rowKey;
+                        return (
                         <div
-                          key={`${dialogTab}-${food.id}`}
+                          key={rowKey}
                           className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3"
                         >
                           <span>
@@ -1453,13 +1473,32 @@ export default function HealthNutritionPage() {
                           </span>
                           <span className="flex items-center gap-2">
                             {activeMealDialog ? (
-                              <button
-                                type="button"
-                                onClick={() => addLibraryFood(food, activeMealDialog)}
-                                className="accent-violet rounded-full px-3 py-1 text-xs font-semibold transition hover:brightness-110"
-                              >
-                                Add
-                              </button>
+                              <>
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={draftValue}
+                                  onChange={(event) =>
+                                    setQuantityDrafts((prev) => ({ ...prev, [rowKey]: event.target.value }))
+                                  }
+                                  onFocus={(event) => event.currentTarget.select()}
+                                  aria-label="Servings"
+                                  className="w-14 rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-1 text-center text-xs text-[var(--text)] focus:border-white/30 focus:outline-none"
+                                />
+                                <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">srv</span>
+                                <button
+                                  type="button"
+                                  disabled={isAdding}
+                                  onClick={() => {
+                                    const parsed = Number(draftValue);
+                                    const qty = Number.isFinite(parsed) && parsed > 0 ? parsed : toEntryQuantity(food.quantity);
+                                    addLibraryFood(food, activeMealDialog, qty);
+                                  }}
+                                  className="accent-violet rounded-full px-3 py-1 text-xs font-semibold transition hover:brightness-110 disabled:opacity-60"
+                                >
+                                  {justAdded ? "Added ✓" : isAdding ? "Adding…" : "Add"}
+                                </button>
+                              </>
                             ) : null}
                             {dialogTab === "mine" ? (
                               <>
@@ -1482,7 +1521,8 @@ export default function HealthNutritionPage() {
                             ) : null}
                           </span>
                         </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </>
