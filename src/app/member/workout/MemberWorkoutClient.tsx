@@ -355,7 +355,7 @@ export default function MemberWorkoutClient() {
                   onClick={() => setSelectedDay(d)}
                   className={`flex min-w-[40px] flex-col items-center rounded-xl px-2 py-1.5 text-center transition ${
                     isSelected
-                      ? "bg-[var(--cyan)]/15 text-[var(--cyan)] ring-1 ring-[var(--cyan)]/30"
+                      ? "bg-blue-800 text-white ring-1 ring-blue-700"
                       : "text-[var(--text-muted)] hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
                   }`}
                 >
