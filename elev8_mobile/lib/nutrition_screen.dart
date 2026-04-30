@@ -1918,6 +1918,10 @@ class _FoodDialogState extends State<_FoodDialog>
   bool _searching = false;
   String _searchQuery = '';
 
+  // Filter for Recents / My Foods tabs
+  final _listSearchCtrl = TextEditingController();
+  String _listSearchQuery = '';
+
   // Create form
   final _nameCtrl = TextEditingController();
   final _calCtrl = TextEditingController();
@@ -1930,12 +1934,16 @@ class _FoodDialogState extends State<_FoodDialog>
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 4, vsync: this);
+    _tabCtrl.addListener(() {
+      if (mounted) setState(() {});
+    });
     _load();
   }
 
   @override
   void dispose() {
     _tabCtrl.dispose();
+    _listSearchCtrl.dispose();
     _nameCtrl.dispose();
     _calCtrl.dispose();
     _proCtrl.dispose();
@@ -2073,6 +2081,37 @@ class _FoodDialogState extends State<_FoodDialog>
           ),
           const SizedBox(height: 16),
 
+          // Search field for Recents / My Foods tabs
+          if (_tabCtrl.index == 0 || _tabCtrl.index == 1) ...[
+            TextField(
+              controller: _listSearchCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Search foods...',
+                hintStyle: const TextStyle(color: Colors.white38),
+                prefixIcon: const Icon(Icons.search, color: Colors.white38),
+                suffixIcon: _listSearchQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white38),
+                        onPressed: () {
+                          _listSearchCtrl.clear();
+                          setState(() => _listSearchQuery = '');
+                        },
+                      ),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.05),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              ),
+              onChanged: (v) => setState(() => _listSearchQuery = v),
+            ),
+            const SizedBox(height: 12),
+          ],
+
           // Tab content
           Expanded(
             child: _loading
@@ -2118,8 +2157,14 @@ class _FoodDialogState extends State<_FoodDialog>
     );
   }
 
-  List<Map<String, dynamic>> _filterFoods(List<Map<String, dynamic>> foods) =>
-      foods;
+  List<Map<String, dynamic>> _filterFoods(List<Map<String, dynamic>> foods) {
+    final q = _listSearchQuery.trim().toLowerCase();
+    if (q.isEmpty) return foods;
+    return foods.where((f) {
+      final name = (f['entry_name'] ?? f['name'] ?? '').toString().toLowerCase();
+      return name.contains(q);
+    }).toList();
+  }
 
   void _showEditFoodDialog(Map<String, dynamic> food) {
     showModalBottomSheet(
