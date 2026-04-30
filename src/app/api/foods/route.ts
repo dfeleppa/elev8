@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireUserContext } from "@/lib/member";
+import { omitNutritionKeys, runNutritionQueryWithFallbacks } from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -22,11 +23,26 @@ export async function GET() {
     return NextResponse.json({ error: userError }, { status: 401 });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("nutrition_custom_foods")
-    .select("id, name, calories, protein, carbs, fat, fiber, created_at")
-    .eq("member_id", userId)
-    .order("created_at", { ascending: false });
+  const { data, error } = await runNutritionQueryWithFallbacks([
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .select("id, name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, created_at")
+        .eq("member_id", userId)
+        .order("created_at", { ascending: false }),
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .select("id, name, calories, protein, carbs, fat, fiber, created_at")
+        .eq("member_id", userId)
+        .order("created_at", { ascending: false }),
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .select("id, name, calories, protein, carbs, fat, created_at")
+        .eq("member_id", userId)
+        .order("created_at", { ascending: false }),
+  ]);
 
   if (error) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
@@ -48,20 +64,38 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Food name is required." }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("nutrition_custom_foods")
-    .insert({
-      member_id: userId,
-      name,
-      calories: toOptionalDecimal(body?.calories),
-      protein: toOptionalDecimal(body?.protein),
-      carbs: toOptionalDecimal(body?.carbs),
-      fat: toOptionalDecimal(body?.fat),
-      fiber: toOptionalDecimal(body?.fiber),
-      updated_at: new Date().toISOString(),
-    })
-    .select("id, name, calories, protein, carbs, fat, fiber, created_at")
-    .single();
+  const payload = {
+    member_id: userId,
+    name,
+    calories: toOptionalDecimal(body?.calories),
+    protein: toOptionalDecimal(body?.protein),
+    carbs: toOptionalDecimal(body?.carbs),
+    fat: toOptionalDecimal(body?.fat),
+    sugar: toOptionalDecimal(body?.sugar),
+    fiber: toOptionalDecimal(body?.fiber),
+    saturated_fat: toOptionalDecimal(body?.saturatedFat ?? body?.saturated_fat),
+    updated_at: new Date().toISOString(),
+  };
+  const { data, error } = await runNutritionQueryWithFallbacks([
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .insert(payload)
+        .select("id, name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, created_at")
+        .single(),
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .insert(omitNutritionKeys(payload, ["sugar", "saturated_fat"]))
+        .select("id, name, calories, protein, carbs, fat, fiber, created_at")
+        .single(),
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .insert(omitNutritionKeys(payload, ["sugar", "saturated_fat", "fiber"]))
+        .select("id, name, calories, protein, carbs, fat, created_at")
+        .single(),
+  ]);
 
   if (error) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

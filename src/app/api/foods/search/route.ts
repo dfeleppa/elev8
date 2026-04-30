@@ -11,6 +11,9 @@ const USDA_NUTRIENT_IDS = {
   protein: 1003,     // g
   carbs: 1005,       // g
   fat: 1004,         // g
+  sugar: 2000,       // g
+  fiber: 1079,       // g
+  saturatedFat: 1258, // g
 } as const;
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -35,6 +38,9 @@ type CachedSearchResult = {
     protein: number | null;
     carbs: number | null;
     fat: number | null;
+    sugar: number | null;
+    fiber: number | null;
+    saturatedFat: number | null;
   }>;
   expiresAt: number;
 };
@@ -210,6 +216,9 @@ export async function GET(request: Request) {
     protein: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.protein),
     carbs: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.carbs),
     fat: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.fat),
+    sugar: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.sugar),
+    fiber: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.fiber),
+    saturatedFat: pickNutrient(food.foodNutrients, USDA_NUTRIENT_IDS.saturatedFat),
   }));
 
   writeCachedSearch(normalizedQuery, results);

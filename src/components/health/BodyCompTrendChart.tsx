@@ -247,7 +247,7 @@ export default function BodyCompTrendChart() {
       </div>
 
       {/* Chart */}
-      <div className="mt-6 h-64">
+      <div className="mt-6 h-64 min-w-0">
         {loading ? (
           <div className="flex h-full items-center justify-center">
             <p className="text-sm text-[var(--text-soft)]">Loading...</p>
@@ -261,7 +261,7 @@ export default function BodyCompTrendChart() {
             <p className="text-sm text-[var(--text-soft)]">No data for this period. Log body comp to start tracking.</p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={chartData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
               <defs>
                 <linearGradient id={activeMetric.gradientId} x1="0" y1="0" x2="0" y2="1">

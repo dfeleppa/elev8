@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireUserContext } from "@/lib/member";
+import { omitNutritionKeys, runNutritionQueryWithFallbacks } from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -129,23 +130,43 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data: entry, error } = await supabaseAdmin
-    .from("nutrition_entries")
-    .insert({
-      member_id: userId,
-      day_id: dayId,
-      meal_type: mealType,
-      entry_name: entryName,
-      quantity: toPositiveDecimal(body?.quantity),
-      calories: toOptionalDecimal(body?.calories),
-      protein: toOptionalDecimal(body?.protein),
-      carbs: toOptionalDecimal(body?.carbs),
-      fat: toOptionalDecimal(body?.fat),
-      fiber: toOptionalDecimal(body?.fiber),
-      updated_at: new Date().toISOString(),
-    })
-    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, created_at")
-    .single();
+  const payload = {
+    member_id: userId,
+    day_id: dayId,
+    meal_type: mealType,
+    entry_name: entryName,
+    quantity: toPositiveDecimal(body?.quantity),
+    calories: toOptionalDecimal(body?.calories),
+    protein: toOptionalDecimal(body?.protein),
+    carbs: toOptionalDecimal(body?.carbs),
+    fat: toOptionalDecimal(body?.fat),
+    fiber: toOptionalDecimal(body?.fiber),
+    sugar: toOptionalDecimal(body?.sugar),
+    saturated_fat: toOptionalDecimal(body?.saturatedFat ?? body?.saturated_fat),
+    updated_at: new Date().toISOString(),
+  };
+  const { data: entry, error } = await runNutritionQueryWithFallbacks([
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .insert(payload)
+        .select(
+          "id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, sugar, saturated_fat, created_at"
+        )
+        .single(),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .insert(omitNutritionKeys(payload, ["sugar", "saturated_fat"]))
+        .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, created_at")
+        .single(),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .insert(omitNutritionKeys(payload, ["sugar", "saturated_fat", "fiber"]))
+        .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, created_at")
+        .single(),
+  ]);
 
   if (error) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

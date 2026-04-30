@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Pencil, Plus, X } from "lucide-react";
+import { Check, Pencil, Plus, Sparkles, X } from "lucide-react";
 
 import SidebarShell from "@/components/SidebarShell";
 import { AccentCard, Chip, Panel, Micro } from "@/components/ui";
@@ -37,7 +37,9 @@ type FoodSearchResult = {
   protein: number | null;
   carbs: number | null;
   fat: number | null;
+  sugar?: number | null;
   fiber?: number | null;
+  saturatedFat?: number | null;
 };
 
 type LibraryFood = {
@@ -171,6 +173,9 @@ export default function HealthNutritionPage() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const searchMeal: MealKey = "lunch";
   const [searchPerformed, setSearchPerformed] = useState(false);
+  const [aiCommand, setAiCommand] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState<string | null>(null);
   const [coachPlanStatus, setCoachPlanStatus] = useState<"loading" | "has" | "none">("loading");
   const [coachPlanSummary, setCoachPlanSummary] = useState<CoachPlanSummary | null>(null);
   const [copyingMeal, setCopyingMeal] = useState<MealKey | null>(null);
@@ -628,6 +633,9 @@ export default function HealthNutritionPage() {
             protein: entry.protein,
             carbs: entry.carbs,
             fat: entry.fat,
+            sugar: entry.sugar,
+            fiber: entry.fiber,
+            saturatedFat: entry.saturated_fat,
           }),
         })
       );
@@ -676,7 +684,11 @@ export default function HealthNutritionPage() {
   }
 
   async function handleFoodSearch() {
-    const query = searchQuery.trim();
+    await runFoodSearch(searchQuery);
+  }
+
+  async function runFoodSearch(queryInput: string) {
+    const query = queryInput.trim();
     if (query.length < 2) {
       setSearchError("Search needs at least 2 characters.");
       return;
@@ -690,11 +702,107 @@ export default function HealthNutritionPage() {
       if (!response.ok) {
         throw new Error(payload?.error ?? "Food search failed.");
       }
+      setSearchQuery(query);
       setSearchResults(payload.results ?? []);
     } catch (err) {
       setSearchError(err instanceof Error ? err.message : "Food search failed.");
     } finally {
       setSearchLoading(false);
+    }
+  }
+
+  async function handleAiCommand() {
+    const command = aiCommand.trim();
+    if (!command) {
+      setAiFeedback("Tell me what you want to do, like searching for a food or copying a meal.");
+      return;
+    }
+
+    setAiLoading(true);
+    setAiFeedback(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/nutrition-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          command,
+          selectedDate,
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Nutrition assistant failed.");
+      }
+
+      if (payload?.intent?.intent === "search_foods") {
+        const mealKey = (payload.intent.mealType as MealKey | null) ?? searchMeal;
+        setActiveMealDialog(mealKey);
+        setFoodDialogOpen(true);
+        setDialogTab("usda");
+        setSearchResults([]);
+        await runFoodSearch(payload.intent.searchQuery ?? command);
+        setAiFeedback(payload.intent.summary ?? "Food search ready.");
+        return;
+      }
+
+      if (payload?.intent?.intent === "copy_meal") {
+        const targetDate = payload?.result?.targetDate as string | undefined;
+        const feedback = payload?.result?.message ?? payload?.intent?.summary ?? "Meal copied.";
+        setAiFeedback(feedback);
+        setAiCommand("");
+
+        if (targetDate && targetDate !== selectedDate) {
+          setSelectedDate(targetDate);
+        } else {
+          const refresh = await fetch(`/api/nutrition-days?date=${selectedDate}`);
+          const dayPayload = await refresh.json().catch(() => null);
+          if (refresh.ok) {
+            setEntries(dayPayload?.entries ?? []);
+            setTargets({
+              calories: dayPayload?.day?.calorie_target?.toString() ?? "",
+              protein: dayPayload?.day?.protein_target?.toString() ?? "",
+              carbs: dayPayload?.day?.carbs_target?.toString() ?? "",
+              fat: dayPayload?.day?.fat_target?.toString() ?? "",
+            });
+          }
+        }
+        return;
+      }
+
+      if (payload?.intent?.intent === "add_food") {
+        const targetDate = payload?.result?.targetDate as string | undefined;
+        const feedback = payload?.result?.message ?? payload?.intent?.summary ?? "Food added.";
+        setAiFeedback(feedback);
+        setAiCommand("");
+
+        if (targetDate && targetDate !== selectedDate) {
+          setSelectedDate(targetDate);
+        } else {
+          const refresh = await fetch(`/api/nutrition-days?date=${selectedDate}`);
+          const dayPayload = await refresh.json().catch(() => null);
+          if (refresh.ok) {
+            setEntries(dayPayload?.entries ?? []);
+            setTargets({
+              calories: dayPayload?.day?.calorie_target?.toString() ?? "",
+              protein: dayPayload?.day?.protein_target?.toString() ?? "",
+              carbs: dayPayload?.day?.carbs_target?.toString() ?? "",
+              fat: dayPayload?.day?.fat_target?.toString() ?? "",
+            });
+          }
+        }
+        return;
+      }
+
+      setAiFeedback(
+        payload?.intent?.summary ?? "Try something like 'search for greek yogurt' or 'copy my breakfast from yesterday'."
+      );
+    } catch (err) {
+      setAiFeedback(err instanceof Error ? err.message : "Nutrition assistant failed.");
+    } finally {
+      setAiLoading(false);
     }
   }
 
@@ -712,7 +820,9 @@ export default function HealthNutritionPage() {
         protein: result.protein,
         carbs: result.carbs,
         fat: result.fat,
-        fiber: result.fiber ?? null,
+        sugar: result.sugar,
+        fiber: result.fiber,
+        saturatedFat: result.saturatedFat,
       }),
     });
     const payload = await response.json();
@@ -757,8 +867,10 @@ export default function HealthNutritionPage() {
           protein: food.protein,
           carbs: food.carbs,
           fat: food.fat,
-          fiber: food.fiber ?? null,
-        }),
+        sugar: food.sugar,
+        fiber: food.fiber,
+        saturatedFat: food.saturated_fat,
+      }),
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
@@ -931,6 +1043,60 @@ export default function HealthNutritionPage() {
             </button>
           </div>
         </header>
+
+        <Panel padding="md" className="hover-lift">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--cyan)]/30 bg-[var(--cyan)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--cyan)]">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                AI Assistant
+              </div>
+              <p className="mt-3 text-sm text-[var(--text-muted)]">
+                Search foods naturally or run quick actions like copying a meal from yesterday.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {["Search for greek yogurt", "Copy my breakfast from yesterday", "Add 2 eggs to breakfast"].map((example) => (
+                <button
+                  key={example}
+                  type="button"
+                  onClick={() => setAiCommand(example)}
+                  className="rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)] transition hover:text-[var(--text)]"
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3 lg:flex-row">
+            <input
+              value={aiCommand}
+              onChange={(event) => setAiCommand(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  void handleAiCommand();
+                }
+              }}
+              placeholder='Try "search for high protein cereal", "add 2 eggs to breakfast", or "copy my breakfast from yesterday"'
+              className="min-w-[240px] flex-1 rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-3 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => void handleAiCommand()}
+              disabled={aiLoading}
+              className="accent-violet rounded-2xl px-5 py-3 text-sm font-semibold transition hover:brightness-110 disabled:opacity-60"
+            >
+              {aiLoading ? "Thinking..." : "Run with AI"}
+            </button>
+          </div>
+
+          {aiFeedback ? (
+            <div className="mt-3 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3 text-sm text-[var(--text-muted)]">
+              {aiFeedback}
+            </div>
+          ) : null}
+        </Panel>
 
         {error ? (
           <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">

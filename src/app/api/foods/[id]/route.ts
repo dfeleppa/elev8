@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireUserContext } from "@/lib/member";
+import { omitNutritionKeys, runNutritionQueryWithFallbacks } from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -33,21 +34,43 @@ export async function PATCH(
     return NextResponse.json({ error: "Food name is required." }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("nutrition_custom_foods")
-    .update({
-      name,
-      calories: toOptionalDecimal(body?.calories),
-      protein: toOptionalDecimal(body?.protein),
-      carbs: toOptionalDecimal(body?.carbs),
-      fat: toOptionalDecimal(body?.fat),
-      fiber: toOptionalDecimal(body?.fiber),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .eq("member_id", userId)
-    .select("id, name, calories, protein, carbs, fat, fiber, created_at")
-    .single();
+  const payload = {
+    name,
+    calories: toOptionalDecimal(body?.calories),
+    protein: toOptionalDecimal(body?.protein),
+    carbs: toOptionalDecimal(body?.carbs),
+    fat: toOptionalDecimal(body?.fat),
+    sugar: toOptionalDecimal(body?.sugar),
+    fiber: toOptionalDecimal(body?.fiber),
+    saturated_fat: toOptionalDecimal(body?.saturatedFat ?? body?.saturated_fat),
+    updated_at: new Date().toISOString(),
+  };
+  const { data, error } = await runNutritionQueryWithFallbacks([
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .update(payload)
+        .eq("id", id)
+        .eq("member_id", userId)
+        .select("id, name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, created_at")
+        .single(),
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .update(omitNutritionKeys(payload, ["sugar", "saturated_fat"]))
+        .eq("id", id)
+        .eq("member_id", userId)
+        .select("id, name, calories, protein, carbs, fat, fiber, created_at")
+        .single(),
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .update(omitNutritionKeys(payload, ["sugar", "saturated_fat", "fiber"]))
+        .eq("id", id)
+        .eq("member_id", userId)
+        .select("id, name, calories, protein, carbs, fat, created_at")
+        .single(),
+  ]);
 
   if (error) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

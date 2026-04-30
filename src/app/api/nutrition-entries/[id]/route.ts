@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireUserContext } from "@/lib/member";
+import { omitNutritionKeys, runNutritionQueryWithFallbacks } from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -80,14 +81,41 @@ export async function PATCH(
   if (body?.fiber !== undefined) {
     updates.fiber = toOptionalDecimal(body.fiber);
   }
+  if (body?.sugar !== undefined) {
+    updates.sugar = toOptionalDecimal(body.sugar);
+  }
+  if (body?.saturatedFat !== undefined || body?.saturated_fat !== undefined) {
+    updates.saturated_fat = toOptionalDecimal(body?.saturatedFat ?? body?.saturated_fat);
+  }
 
-  const { data: entry, error } = await supabaseAdmin
-    .from("nutrition_entries")
-    .update(updates)
-    .eq("id", id)
-    .eq("member_id", userId)
-    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, created_at")
-    .maybeSingle();
+  const { data: entry, error } = await runNutritionQueryWithFallbacks([
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .update(updates)
+        .eq("id", id)
+        .eq("member_id", userId)
+        .select(
+          "id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, sugar, saturated_fat, created_at"
+        )
+        .maybeSingle(),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .update(omitNutritionKeys(updates, ["sugar", "saturated_fat"]))
+        .eq("id", id)
+        .eq("member_id", userId)
+        .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, created_at")
+        .maybeSingle(),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .update(omitNutritionKeys(updates, ["sugar", "saturated_fat", "fiber"]))
+        .eq("id", id)
+        .eq("member_id", userId)
+        .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, created_at")
+        .maybeSingle(),
+  ]);
 
   if (error) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
