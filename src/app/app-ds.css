@@ -106,6 +106,30 @@
 :root[data-theme="light"] .pill-violet { color: #5a2fcc; background: rgba(109,61,212,0.10); border-color: rgba(109,61,212,0.30); }
 :root[data-theme="light"] .pill-lime   { color: #548a0f; background: rgba(142,224,60,0.15); border-color: rgba(142,224,60,0.40); }
 
+.pill-amber { background: rgba(255,179,71,0.12); color: #ffc98a; border: 1px solid rgba(255,179,71,0.25); }
+:root[data-theme="light"] .pill-amber { color: #a66508; background: rgba(255,179,71,0.18); border-color: rgba(255,179,71,0.38); }
+
+/* ---------- Quiet accent-card variants (border-only, for inline use) ---------- */
+.accent-pink-quiet   { border-left: 2px solid var(--pink); }
+.accent-violet-quiet { border-left: 2px solid var(--violet); }
+.accent-lime-quiet   { border-left: 2px solid var(--lime); }
+
+/* ---------- Typing indicator (chat) ---------- */
+.ds-typing span {
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  margin: 0 1.5px;
+  animation: ds-typing-blink 1.2s infinite both;
+}
+.ds-typing span:nth-child(2) { animation-delay: 0.18s; }
+.ds-typing span:nth-child(3) { animation-delay: 0.36s; }
+@keyframes ds-typing-blink {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40%           { opacity: 1;    transform: translateY(-2px); }
+}
+
 /* ---------- Nav (used by SidebarShell) ---------- */
 .app-nav-link {
   color: var(--text-muted);

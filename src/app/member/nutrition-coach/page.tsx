@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 
 import SidebarShell from "@/components/SidebarShell";
 import { hasRole, requireUserContext } from "@/lib/member";
-import CoachSetupClient from "../../coach/CoachSetupClient";
+
+import NutritionCoachClient from "./NutritionCoachClient";
 
 export default async function MemberNutritionCoachPage() {
   const { error, role, userId } = await requireUserContext();
@@ -11,8 +12,8 @@ export default async function MemberNutritionCoachPage() {
   }
 
   return (
-    <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
-      <CoachSetupClient />
+    <SidebarShell mainClassName="w-full">
+      <NutritionCoachClient />
     </SidebarShell>
   );
 }
