@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 
+import NutritionCheckInBanner from "./NutritionCheckInBanner";
+
 type GoalType =
   | "lose_weight"
   | "gain_weight"
@@ -272,6 +274,8 @@ export default function NutritionCoachCard() {
           </div>
         </div>
       </div>
+
+      <NutritionCheckInBanner canManage />
 
       {expanded ? (
         <>

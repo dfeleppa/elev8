@@ -37,6 +37,7 @@ type FoodSearchResult = {
   protein: number | null;
   carbs: number | null;
   fat: number | null;
+  fiber?: number | null;
 };
 
 type LibraryFood = {
@@ -711,6 +712,7 @@ export default function HealthNutritionPage() {
         protein: result.protein,
         carbs: result.carbs,
         fat: result.fat,
+        fiber: result.fiber ?? null,
       }),
     });
     const payload = await response.json();
@@ -755,6 +757,7 @@ export default function HealthNutritionPage() {
           protein: food.protein,
           carbs: food.carbs,
           fat: food.fat,
+          fiber: food.fiber ?? null,
         }),
       });
       const payload = await response.json().catch(() => null);
