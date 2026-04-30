@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { requireUserContext } from "@/lib/member";
+import {
+  readNutritionNumberField,
+  readNutritionStringField,
+  runNutritionQueryWithFallbacks,
+} from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -32,12 +37,29 @@ export async function GET(request: Request) {
   const limitRaw = Number(searchParams.get("limit") ?? 30);
   const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(100, Math.round(limitRaw))) : 30;
 
-  const { data, error } = await supabaseAdmin
-    .from("nutrition_entries")
-    .select("entry_name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, quantity")
-    .eq("member_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(400);
+  const { data, error } = await runNutritionQueryWithFallbacks([
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .select("entry_name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, quantity")
+        .eq("member_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(400),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .select("entry_name, calories, protein, carbs, fat, fiber, quantity")
+        .eq("member_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(400),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .select("entry_name, calories, protein, carbs, fat, quantity")
+        .eq("member_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(400),
+  ]);
 
   if (error) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
@@ -47,7 +69,8 @@ export async function GET(request: Request) {
   const items: RecentFood[] = [];
 
   for (const row of data ?? []) {
-    const name = typeof row.entry_name === "string" ? row.entry_name.trim() : "";
+    const rowRecord = row as Record<string, unknown>;
+    const name = readNutritionStringField(rowRecord, "entry_name").trim();
     if (!name) {
       continue;
     }
@@ -59,14 +82,14 @@ export async function GET(request: Request) {
     items.push({
       id: safeId(name),
       name,
-      calories: typeof row.calories === "number" ? row.calories : null,
-      protein: typeof row.protein === "number" ? row.protein : null,
-      carbs: typeof row.carbs === "number" ? row.carbs : null,
-      fat: typeof row.fat === "number" ? row.fat : null,
-      sugar: typeof row.sugar === "number" ? row.sugar : null,
-      fiber: typeof row.fiber === "number" ? row.fiber : null,
-      saturated_fat: typeof row.saturated_fat === "number" ? row.saturated_fat : null,
-      quantity: typeof row.quantity === "number" ? row.quantity : 1,
+      calories: readNutritionNumberField(rowRecord, "calories"),
+      protein: readNutritionNumberField(rowRecord, "protein"),
+      carbs: readNutritionNumberField(rowRecord, "carbs"),
+      fat: readNutritionNumberField(rowRecord, "fat"),
+      sugar: readNutritionNumberField(rowRecord, "sugar"),
+      fiber: readNutritionNumberField(rowRecord, "fiber"),
+      saturated_fat: readNutritionNumberField(rowRecord, "saturated_fat"),
+      quantity: readNutritionNumberField(rowRecord, "quantity") ?? 1,
     });
     if (items.length >= limit) {
       break;

@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { requireUserContext } from "@/lib/member";
+import {
+  omitNutritionKeys,
+  readNutritionNumberField,
+  readNutritionStringField,
+  runNutritionQueryWithFallbacks,
+} from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -356,13 +362,32 @@ async function executeCopyMeal(memberId: string, intent: CopyMealIntent) {
     throw new Error(`No nutrition day found for ${intent.sourceDate}.`);
   }
 
-  const { data: sourceEntries, error: sourceEntriesError } = await supabaseAdmin
-    .from("nutrition_entries")
-    .select("entry_name, quantity, calories, protein, carbs, fat, fiber, sugar, saturated_fat")
-    .eq("day_id", sourceDay.id)
-    .eq("member_id", memberId)
-    .eq("meal_type", intent.mealType)
-    .order("created_at", { ascending: true });
+  const { data: sourceEntries, error: sourceEntriesError } = await runNutritionQueryWithFallbacks([
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .select("entry_name, quantity, calories, protein, carbs, fat, fiber, sugar, saturated_fat")
+        .eq("day_id", sourceDay.id)
+        .eq("member_id", memberId)
+        .eq("meal_type", intent.mealType)
+        .order("created_at", { ascending: true }),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .select("entry_name, quantity, calories, protein, carbs, fat, fiber")
+        .eq("day_id", sourceDay.id)
+        .eq("member_id", memberId)
+        .eq("meal_type", intent.mealType)
+        .order("created_at", { ascending: true }),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .select("entry_name, quantity, calories, protein, carbs, fat")
+        .eq("day_id", sourceDay.id)
+        .eq("member_id", memberId)
+        .eq("meal_type", intent.mealType)
+        .order("created_at", { ascending: true }),
+  ]);
 
   if (sourceEntriesError) {
     throw new Error("Failed to load source meal.");
@@ -374,23 +399,35 @@ async function executeCopyMeal(memberId: string, intent: CopyMealIntent) {
 
   const targetDayId = await getOrCreateNutritionDay(memberId, intent.targetDate);
 
-  const { error: insertError } = await supabaseAdmin.from("nutrition_entries").insert(
-    sourceEntries.map((entry) => ({
+  const entryPayload = sourceEntries.map((entry) => {
+    const rowRecord = entry as Record<string, unknown>;
+    return {
       member_id: memberId,
       day_id: targetDayId,
       meal_type: intent.targetMealType,
-      entry_name: entry.entry_name,
-      quantity: entry.quantity,
-      calories: entry.calories,
-      protein: entry.protein,
-      carbs: entry.carbs,
-      fat: entry.fat,
-      fiber: entry.fiber,
-      sugar: entry.sugar,
-      saturated_fat: entry.saturated_fat,
+      entry_name: readNutritionStringField(rowRecord, "entry_name"),
+      quantity: readNutritionNumberField(rowRecord, "quantity"),
+      calories: readNutritionNumberField(rowRecord, "calories"),
+      protein: readNutritionNumberField(rowRecord, "protein"),
+      carbs: readNutritionNumberField(rowRecord, "carbs"),
+      fat: readNutritionNumberField(rowRecord, "fat"),
+      fiber: readNutritionNumberField(rowRecord, "fiber"),
+      sugar: readNutritionNumberField(rowRecord, "sugar"),
+      saturated_fat: readNutritionNumberField(rowRecord, "saturated_fat"),
       updated_at: new Date().toISOString(),
-    }))
-  );
+    };
+  });
+  const { error: insertError } = await runNutritionQueryWithFallbacks([
+    () => supabaseAdmin.from("nutrition_entries").insert(entryPayload),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .insert(entryPayload.map((entry) => omitNutritionKeys(entry, ["sugar", "saturated_fat"]))),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .insert(entryPayload.map((entry) => omitNutritionKeys(entry, ["sugar", "saturated_fat", "fiber"]))),
+  ]);
 
   if (insertError) {
     throw new Error("Failed to copy meal.");
@@ -483,16 +520,46 @@ async function resolveFoodCandidate(memberId: string, query: string) {
   const normalizedQuery = normalizeQuery(query);
 
   const [customFoodsResult, recentEntriesResult] = await Promise.all([
-    supabaseAdmin
-      .from("nutrition_custom_foods")
-      .select("name, calories, protein, carbs, fat, fiber, sugar, saturated_fat")
-      .eq("member_id", memberId),
-    supabaseAdmin
-      .from("nutrition_entries")
-      .select("entry_name, calories, protein, carbs, fat, fiber, sugar, saturated_fat")
-      .eq("member_id", memberId)
-      .order("created_at", { ascending: false })
-      .limit(100),
+    runNutritionQueryWithFallbacks([
+      () =>
+        supabaseAdmin
+          .from("nutrition_custom_foods")
+          .select("name, calories, protein, carbs, fat, fiber, sugar, saturated_fat")
+          .eq("member_id", memberId),
+      () =>
+        supabaseAdmin
+          .from("nutrition_custom_foods")
+          .select("name, calories, protein, carbs, fat, fiber")
+          .eq("member_id", memberId),
+      () =>
+        supabaseAdmin
+          .from("nutrition_custom_foods")
+          .select("name, calories, protein, carbs, fat")
+          .eq("member_id", memberId),
+    ]),
+    runNutritionQueryWithFallbacks([
+      () =>
+        supabaseAdmin
+          .from("nutrition_entries")
+          .select("entry_name, calories, protein, carbs, fat, fiber, sugar, saturated_fat")
+          .eq("member_id", memberId)
+          .order("created_at", { ascending: false })
+          .limit(100),
+      () =>
+        supabaseAdmin
+          .from("nutrition_entries")
+          .select("entry_name, calories, protein, carbs, fat, fiber")
+          .eq("member_id", memberId)
+          .order("created_at", { ascending: false })
+          .limit(100),
+      () =>
+        supabaseAdmin
+          .from("nutrition_entries")
+          .select("entry_name, calories, protein, carbs, fat")
+          .eq("member_id", memberId)
+          .order("created_at", { ascending: false })
+          .limit(100),
+    ]),
   ]);
 
   if (customFoodsResult.error) {
@@ -505,28 +572,30 @@ async function resolveFoodCandidate(memberId: string, query: string) {
   const candidates: FoodCandidate[] = [];
 
   for (const row of customFoodsResult.data ?? []) {
+    const rowRecord = row as Record<string, unknown>;
     candidates.push({
-      name: row.name,
-      calories: row.calories,
-      protein: row.protein,
-      carbs: row.carbs,
-      fat: row.fat,
-      fiber: row.fiber,
-      sugar: row.sugar,
-      saturated_fat: row.saturated_fat,
+      name: readNutritionStringField(rowRecord, "name"),
+      calories: readNutritionNumberField(rowRecord, "calories"),
+      protein: readNutritionNumberField(rowRecord, "protein"),
+      carbs: readNutritionNumberField(rowRecord, "carbs"),
+      fat: readNutritionNumberField(rowRecord, "fat"),
+      fiber: readNutritionNumberField(rowRecord, "fiber"),
+      sugar: readNutritionNumberField(rowRecord, "sugar"),
+      saturated_fat: readNutritionNumberField(rowRecord, "saturated_fat"),
     });
   }
 
   for (const row of recentEntriesResult.data ?? []) {
+    const rowRecord = row as Record<string, unknown>;
     candidates.push({
-      name: row.entry_name,
-      calories: row.calories,
-      protein: row.protein,
-      carbs: row.carbs,
-      fat: row.fat,
-      fiber: row.fiber,
-      sugar: row.sugar,
-      saturated_fat: row.saturated_fat,
+      name: readNutritionStringField(rowRecord, "entry_name"),
+      calories: readNutritionNumberField(rowRecord, "calories"),
+      protein: readNutritionNumberField(rowRecord, "protein"),
+      carbs: readNutritionNumberField(rowRecord, "carbs"),
+      fat: readNutritionNumberField(rowRecord, "fat"),
+      fiber: readNutritionNumberField(rowRecord, "fiber"),
+      sugar: readNutritionNumberField(rowRecord, "sugar"),
+      saturated_fat: readNutritionNumberField(rowRecord, "saturated_fat"),
     });
   }
 
@@ -556,7 +625,7 @@ async function executeAddFood(memberId: string, intent: AddFoodIntent) {
   const targetDayId = await getOrCreateNutritionDay(memberId, intent.targetDate);
   const quantity = Math.max(0.01, Math.round(intent.quantity * 100) / 100);
 
-  const { error } = await supabaseAdmin.from("nutrition_entries").insert({
+  const payload = {
     member_id: memberId,
     day_id: targetDayId,
     meal_type: intent.mealType,
@@ -570,7 +639,12 @@ async function executeAddFood(memberId: string, intent: AddFoodIntent) {
     sugar: resolved.candidate.sugar,
     saturated_fat: resolved.candidate.saturated_fat,
     updated_at: new Date().toISOString(),
-  });
+  };
+  const { error } = await runNutritionQueryWithFallbacks([
+    () => supabaseAdmin.from("nutrition_entries").insert(payload),
+    () => supabaseAdmin.from("nutrition_entries").insert(omitNutritionKeys(payload, ["sugar", "saturated_fat"])),
+    () => supabaseAdmin.from("nutrition_entries").insert(omitNutritionKeys(payload, ["sugar", "saturated_fat", "fiber"])),
+  ]);
 
   if (error) {
     throw new Error("Failed to add food.");
