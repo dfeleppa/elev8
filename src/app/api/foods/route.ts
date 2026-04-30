@@ -24,7 +24,7 @@ export async function GET() {
 
   const { data, error } = await supabaseAdmin
     .from("nutrition_custom_foods")
-    .select("id, name, calories, protein, carbs, fat, fiber, created_at")
+    .select("id, name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, created_at")
     .eq("member_id", userId)
     .order("created_at", { ascending: false });
 
@@ -57,10 +57,12 @@ export async function POST(request: Request) {
       protein: toOptionalDecimal(body?.protein),
       carbs: toOptionalDecimal(body?.carbs),
       fat: toOptionalDecimal(body?.fat),
+      sugar: toOptionalDecimal(body?.sugar),
       fiber: toOptionalDecimal(body?.fiber),
+      saturated_fat: toOptionalDecimal(body?.saturatedFat ?? body?.saturated_fat),
       updated_at: new Date().toISOString(),
     })
-    .select("id, name, calories, protein, carbs, fat, fiber, created_at")
+    .select("id, name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, created_at")
     .single();
 
   if (error) {

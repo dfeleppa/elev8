@@ -142,9 +142,13 @@ export async function POST(request: Request) {
       carbs: toOptionalDecimal(body?.carbs),
       fat: toOptionalDecimal(body?.fat),
       fiber: toOptionalDecimal(body?.fiber),
+      sugar: toOptionalDecimal(body?.sugar),
+      saturated_fat: toOptionalDecimal(body?.saturatedFat ?? body?.saturated_fat),
       updated_at: new Date().toISOString(),
     })
-    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, created_at")
+    .select(
+      "id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, sugar, saturated_fat, created_at"
+    )
     .single();
 
   if (error) {

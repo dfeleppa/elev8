@@ -12,7 +12,9 @@ type RecentFood = {
   protein: number | null;
   carbs: number | null;
   fat: number | null;
+  sugar: number | null;
   fiber: number | null;
+  saturated_fat: number | null;
   quantity: number | null;
 };
 
@@ -32,7 +34,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabaseAdmin
     .from("nutrition_entries")
-    .select("entry_name, calories, protein, carbs, fat, fiber, quantity")
+    .select("entry_name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, quantity")
     .eq("member_id", userId)
     .order("created_at", { ascending: false })
     .limit(400);
@@ -61,7 +63,9 @@ export async function GET(request: Request) {
       protein: typeof row.protein === "number" ? row.protein : null,
       carbs: typeof row.carbs === "number" ? row.carbs : null,
       fat: typeof row.fat === "number" ? row.fat : null,
+      sugar: typeof row.sugar === "number" ? row.sugar : null,
       fiber: typeof row.fiber === "number" ? row.fiber : null,
+      saturated_fat: typeof row.saturated_fat === "number" ? row.saturated_fat : null,
       quantity: typeof row.quantity === "number" ? row.quantity : 1,
     });
     if (items.length >= limit) {

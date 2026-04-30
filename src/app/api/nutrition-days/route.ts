@@ -134,7 +134,9 @@ export async function GET(request: Request) {
 
   const { data: entries, error: entriesError } = await supabaseAdmin
     .from("nutrition_entries")
-    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, created_at")
+    .select(
+      "id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, sugar, saturated_fat, created_at"
+    )
     .eq("day_id", resolvedDay.id)
     .order("created_at", { ascending: true });
 
