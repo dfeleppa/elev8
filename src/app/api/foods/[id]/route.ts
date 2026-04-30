@@ -41,11 +41,12 @@ export async function PATCH(
       protein: toOptionalDecimal(body?.protein),
       carbs: toOptionalDecimal(body?.carbs),
       fat: toOptionalDecimal(body?.fat),
+      fiber: toOptionalDecimal(body?.fiber),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
     .eq("member_id", userId)
-    .select("id, name, calories, protein, carbs, fat, created_at")
+    .select("id, name, calories, protein, carbs, fat, fiber, created_at")
     .single();
 
   if (error) {

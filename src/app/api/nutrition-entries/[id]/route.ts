@@ -77,13 +77,16 @@ export async function PATCH(
   if (body?.fat !== undefined) {
     updates.fat = toOptionalDecimal(body.fat);
   }
+  if (body?.fiber !== undefined) {
+    updates.fiber = toOptionalDecimal(body.fiber);
+  }
 
   const { data: entry, error } = await supabaseAdmin
     .from("nutrition_entries")
     .update(updates)
     .eq("id", id)
     .eq("member_id", userId)
-    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, created_at")
+    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, created_at")
     .maybeSingle();
 
   if (error) {

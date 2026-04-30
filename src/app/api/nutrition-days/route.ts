@@ -37,7 +37,7 @@ function areTargetsUnset(day: {
 async function getCoachPlanTargets(memberId: string, date: string) {
   const { data: plan, error } = await supabaseAdmin
     .from("coach_nutrition_plans")
-    .select("target_calories, protein_grams, carbs_grams, fat_grams")
+    .select("target_calories, protein_grams, carbs_grams, fat_grams, fiber_grams")
     .eq("member_id", memberId)
     .lte("effective_date", date)
     .order("effective_date", { ascending: false })
@@ -53,6 +53,7 @@ async function getCoachPlanTargets(memberId: string, date: string) {
     protein_target: toOptionalDecimal(plan.protein_grams),
     carbs_target: toOptionalDecimal(plan.carbs_grams),
     fat_target: toOptionalDecimal(plan.fat_grams),
+    fiber_target: toOptionalDecimal(plan.fiber_grams),
   };
 }
 
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
 
   const { data: day, error: dayError } = await supabaseAdmin
     .from("nutrition_days")
-    .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target")
+    .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target, fiber_target")
     .eq("member_id", userId)
     .eq("day_date", date)
     .maybeSingle();
@@ -96,7 +97,7 @@ export async function GET(request: Request) {
           },
           { onConflict: "member_id,day_date" }
         )
-        .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target")
+        .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target, fiber_target")
         .single();
 
       if (createError) {
@@ -116,7 +117,7 @@ export async function GET(request: Request) {
         })
         .eq("id", resolvedDay.id)
         .eq("member_id", userId)
-        .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target")
+        .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target, fiber_target")
         .single();
 
       if (updateError) {
@@ -133,7 +134,7 @@ export async function GET(request: Request) {
 
   const { data: entries, error: entriesError } = await supabaseAdmin
     .from("nutrition_entries")
-    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, created_at")
+    .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, fiber, created_at")
     .eq("day_id", resolvedDay.id)
     .order("created_at", { ascending: true });
 
@@ -167,11 +168,12 @@ export async function POST(request: Request) {
         protein_target: toOptionalDecimal(body?.proteinTarget),
         carbs_target: toOptionalDecimal(body?.carbsTarget),
         fat_target: toOptionalDecimal(body?.fatTarget),
+        fiber_target: toOptionalDecimal(body?.fiberTarget),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "member_id,day_date" }
     )
-    .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target")
+    .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target, fiber_target")
     .single();
 
   if (error) {
