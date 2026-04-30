@@ -39,6 +39,18 @@ type UnknownIntent = {
 
 type NutritionIntent = CopyMealIntent | SearchFoodsIntent | AddFoodIntent | UnknownIntent;
 
+type ParsedNutritionIntent = {
+  intent?: string;
+  mealType?: MealKey;
+  targetMealType?: MealKey;
+  sourceDate?: string;
+  targetDate?: string;
+  searchQuery?: string;
+  foodQuery?: string;
+  quantity?: number;
+  summary?: string;
+};
+
 const mealKeywords: Array<{ key: MealKey; terms: string[] }> = [
   { key: "breakfast", terms: ["breakfast"] },
   { key: "lunch", terms: ["lunch"] },
@@ -232,7 +244,7 @@ async function aiInterpret(command: string, selectedDate: string): Promise<Nutri
   }
 
   try {
-    const parsed = JSON.parse(text) as Partial<CopyMealIntent & SearchFoodsIntent & AddFoodIntent & UnknownIntent>;
+    const parsed = JSON.parse(text) as ParsedNutritionIntent;
     if (parsed.intent === "copy_meal" && parsed.mealType && parsed.targetMealType && parsed.sourceDate && parsed.targetDate) {
       return {
         intent: "copy_meal",
