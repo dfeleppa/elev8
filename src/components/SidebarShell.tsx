@@ -110,7 +110,6 @@ const navItems: NavItem[] = [
           { label: "Athlete Dashboard", href: "/member/athlete-dashboard", minRole: "member" },
           { label: "Workout", href: "/member/workout", minRole: "member" },
           { label: "Nutrition", href: "/member/nutrition", minRole: "member" },
-          { label: "Nutrition Coach", href: "/member/nutrition-coach", minRole: "member" },
           { label: "Class Schedule", href: "/member/class-schedule", minRole: "member" },
           { label: "Account Dashboard", href: "/member/account-dashboard", minRole: "member" },
           { label: "Store", href: "/member/store", minRole: "member" },

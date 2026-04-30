@@ -8,6 +8,7 @@ import { Check, Pencil, Plus, X } from "lucide-react";
 
 import SidebarShell from "@/components/SidebarShell";
 import { AccentCard, Chip, Panel, Micro } from "@/components/ui";
+import NutritionTopBar from "./NutritionTopBar";
 
 type NutritionEntry = {
   id: string;
@@ -883,8 +884,9 @@ export default function HealthNutritionPage() {
   }, [dialogTab, recentFoods, myFoods, dialogSearch]);
 
   return (
-    <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
-      <section className="space-y-8">
+    <SidebarShell mainClassName="w-full">
+      <NutritionTopBar active="daily" />
+      <section className="mx-auto w-full max-w-[1480px] space-y-8 px-6 py-8 lg:px-10 lg:py-10">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold text-[var(--text)]">Nutrition</h1>

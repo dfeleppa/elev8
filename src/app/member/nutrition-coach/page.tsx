@@ -4,6 +4,7 @@ import SidebarShell from "@/components/SidebarShell";
 import { hasRole, requireUserContext } from "@/lib/member";
 
 import NutritionCoachClient from "./NutritionCoachClient";
+import NutritionTopBar from "../nutrition/NutritionTopBar";
 
 export default async function MemberNutritionCoachPage() {
   const { error, role, userId } = await requireUserContext();
@@ -13,7 +14,10 @@ export default async function MemberNutritionCoachPage() {
 
   return (
     <SidebarShell mainClassName="w-full">
-      <NutritionCoachClient />
+      <NutritionTopBar active="coach" />
+      <div className="mx-auto w-full max-w-[1480px]">
+        <NutritionCoachClient />
+      </div>
     </SidebarShell>
   );
 }
