@@ -50,14 +50,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
   const week = isoWeek(now);
 
   return (
-    <div
-      className="sticky top-0 z-10 flex flex-wrap items-center gap-x-8 gap-y-3 border-b px-6 lg:px-8 h-14"
-      style={{
-        background: "color-mix(in srgb, var(--bg) 88%, transparent)",
-        borderColor: "var(--line)",
-        backdropFilter: "blur(8px)",
-      }}
-    >
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
       <div
         className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest"
         style={{ color: "var(--text-muted)" }}
@@ -69,7 +62,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
         <span style={{ color: "var(--text-soft)" }}>Week {week}</span>
       </div>
 
-      <nav className="flex items-center gap-7 text-[13.5px] h-full">
+      <nav className="flex items-center gap-6 text-[13.5px]">
         {TABS.map((t) => {
           const isActive = t.id === active;
           return (
@@ -77,7 +70,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
               key={t.id}
               href={t.href}
               className={clsx(
-                "relative h-full inline-flex items-center transition",
+                "relative inline-flex items-center py-1 transition",
                 isActive
                   ? "text-[color:var(--text)] font-semibold"
                   : "text-[color:var(--text-muted)] hover:text-[color:var(--text)]",
@@ -87,7 +80,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
               {isActive && (
                 <span
                   aria-hidden
-                  className="absolute left-0 right-0 -bottom-px h-[2px]"
+                  className="absolute left-0 right-0 -bottom-0.5 h-[2px]"
                   style={{ background: "var(--text)" }}
                 />
               )}
