@@ -14,7 +14,9 @@ export default async function MemberNutritionCoachPage() {
 
   return (
     <SidebarShell mainClassName="w-full">
-      <NutritionTopBar active="coach" />
+      <div className="mx-auto w-full max-w-[1480px] px-6 pt-6 lg:px-10">
+        <NutritionTopBar active="coach" />
+      </div>
       <div className="mx-auto w-full max-w-[1480px]">
         <NutritionCoachClient />
       </div>

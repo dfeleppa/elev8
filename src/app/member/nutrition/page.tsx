@@ -1000,7 +1000,6 @@ export default function HealthNutritionPage() {
 
   return (
     <SidebarShell mainClassName="w-full">
-      <NutritionTopBar active="daily" />
       <section className="mx-auto w-full max-w-[1480px] space-y-8 px-6 py-8 lg:px-10 lg:py-10">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -1008,6 +1007,9 @@ export default function HealthNutritionPage() {
             <p className="mt-3 text-sm text-[var(--text-muted)]">
               Plan meals, track macros, and stay on target.
             </p>
+            <div className="mt-4">
+              <NutritionTopBar active="daily" />
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button

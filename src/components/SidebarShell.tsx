@@ -24,6 +24,7 @@ import {
   Settings,
   ShieldCheck,
   ShoppingBag,
+  Tv,
   UserCircle2,
   Users,
   Wallet,
@@ -426,6 +427,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   }
 
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
+  const firstName = userName.trim().split(/\s+/)[0] || "User";
 
   const visibleNavItems = navItems
     .filter((item) => canViewRole(item.minRole))
@@ -713,11 +715,26 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               {hamburgerIcon}
             </button>
           </div>
-          {!sidebarCollapsed && (
-            <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-[var(--text-soft)]">
-              Gym OS
-            </p>
-          )}
+          {showViewToggle ? (
+            <div className={`mt-3 flex items-center gap-2 ${sidebarCollapsed ? "justify-center" : ""}`}>
+              <button
+                type="button"
+                onClick={() => handleSwitchView("gym")}
+                className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
+                aria-label="Gym view"
+              >
+                {gymViewIcon}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchView("athlete")}
+                className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
+                aria-label="Athlete view"
+              >
+                {athleteViewIcon}
+              </button>
+            </div>
+          ) : null}
         </div>
 
         {sidebarCollapsed ? (
@@ -774,47 +791,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       </aside>
 
       <div className={`${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
-        <header className="app-shell-topbar hidden h-14 w-full items-center justify-between px-5 text-[var(--text)] lg:flex">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{gymName}</p>
-            {tracks.length > 1 ? (
-              <select
-                value={selectedTrackId ?? ""}
-                onChange={(e) => handleTrackChange(e.target.value)}
-                className="mt-0.5 max-w-[200px] cursor-pointer bg-transparent text-xs text-[var(--text-muted)] outline-none transition hover:text-[var(--text)]"
-              >
-                {tracks.map((t) => (
-                  <option key={t.id} value={t.id} className="bg-[var(--panel-2)] text-[var(--text)]">
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p className="truncate text-xs text-[var(--text-muted)]">Track: {currentTrack}</p>
-            )}
-          </div>
+        <header className="app-shell-topbar hidden h-14 w-full items-center justify-end px-5 text-[var(--text)] lg:flex">
           <div className="flex items-center gap-4 text-sm">
-            {showViewToggle ? (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleSwitchView("gym")}
-                  className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
-                  aria-label="Gym view"
-                >
-                  {gymViewIcon}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSwitchView("athlete")}
-                  className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
-                  aria-label="Athlete view"
-                >
-                  {athleteViewIcon}
-                </button>
-              </div>
-            ) : null}
-
             <button
               type="button"
               onClick={toggleTheme}
@@ -826,22 +804,36 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             <button
               type="button"
-              className="inline-flex items-center gap-2 text-[var(--text-muted)] transition hover:text-[var(--text)]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
               aria-label="TV display mode"
+              title="TV Display Mode"
             >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                <path d="M4 5h16v11H4z" fill="none" stroke="currentColor" strokeWidth="1.7" />
-                <path d="M10 19h4" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" />
-              </svg>
-              TV Display Mode
+              <Tv className="h-4 w-4" aria-hidden="true" />
             </button>
+
+            {tracks.length > 1 ? (
+              <select
+                value={selectedTrackId ?? ""}
+                onChange={(e) => handleTrackChange(e.target.value)}
+                className="max-w-[200px] cursor-pointer bg-transparent text-xs text-[var(--text-muted)] outline-none transition hover:text-[var(--text)]"
+                aria-label="Select track"
+              >
+                {tracks.map((t) => (
+                  <option key={t.id} value={t.id} className="bg-[var(--panel-2)] text-[var(--text)]">
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="truncate text-xs text-[var(--text-muted)]">{currentTrack}</span>
+            )}
 
             <button
               type="button"
               className="inline-flex items-center gap-2 text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="User account"
             >
-              <span className="truncate max-w-[160px]">{userName}</span>
+              <span className="truncate max-w-[160px]">{firstName}</span>
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--panel-2)] text-xs font-semibold text-[var(--text)]">
                 {userInitial}
               </span>
