@@ -63,6 +63,10 @@ export type ResolvedFoodCandidate = {
   source: "local" | "usda";
 };
 
+type RankedFoodCandidate = ResolvedFoodCandidate & {
+  score: number;
+};
+
 const mealKeywords: Array<{ key: MealKey; terms: string[] }> = [
   { key: "breakfast", terms: ["breakfast"] },
   { key: "lunch", terms: ["lunch"] },
@@ -452,26 +456,52 @@ export async function executeCopyMeal(memberId: string, intent: CopyMealIntent) 
 }
 
 function normalizeQuery(value: string) {
-  return value.trim().toLowerCase();
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[’']/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function scoreFoodMatch(candidateName: string, query: string) {
-  const candidate = candidateName.trim().toLowerCase();
-  if (!candidate) {
+  const candidate = normalizeQuery(candidateName);
+  const normalizedQuery = normalizeQuery(query);
+
+  if (!candidate || !normalizedQuery) {
     return 0;
   }
-  if (candidate === query) {
+
+  if (candidate === normalizedQuery) {
     return 100;
   }
-  if (candidate.startsWith(query)) {
+
+  if (candidate.startsWith(normalizedQuery)) {
     return 80;
   }
-  if (candidate.includes(query)) {
+
+  if (candidate.includes(normalizedQuery)) {
     return 60;
   }
-  const queryTerms = query.split(/\s+/).filter(Boolean);
+
+  const queryTerms = normalizedQuery
+    .split(/\s+/)
+    .filter((term) => term.length >= 2)
+    .filter((term) => !["a", "an", "of", "to", "for", "my", "the", "serving"].includes(term));
+
+  if (queryTerms.length === 0) {
+    return 0;
+  }
+
   const matchedTerms = queryTerms.filter((term) => candidate.includes(term)).length;
-  return matchedTerms * 10;
+  if (matchedTerms === 0) {
+    return 0;
+  }
+
+  const coverage = matchedTerms / queryTerms.length;
+  return Math.round(coverage * 50) + matchedTerms * 10;
 }
 
 async function searchUsdFoods(query: string, limit = 3) {
@@ -579,7 +609,7 @@ export async function searchFoodCandidates(memberId: string, query: string, limi
     throw new Error("Failed to search recent foods.");
   }
 
-  const localCandidates: Array<ResolvedFoodCandidate & { score: number }> = [];
+  const localCandidates: RankedFoodCandidate[] = [];
 
   for (const row of customFoodsResult.data ?? []) {
     const rowRecord = row as Record<string, unknown>;
@@ -627,7 +657,7 @@ export async function searchFoodCandidates(memberId: string, query: string, limi
     });
   }
 
-  const deduped = new Map<string, ResolvedFoodCandidate & { score: number }>();
+  const deduped = new Map<string, RankedFoodCandidate>();
   for (const item of localCandidates) {
     const key = item.candidate.name.trim().toLowerCase();
     const current = deduped.get(key);
@@ -656,6 +686,36 @@ export async function searchFoodCandidates(memberId: string, query: string, limi
   return Array.from(uniqueCombined.values()).slice(0, limit);
 }
 
+function rankResolvedCandidates(candidates: ResolvedFoodCandidate[], query: string): RankedFoodCandidate[] {
+  return candidates
+    .map((item) => ({
+      ...item,
+      score: scoreFoodMatch(item.candidate.name, query),
+    }))
+    .sort((a, b) => b.score - a.score);
+}
+
+function pickConfidentCandidate(candidates: RankedFoodCandidate[], query: string) {
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  const normalizedQuery = normalizeQuery(query);
+  const top = candidates[0];
+  const runnerUp = candidates[1];
+  const normalizedTop = normalizeQuery(top.candidate.name);
+
+  if (normalizedTop === normalizedQuery) {
+    return top;
+  }
+
+  if (top.score >= 80 && (!runnerUp || top.score - runnerUp.score >= 20)) {
+    return top;
+  }
+
+  return null;
+}
+
 export async function resolveFoodCandidate(memberId: string, query: string, candidateName?: string) {
   const candidates = await searchFoodCandidates(memberId, query, 5);
   if (candidateName) {
@@ -663,8 +723,11 @@ export async function resolveFoodCandidate(memberId: string, query: string, cand
     if (match) {
       return match;
     }
+    return null;
   }
-  return candidates[0] ?? null;
+
+  const ranked = rankResolvedCandidates(candidates, query);
+  return pickConfidentCandidate(ranked, query);
 }
 
 export async function executeAddFood(memberId: string, intent: AddFoodIntent, candidateName?: string) {

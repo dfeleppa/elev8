@@ -143,7 +143,20 @@ export async function POST(request: Request) {
         });
       }
 
-      const result = await executeAddFood(memberId, intent, candidateName || undefined);
+      const result = await executeAddFood(memberId, intent, candidateName || undefined).catch((error) => {
+        if (error instanceof Error && error.message.includes(`I couldn't find a food match`)) {
+          return null;
+        }
+        throw error;
+      });
+
+      if (!result) {
+        return NextResponse.json(
+          { error: `I couldn't find a reliable food match for "${intent.foodQuery}". Please pick a specific result first.` },
+          { status: 404 }
+        );
+      }
+
       return NextResponse.json({
         mode,
         intent,

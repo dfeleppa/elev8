@@ -225,4 +225,93 @@ describe("agent nutrition-ai POST", () => {
       protein: 35,
     });
   });
+
+  it("does not guess a food on execute when the selected candidate is ambiguous", async () => {
+    fromMock.mockImplementation((table: string) => {
+      if (table === "nutrition_custom_foods") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(async () => ({
+              data: [
+                {
+                  name: "Costco Chocolate Chip Cookie (1 cookie)",
+                  calories: 210,
+                  protein: 3,
+                  carbs: 27,
+                  fat: 11,
+                  fiber: 1,
+                  sugar: 17,
+                  saturated_fat: 5,
+                },
+                {
+                  name: "M&M's Milk Chocolate Candies",
+                  calories: 240,
+                  protein: 2,
+                  carbs: 34,
+                  fat: 10,
+                  fiber: 1,
+                  sugar: 30,
+                  saturated_fat: 6,
+                },
+              ],
+              error: null,
+            })),
+          })),
+        };
+      }
+
+      if (table === "nutrition_entries") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              order: vi.fn(() => ({
+                limit: vi.fn(async () => ({
+                  data: [],
+                  error: null,
+                })),
+              })),
+            })),
+          })),
+          insert: vi.fn(() => Promise.resolve({ error: null })),
+        };
+      }
+
+      if (table === "nutrition_days") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn(async () => ({
+                  data: { id: "target-day" },
+                  error: null,
+                })),
+              })),
+            })),
+          })),
+        };
+      }
+
+      throw new Error(`Unexpected table ${table}`);
+    });
+
+    const { POST } = await import("./route");
+    const request = new Request("http://localhost/api/agent/nutrition-ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-AGENT-TOKEN": "test-token",
+      },
+      body: JSON.stringify({
+        command: "add a serving of m&m's to snack",
+        selectedDate: "2026-05-03",
+        mode: "execute",
+      }),
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(payload.error).toContain(`I couldn't find a reliable food match`);
+  });
 });
