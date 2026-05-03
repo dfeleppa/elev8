@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const { origin } = new URL(request.url);
 
   return NextResponse.json({
-    openapi: "3.0.3",
+    openapi: "3.1.0",
     info: {
       title: "Elev8 Nutrition Agent API",
       version: "1.0.0",
@@ -73,13 +73,13 @@ export async function GET(request: Request) {
           properties: {
             source: { type: "string", enum: ["local", "usda"] },
             name: { type: "string" },
-            calories: { type: "number", nullable: true },
-            protein: { type: "number", nullable: true },
-            carbs: { type: "number", nullable: true },
-            fat: { type: "number", nullable: true },
-            fiber: { type: "number", nullable: true },
-            sugar: { type: "number", nullable: true },
-            saturated_fat: { type: "number", nullable: true },
+            calories: { type: ["number", "null"] },
+            protein: { type: ["number", "null"] },
+            carbs: { type: ["number", "null"] },
+            fat: { type: ["number", "null"] },
+            fiber: { type: ["number", "null"] },
+            sugar: { type: ["number", "null"] },
+            saturated_fat: { type: ["number", "null"] },
           },
         },
         NutritionCommandResponse: {
