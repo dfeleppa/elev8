@@ -5,11 +5,13 @@ import type { NextRequest } from "next/server";
 const PUBLIC_FILE = /\.[^/]+$/;
 
 function isFullyPublic(pathname: string) {
+  if (pathname === "/") return true;
   if (PUBLIC_FILE.test(pathname)) return true;
   if (pathname === "/favicon.ico") return true;
   if (pathname.startsWith("/_next")) return true;
   if (pathname.startsWith("/api/auth")) return true;
   if (pathname.startsWith("/api/agent")) return true;
+  if (pathname.startsWith("/api/mcp")) return true;
   if (pathname.startsWith("/api/cron")) return true;
   if (pathname.startsWith("/api/webhooks/stripe")) return true;
   return false;

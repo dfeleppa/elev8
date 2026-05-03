@@ -40,3 +40,14 @@ export function isAuthorizedAgentRequest(request: Request, expectedToken: string
   }
   return constantTimeEqual(headerToken, expectedToken);
 }
+
+export function isAuthorizedAgentBearerRequest(request: Request, expectedToken: string) {
+  const authorization = request.headers.get("authorization")?.trim() ?? "";
+  const [scheme, token] = authorization.split(/\s+/, 2);
+
+  if (scheme?.toLowerCase() !== "bearer" || !token || !expectedToken) {
+    return false;
+  }
+
+  return constantTimeEqual(token, expectedToken);
+}
