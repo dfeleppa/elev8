@@ -21,10 +21,9 @@ export async function GET(request: Request) {
     components: {
       securitySchemes: {
         AgentToken: {
-          type: "apiKey",
-          in: "header",
-          name: "X-AGENT-TOKEN",
-          description: "Set this to your AGENT_NUTRITION_TOKEN value.",
+          type: "http",
+          scheme: "bearer",
+          description: "Set this bearer token to your AGENT_NUTRITION_TOKEN value.",
         },
       },
       schemas: {
@@ -204,7 +203,7 @@ export async function GET(request: Request) {
               },
             },
             "401": {
-              description: "Missing or invalid agent token.",
+              description: "Missing or invalid bearer token.",
               content: {
                 "application/json": {
                   schema: { $ref: "#/components/schemas/ErrorResponse" },

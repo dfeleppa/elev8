@@ -367,13 +367,17 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
             </label>
 
             <label className="block space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Auth Header</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Bearer Format</span>
               <input
                 readOnly
-                value="X-AGENT-TOKEN"
+                value={`Authorization: Bearer ${bearerPreview}`}
                 className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200"
               />
             </label>
+
+            <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+              ChatGPT Action auth should use <span className="text-slate-100">API Key</span> with <span className="text-slate-100">Bearer</span>, not a custom header.
+            </p>
 
             <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
               Recommended behavior: call in <span className="text-slate-100">preview</span> mode first for add/copy requests, show the result to the user, then call again with

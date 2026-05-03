@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { getAgentConfig, isAuthorizedAgentRequest } from "@/lib/agent-auth";
+import {
+  getAgentConfig,
+  isAuthorizedAgentBearerRequest,
+  isAuthorizedAgentRequest,
+} from "@/lib/agent-auth";
 import {
   executeAddFood,
   executeCopyMeal,
@@ -18,13 +22,20 @@ function normalizeMode(value: unknown): RequestMode {
   return value === "execute" ? "execute" : "preview";
 }
 
+function isAuthorized(request: Request, expectedToken: string) {
+  return (
+    isAuthorizedAgentBearerRequest(request, expectedToken) ||
+    isAuthorizedAgentRequest(request, expectedToken)
+  );
+}
+
 export async function POST(request: Request) {
   const { errorResponse, token, memberId } = getAgentConfig();
   if (errorResponse) {
     return errorResponse;
   }
 
-  if (!isAuthorizedAgentRequest(request, token)) {
+  if (!isAuthorized(request, token)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
