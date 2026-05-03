@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import OwnerSettingsSubheader from "@/components/owner/OwnerSettingsSubheader";
 
 type PermissionRow = {
@@ -108,6 +108,8 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
   const [permissionRows, setPermissionRows] = useState<PermissionRow[]>(starterPermissionRows);
   const [generatedToken, setGeneratedToken] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copiedValue, setCopiedValue] = useState("");
+  const [baseUrl, setBaseUrl] = useState("");
 
   const [tokenForTest, setTokenForTest] = useState("");
   const [entryIdForTest, setEntryIdForTest] = useState("");
@@ -137,6 +139,30 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
       );
     }, 0);
   }, [permissionRows]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setBaseUrl(window.location.origin);
+    }
+  }, []);
+
+  const openApiUrl = baseUrl
+    ? `${baseUrl}/api/agent/openapi/nutrition-ai`
+    : "/api/agent/openapi/nutrition-ai";
+  const nutritionAiUrl = baseUrl ? `${baseUrl}/api/agent/nutrition-ai` : "/api/agent/nutrition-ai";
+  const mcpUrl = baseUrl ? `${baseUrl}/api/mcp/nutrition` : "/api/mcp/nutrition";
+  const bearerPreview = generatedToken || "YOUR_AGENT_NUTRITION_TOKEN";
+  const codexConfigSnippet = `{
+  "mcpServers": {
+    "elev8-nutrition": {
+      "type": "streamable-http",
+      "url": "${mcpUrl}",
+      "headers": {
+        "Authorization": "Bearer ${bearerPreview}"
+      }
+    }
+  }
+}`;
 
   const togglePermission = (
     key: PermissionRow["key"],
@@ -170,6 +196,16 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
       setTimeout(() => setCopied(false), 1600);
     } catch {
       setCopied(false);
+    }
+  };
+
+  const copyValue = async (value: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedValue(key);
+      setTimeout(() => setCopiedValue(""), 1600);
+    } catch {
+      setCopiedValue("");
     }
   };
 
@@ -299,6 +335,116 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
         </p>
       </header>
 
+      <section className="grid gap-6 lg:grid-cols-2">
+        <article className="rounded-[28px] border border-cyan-400/20 bg-cyan-400/5 p-6 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.2em] text-cyan-300/70">ChatGPT Setup</p>
+          <h2 className="mt-2 text-xl font-semibold text-slate-100">Import As A ChatGPT Action</h2>
+          <p className="mt-2 text-sm text-slate-300">
+            Use the import URL below in your ChatGPT action setup. It points to the natural-language nutrition endpoint, so prompts like
+            {" "}
+            <span className="text-slate-100">copy my dinner from yesterday to today</span>
+            {" "}
+            work without additional tool wiring.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            <label className="block space-y-1">
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">OpenAPI Import URL</span>
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  value={openApiUrl}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => void copyValue(openApiUrl, "openapi")}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200"
+                >
+                  {copiedValue === "openapi" ? "Copied" : "Copy"}
+                </button>
+              </div>
+            </label>
+
+            <label className="block space-y-1">
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Auth Header</span>
+              <input
+                readOnly
+                value="X-AGENT-TOKEN"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200"
+              />
+            </label>
+
+            <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+              Recommended behavior: call in <span className="text-slate-100">preview</span> mode first for add/copy requests, show the result to the user, then call again with
+              {" "}
+              <span className="text-slate-100">execute</span>
+              {" "}
+              after confirmation.
+            </p>
+          </div>
+        </article>
+
+        <article className="rounded-[28px] border border-pink-400/20 bg-pink-400/5 p-6 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.2em] text-pink-300/70">Codex Setup</p>
+          <h2 className="mt-2 text-xl font-semibold text-slate-100">Connect As An MCP Server</h2>
+          <p className="mt-2 text-sm text-slate-300">
+            Use the MCP endpoint below in Codex or another MCP client. It exposes structured nutrition tools for daily review, food search, and natural-language meal actions.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            <label className="block space-y-1">
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">MCP Endpoint</span>
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  value={mcpUrl}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => void copyValue(mcpUrl, "mcp")}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200"
+                >
+                  {copiedValue === "mcp" ? "Copied" : "Copy"}
+                </button>
+              </div>
+            </label>
+
+            <label className="block space-y-1">
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Authorization Header</span>
+              <input
+                readOnly
+                value={`Authorization: Bearer ${bearerPreview}`}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200"
+              />
+            </label>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+              Available tools: <span className="text-slate-100">get_daily_nutrition</span>,{" "}
+              <span className="text-slate-100">search_nutrition_foods</span>, and{" "}
+              <span className="text-slate-100">manage_nutrition</span>.
+            </div>
+
+            <label className="block space-y-1">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Copy-Ready Codex Config</span>
+                <button
+                  type="button"
+                  onClick={() => void copyValue(codexConfigSnippet, "codex-config")}
+                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200"
+                >
+                  {copiedValue === "codex-config" ? "Copied" : "Copy"}
+                </button>
+              </div>
+              <pre className="overflow-auto rounded-2xl border border-white/10 bg-slate-950/40 p-4 text-xs text-slate-200">
+                {codexConfigSnippet}
+              </pre>
+            </label>
+          </div>
+        </article>
+      </section>
+
       <section className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -409,6 +555,15 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
             <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Configured Agent Member ID</span>
             <input
               value={configuredMemberId || "Not set"}
+              readOnly
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 focus:border-cyan-400 focus:outline-none"
+            />
+          </label>
+
+          <label className="mt-3 block space-y-1">
+            <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Natural-Language Endpoint</span>
+            <input
+              value={nutritionAiUrl}
               readOnly
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 focus:border-cyan-400 focus:outline-none"
             />
