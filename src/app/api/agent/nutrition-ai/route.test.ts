@@ -14,6 +14,8 @@ describe("agent nutrition-ai POST", () => {
     process.env.OPENAI_API_KEY = "";
     process.env.AGENT_NUTRITION_TOKEN = "test-token";
     process.env.AGENT_MEMBER_ID = "member-1";
+    process.env.USDA_API_KEY = "";
+    vi.unstubAllGlobals();
   });
 
   it("returns a preview for copy commands", async () => {
@@ -313,5 +315,114 @@ describe("agent nutrition-ai POST", () => {
 
     expect(response.status).toBe(404);
     expect(payload.error).toContain(`I couldn't find a reliable food match`);
+  });
+
+  it("uses the selected USDA candidate even when candidateName includes nutrition text", async () => {
+    let insertedEntry: Record<string, unknown> | null = null;
+    process.env.USDA_API_KEY = "test-usda-key";
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            foods: [
+              {
+                description: "Candies, MARS SNACKFOOD US, M&M's Milk Chocolate Candies",
+                foodNutrients: [
+                  { nutrientId: 1008, value: 492 },
+                  { nutrientId: 1003, value: 4 },
+                  { nutrientId: 1005, value: 71 },
+                  { nutrientId: 1004, value: 21 },
+                  { nutrientId: 2000, value: 64 },
+                  { nutrientId: 1079, value: 3 },
+                ],
+              },
+            ],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    fromMock.mockImplementation((table: string) => {
+      if (table === "nutrition_custom_foods") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(async () => ({
+              data: [],
+              error: null,
+            })),
+          })),
+        };
+      }
+
+      if (table === "nutrition_entries") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              order: vi.fn(() => ({
+                limit: vi.fn(async () => ({
+                  data: [],
+                  error: null,
+                })),
+              })),
+            })),
+          })),
+          insert: vi.fn((payload: Record<string, unknown>) => {
+            insertedEntry = payload;
+            return Promise.resolve({ error: null });
+          }),
+        };
+      }
+
+      if (table === "nutrition_days") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn(async () => ({
+                  data: { id: "target-day" },
+                  error: null,
+                })),
+              })),
+            })),
+          })),
+        };
+      }
+
+      throw new Error(`Unexpected table ${table}`);
+    });
+
+    const { POST } = await import("./route");
+    const request = new Request("http://localhost/api/agent/nutrition-ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-AGENT-TOKEN": "test-token",
+      },
+      body: JSON.stringify({
+        command: "add m&m's to snack",
+        selectedDate: "2026-05-03",
+        mode: "execute",
+        candidateName: "Candies, MARS SNACKFOOD US, M&M's Milk Chocolate Candies - 492 cal, 4g protein, 71g carbs, 21g fat",
+      }),
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.result.foodName).toBe("Candies, MARS SNACKFOOD US, M&M's Milk Chocolate Candies");
+    expect(insertedEntry).toMatchObject({
+      member_id: "member-1",
+      day_id: "target-day",
+      meal_type: "snack",
+      entry_name: "Candies, MARS SNACKFOOD US, M&M's Milk Chocolate Candies",
+      calories: 492,
+      protein: 4,
+      carbs: 71,
+      fat: 21,
+    });
   });
 });

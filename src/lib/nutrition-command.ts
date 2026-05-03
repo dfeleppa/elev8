@@ -466,6 +466,33 @@ function normalizeQuery(value: string) {
     .trim();
 }
 
+function stripCandidateMetadata(value: string) {
+  return value
+    .trim()
+    .replace(/\s+[—-]\s+\d+\s*cal\b.*$/i, "")
+    .replace(/\s+[—-]\s+\d+\s*kcal\b.*$/i, "")
+    .trim();
+}
+
+function foodNamesMatch(candidateName: string, requestedName: string) {
+  const candidate = normalizeQuery(candidateName);
+  const requested = normalizeQuery(stripCandidateMetadata(requestedName));
+
+  if (!candidate || !requested) {
+    return false;
+  }
+
+  if (candidate === requested) {
+    return true;
+  }
+
+  if (requested.startsWith(candidate) || candidate.startsWith(requested)) {
+    return true;
+  }
+
+  return requested.includes(candidate) && candidate.length >= 8;
+}
+
 function scoreFoodMatch(candidateName: string, query: string) {
   const candidate = normalizeQuery(candidateName);
   const normalizedQuery = normalizeQuery(query);
@@ -717,15 +744,43 @@ function pickConfidentCandidate(candidates: RankedFoodCandidate[], query: string
 }
 
 export async function resolveFoodCandidate(memberId: string, query: string, candidateName?: string) {
-  const candidates = await searchFoodCandidates(memberId, query, 5);
   if (candidateName) {
-    const match = candidates.find((item) => item.candidate.name.trim().toLowerCase() === candidateName.trim().toLowerCase());
-    if (match) {
-      return match;
+    const requestedName = stripCandidateMetadata(candidateName);
+    const merged = new Map<string, ResolvedFoodCandidate>();
+
+    for (const searchQuery of [requestedName, query]) {
+      if (!searchQuery.trim()) {
+        continue;
+      }
+
+      const candidates = await searchFoodCandidates(memberId, searchQuery, 8);
+      for (const item of candidates) {
+        const key = normalizeQuery(item.candidate.name);
+        if (!merged.has(key)) {
+          merged.set(key, item);
+        }
+      }
     }
+
+    const candidates = Array.from(merged.values());
+    const exactNormalizedMatch = candidates.find((item) => normalizeQuery(item.candidate.name) === normalizeQuery(requestedName));
+    if (exactNormalizedMatch) {
+      return exactNormalizedMatch;
+    }
+
+    const namedMatches = candidates.filter((item) => foodNamesMatch(item.candidate.name, requestedName));
+    if (namedMatches.length === 1) {
+      return namedMatches[0];
+    }
+
+    if (namedMatches.length > 1) {
+      return pickConfidentCandidate(rankResolvedCandidates(namedMatches, requestedName), requestedName);
+    }
+
     return null;
   }
 
+  const candidates = await searchFoodCandidates(memberId, query, 5);
   const ranked = rankResolvedCandidates(candidates, query);
   return pickConfidentCandidate(ranked, query);
 }
