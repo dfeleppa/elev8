@@ -5,12 +5,13 @@
  * through Supabase Auth so that the same accounts work on web and iOS.
  *
  * The supabaseAdmin client uses the SERVICE_ROLE_KEY, which bypasses RLS
- * but still routes through the Auth server — meaning password verification
+ * but still routes through the Auth server, meaning password verification
  * and OAuth token handling are handled correctly.
  */
 
-import { supabaseAdmin } from "./supabase-admin";
 import type { User } from "@supabase/supabase-js";
+
+import { supabaseAdmin } from "./supabase-admin";
 
 function normalizeEmail(value: string | null | undefined): string {
   return value?.trim().toLowerCase() ?? "";
@@ -34,7 +35,33 @@ async function findAuthUserIdByEmail(email: string): Promise<string | null> {
   return row.supabase_auth_uid ?? row.id ?? null;
 }
 
-// ─── Registration ────────────────────────────────────────────────────────────
+async function findSupabaseAuthUserByEmail(email: string): Promise<User | null> {
+  let page = 1;
+
+  while (page <= 50) {
+    const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({
+      page,
+      perPage: 200,
+    });
+
+    if (error || !list?.users?.length) {
+      return null;
+    }
+
+    const match = list.users.find((user) => user.email?.toLowerCase().trim() === email);
+    if (match) {
+      return match as User;
+    }
+
+    if (list.users.length < 200) {
+      return null;
+    }
+
+    page += 1;
+  }
+
+  return null;
+}
 
 export interface RegisterResult {
   ok: true;
@@ -48,7 +75,7 @@ export type RegisterError =
   | { ok: false; code: "internal_error" };
 
 /**
- * Creates a new user account in Supabase Auth AND upserts their app_users record.
+ * Creates a new user account in Supabase Auth and upserts their app_users row.
  * This is the single registration entry point for the web app.
  */
 export async function registerWithEmailPassword(
@@ -61,29 +88,77 @@ export async function registerWithEmailPassword(
     return { ok: false, code: "internal_error" };
   }
 
-  // Check if already in app_users
+  const trimmedFullName = fullName.trim();
+
   const { data: existingAppUser } = await supabaseAdmin
     .from("app_users")
-    .select("id")
+    .select("id, full_name, supabase_auth_uid")
     .eq("email", normalizedEmail)
     .maybeSingle();
 
   if (existingAppUser) {
-    // Already registered — don't allow re-registration with password
-    return { ok: false, code: "already_exists" };
+    const linkedAuthUser = await findSupabaseAuthUserByEmail(normalizedEmail);
+
+    if (linkedAuthUser?.id) {
+      await supabaseAdmin
+        .from("app_users")
+        .update({
+          supabase_auth_uid: linkedAuthUser.id,
+          full_name: trimmedFullName || existingAppUser.full_name ?? null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingAppUser.id);
+
+      return { ok: false, code: "already_exists" };
+    }
+
+    const { data: createdAuthUser, error: createLegacyAuthError } =
+      await supabaseAdmin.auth.admin.createUser({
+        email: normalizedEmail,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: trimmedFullName || existingAppUser.full_name ?? undefined,
+        },
+      });
+
+    if (createLegacyAuthError || !createdAuthUser.user?.id) {
+      return {
+        ok: false,
+        code: "supabase_error",
+        message: createLegacyAuthError?.message ?? "Failed to create account.",
+      };
+    }
+
+    const supabaseUserId = createdAuthUser.user.id;
+    const { error: updateExistingUserError } = await supabaseAdmin
+      .from("app_users")
+      .update({
+        full_name: trimmedFullName || existingAppUser.full_name ?? null,
+        supabase_auth_uid: supabaseUserId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingAppUser.id);
+
+    if (updateExistingUserError) {
+      console.error(
+        "[supabase-auth-admin] Failed to attach Supabase Auth user to legacy app_users row:",
+        updateExistingUserError.message
+      );
+    }
+
+    return { ok: true, supabaseUserId, appUserId: existingAppUser.id };
   }
 
-  // Create user in Supabase Auth
   const { data: supabaseUser, error: supabaseError } =
     await supabaseAdmin.auth.admin.createUser({
       email: normalizedEmail,
       password,
       email_confirm: true,
-      user_metadata: { full_name: fullName },
+      user_metadata: { full_name: trimmedFullName },
     });
 
   if (supabaseError) {
-    // Handle "user already exists" from Supabase Auth
     if (supabaseError.message.includes("already been registered")) {
       return { ok: false, code: "already_exists" };
     }
@@ -92,28 +167,24 @@ export async function registerWithEmailPassword(
 
   const supabaseUserId = (supabaseUser.user as User).id;
 
-  // Upsert app_users record (for full_name, etc.)
   const { error: appUserError } = await supabaseAdmin
     .from("app_users")
     .upsert(
       {
-        id: supabaseUserId, // use Supabase Auth user ID as the app_users PK
+        id: supabaseUserId,
         email: normalizedEmail,
-        full_name: fullName.trim(),
+        full_name: trimmedFullName,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "email" }
     );
 
   if (appUserError) {
-    // Non-fatal — user exists in Supabase Auth, which is what matters for login
     console.error("[supabase-auth-admin] Failed to upsert app_users:", appUserError.message);
   }
 
   return { ok: true, supabaseUserId, appUserId: supabaseUserId };
 }
-
-// ─── Credentials Login ───────────────────────────────────────────────────────
 
 export interface LoginResult {
   ok: true;
@@ -141,10 +212,6 @@ export async function loginWithEmailPassword(
     return { ok: false, code: "internal_error" };
   }
 
-  // Step 1: try Supabase Auth verification
-  // signInWithPassword on the admin client uses the service role key.
-  // This bypasses RLS but still routes through the Auth server,
-  // which correctly verifies the password against the Supabase Auth hash.
   const { data: signInData, error: signInError } =
     await supabaseAdmin.auth.signInWithPassword({
       email: normalizedEmail,
@@ -161,8 +228,6 @@ export async function loginWithEmailPassword(
     };
   }
 
-  // Step 2: check if user exists in app_users but not in Supabase Auth
-  // (legacy migration case: user registered before this change)
   const { data: appUser } = await supabaseAdmin
     .from("app_users")
     .select("id, email, full_name, password_hash")
@@ -170,16 +235,23 @@ export async function loginWithEmailPassword(
     .maybeSingle();
 
   if (appUser?.password_hash) {
-    // Migrate: create Supabase Auth account for this user
-    const { error: migrateError } = await supabaseAdmin.auth.admin.createUser({
-      email: normalizedEmail,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name: appUser.full_name ?? undefined },
-    });
+    const { data: migratedUser, error: migrateError } =
+      await supabaseAdmin.auth.admin.createUser({
+        email: normalizedEmail,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: appUser.full_name ?? undefined },
+      });
 
-    if (!migrateError) {
-      // Return success — they can log in via Supabase Auth next time
+    if (!migrateError && migratedUser.user?.id) {
+      await supabaseAdmin
+        .from("app_users")
+        .update({
+          supabase_auth_uid: migratedUser.user.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", appUser.id);
+
       return {
         ok: true,
         userId: appUser.id,
@@ -192,13 +264,9 @@ export async function loginWithEmailPassword(
   return { ok: false, code: "invalid_credentials" };
 }
 
-// ─── OAuth user upsert (used by NextAuth callbacks) ─────────────────────────
-
 /**
  * Ensures an OAuth user exists in Supabase Auth.
  * Called from NextAuth's signIn callback when a user logs in via Google/Apple.
- *
- * Returns the Supabase Auth user ID, or null if the user should be rejected.
  */
 export async function upsertSupabaseAuthOAuthUser(
   email: string,
@@ -209,7 +277,6 @@ export async function upsertSupabaseAuthOAuthUser(
     return { ok: false, redirect: "/login?error=invalid_email" };
   }
 
-  // Upsert into app_users (existing logic, preserved)
   const { data: existingAppUser } = await supabaseAdmin
     .from("app_users")
     .select("id, email")
@@ -236,18 +303,11 @@ export async function upsertSupabaseAuthOAuthUser(
     });
   }
 
-  // Cached path: if app_users already knows the Supabase Auth uid (set by a
-  // prior login or password registration where app_users.id IS the auth uid),
-  // reuse it instead of paginating the entire users table.
   const cachedAuthUid = await findAuthUserIdByEmail(normalizedEmail);
   if (cachedAuthUid) {
     return { ok: true, supabaseUserId: cachedAuthUid };
   }
 
-  // Cold path: create the Supabase Auth user. If they already exist
-  // (e.g. registered via password before our cache was populated),
-  // createUser returns an "already_exists" style error; we then fall back
-  // to a paginated lookup so subsequent logins are fast.
   const { data: newUser, error } = await supabaseAdmin.auth.admin.createUser({
     email: normalizedEmail,
     email_confirm: true,
@@ -257,32 +317,13 @@ export async function upsertSupabaseAuthOAuthUser(
   let supabaseUserId: string | null = newUser?.user?.id ?? null;
 
   if (error || !supabaseUserId) {
-    // Slow fallback: scan auth users for this email. This only runs once per
-    // user (we cache the uid below) and only when the user pre-existed in
-    // Supabase Auth without a synced app_users row.
-    let page = 1;
-    while (page <= 50) {
-      const { data: list, error: listError } = await supabaseAdmin.auth.admin.listUsers({
-        page,
-        perPage: 200,
-      });
-      if (listError || !list?.users?.length) break;
-      const match = list.users.find((u) => u.email === normalizedEmail);
-      if (match) {
-        supabaseUserId = match.id;
-        break;
-      }
-      if (list.users.length < 200) break;
-      page += 1;
-    }
+    supabaseUserId = (await findSupabaseAuthUserByEmail(normalizedEmail))?.id ?? null;
   }
 
   if (!supabaseUserId) {
     return { ok: false, redirect: "/login?error=oauth_create_failed" };
   }
 
-  // Cache the auth uid back to app_users so the next OAuth login skips the
-  // expensive listUsers fallback entirely.
   await supabaseAdmin
     .from("app_users")
     .update({
