@@ -104,7 +104,7 @@ export async function registerWithEmailPassword(
         .from("app_users")
         .update({
           supabase_auth_uid: linkedAuthUser.id,
-          full_name: trimmedFullName || existingAppUser.full_name ?? null,
+          full_name: (trimmedFullName || existingAppUser.full_name) ?? null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", existingAppUser.id);
@@ -118,7 +118,7 @@ export async function registerWithEmailPassword(
         password,
         email_confirm: true,
         user_metadata: {
-          full_name: trimmedFullName || existingAppUser.full_name ?? undefined,
+          full_name: (trimmedFullName || existingAppUser.full_name) ?? undefined,
         },
       });
 
@@ -134,7 +134,7 @@ export async function registerWithEmailPassword(
     const { error: updateExistingUserError } = await supabaseAdmin
       .from("app_users")
       .update({
-        full_name: trimmedFullName || existingAppUser.full_name ?? null,
+        full_name: (trimmedFullName || existingAppUser.full_name) ?? null,
         supabase_auth_uid: supabaseUserId,
         updated_at: new Date().toISOString(),
       })
