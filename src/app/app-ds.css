@@ -113,6 +113,46 @@
 .accent-pink-quiet   { border-left: 2px solid var(--pink); }
 .accent-violet-quiet { border-left: 2px solid var(--violet); }
 .accent-lime-quiet   { border-left: 2px solid var(--lime); }
+.accent-amber-quiet  { border-left: 2px solid var(--amber); }
+.accent-success-quiet{ border-left: 2px solid var(--success-text); }
+
+/* ---------- Additional pill variants (success/danger/ink) ---------- */
+.pill-success { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-line); }
+.pill-danger  { background: var(--danger-bg);  color: var(--danger-text);  border: 1px solid var(--danger-line); }
+.pill-ink     { background: var(--input-bg);   color: var(--text);          border: 1px solid var(--line-strong); }
+
+/* ---------- Numeric heading (tabular nums) ---------- */
+.stat-num {
+  font-family: var(--font-brand-heading);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ---------- Underlined tab strip (used in Gym Dashboard topbar) ---------- */
+.tab-underline {
+  position: relative;
+  padding: 14px 2px;
+  color: var(--text-soft);
+  font-weight: 500;
+  font-size: 13.5px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.tab-underline:hover { color: var(--text); }
+.tab-underline-active { color: var(--text); }
+.tab-underline-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+}
 
 /* ---------- Typing indicator (chat) ---------- */
 .ds-typing span {
