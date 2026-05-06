@@ -995,6 +995,44 @@ export default function HealthNutritionPage() {
     });
   }
 
+  async function beginEditRecentFood(food: LibraryFood) {
+    const match = myFoods.find((item) => item.name.toLowerCase() === food.name.toLowerCase());
+    if (match) {
+      beginEditFood(match);
+      return;
+    }
+    setDialogSaving(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/foods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: food.name,
+          servingSize: food.serving_size?.toString() ?? "1",
+          servingUnit: food.serving_unit ?? DEFAULT_SERVING_UNIT,
+          calories: food.calories?.toString() ?? "",
+          protein: food.protein?.toString() ?? "",
+          carbs: food.carbs?.toString() ?? "",
+          fat: food.fat?.toString() ?? "",
+          sugar: food.sugar?.toString() ?? "",
+          fiber: food.fiber?.toString() ?? "",
+          saturatedFat: food.saturated_fat?.toString() ?? "",
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.food) {
+        setError(payload?.error ?? "Failed to load food for editing.");
+        return;
+      }
+      setMyFoods((prev) => [payload.food, ...prev]);
+      myFoodsFetchedAtRef.current = Date.now();
+      beginEditFood(payload.food);
+    } finally {
+      setDialogSaving(false);
+    }
+  }
+
   async function saveEditedFood(foodId: string) {
     setDialogSaving(true);
     setError(null);
@@ -1492,7 +1530,7 @@ export default function HealthNutritionPage() {
                     onClick={() => setDialogTab(tab)}
                     className={`rounded-full border px-4 py-1 text-sm font-semibold transition ${
                       dialogTab === tab
-                        ? "border-[var(--cyan)]/40 bg-[var(--cyan)]/12 text-[var(--cyan)]"
+                        ? "border-[var(--pink)]/50 bg-[var(--pink)]/12 text-[var(--pink)]"
                         : "border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:text-[var(--text)]"
                     }`}
                   >
@@ -1721,17 +1759,49 @@ export default function HealthNutritionPage() {
                           <span className="flex items-center gap-2">
                             {activeMealDialog ? (
                               <>
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  value={draftValue}
-                                  onChange={(event) =>
-                                    setQuantityDrafts((prev) => ({ ...prev, [rowKey]: event.target.value }))
-                                  }
-                                  onFocus={(event) => event.currentTarget.select()}
-                                  aria-label="Servings"
-                                  className="w-14 rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-1 text-center text-xs text-[var(--text)] focus:border-white/30 focus:outline-none"
-                                />
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    aria-label="Decrease servings"
+                                    onClick={() =>
+                                      setQuantityDrafts((prev) => {
+                                        const current = Number(prev[rowKey] ?? defaultQty);
+                                        const base = Number.isFinite(current) ? current : Number(defaultQty);
+                                        const next = Math.max(1, Math.round(base) - 1);
+                                        return { ...prev, [rowKey]: formatServingSize(next) };
+                                      })
+                                    }
+                                    className="grid h-7 w-7 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--text)]"
+                                  >
+                                    −
+                                  </button>
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={draftValue}
+                                    onChange={(event) =>
+                                      setQuantityDrafts((prev) => ({ ...prev, [rowKey]: event.target.value }))
+                                    }
+                                    onFocus={(event) => event.currentTarget.select()}
+                                    aria-label="Servings"
+                                    className="w-14 rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-1 text-center text-xs text-[var(--text)] focus:border-white/30 focus:outline-none"
+                                  />
+                                  <button
+                                    type="button"
+                                    aria-label="Increase servings"
+                                    onClick={() =>
+                                      setQuantityDrafts((prev) => {
+                                        const current = Number(prev[rowKey] ?? defaultQty);
+                                        const base = Number.isFinite(current) ? current : Number(defaultQty);
+                                        const next = Math.max(1, Math.round(base) + 1);
+                                        return { ...prev, [rowKey]: formatServingSize(next) };
+                                      })
+                                    }
+                                    className="grid h-7 w-7 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--text)]"
+                                  >
+                                    +
+                                  </button>
+                                </div>
                                 <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">srv</span>
                                 <button
                                   type="button"
@@ -1765,6 +1835,16 @@ export default function HealthNutritionPage() {
                                   Delete
                                 </button>
                               </>
+                            ) : null}
+                            {dialogTab === "recent" ? (
+                              <button
+                                type="button"
+                                disabled={dialogSaving}
+                                onClick={() => beginEditRecentFood(food)}
+                                className="rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-1 text-xs text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-60"
+                              >
+                                Edit
+                              </button>
                             ) : null}
                           </span>
                         </div>
