@@ -1463,13 +1463,13 @@ export default function HealthNutritionPage() {
                                       }}
                                       className="w-12 rounded border border-[var(--line-strong)] bg-[var(--panel-2)] px-1 py-0.5 text-[11px] text-[var(--text)] focus:border-white/30 focus:outline-none"
                                       inputMode="decimal"
-                                      aria-label="Edit serving size"
+                                      aria-label="Edit servings"
                                     />
                                     <button
                                       type="button"
                                       onClick={() => void saveServingSize(entry.id)}
                                       className="rounded-full p-0.5 text-[var(--text-muted)] transition hover:bg-[var(--panel)]"
-                                      aria-label="Save serving size"
+                                      aria-label="Save servings"
                                     >
                                       <Check className="h-3 w-3" aria-hidden="true" />
                                     </button>
@@ -1481,7 +1481,7 @@ export default function HealthNutritionPage() {
                                       type="button"
                                       onClick={() => openServingSizeEditor(entry.id, entry.quantity)}
                                       className="rounded-full p-0.5 text-[var(--text-soft)] opacity-0 transition hover:text-[var(--text)] group-hover:opacity-100"
-                                      aria-label="Edit serving size"
+                                      aria-label="Edit servings"
                                     >
                                       <Pencil className="h-2.5 w-2.5" aria-hidden="true" />
                                     </button>
@@ -1585,14 +1585,15 @@ export default function HealthNutritionPage() {
                     />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Serving Size</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Amount per Serving</span>
                     <input
                       value={createFoodDraft.servingSize}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, servingSize: event.target.value }))}
-                      placeholder="1"
+                      placeholder="e.g. 84"
                       inputMode="decimal"
                       className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                     />
+                    <span className="block text-[10px] text-[var(--text-soft)]">How much is in one serving (e.g. 84 grams).</span>
                   </label>
                   <label className="space-y-1">
                     <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Unit</span>
@@ -1904,14 +1905,15 @@ export default function HealthNutritionPage() {
                       />
                     </label>
                     <label className="space-y-1">
-                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Serving Size</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Amount per Serving</span>
                       <input
                         value={editFoodDraft.servingSize}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, servingSize: event.target.value }))}
-                        placeholder="1"
+                        placeholder="e.g. 84"
                         inputMode="decimal"
                         className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       />
+                      <span className="block text-[10px] text-[var(--text-soft)]">How much is in one serving (e.g. 84 grams).</span>
                     </label>
                     <label className="space-y-1">
                       <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Unit</span>
