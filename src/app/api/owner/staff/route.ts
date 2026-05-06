@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 
   // Promotable = members roster entries not already in staff
   const { data: memberRows, error: memberError } = await supabaseAdmin
-    .from("members")
+    .from("app_users")
     .select("first_name, last_name, email, role, membership")
     .order("created_at", { ascending: true });
 
