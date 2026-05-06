@@ -15,11 +15,6 @@ const fontBody = Manrope({
 export const metadata: Metadata = {
   title: "Lyfe Fitness",
   description: "Your gym management platform — training, nutrition, and performance.",
-  icons: {
-    icon: "/icon.png",
-    shortcut: "/icon.png",
-    apple: "/icon.png",
-  },
 };
 
 export default function RootLayout({
