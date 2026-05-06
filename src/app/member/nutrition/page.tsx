@@ -148,6 +148,34 @@ function formatServing(size: number | null | undefined, unit: string | null | un
   return `${sizeStr} ${unitStr}`;
 }
 
+const SERVING_UNIT_ABBREV: Record<string, string> = {
+  gram: "g",
+  grams: "g",
+  ounce: "oz",
+  ounces: "oz",
+  milliliter: "ml",
+  milliliters: "ml",
+  "fluid ounce": "fl oz",
+  "fluid ounces": "fl oz",
+};
+
+function formatTotalAmount(
+  servings: number,
+  size: number | null | undefined,
+  unit: string | null | undefined,
+): string | null {
+  if (typeof size !== "number" || !Number.isFinite(size) || size <= 0) return null;
+  if (!Number.isFinite(servings) || servings <= 0) return null;
+  const total = servings * size;
+  const safeUnit = (unit ?? "").trim().toLowerCase();
+  const abbrev = SERVING_UNIT_ABBREV[safeUnit];
+  if (abbrev) {
+    return `${formatGrams(total)}${abbrev}`;
+  }
+  const u = safeUnit || "serving";
+  return `${formatGrams(total)} ${total === 1 ? u : `${u}s`}`;
+}
+
 function formatServingSize(value: number) {
   return value.toFixed(2);
 }
@@ -1738,6 +1766,8 @@ export default function HealthNutritionPage() {
                         const rowKey = `${dialogTab}-${food.id}`;
                         const defaultQty = formatServingSize(toEntryQuantity(food.quantity));
                         const draftValue = quantityDrafts[rowKey] ?? defaultQty;
+                        const draftServings = Number(draftValue);
+                        const totalAmount = formatTotalAmount(draftServings, food.serving_size, food.serving_unit);
                         const isAdding = addingFoodKey === rowKey;
                         const justAdded = addedFlashKey === rowKey;
                         return (
@@ -1750,6 +1780,9 @@ export default function HealthNutritionPage() {
                             {food.serving_size != null || (food.serving_unit ?? "").trim() ? (
                               <span className="mt-0.5 block text-[11px] uppercase tracking-[0.18em] text-[var(--text-soft)]">
                                 {formatServing(food.serving_size, food.serving_unit)}
+                                {totalAmount && draftServings !== 1 ? (
+                                  <span className="ml-1.5 text-[var(--text-muted)]">· total {totalAmount}</span>
+                                ) : null}
                               </span>
                             ) : null}
                             <span className="mt-1 block text-xs text-[var(--text-muted)]">
@@ -1802,7 +1835,9 @@ export default function HealthNutritionPage() {
                                     +
                                   </button>
                                 </div>
-                                <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">srv</span>
+                                <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                                  {totalAmount ? totalAmount : "srv"}
+                                </span>
                                 <button
                                   type="button"
                                   disabled={isAdding}
