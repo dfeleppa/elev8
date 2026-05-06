@@ -1,10 +1,9 @@
-import { getCanonicalAppUrl } from "./site-url";
-
 export const INSTAGRAM_OAUTH_STATE_COOKIE = "instagram_oauth_state";
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 const redirectUri =
   process.env.INSTAGRAM_OAUTH_REDIRECT_URI ??
-  `${getCanonicalAppUrl()}/api/oauth/instagram/callback`;
+  (appUrl ? `${appUrl}/api/oauth/instagram/callback` : undefined);
 
 export const META_OAUTH_SCOPES = [
   "pages_show_list",

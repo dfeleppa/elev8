@@ -2,8 +2,6 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { toCanonicalAppUrl } from "@/lib/site-url";
-
 const PUBLIC_FILE = /\.[^/]+$/;
 
 function isFullyPublic(pathname: string) {
@@ -25,12 +23,6 @@ function isAuthPage(pathname: string) {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Canonicalize host so auth callbacks and session cookies are always
-  // generated on the same origin.
-  if (request.nextUrl.hostname === "www.daneff.com" || request.nextUrl.hostname === "daneff.com") {
-    return NextResponse.redirect(toCanonicalAppUrl(request.url), 308);
-  }
 
   if (isFullyPublic(pathname)) {
     return NextResponse.next();
