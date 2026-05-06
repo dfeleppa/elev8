@@ -489,8 +489,9 @@ export default async function GymDashboardPage({
   const [metrics, membersResult] = await Promise.all([
     getGymMetrics(),
     supabaseAdmin
-      .from("members")
-      .select("id, first_name, last_name, email, membership, last_check_in, last_active, created_at, updated_at, birth_date, tags, tracks, status, attendance_count"),
+      .from("app_users")
+      .select("id, first_name, last_name, email, membership, last_check_in, last_active, created_at, updated_at, birth_date, tags, tracks, status, attendance_count")
+      .eq("role", "member"),
   ]);
 
   const members = (membersResult.data ?? []) as GymMemberRow[];

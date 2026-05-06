@@ -50,8 +50,9 @@ export default async function MembersPage() {
   }
 
   const { data, error: membersError } = await supabaseAdmin
-    .from("members")
+    .from("app_users")
     .select("*")
+    .eq("role", "member")
     .order("created_at", { ascending: false });
 
   const members = (data ?? []) as MemberRow[];
@@ -69,7 +70,7 @@ export default async function MembersPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Source Table</p>
-              <h2 className="mt-2 text-xl font-semibold text-slate-50">members</h2>
+              <h2 className="mt-2 text-xl font-semibold text-slate-50">app_users · role=member</h2>
             </div>
             <span className="text-xs text-slate-400">{members.length} rows</span>
           </div>
@@ -98,7 +99,7 @@ export default async function MembersPage() {
                       colSpan={Math.max(columns.length, 1)}
                       className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-sm text-slate-400"
                     >
-                      No rows found in members.
+                      No member rows found in app_users.
                     </td>
                   </tr>
                 ) : (
