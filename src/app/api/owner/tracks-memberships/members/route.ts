@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { data, error: dbError } = await supabaseAdmin
-    .from("members")
+    .from("app_users")
     .select("email, first_name, last_name, tracks")
     .order("created_at", { ascending: false });
 
@@ -68,7 +68,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const { data: existing, error: lookupError } = await supabaseAdmin
-    .from("members")
+    .from("app_users")
     .select("tracks")
     .eq("email", email)
     .single();
@@ -81,7 +81,7 @@ export async function PATCH(request: NextRequest) {
     : current.filter((name) => name !== trackName);
 
   const { error: updateError } = await supabaseAdmin
-    .from("members")
+    .from("app_users")
     .update({ tracks: toTrackString(next), updated_at: new Date().toISOString() })
     .eq("email", email);
 

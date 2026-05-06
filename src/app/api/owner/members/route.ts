@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   }
 
   const rich = await supabaseAdmin
-    .from("members")
+    .from("app_users")
     .select(RICH_SELECT)
     .order("created_at", { ascending: false });
 
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
   }
 
   const base = await supabaseAdmin
-    .from("members")
+    .from("app_users")
     .select(BASE_SELECT)
     .order("created_at", { ascending: false });
 

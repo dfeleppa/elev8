@@ -38,7 +38,7 @@ async function getOwnerMembers() {
     "first_name, last_name, membership, last_check_in, mrr, created_at, updated_at, email, role";
 
   const richQuery = await supabaseAdmin
-    .from("members")
+    .from("app_users")
     .select(richSelect)
     .order("created_at", { ascending: false });
 
@@ -47,7 +47,7 @@ async function getOwnerMembers() {
   }
 
   return supabaseAdmin
-    .from("members")
+    .from("app_users")
     .select(baseSelect)
     .order("created_at", { ascending: false });
 }
