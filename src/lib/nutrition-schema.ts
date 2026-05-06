@@ -14,6 +14,8 @@ const OPTIONAL_NUTRITION_COLUMNS = [
   "fiber_grams",
   "sugar",
   "saturated_fat",
+  "serving_size",
+  "serving_unit",
 ] as const;
 
 export function isMissingOptionalNutritionColumnError(error: unknown) {

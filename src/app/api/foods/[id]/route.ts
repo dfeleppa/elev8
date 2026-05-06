@@ -17,6 +17,14 @@ function toOptionalDecimal(value: unknown) {
   return Math.max(0, parsed);
 }
 
+function toOptionalString(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
@@ -43,6 +51,8 @@ export async function PATCH(
     sugar: toOptionalDecimal(body?.sugar),
     fiber: toOptionalDecimal(body?.fiber),
     saturated_fat: toOptionalDecimal(body?.saturatedFat ?? body?.saturated_fat),
+    serving_size: toOptionalDecimal(body?.servingSize ?? body?.serving_size),
+    serving_unit: toOptionalString(body?.servingUnit ?? body?.serving_unit),
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await runNutritionQueryWithFallbacks([
@@ -52,12 +62,20 @@ export async function PATCH(
         .update(payload)
         .eq("id", id)
         .eq("member_id", userId)
+        .select("id, name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, serving_size, serving_unit, created_at")
+        .single(),
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .update(omitNutritionKeys(payload, ["serving_size", "serving_unit"]))
+        .eq("id", id)
+        .eq("member_id", userId)
         .select("id, name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, created_at")
         .single(),
     () =>
       supabaseAdmin
         .from("nutrition_custom_foods")
-        .update(omitNutritionKeys(payload, ["sugar", "saturated_fat"]))
+        .update(omitNutritionKeys(payload, ["serving_size", "serving_unit", "sugar", "saturated_fat"]))
         .eq("id", id)
         .eq("member_id", userId)
         .select("id, name, calories, protein, carbs, fat, fiber, created_at")
@@ -65,7 +83,7 @@ export async function PATCH(
     () =>
       supabaseAdmin
         .from("nutrition_custom_foods")
-        .update(omitNutritionKeys(payload, ["sugar", "saturated_fat", "fiber"]))
+        .update(omitNutritionKeys(payload, ["serving_size", "serving_unit", "sugar", "saturated_fat", "fiber"]))
         .eq("id", id)
         .eq("member_id", userId)
         .select("id, name, calories, protein, carbs, fat, created_at")

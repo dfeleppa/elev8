@@ -52,8 +52,24 @@ type LibraryFood = {
   sugar?: number | null;
   fiber?: number | null;
   saturated_fat?: number | null;
+  serving_size?: number | null;
+  serving_unit?: string | null;
   quantity?: number | null;
 };
+
+const SERVING_UNIT_OPTIONS = [
+  "gram",
+  "ounce",
+  "milliliter",
+  "fluid ounce",
+  "cup",
+  "tablespoon",
+  "teaspoon",
+  "meal",
+  "piece",
+] as const;
+
+const DEFAULT_SERVING_UNIT: (typeof SERVING_UNIT_OPTIONS)[number] = "gram";
 
 type CoachPlanSummary = {
   goalType?: string | null;
@@ -121,6 +137,15 @@ function formatGrams(value: number | null | undefined) {
   }
   const tenths = Math.round(value * 10) / 10;
   return Number.isInteger(tenths) ? tenths.toString() : tenths.toFixed(1);
+}
+
+function formatServing(size: number | null | undefined, unit: string | null | undefined) {
+  const safeSize =
+    typeof size === "number" && Number.isFinite(size) && size > 0 ? size : 1;
+  const safeUnit = (unit ?? "").trim() || "serving";
+  const sizeStr = formatGrams(safeSize);
+  const unitStr = safeSize === 1 ? safeUnit : `${safeUnit}s`;
+  return `${sizeStr} ${unitStr}`;
 }
 
 function formatServingSize(value: number) {
@@ -214,6 +239,8 @@ export default function HealthNutritionPage() {
   const myFoodsFetchedAtRef = useRef(0);
   const [createFoodDraft, setCreateFoodDraft] = useState({
     name: "",
+    servingSize: "1",
+    servingUnit: DEFAULT_SERVING_UNIT as string,
     calories: "",
     protein: "",
     carbs: "",
@@ -226,6 +253,8 @@ export default function HealthNutritionPage() {
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   const [editFoodDraft, setEditFoodDraft] = useState({
     name: "",
+    servingSize: "1",
+    servingUnit: DEFAULT_SERVING_UNIT as string,
     calories: "",
     protein: "",
     carbs: "",
@@ -913,6 +942,8 @@ export default function HealthNutritionPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          servingSize: createFoodDraft.servingSize,
+          servingUnit: createFoodDraft.servingUnit,
           calories: createFoodDraft.calories,
           protein: createFoodDraft.protein,
           carbs: createFoodDraft.carbs,
@@ -933,6 +964,8 @@ export default function HealthNutritionPage() {
       setDialogTab("mine");
       setCreateFoodDraft({
         name: "",
+        servingSize: "1",
+        servingUnit: DEFAULT_SERVING_UNIT,
         calories: "",
         protein: "",
         carbs: "",
@@ -950,6 +983,8 @@ export default function HealthNutritionPage() {
     setEditingFoodId(food.id);
     setEditFoodDraft({
       name: food.name,
+      servingSize: food.serving_size?.toString() ?? "1",
+      servingUnit: food.serving_unit ?? DEFAULT_SERVING_UNIT,
       calories: food.calories?.toString() ?? "",
       protein: food.protein?.toString() ?? "",
       carbs: food.carbs?.toString() ?? "",
@@ -1484,6 +1519,30 @@ export default function HealthNutritionPage() {
                     />
                   </label>
                   <label className="space-y-1">
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Serving Size</span>
+                    <input
+                      value={createFoodDraft.servingSize}
+                      onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, servingSize: event.target.value }))}
+                      placeholder="1"
+                      inputMode="decimal"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                    />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Unit</span>
+                    <select
+                      value={createFoodDraft.servingUnit}
+                      onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, servingUnit: event.target.value }))}
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-white/30 focus:outline-none"
+                    >
+                      {SERVING_UNIT_OPTIONS.map((unit) => (
+                        <option key={unit} value={unit}>
+                          {unit}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-1">
                     <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Calories</span>
                     <input
                       value={createFoodDraft.calories}
@@ -1650,6 +1709,11 @@ export default function HealthNutritionPage() {
                         >
                           <span>
                             <span className="block text-sm font-semibold text-[var(--text)]">{food.name}</span>
+                            {food.serving_size != null || (food.serving_unit ?? "").trim() ? (
+                              <span className="mt-0.5 block text-[11px] uppercase tracking-[0.18em] text-[var(--text-soft)]">
+                                {formatServing(food.serving_size, food.serving_unit)}
+                              </span>
+                            ) : null}
                             <span className="mt-1 block text-xs text-[var(--text-muted)]">
                               {roundToWhole(food.calories)} cal · {formatGrams(food.protein)}p · {formatGrams(food.carbs)}c · {formatGrams(food.fat)}f
                             </span>
@@ -1723,6 +1787,30 @@ export default function HealthNutritionPage() {
                         placeholder="Food name"
                         className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
                       />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Serving Size</span>
+                      <input
+                        value={editFoodDraft.servingSize}
+                        onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, servingSize: event.target.value }))}
+                        placeholder="1"
+                        inputMode="decimal"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Unit</span>
+                      <select
+                        value={editFoodDraft.servingUnit}
+                        onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, servingUnit: event.target.value }))}
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-white/30 focus:outline-none"
+                      >
+                        {SERVING_UNIT_OPTIONS.map((unit) => (
+                          <option key={unit} value={unit}>
+                            {unit}
+                          </option>
+                        ))}
+                      </select>
                     </label>
                     <label className="space-y-1">
                       <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Calories</span>
