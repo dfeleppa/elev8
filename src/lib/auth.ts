@@ -4,7 +4,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
 import { getClientIpFromHeaders, rateLimitByKey } from "./rate-limit";
-import { getCanonicalAppUrl, toCanonicalAppUrl } from "./site-url";
 import { loginWithEmailPassword, upsertSupabaseAuthOAuthUser } from "./supabase-auth-admin";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
@@ -96,18 +95,6 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email;
       }
       return session;
-    },
-
-    async redirect({ url }) {
-      if (url.startsWith("/")) {
-        return toCanonicalAppUrl(url);
-      }
-
-      const normalizedUrl = toCanonicalAppUrl(url);
-      const canonicalBase = getCanonicalAppUrl();
-      const normalizedOrigin = new URL(normalizedUrl).origin;
-
-      return normalizedOrigin === canonicalBase ? normalizedUrl : canonicalBase;
     },
   },
 };
