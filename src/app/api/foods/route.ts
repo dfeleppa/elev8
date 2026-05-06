@@ -17,6 +17,14 @@ function toOptionalDecimal(value: unknown) {
   return Math.max(0, parsed);
 }
 
+function toOptionalString(value: unknown) {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 export async function GET() {
   const { error: userError, userId } = await requireUserContext();
   if (userError || !userId) {
@@ -24,6 +32,12 @@ export async function GET() {
   }
 
   const { data, error } = await runNutritionQueryWithFallbacks([
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .select("id, name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, serving_size, serving_unit, created_at")
+        .eq("member_id", userId)
+        .order("created_at", { ascending: false }),
     () =>
       supabaseAdmin
         .from("nutrition_custom_foods")
@@ -74,6 +88,8 @@ export async function POST(request: Request) {
     sugar: toOptionalDecimal(body?.sugar),
     fiber: toOptionalDecimal(body?.fiber),
     saturated_fat: toOptionalDecimal(body?.saturatedFat ?? body?.saturated_fat),
+    serving_size: toOptionalDecimal(body?.servingSize ?? body?.serving_size),
+    serving_unit: toOptionalString(body?.servingUnit ?? body?.serving_unit),
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await runNutritionQueryWithFallbacks([
@@ -81,18 +97,24 @@ export async function POST(request: Request) {
       supabaseAdmin
         .from("nutrition_custom_foods")
         .insert(payload)
+        .select("id, name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, serving_size, serving_unit, created_at")
+        .single(),
+    () =>
+      supabaseAdmin
+        .from("nutrition_custom_foods")
+        .insert(omitNutritionKeys(payload, ["serving_size", "serving_unit"]))
         .select("id, name, calories, protein, carbs, fat, sugar, fiber, saturated_fat, created_at")
         .single(),
     () =>
       supabaseAdmin
         .from("nutrition_custom_foods")
-        .insert(omitNutritionKeys(payload, ["sugar", "saturated_fat"]))
+        .insert(omitNutritionKeys(payload, ["serving_size", "serving_unit", "sugar", "saturated_fat"]))
         .select("id, name, calories, protein, carbs, fat, fiber, created_at")
         .single(),
     () =>
       supabaseAdmin
         .from("nutrition_custom_foods")
-        .insert(omitNutritionKeys(payload, ["sugar", "saturated_fat", "fiber"]))
+        .insert(omitNutritionKeys(payload, ["serving_size", "serving_unit", "sugar", "saturated_fat", "fiber"]))
         .select("id, name, calories, protein, carbs, fat, created_at")
         .single(),
   ]);
