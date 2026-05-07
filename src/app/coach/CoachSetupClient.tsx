@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import type { GoalType, IntensityPreset } from "@/lib/nutrition-calculations";
@@ -114,8 +115,19 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function CoachSetupClient() {
-  const [viewMode, setViewMode] = useState<"dashboard" | "setup">("setup");
+type CoachSetupClientProps = {
+  /** Force the wizard view on mount even when an active plan exists. */
+  initialMode?: "dashboard" | "setup";
+  /** When set, navigate here after successful save instead of switching to the internal dashboard view. */
+  redirectAfterSaveTo?: string;
+};
+
+export default function CoachSetupClient({
+  initialMode = "setup",
+  redirectAfterSaveTo,
+}: CoachSetupClientProps = {}) {
+  const router = useRouter();
+  const [viewMode, setViewMode] = useState<"dashboard" | "setup">(initialMode);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -185,7 +197,7 @@ export default function CoachSetupClient() {
           setReverseDietWeeklyKcalOverride(String(latestPlan.plan_payload.reverseDietWeeklyKcalOverride));
         }
 
-        if (planExists && latestPlan) {
+        if (planExists && latestPlan && initialMode !== "setup") {
           setViewMode("dashboard");
         }
       })
@@ -275,8 +287,13 @@ export default function CoachSetupClient() {
         height_cm: heightCm ? Number(heightCm) : prev?.height_cm,
       }));
       setHasPlan(true);
-      setViewMode("dashboard");
       setMessage("Plan saved and nutrition targets applied.");
+      if (redirectAfterSaveTo) {
+        router.push(redirectAfterSaveTo);
+        router.refresh();
+      } else {
+        setViewMode("dashboard");
+      }
     } else {
       setMessage("Plan generated. Review and continue.");
     }
