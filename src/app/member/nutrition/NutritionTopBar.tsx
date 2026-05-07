@@ -3,11 +3,12 @@
 import Link from "next/link";
 import clsx from "clsx";
 
-type Tab = "daily" | "coach";
+type Tab = "daily" | "coach" | "ai-coach";
 
 const TABS: { id: Tab; label: string; href: string }[] = [
   { id: "daily", label: "Daily", href: "/member/nutrition" },
-  { id: "coach", label: "Coach", href: "/member/nutrition-coach" },
+  { id: "coach", label: "Coach", href: "/member/nutrition/coach" },
+  { id: "ai-coach", label: "AI Coach", href: "/member/nutrition-coach" },
 ];
 
 const DAY_NAMES = [
@@ -50,7 +51,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
   const week = isoWeek(now);
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
       <div
         className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest"
         style={{ color: "var(--text-muted)" }}
@@ -62,7 +63,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
         <span style={{ color: "var(--text-soft)" }}>Week {week}</span>
       </div>
 
-      <nav className="flex items-center gap-6 text-[13.5px]">
+      <nav className="flex flex-wrap items-center gap-2">
         {TABS.map((t) => {
           const isActive = t.id === active;
           return (
@@ -70,20 +71,13 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
               key={t.id}
               href={t.href}
               className={clsx(
-                "relative inline-flex items-center py-1 transition",
+                "shrink-0 whitespace-nowrap rounded-xl px-4 py-2 text-sm transition-colors",
                 isActive
-                  ? "text-[color:var(--text)] font-semibold"
-                  : "text-[color:var(--text-muted)] hover:text-[color:var(--text)]",
+                  ? "border border-[var(--pink)]/30 bg-[var(--pink)]/12 font-semibold text-[var(--pink)]"
+                  : "border border-[var(--line-strong)] bg-[var(--panel-2)] font-medium text-[var(--text-muted)] hover:border-[var(--pink)]/30 hover:text-[var(--text)]",
               )}
             >
               {t.label}
-              {isActive && (
-                <span
-                  aria-hidden
-                  className="absolute left-0 right-0 -bottom-0.5 h-[2px]"
-                  style={{ background: "var(--text)" }}
-                />
-              )}
             </Link>
           );
         })}

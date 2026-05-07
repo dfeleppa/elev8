@@ -150,7 +150,7 @@ const ATHLETE_SECTIONS = [
   { label: "Today",    hrefs: ["/member/athlete-dashboard"] },
   { label: "Train",    hrefs: ["/member/workout"] },
   { label: "Schedule", hrefs: ["/member/class-schedule"] },
-  { label: "Nutrition",hrefs: ["/member/nutrition", "/member/nutrition-coach"] },
+  { label: "Nutrition",hrefs: ["/member/nutrition", "/member/nutrition/coach", "/member/nutrition-coach"] },
   { label: "Account",  hrefs: ["/member/account-dashboard", "/member/store"] },
 ] as const;
 
