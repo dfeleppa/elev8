@@ -64,8 +64,7 @@ export default function CoachPlanClient() {
       .then((res) => res.json().catch(() => null))
       .then((payload) => {
         if (cancelled) return;
-        const status = payload?.status;
-        if (status !== "active") {
+        if (!payload?.hasPlan) {
           setHasPlan(false);
           setSummary(null);
           return;
