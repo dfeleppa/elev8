@@ -73,7 +73,6 @@ const navItems: NavItem[] = [
         minRole: "coach",
         children: [
           { label: "Gym Dashboard", href: "/gym-dashboard", minRole: "coach" },
-          { label: "Nutrition Coach", href: "/coach/nutrition-coach", minRole: "coach" },
           { label: "Schedule", href: "/coach/schedule", minRole: "coach" },
           { label: "Reports - Members", href: "/coach/reports-members", minRole: "coach" },
         ],
