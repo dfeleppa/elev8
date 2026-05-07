@@ -63,7 +63,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
         <span style={{ color: "var(--text-soft)" }}>Week {week}</span>
       </div>
 
-      <nav className="flex flex-wrap items-center gap-2">
+      <nav className="flex items-center gap-6 text-[13.5px]">
         {TABS.map((t) => {
           const isActive = t.id === active;
           return (
@@ -71,13 +71,20 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
               key={t.id}
               href={t.href}
               className={clsx(
-                "shrink-0 whitespace-nowrap rounded-xl px-4 py-2 text-sm transition-colors",
+                "relative inline-flex items-center py-1 transition",
                 isActive
-                  ? "border border-[var(--pink)]/30 bg-[var(--pink)]/12 font-semibold text-[var(--pink)]"
-                  : "border border-[var(--line-strong)] bg-[var(--panel-2)] font-medium text-[var(--text-muted)] hover:border-[var(--pink)]/30 hover:text-[var(--text)]",
+                  ? "font-semibold text-[var(--pink)]"
+                  : "text-[color:var(--text-muted)] hover:text-[color:var(--text)]",
               )}
             >
               {t.label}
+              {isActive && (
+                <span
+                  aria-hidden
+                  className="absolute left-0 right-0 -bottom-0.5 h-[2px]"
+                  style={{ background: "var(--pink)" }}
+                />
+              )}
             </Link>
           );
         })}
