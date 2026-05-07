@@ -19,7 +19,6 @@ import {
   FileText,
   HandPlatter,
   LogOut,
-  PersonStanding,
   PlugZap,
   Settings,
   ShieldCheck,
@@ -537,8 +536,16 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       <path d="M20.2 14.3A8.5 8.5 0 0 1 9.7 3.8a8.9 8.9 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.8" />
     </svg>
   );
-  const gymViewIcon = <Briefcase className="h-4 w-4" aria-hidden="true" />;
-  const athleteViewIcon = <PersonStanding className="h-4 w-4" aria-hidden="true" />;
+  const viewToggleBaseCls =
+    "inline-flex items-center justify-center rounded-full px-3 h-9 font-mono text-[10.5px] font-semibold uppercase tracking-[0.18em] transition-colors";
+  const viewToggleActiveTopbarCls =
+    `${viewToggleBaseCls} border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink-soft)]`;
+  const viewToggleActiveSidebarCls =
+    `${viewToggleBaseCls} border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink)]`;
+  const viewToggleInactiveTopbarCls =
+    `${viewToggleBaseCls} border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]`;
+  const viewToggleInactiveSidebarCls =
+    `${viewToggleBaseCls} border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:border-[var(--line-focus)] hover:bg-[var(--panel)] hover:text-[var(--text)]`;
   const handleSignOut = () => {
     setMenuOpen(false);
     void signOut({ callbackUrl: "/login" });
@@ -577,22 +584,24 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 })}
               </div>
               {showViewToggle ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => handleSwitchView("gym")}
-                    className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink-soft)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
+                    className={viewMode === "gym" ? viewToggleActiveTopbarCls : viewToggleInactiveTopbarCls}
+                    aria-pressed={viewMode === "gym"}
                     aria-label="Gym view"
                   >
-                    {gymViewIcon}
+                    Gym
                   </button>
                   <button
                     type="button"
                     onClick={() => handleSwitchView("athlete")}
-                    className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink-soft)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
-                    aria-label="Athlete view"
+                    className={viewMode === "athlete" ? viewToggleActiveTopbarCls : viewToggleInactiveTopbarCls}
+                    aria-pressed={viewMode === "athlete"}
+                    aria-label="Member view"
                   >
-                    {athleteViewIcon}
+                    Member
                   </button>
                 </div>
               ) : null}
@@ -716,22 +725,34 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             </button>
           </div>
           {showViewToggle ? (
-            <div className={`mt-3 flex items-center gap-2 ${sidebarCollapsed ? "justify-center" : ""}`}>
+            <div
+              className={`mt-3 flex gap-1.5 ${
+                sidebarCollapsed ? "flex-col items-stretch" : "flex-row items-center justify-stretch"
+              }`}
+            >
               <button
                 type="button"
                 onClick={() => handleSwitchView("gym")}
-                className={viewMode === "gym" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
+                className={
+                  (viewMode === "gym" ? viewToggleActiveSidebarCls : viewToggleInactiveSidebarCls) +
+                  (sidebarCollapsed ? " w-full" : " flex-1")
+                }
+                aria-pressed={viewMode === "gym"}
                 aria-label="Gym view"
               >
-                {gymViewIcon}
+                Gym
               </button>
               <button
                 type="button"
                 onClick={() => handleSwitchView("athlete")}
-                className={viewMode === "athlete" ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink)] transition-colors" : "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
-                aria-label="Athlete view"
+                className={
+                  (viewMode === "athlete" ? viewToggleActiveSidebarCls : viewToggleInactiveSidebarCls) +
+                  (sidebarCollapsed ? " w-full" : " flex-1")
+                }
+                aria-pressed={viewMode === "athlete"}
+                aria-label="Member view"
               >
-                {athleteViewIcon}
+                Member
               </button>
             </div>
           ) : null}
