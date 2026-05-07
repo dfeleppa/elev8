@@ -81,19 +81,6 @@ type CoachPlanSummary = {
   nextCheckInDate?: string | null;
 };
 
-type GoalType =
-  | "lose_weight"
-  | "gain_weight"
-  | "maintain_weight"
-  | "performance_reverse_diet";
-
-const GOAL_OPTIONS: { value: GoalType; label: string }[] = [
-  { value: "lose_weight", label: "Lose Weight" },
-  { value: "gain_weight", label: "Gain Weight" },
-  { value: "maintain_weight", label: "Maintain Weight" },
-  { value: "performance_reverse_diet", label: "Performance / Reverse Diet" },
-];
-
 const meals: { key: MealKey; label: string }[] = [
   { key: "breakfast", label: "Breakfast" },
   { key: "lunch", label: "Lunch" },
@@ -246,10 +233,6 @@ export default function HealthNutritionPage() {
   const [mealMenuOpen, setMealMenuOpen] = useState<MealKey | null>(null);
   const [copyTargetDate, setCopyTargetDate] = useState(() => toLocalDateInputValue(new Date()));
   const [copyTargetMeal, setCopyTargetMeal] = useState<MealKey>("breakfast");
-  const [coachSettingsOpen, setCoachSettingsOpen] = useState(false);
-  const [coachSettingsGoal, setCoachSettingsGoal] = useState<GoalType>("lose_weight");
-  const [coachSettingsSaving, setCoachSettingsSaving] = useState(false);
-  const [coachSettingsError, setCoachSettingsError] = useState<string | null>(null);
   const [foodDialogOpen, setFoodDialogOpen] = useState(false);
   const [activeMealDialog, setActiveMealDialog] = useState<MealKey | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
@@ -402,7 +385,6 @@ export default function HealthNutritionPage() {
         setCoachPlanStatus(payload?.hasPlan ? "has" : "none");
         const s = (payload?.summary ?? null) as CoachPlanSummary | null;
         setCoachPlanSummary(s);
-        if (s?.goalType) setCoachSettingsGoal(s.goalType as GoalType);
       })
       .catch(() => {
         if (isActive) {
@@ -581,28 +563,6 @@ export default function HealthNutritionPage() {
       daysUntilNext: Math.max(0, 10 - filledBars),
     };
   }, [coachPlanSummary?.effectiveDate, coachPlanSummary?.lastCheckInDate, coachPlanSummary?.nextCheckInDate]);
-
-  async function saveCoachSettings() {
-    setCoachSettingsSaving(true);
-    setCoachSettingsError(null);
-    try {
-      const res = await fetch("/api/athlete/coach-plan-settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goalType: coachSettingsGoal }),
-      });
-      const payload = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(payload?.error ?? "Failed to save.");
-      setCoachPlanSummary((prev) =>
-        prev ? { ...prev, goalType: coachSettingsGoal } : prev
-      );
-      setCoachSettingsOpen(false);
-    } catch (err) {
-      setCoachSettingsError(err instanceof Error ? err.message : "Failed to save.");
-    } finally {
-      setCoachSettingsSaving(false);
-    }
-  }
 
   async function deleteEntry(entryId: string) {
     setError(null);
@@ -2022,68 +1982,6 @@ export default function HealthNutritionPage() {
           </div>
         )}
 
-        {coachSettingsOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <Panel padding="lg" className="w-full max-w-sm shadow-[var(--shadow-lg)]">
-              <div className="mb-5 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-[var(--text)]">Coach Settings</h3>
-                <button
-                  type="button"
-                  onClick={() => setCoachSettingsOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Goal</p>
-                {GOAL_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setCoachSettingsGoal(opt.value)}
-                    className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition ${
-                      coachSettingsGoal === opt.value
-                        ? "border-[var(--pink)]/40 bg-[var(--pink)]/10 text-[var(--pink)]"
-                        : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:text-[var(--text)]"
-                    }`}
-                  >
-                    <span
-                      className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                        coachSettingsGoal === opt.value ? "bg-[var(--pink)]" : "bg-[var(--line-strong)]"
-                      }`}
-                    />
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-
-              {coachSettingsError && (
-                <p className="mt-3 text-sm text-rose-400">{coachSettingsError}</p>
-              )}
-
-              <div className="mt-5 flex gap-2">
-                <button
-                  type="button"
-                  onClick={saveCoachSettings}
-                  disabled={coachSettingsSaving}
-                  className="accent-pink flex-1 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {coachSettingsSaving ? "Saving..." : "Save"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCoachSettingsOpen(false)}
-                  disabled={coachSettingsSaving}
-                  className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-60"
-                >
-                  Cancel
-                </button>
-              </div>
-            </Panel>
-          </div>
-        )}
 
         {copyDialogMeal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">

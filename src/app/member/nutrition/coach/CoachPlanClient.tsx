@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 
 import NutritionCheckInBanner from "@/components/health/NutritionCheckInBanner";
 import { Micro, Panel } from "@/components/ui";
@@ -42,14 +43,20 @@ function formatWeight(value: number | null | undefined) {
   return `${num.toFixed(1)} lb`;
 }
 
+function formatGoalLabel(goalType: string | null | undefined) {
+  const match = GOAL_OPTIONS.find((opt) => opt.value === goalType);
+  return match?.label ?? "Not set";
+}
+
 export default function CoachPlanClient() {
   const [summary, setSummary] = useState<CoachPlanSummary | null>(null);
   const [hasPlan, setHasPlan] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
-  const [goal, setGoal] = useState<GoalType>("lose_weight");
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsGoal, setSettingsGoal] = useState<GoalType>("lose_weight");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,7 +74,7 @@ export default function CoachPlanClient() {
         setSummary(s);
         setHasPlan(true);
         if (s?.goalType) {
-          setGoal(s.goalType as GoalType);
+          setSettingsGoal(s.goalType as GoalType);
         }
       })
       .catch(() => {
@@ -83,19 +90,25 @@ export default function CoachPlanClient() {
     };
   }, []);
 
-  async function saveGoal() {
+  function openSettings() {
+    setSettingsGoal((summary?.goalType as GoalType) ?? "lose_weight");
+    setError(null);
+    setSettingsOpen(true);
+  }
+
+  async function saveSettings() {
     setSaving(true);
     setError(null);
     try {
       const res = await fetch("/api/athlete/coach-plan-settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goalType: goal }),
+        body: JSON.stringify({ goalType: settingsGoal }),
       });
       const payload = await res.json().catch(() => null);
       if (!res.ok) throw new Error(payload?.error ?? "Failed to save.");
-      setSummary((prev) => (prev ? { ...prev, goalType: goal } : prev));
-      setSavedAt(Date.now());
+      setSummary((prev) => (prev ? { ...prev, goalType: settingsGoal } : prev));
+      setSettingsOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save.");
     } finally {
@@ -123,90 +136,115 @@ export default function CoachPlanClient() {
     );
   }
 
-  const goalDirty = summary?.goalType !== goal;
-
   return (
     <div className="space-y-6">
       <NutritionCheckInBanner />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Panel padding="lg">
-          <Micro as="p">Plan Overview</Micro>
-          <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
-            <div>
-              <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Start weight</dt>
-              <dd className="mt-1 text-[var(--text)]">{formatWeight(summary?.startWeight)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Current weight</dt>
-              <dd className="mt-1 text-[var(--text)]">{formatWeight(summary?.currentWeight)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Target weight</dt>
-              <dd className="mt-1 text-[var(--text)]">{formatWeight(summary?.targetWeight)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Plan started</dt>
-              <dd className="mt-1 text-[var(--text)]">{formatDate(summary?.effectiveDate)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Last check-in</dt>
-              <dd className="mt-1 text-[var(--text)]">{formatDate(summary?.lastCheckInDate)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Next check-in</dt>
-              <dd className="mt-1 text-[var(--text)]">{formatDate(summary?.nextCheckInDate)}</dd>
-            </div>
-          </dl>
-        </Panel>
+      <Panel padding="lg">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <Micro as="p">Plan Overview</Micro>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
+              Goal: <span className="text-[var(--text)]">{formatGoalLabel(summary?.goalType)}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={openSettings}
+            className="rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--pink)]/40 hover:text-[var(--pink)]"
+          >
+            Coach settings
+          </button>
+        </div>
 
-        <Panel padding="lg">
-          <Micro as="p">Goal</Micro>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
-            Pick the goal that matches what you&apos;re working toward. Your coach will use this when reviewing your check-ins.
-          </p>
-          <div className="mt-4 space-y-2">
-            {GOAL_OPTIONS.map((opt) => {
-              const selected = goal === opt.value;
-              return (
+        <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 text-sm md:grid-cols-3">
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Start weight</dt>
+            <dd className="mt-1 text-[var(--text)]">{formatWeight(summary?.startWeight)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Current weight</dt>
+            <dd className="mt-1 text-[var(--text)]">{formatWeight(summary?.currentWeight)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Target weight</dt>
+            <dd className="mt-1 text-[var(--text)]">{formatWeight(summary?.targetWeight)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Plan started</dt>
+            <dd className="mt-1 text-[var(--text)]">{formatDate(summary?.effectiveDate)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Last check-in</dt>
+            <dd className="mt-1 text-[var(--text)]">{formatDate(summary?.lastCheckInDate)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Next check-in</dt>
+            <dd className="mt-1 text-[var(--text)]">{formatDate(summary?.nextCheckInDate)}</dd>
+          </div>
+        </dl>
+      </Panel>
+
+      {settingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <Panel padding="lg" className="w-full max-w-sm shadow-[var(--shadow-lg)]">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-[var(--text)]">Coach Settings</h3>
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Goal</p>
+              {GOAL_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
-                  onClick={() => setGoal(opt.value)}
+                  onClick={() => setSettingsGoal(opt.value)}
                   className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition ${
-                    selected
+                    settingsGoal === opt.value
                       ? "border-[var(--pink)]/40 bg-[var(--pink)]/10 text-[var(--pink)]"
                       : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:text-[var(--text)]"
                   }`}
                 >
                   <span
                     className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                      selected ? "bg-[var(--pink)]" : "bg-[var(--line-strong)]"
+                      settingsGoal === opt.value ? "bg-[var(--pink)]" : "bg-[var(--line-strong)]"
                     }`}
                   />
                   {opt.label}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
 
-          {error && <p className="mt-3 text-sm text-rose-400">{error}</p>}
+            {error && <p className="mt-3 text-sm text-rose-400">{error}</p>}
 
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={saveGoal}
-              disabled={saving || !goalDirty}
-              className="accent-pink rounded-xl px-5 py-2 text-xs font-bold uppercase tracking-widest transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {saving ? "Saving..." : "Save"}
-            </button>
-            {savedAt && !goalDirty && (
-              <span className="text-xs text-[var(--text-soft)]">Saved.</span>
-            )}
-          </div>
-        </Panel>
-      </div>
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={saveSettings}
+                disabled={saving}
+                className="accent-pink flex-1 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-widest transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(false)}
+                disabled={saving}
+                className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+          </Panel>
+        </div>
+      )}
     </div>
   );
 }
