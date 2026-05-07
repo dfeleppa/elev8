@@ -1331,13 +1331,12 @@ export default function HealthNutritionPage() {
                   : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until next check-in`}
               </p>
 
-              <button
-                type="button"
-                onClick={() => setCoachSettingsOpen(true)}
+              <Link
+                href="/member/nutrition/coach"
                 className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-[#140a2e] py-3 text-sm font-semibold text-white transition hover:opacity-90"
               >
-                Coach settings
-              </button>
+                {checkInTimeline.daysUntilNext === 0 ? "Check-In" : "Nutrition Plan"}
+              </Link>
             </AccentCard>
           )}
         </section>
