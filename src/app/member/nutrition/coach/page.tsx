@@ -4,6 +4,7 @@ import SidebarShell from "@/components/SidebarShell";
 import { hasRole, requireUserContext } from "@/lib/member";
 
 import NutritionTopBar from "../NutritionTopBar";
+import CoachPlanClient from "./CoachPlanClient";
 
 export default async function MemberNutritionCoachPlanPage() {
   const { error, role, userId } = await requireUserContext();
@@ -24,11 +25,7 @@ export default async function MemberNutritionCoachPlanPage() {
           </div>
         </header>
 
-        <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-10 text-center">
-          <p className="text-sm text-[var(--text-muted)]">
-            Coach plan view coming soon.
-          </p>
-        </div>
+        <CoachPlanClient />
       </section>
     </SidebarShell>
   );
