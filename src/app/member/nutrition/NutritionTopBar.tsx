@@ -7,7 +7,7 @@ type Tab = "daily" | "coach" | "ai-coach";
 
 const TABS: { id: Tab; label: string; href: string }[] = [
   { id: "daily", label: "Daily", href: "/member/nutrition" },
-  { id: "coach", label: "Coach", href: "/member/nutrition/coach" },
+  { id: "coach", label: "Plan", href: "/member/nutrition/coach" },
   { id: "ai-coach", label: "AI Coach", href: "/member/nutrition-coach" },
 ];
 
