@@ -73,7 +73,6 @@ const navItems: NavItem[] = [
         minRole: "coach",
         children: [
           { label: "Gym Dashboard", href: "/gym-dashboard", minRole: "coach" },
-          { label: "Nutrition Coach", href: "/coach/nutrition-coach", minRole: "coach" },
           { label: "Schedule", href: "/coach/schedule", minRole: "coach" },
           { label: "Reports - Members", href: "/coach/reports-members", minRole: "coach" },
         ],
@@ -150,7 +149,7 @@ const ATHLETE_SECTIONS = [
   { label: "Today",    hrefs: ["/member/athlete-dashboard"] },
   { label: "Train",    hrefs: ["/member/workout"] },
   { label: "Schedule", hrefs: ["/member/class-schedule"] },
-  { label: "Nutrition",hrefs: ["/member/nutrition", "/member/nutrition-coach"] },
+  { label: "Nutrition",hrefs: ["/member/nutrition", "/member/nutrition/coach", "/member/nutrition-coach"] },
   { label: "Account",  hrefs: ["/member/account-dashboard", "/member/store"] },
 ] as const;
 

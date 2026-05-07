@@ -14,9 +14,17 @@ export default async function MemberNutritionCoachPage() {
 
   return (
     <SidebarShell mainClassName="w-full">
-      <div className="mx-auto w-full max-w-[1480px] px-6 pt-6 lg:px-10">
-        <NutritionTopBar active="coach" />
-      </div>
+      <section className="mx-auto w-full max-w-[1480px] px-6 pt-8 lg:px-10 lg:pt-10">
+        <header>
+          <h1 className="text-3xl font-semibold text-[var(--text)]">AI Coach</h1>
+          <p className="mt-3 text-sm text-[var(--text-muted)]">
+            Chat with Lia for instant answers, plan check-ins, and meal feedback.
+          </p>
+          <div className="mt-4">
+            <NutritionTopBar active="ai-coach" />
+          </div>
+        </header>
+      </section>
       <div className="mx-auto w-full max-w-[1480px]">
         <NutritionCoachClient />
       </div>
