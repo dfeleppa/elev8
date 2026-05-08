@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { analyzeNutritionAdjustment, type AdjustmentInputs, type CurrentPlan } from "./nutrition-adjustment";
+import {
+  analyzeNutritionAdjustment,
+  estimateMetabolism,
+  type AdjustmentInputs,
+  type CurrentPlan,
+  type MetabolismEstimateInputs,
+} from "./nutrition-adjustment";
 
 function basePlan(overrides: Partial<CurrentPlan> = {}): CurrentPlan {
   return {
@@ -212,5 +218,134 @@ describe("analyzeNutritionAdjustment", () => {
     };
     const rec = analyzeNutritionAdjustment(inputs);
     expect(rec.status).toBe("on_track");
+  });
+});
+
+// ----------------------------------------------------------------------------
+// estimateMetabolism
+// ----------------------------------------------------------------------------
+
+const ASOF = "2026-04-30";
+
+function logsLastNDays(n: number, calories: number) {
+  // produces n consecutive days ending on ASOF
+  const arr = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(`${ASOF}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - i);
+    arr.push({
+      date: d.toISOString().slice(0, 10),
+      calories,
+      proteinGrams: 180,
+      fiberGrams: null,
+    });
+  }
+  return arr;
+}
+
+function weightsAcross7Days(start: number, end: number, count = 4) {
+  // count entries spread across the 7-day window ending on ASOF.
+  const arr = [];
+  for (let i = 0; i < count; i++) {
+    const dayOffset = Math.round((6 * i) / (count - 1)); // 0..6
+    const d = new Date(`${ASOF}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - (6 - dayOffset));
+    const w = start + ((end - start) * i) / (count - 1);
+    arr.push({ date: d.toISOString().slice(0, 10), weightLbs: w });
+  }
+  return arr;
+}
+
+describe("estimateMetabolism", () => {
+  it("estimates higher TDEE when losing weight on a deficit", () => {
+    // Avg 2200 kcal/day, lost 1 lb over 6 days -> TDEE ≈ 2200 + (1*3500/6) = 2783
+    const inputs: MetabolismEstimateInputs = {
+      plan: basePlan({ targetCalories: 2200, maintenanceCalories: 2700 }),
+      dailyLogs: logsLastNDays(7, 2200),
+      weights: weightsAcross7Days(180, 179, 4),
+      asOf: ASOF,
+    };
+    const est = estimateMetabolism(inputs);
+    expect(est.status).toBe("estimated");
+    expect(est.confidence).toBe("high");
+    expect(est.estimatedTdee).toBeGreaterThan(2700);
+    expect(est.estimatedTdee).toBeLessThan(2900);
+    expect(est.weightChangeLbs).toBeCloseTo(-1, 1);
+  });
+
+  it("estimates ≈ avg intake when weight is stable", () => {
+    const inputs: MetabolismEstimateInputs = {
+      plan: basePlan({ goalType: "maintain_weight", targetCalories: 2400, maintenanceCalories: 2400 }),
+      dailyLogs: logsLastNDays(7, 2400),
+      weights: weightsAcross7Days(180, 180, 4),
+      asOf: ASOF,
+    };
+    const est = estimateMetabolism(inputs);
+    expect(est.status).toBe("estimated");
+    expect(est.estimatedTdee).toBe(2400);
+    expect(Math.abs(est.deltaKcal!)).toBeLessThanOrEqual(5);
+  });
+
+  it("returns low_adherence when fewer than 5/7 days logged", () => {
+    const inputs: MetabolismEstimateInputs = {
+      plan: basePlan(),
+      dailyLogs: logsLastNDays(4, 2200),
+      weights: weightsAcross7Days(180, 179, 4),
+      asOf: ASOF,
+    };
+    const est = estimateMetabolism(inputs);
+    expect(est.status).toBe("low_adherence");
+    expect(est.estimatedTdee).toBeNull();
+    expect(est.confidence).toBe("low");
+  });
+
+  it("returns insufficient_weight_data when only 1 weigh-in", () => {
+    const inputs: MetabolismEstimateInputs = {
+      plan: basePlan(),
+      dailyLogs: logsLastNDays(7, 2200),
+      weights: [{ date: ASOF, weightLbs: 180 }],
+      asOf: ASOF,
+    };
+    const est = estimateMetabolism(inputs);
+    expect(est.status).toBe("insufficient_weight_data");
+    expect(est.estimatedTdee).toBeNull();
+  });
+
+  it("flags likely_undertracking when logged ≪ target and weight not moving toward goal", () => {
+    // lose_weight goal, logged 1500 vs target 2500, weight stable
+    const inputs: MetabolismEstimateInputs = {
+      plan: basePlan({ targetCalories: 2500, maintenanceCalories: 2900 }),
+      dailyLogs: logsLastNDays(7, 1500),
+      weights: weightsAcross7Days(200, 200, 4),
+      asOf: ASOF,
+    };
+    const est = estimateMetabolism(inputs);
+    expect(est.status).toBe("likely_undertracking");
+    expect(est.confidence).toBe("low");
+  });
+
+  it("flags out_of_bounds when computed TDEE is implausible", () => {
+    // Avg 5000 kcal but lost 5 lb in 6 days -> TDEE ≈ 5000 + 5*3500/6 ≈ 7917
+    const inputs: MetabolismEstimateInputs = {
+      plan: basePlan({ targetCalories: 5000, maintenanceCalories: 3000 }),
+      dailyLogs: logsLastNDays(7, 5000),
+      weights: weightsAcross7Days(200, 195, 4),
+      asOf: ASOF,
+    };
+    const est = estimateMetabolism(inputs);
+    expect(est.status).toBe("out_of_bounds");
+    expect(est.confidence).toBe("low");
+  });
+
+  it("downgrades to medium confidence with only 5/7 logged days and 2 weigh-ins", () => {
+    const inputs: MetabolismEstimateInputs = {
+      plan: basePlan({ goalType: "maintain_weight", targetCalories: 2400, maintenanceCalories: 2400 }),
+      dailyLogs: logsLastNDays(5, 2400),
+      weights: weightsAcross7Days(180, 180, 2),
+      asOf: ASOF,
+    };
+    const est = estimateMetabolism(inputs);
+    expect(est.status).toBe("estimated");
+    expect(est.confidence).toBe("medium");
   });
 });

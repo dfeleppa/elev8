@@ -6,10 +6,38 @@ import NutritionCheckInBanner from "@/components/health/NutritionCheckInBanner";
 
 type Member = { id: string; full_name: string | null; email: string | null };
 
+type MetabolismEstimateSnapshot = {
+  status:
+    | "estimated"
+    | "low_adherence"
+    | "insufficient_weight_data"
+    | "likely_undertracking"
+    | "out_of_bounds";
+  windowDays: number;
+  daysLogged: number;
+  daysExpected: number;
+  avgDailyCalories: number;
+  loggedVsTargetRatio: number;
+  weightEntries: number;
+  weightSpanDays: number | null;
+  startWeightLbs: number | null;
+  endWeightLbs: number | null;
+  weightChangeLbs: number | null;
+  estimatedTdee: number | null;
+  formulaTdee: number;
+  deltaKcal: number | null;
+  confidence: "high" | "medium" | "low";
+  reason: string;
+};
+
 type PlanRow = {
   id: string;
   goal_type: string;
   target_calories: number;
+  maintenance_calories: number | null;
+  maintenance_calories_source: "formula" | "empirical" | null;
+  maintenance_calories_estimated_at: string | null;
+  last_metabolism_estimate: MetabolismEstimateSnapshot | null;
   protein_grams: number;
   carbs_grams: number;
   fat_grams: number;
@@ -220,6 +248,11 @@ export default function MemberDetailClient({ memberId }: { memberId: string }) {
         </section>
       )}
 
+      {/* Estimated metabolism */}
+      {currentPlan ? (
+        <MetabolismCard plan={currentPlan} />
+      ) : null}
+
       {/* Plan history */}
       {planChanges.length > 0 ? (
         <section className="panel rounded-3xl p-5">
@@ -295,5 +328,104 @@ export default function MemberDetailClient({ memberId }: { memberId: string }) {
         </section>
       ) : null}
     </div>
+  );
+}
+
+const STATUS_LABEL: Record<MetabolismEstimateSnapshot["status"], string> = {
+  estimated: "Estimated",
+  low_adherence: "Low adherence",
+  insufficient_weight_data: "Need more weigh-ins",
+  likely_undertracking: "Possible undertracking",
+  out_of_bounds: "Out of bounds",
+};
+
+const CONFIDENCE_TONE: Record<MetabolismEstimateSnapshot["confidence"], string> = {
+  high: "text-emerald-300 border-emerald-300/40 bg-emerald-300/10",
+  medium: "text-amber-300 border-amber-300/40 bg-amber-300/10",
+  low: "text-[var(--text-muted)] border-[var(--line)] bg-white/5",
+};
+
+function relativeTime(iso: string | null): string {
+  if (!iso) return "never";
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return "never";
+  const diffMs = Date.now() - then;
+  const mins = Math.round(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} h ago`;
+  const days = Math.round(hrs / 24);
+  return `${days} d ago`;
+}
+
+function MetabolismCard({ plan }: { plan: PlanRow }) {
+  const estimate = plan.last_metabolism_estimate;
+  const formulaTdee = plan.maintenance_calories ?? estimate?.formulaTdee ?? null;
+  const source = plan.maintenance_calories_source ?? "formula";
+
+  return (
+    <section className="panel rounded-3xl p-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
+          Estimated Metabolism
+        </h2>
+        {source === "empirical" ? (
+          <span className="rounded-full border border-[var(--accent-cyan)]/40 bg-[var(--accent-cyan)]/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[var(--accent-cyan)]">
+            Auto-updated
+          </span>
+        ) : null}
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div>
+          <p className="text-xs text-[var(--text-muted)]">Formula TDEE</p>
+          <p className="text-2xl font-semibold text-[var(--text)]">
+            {formatNumber(formulaTdee)}
+            <span className="ml-1 text-xs font-normal text-[var(--text-muted)]">kcal/day</span>
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-[var(--text-muted)]">Empirical TDEE (last 7 days)</p>
+          <p className="text-2xl font-semibold text-[var(--text)]">
+            {estimate?.estimatedTdee !== null && estimate?.estimatedTdee !== undefined
+              ? formatNumber(estimate.estimatedTdee)
+              : "—"}
+            <span className="ml-1 text-xs font-normal text-[var(--text-muted)]">kcal/day</span>
+          </p>
+        </div>
+        <div className="flex flex-col gap-1">
+          {estimate?.deltaKcal !== null && estimate?.deltaKcal !== undefined ? (
+            <span className="self-start rounded-full border border-[var(--line)] bg-white/5 px-2 py-0.5 text-[11px] text-[var(--text)]">
+              {estimate.deltaKcal > 0 ? "+" : ""}
+              {estimate.deltaKcal} kcal vs formula
+            </span>
+          ) : null}
+          {estimate ? (
+            <span
+              className={`self-start rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] ${CONFIDENCE_TONE[estimate.confidence]}`}
+            >
+              {STATUS_LABEL[estimate.status]} · {estimate.confidence}
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      {estimate ? (
+        <p className="mt-3 text-xs text-[var(--text-muted)]">{estimate.reason}</p>
+      ) : (
+        <p className="mt-3 text-xs text-[var(--text-muted)]">
+          No estimate yet — needs ≥5/7 days logged and ≥2 weigh-ins in the last 7 days.
+        </p>
+      )}
+
+      {estimate ? (
+        <p className="mt-2 text-[11px] text-[var(--text-muted)]">
+          Window: last {estimate.windowDays} days · {estimate.daysLogged}/{estimate.daysExpected}{" "}
+          days logged · {estimate.weightEntries} weigh-ins · updated{" "}
+          {relativeTime(plan.maintenance_calories_estimated_at)}
+        </p>
+      ) : null}
+    </section>
   );
 }
