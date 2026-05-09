@@ -280,6 +280,7 @@ export default function HealthNutritionPage() {
     carbs: "",
     fat: "",
   });
+  const [macroViewMode, setMacroViewMode] = useState<"consumed" | "remaining">("consumed");
 
   async function loadFoodLibraries(options?: {
     includeRecent?: boolean;
@@ -448,12 +449,23 @@ export default function HealthNutritionPage() {
   const FIBER_DEFAULT_TARGET = 30;
   const fiberProgress = clampPercent((totals.fiber / FIBER_DEFAULT_TARGET) * 100);
 
-  const macroBars = [
+  const consumedMacroBars = [
     { label: "Protein", value: totals.protein, target: targetNumbers.protein, progress: proteinProgress },
     { label: "Carbs", value: totals.carbs, target: targetNumbers.carbs, progress: carbsProgress },
     { label: "Fat", value: totals.fat, target: targetNumbers.fat, progress: fatProgress },
     { label: "Fiber", value: totals.fiber, target: FIBER_DEFAULT_TARGET, progress: fiberProgress },
   ];
+
+  const remainingMacroBars = consumedMacroBars.map((bar) => ({
+    ...bar,
+    value: Math.max(0, bar.target - bar.value),
+    progress: bar.target ? clampPercent((Math.max(0, bar.target - bar.value) / bar.target) * 100) : 0,
+  }));
+
+  const showingRemaining = macroViewMode === "remaining";
+  const displayCalories = showingRemaining ? Math.max(0, remaining.calories) : totals.calories;
+  const displayCaloriesProgress = showingRemaining ? clampPercent(100 - caloriesProgress) : caloriesProgress;
+  const macroBars = showingRemaining ? remainingMacroBars : consumedMacroBars;
 
   const selectedDateObj = new Date(`${selectedDate}T00:00:00`);
   const isSelectedDateToday = toLocalDateInputValue(new Date()) === selectedDate;
@@ -1181,12 +1193,26 @@ export default function HealthNutritionPage() {
           <AccentCard tone="pink">
             <div className="flex items-start justify-between gap-3">
               <Micro onAccent as="p">{macroCardLabel}</Micro>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-black/10 px-3.5 py-1.5 text-xs font-semibold">
-                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-                {roundToWhole(Math.max(0, remaining.calories))} kcal to go
-              </span>
+              <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-black/10 p-1 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setMacroViewMode("consumed")}
+                  className={`rounded-full px-2.5 py-1 transition ${
+                    !showingRemaining ? "bg-black/70 text-white" : "text-black/70 hover:bg-black/10"
+                  }`}
+                >
+                  Consumed
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMacroViewMode("remaining")}
+                  className={`rounded-full px-2.5 py-1 transition ${
+                    showingRemaining ? "bg-black/70 text-white" : "text-black/70 hover:bg-black/10"
+                  }`}
+                >
+                  Remaining
+                </button>
+              </div>
             </div>
 
             <div className="mt-6 grid gap-6 md:grid-cols-[auto_1fr] md:items-center">
@@ -1203,18 +1229,18 @@ export default function HealthNutritionPage() {
                         stroke="#230012"
                         strokeWidth="12"
                         strokeLinecap="round"
-                        strokeDasharray={ringDashArray(caloriesProgress, 76)}
+                        strokeDasharray={ringDashArray(displayCaloriesProgress, 76)}
                       />
                     </g>
                   </svg>
                   <div className="text-center">
                     <p className="text-4xl font-bold leading-none tracking-tight">
-                      {roundToWhole(totals.calories).toLocaleString()}
+                      {roundToWhole(displayCalories).toLocaleString()}
                     </p>
                     <p className="mt-1.5 text-[10px] uppercase tracking-[0.18em] opacity-60">
                       of {roundToWhole(targetNumbers.calories || 0).toLocaleString()} kcal
                     </p>
-                    <p className="mt-1 text-sm font-semibold">{Math.round(caloriesProgress)}%</p>
+                    <p className="mt-1 text-sm font-semibold">{Math.round(displayCaloriesProgress)}%</p>
                   </div>
                 </div>
               </div>
@@ -1730,6 +1756,10 @@ export default function HealthNutritionPage() {
                         const fallbackServings = toEntryQuantity(food.quantity);
                         const effectiveServings = Number.isFinite(draftServings) && draftServings > 0 ? draftServings : fallbackServings;
                         const totalAmount = formatTotalAmount(effectiveServings, food.serving_size, food.serving_unit);
+                        const caloriesTotal = roundToWhole(toNumber(food.calories) * effectiveServings);
+                        const proteinTotal = formatGrams(toNumber(food.protein) * effectiveServings);
+                        const carbsTotal = formatGrams(toNumber(food.carbs) * effectiveServings);
+                        const fatTotal = formatGrams(toNumber(food.fat) * effectiveServings);
                         const isAdding = addingFoodKey === rowKey;
                         const justAdded = addedFlashKey === rowKey;
                         return (
@@ -1748,7 +1778,7 @@ export default function HealthNutritionPage() {
                               </span>
                             ) : null}
                             <span className="mt-1 block text-xs text-[var(--text-muted)]">
-                              {roundToWhole(toNumber(food.calories) * effectiveServings)} cal · {formatGrams(toNumber(food.protein) * effectiveServings)}p · {formatGrams(toNumber(food.carbs) * effectiveServings)}c · {formatGrams(toNumber(food.fat) * effectiveServings)}f
+                              {caloriesTotal} cal · {proteinTotal}p · {carbsTotal}c · {fatTotal}f
                               {totalAmount ? <span className="ml-1.5">· {totalAmount}</span> : null}
                             </span>
                           </span>
