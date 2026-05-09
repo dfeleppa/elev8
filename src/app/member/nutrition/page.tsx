@@ -1727,7 +1727,9 @@ export default function HealthNutritionPage() {
                         const defaultQty = formatServingSize(toEntryQuantity(food.quantity));
                         const draftValue = quantityDrafts[rowKey] ?? defaultQty;
                         const draftServings = Number(draftValue);
-                        const totalAmount = formatTotalAmount(draftServings, food.serving_size, food.serving_unit);
+                        const fallbackServings = toEntryQuantity(food.quantity);
+                        const effectiveServings = Number.isFinite(draftServings) && draftServings > 0 ? draftServings : fallbackServings;
+                        const totalAmount = formatTotalAmount(effectiveServings, food.serving_size, food.serving_unit);
                         const isAdding = addingFoodKey === rowKey;
                         const justAdded = addedFlashKey === rowKey;
                         return (
@@ -1746,7 +1748,8 @@ export default function HealthNutritionPage() {
                               </span>
                             ) : null}
                             <span className="mt-1 block text-xs text-[var(--text-muted)]">
-                              {roundToWhole(food.calories)} cal · {formatGrams(food.protein)}p · {formatGrams(food.carbs)}c · {formatGrams(food.fat)}f
+                              {roundToWhole(toNumber(food.calories) * effectiveServings)} cal · {formatGrams(toNumber(food.protein) * effectiveServings)}p · {formatGrams(toNumber(food.carbs) * effectiveServings)}c · {formatGrams(toNumber(food.fat) * effectiveServings)}f
+                              {totalAmount ? <span className="ml-1.5">· {totalAmount}</span> : null}
                             </span>
                           </span>
                           <span className="flex items-center gap-2">
