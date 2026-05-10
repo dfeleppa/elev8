@@ -5,8 +5,17 @@
 -- 1) Move extensions out of public schema.
 create schema if not exists extensions;
 
-alter extension if exists pg_trgm set schema extensions;
-alter extension if exists vector set schema extensions;
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_trgm') then
+    alter extension pg_trgm set schema extensions;
+  end if;
+
+  if exists (select 1 from pg_extension where extname = 'vector') then
+    alter extension vector set schema extensions;
+  end if;
+end
+$$;
 
 -- 2) Restrict SECURITY DEFINER RPC exposure.
 -- Revoke EXECUTE only if public.mobile_app_user_role() exists.

@@ -79,7 +79,15 @@ end $$;
 -- 3) Move extensions to a dedicated schema.
 create schema if not exists extensions;
 
-alter extension if exists vector set schema extensions;
-alter extension if exists pg_trgm set schema extensions;
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'vector') then
+    alter extension vector set schema extensions;
+  end if;
+
+  if exists (select 1 from pg_extension where extname = 'pg_trgm') then
+    alter extension pg_trgm set schema extensions;
+  end if;
+end $$;
 
 commit;
