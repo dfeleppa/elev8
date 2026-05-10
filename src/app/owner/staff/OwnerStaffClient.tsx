@@ -24,6 +24,7 @@ type StaffRow = {
 };
 
 type PromotableMember = {
+  id: string;
   email: string;
   fullName: string;
   membership: string | null;
@@ -125,7 +126,7 @@ export default function OwnerStaffClient() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const [selectedMemberEmail, setSelectedMemberEmail] = useState("");
+  const [selectedMemberId, setSelectedMemberId] = useState("");
   const [promoteRole, setPromoteRole] = useState<StaffRole>("coach");
   const [promoteCoachingPayrate, setPromoteCoachingPayrate] = useState("");
   const [promoteOfficePayrate, setPromoteOfficePayrate] = useState("");
@@ -142,6 +143,7 @@ export default function OwnerStaffClient() {
 
   const promotableOptions = useMemo(() => {
     return promotableMembers.map((row) => ({
+      id: row.id,
       email: row.email,
       label: row.fullName,
       membership: row.membership,
@@ -161,7 +163,7 @@ export default function OwnerStaffClient() {
 
       setStaff(payload.staff);
       setPromotableMembers(payload.promotableMembers);
-      setSelectedMemberEmail((prev) => prev || payload.promotableMembers[0]?.email || "");
+      setSelectedMemberId((prev) => prev || payload.promotableMembers[0]?.id || "");
 
       const nextEditing: Record<string, EditState> = {};
       for (const row of payload.staff) {
@@ -189,12 +191,12 @@ export default function OwnerStaffClient() {
 
   const promoteMember = async (event: FormEvent) => {
     event.preventDefault();
-    if (!selectedMemberEmail) {
+    if (!selectedMemberId) {
       setError("Choose a member to promote.");
       return;
     }
 
-    const selectedMember = promotableMembers.find((member) => member.email === selectedMemberEmail) ?? null;
+    const selectedMember = promotableMembers.find((member) => member.id === selectedMemberId) ?? null;
 
     setSaving(true);
     setError(null);
@@ -205,7 +207,8 @@ export default function OwnerStaffClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          existingMemberEmail: selectedMemberEmail,
+          existingUserId: selectedMemberId,
+          existingMemberEmail: selectedMember?.email,
           existingMemberName: selectedMember?.fullName,
           role: promoteRole,
           coachingPayrate: asPayrate(promoteCoachingPayrate),
@@ -273,8 +276,8 @@ export default function OwnerStaffClient() {
     }
   };
 
-  const saveStaffRow = async (membershipId: string) => {
-    const draft = editing[membershipId];
+  const saveStaffRow = async (userId: string) => {
+    const draft = editing[userId];
     if (!draft) {
       return;
     }
@@ -288,7 +291,7 @@ export default function OwnerStaffClient() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          membershipId,
+          userId,
           role: draft.role,
           coachingPayrate: asPayrate(draft.coachingPayrate),
           officePayrate: asPayrate(draft.officePayrate),
@@ -352,14 +355,14 @@ export default function OwnerStaffClient() {
               </label>
               <select
                 id="promote-member"
-                value={selectedMemberEmail}
-                onChange={(event) => setSelectedMemberEmail(event.target.value)}
+                value={selectedMemberId}
+                onChange={(event) => setSelectedMemberId(event.target.value)}
                 className={fieldClass}
                 disabled={saving || loading}
               >
                 {promotableOptions.length === 0 ? <option value="">No promotable members</option> : null}
                 {promotableOptions.map((option) => (
-                  <option key={option.email} value={option.email}>
+                  <option key={option.id} value={option.id}>
                     {option.label}
                     {option.membership ? ` • ${option.membership}` : ""}
                   </option>
