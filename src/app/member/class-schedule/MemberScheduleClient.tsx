@@ -287,8 +287,8 @@ export default function MemberScheduleClient() {
             <ChevronLeft size={16} />
           </button>
 
-          <div className="min-w-0 flex-1 overflow-x-auto">
-            <div className="flex gap-1.5 min-w-max">
+          <div className="min-w-0 flex-1 overflow-x-auto md:overflow-x-visible">
+            <div className="flex min-w-max gap-1.5 md:min-w-0 md:w-full">
               {dayRail.map((dateKey) => {
                 const isSelected = dateKey === selectedDate;
                 const isToday = dateKey === todayKey;
@@ -299,7 +299,7 @@ export default function MemberScheduleClient() {
                     key={dateKey}
                     type="button"
                     onClick={() => setSelectedDate(dateKey)}
-                    className={`flex w-[62px] shrink-0 flex-col items-center rounded-2xl border px-1.5 py-2.5 text-center transition ${
+                    className={`flex w-[62px] shrink-0 flex-col items-center rounded-2xl border px-1.5 py-2.5 text-center transition md:w-auto md:flex-1 md:shrink ${
                       isSelected
                         ? "border-transparent bg-[linear-gradient(160deg,#ff4a8d,#8b5cf6)] shadow-[0_8px_24px_rgba(255,74,141,0.40)]"
                         : "border-[var(--line)] bg-[var(--panel-2)] hover:border-[var(--line-strong)] hover:bg-[var(--panel)]"
