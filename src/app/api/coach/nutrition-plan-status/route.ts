@@ -22,13 +22,20 @@ export async function GET(request: Request) {
       getCoachNutritionPlan<{
         goal_type: string | null;
         target_weight_lbs: number | null;
+        maintenance_calories: number | null;
+        target_calories: number | null;
+        protein_grams: number | null;
+        carbs_grams: number | null;
+        fat_grams: number | null;
+        maintenance_calories_source: "formula" | "empirical" | null;
+        maintenance_calories_estimated_at: string | null;
         effective_date: string | null;
         last_check_in_date: string | null;
         next_check_in_date: string | null;
         plan_payload: { weightLbs?: number | null; weightKg?: number | null } | null;
       }>(
         userId,
-        "goal_type, target_weight_lbs, effective_date, last_check_in_date, next_check_in_date, plan_payload"
+        "goal_type, target_weight_lbs, maintenance_calories, target_calories, protein_grams, carbs_grams, fat_grams, maintenance_calories_source, maintenance_calories_estimated_at, effective_date, last_check_in_date, next_check_in_date, plan_payload"
       ),
       supabaseAdmin
         .from("app_users")
@@ -78,6 +85,28 @@ export async function GET(request: Request) {
             targetWeight:
               typeof latestPlan.target_weight_lbs === "number" && Number.isFinite(latestPlan.target_weight_lbs)
                 ? latestPlan.target_weight_lbs
+                : null,
+            estimatedMetabolism:
+              typeof latestPlan.maintenance_calories === "number" && Number.isFinite(latestPlan.maintenance_calories)
+                ? latestPlan.maintenance_calories
+                : null,
+            metabolismSource: latestPlan.maintenance_calories_source,
+            metabolismEstimatedAt: latestPlan.maintenance_calories_estimated_at,
+            targetCalories:
+              typeof latestPlan.target_calories === "number" && Number.isFinite(latestPlan.target_calories)
+                ? latestPlan.target_calories
+                : null,
+            proteinGrams:
+              typeof latestPlan.protein_grams === "number" && Number.isFinite(latestPlan.protein_grams)
+                ? latestPlan.protein_grams
+                : null,
+            carbsGrams:
+              typeof latestPlan.carbs_grams === "number" && Number.isFinite(latestPlan.carbs_grams)
+                ? latestPlan.carbs_grams
+                : null,
+            fatGrams:
+              typeof latestPlan.fat_grams === "number" && Number.isFinite(latestPlan.fat_grams)
+                ? latestPlan.fat_grams
                 : null,
             effectiveDate: latestPlan.effective_date,
             lastCheckInDate: latestPlan.last_check_in_date,

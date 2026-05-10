@@ -11,6 +11,13 @@ type CoachPlanSummary = {
   startWeight?: number | null;
   currentWeight?: number | null;
   targetWeight?: number | null;
+  estimatedMetabolism?: number | null;
+  metabolismSource?: "formula" | "empirical" | null;
+  metabolismEstimatedAt?: string | null;
+  targetCalories?: number | null;
+  proteinGrams?: number | null;
+  carbsGrams?: number | null;
+  fatGrams?: number | null;
   effectiveDate?: string | null;
   lastCheckInDate?: string | null;
   nextCheckInDate?: string | null;
@@ -36,6 +43,21 @@ function formatWeight(value: number | null | undefined) {
   if (!Number.isFinite(num) || num === 0) return "—";
   return `${num.toFixed(1)} lb`;
 }
+
+function formatCalories(value: number | null | undefined) {
+  if (value == null) return "—";
+  const num = Math.round(Number(value));
+  if (!Number.isFinite(num) || num <= 0) return "—";
+  return `${num} kcal`;
+}
+
+function formatGrams(value: number | null | undefined) {
+  if (value == null) return "—";
+  const num = Number(value);
+  if (!Number.isFinite(num) || num <= 0) return "—";
+  return `${Math.round(num)} g`;
+}
+
 
 export default function CoachPlanClient() {
   const [summary, setSummary] = useState<CoachPlanSummary | null>(null);
@@ -144,6 +166,30 @@ export default function CoachPlanClient() {
           <div>
             <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Next check-in</dt>
             <dd className="mt-1 text-[var(--text)]">{formatDate(summary?.nextCheckInDate)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Estimated metabolism</dt>
+            <dd className="mt-1 text-[var(--text)]">{formatCalories(summary?.estimatedMetabolism)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Daily calorie target</dt>
+            <dd className="mt-1 text-[var(--text)]">{formatCalories(summary?.targetCalories)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Macros (P/C/F)</dt>
+            <dd className="mt-1 text-[var(--text)]">
+              {formatGrams(summary?.proteinGrams)} / {formatGrams(summary?.carbsGrams)} / {formatGrams(summary?.fatGrams)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Metabolism source</dt>
+            <dd className="mt-1 text-[var(--text)]">
+              {summary?.metabolismSource === "empirical" ? "Empirical" : summary?.metabolismSource === "formula" ? "Formula" : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Estimate updated</dt>
+            <dd className="mt-1 text-[var(--text)]">{formatDate(summary?.metabolismEstimatedAt)}</dd>
           </div>
         </dl>
       </Panel>
