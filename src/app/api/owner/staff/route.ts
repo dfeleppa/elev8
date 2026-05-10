@@ -190,7 +190,9 @@ export async function PATCH(request: NextRequest) {
     officePayrate?: number | string | null;
   } | null;
 
-  const userId = payload?.userId?.trim() || payload?.membershipId?.trim() || "";
+  if (!payload) return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
+
+  const userId = payload.userId?.trim() || payload.membershipId?.trim() || "";
   if (!userId) return NextResponse.json({ error: "userId is required." }, { status: 400 });
 
   if (!isAllowedStaffRole(payload.role)) {
