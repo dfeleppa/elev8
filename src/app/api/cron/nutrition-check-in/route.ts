@@ -4,11 +4,13 @@ import { NextResponse } from "next/server";
 
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import {
+  METABOLISM_AUTO_UPDATE_DELTA_KCAL,
   NEXT_CHECK_IN_DAYS,
   buildCheckInRecommendation,
   datePlusDays,
   todayIsoDate,
 } from "@/lib/nutrition-check-in";
+import type { MetabolismEstimate } from "@/lib/nutrition-adjustment";
 
 export const runtime = "nodejs";
 
@@ -70,17 +72,49 @@ async function processMember(memberId: string, planId: string) {
   }
 
   // Bump the plan's next_check_in_date so we don't repeatedly re-fire.
+  // Also persist the metabolism estimate (and auto-update maintenance_calories
+  // when high confidence + meaningful delta).
   const today = todayIsoDate();
+  const planUpdate = buildPlanUpdate(today, result.metabolismEstimate);
   await supabaseAdmin
     .from("coach_nutrition_plans")
-    .update({
-      last_check_in_date: today,
-      next_check_in_date: datePlusDays(today, NEXT_CHECK_IN_DAYS),
-      updated_at: new Date().toISOString(),
-    })
+    .update(planUpdate)
     .eq("id", planId);
 
-  return { memberId, status: "queued", recommendation: result.recommendation.status };
+  return {
+    memberId,
+    status: "queued",
+    recommendation: result.recommendation.status,
+    metabolism: result.metabolismEstimate.status,
+    metabolismUpdated: planUpdate.maintenance_calories_source === "empirical",
+  };
+}
+
+function buildPlanUpdate(
+  today: string,
+  estimate: MetabolismEstimate
+): Record<string, unknown> {
+  const base: Record<string, unknown> = {
+    last_check_in_date: today,
+    next_check_in_date: datePlusDays(today, NEXT_CHECK_IN_DAYS),
+    updated_at: new Date().toISOString(),
+    last_metabolism_estimate: estimate as unknown as Record<string, unknown>,
+    maintenance_calories_estimated_at: new Date().toISOString(),
+  };
+
+  const shouldAutoUpdate =
+    estimate.status === "estimated" &&
+    estimate.confidence === "high" &&
+    estimate.estimatedTdee !== null &&
+    estimate.deltaKcal !== null &&
+    Math.abs(estimate.deltaKcal) > METABOLISM_AUTO_UPDATE_DELTA_KCAL;
+
+  if (shouldAutoUpdate) {
+    base.maintenance_calories = estimate.estimatedTdee;
+    base.maintenance_calories_source = "empirical";
+  }
+
+  return base;
 }
 
 export async function GET(request: Request) {
@@ -101,7 +135,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ today, processed: 0, results: [] });
     }
 
-    const results: Array<{ memberId: string; status: string; reason?: string; recommendation?: string }> = [];
+    const results: Array<{
+      memberId: string;
+      status: string;
+      reason?: string;
+      recommendation?: string;
+      metabolism?: string;
+      metabolismUpdated?: boolean;
+    }> = [];
     for (const plan of duePlans) {
       try {
         results.push(await processMember(plan.member_id, plan.id));

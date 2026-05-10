@@ -480,3 +480,207 @@ function buildAdjustment(
     calorieDelta: finalDelta,
   };
 }
+
+// ----------------------------------------------------------------------------
+// Empirical metabolism (TDEE) estimator
+// ----------------------------------------------------------------------------
+
+export type MetabolismEstimateStatus =
+  | "estimated"
+  | "low_adherence"
+  | "insufficient_weight_data"
+  | "likely_undertracking"
+  | "out_of_bounds";
+
+export type MetabolismConfidence = "high" | "medium" | "low";
+
+export type MetabolismEstimate = {
+  status: MetabolismEstimateStatus;
+  windowDays: number;
+  daysLogged: number;
+  daysExpected: number;
+  avgDailyCalories: number;
+  loggedVsTargetRatio: number;
+  weightEntries: number;
+  weightSpanDays: number | null;
+  startWeightLbs: number | null;
+  endWeightLbs: number | null;
+  weightChangeLbs: number | null;
+  estimatedTdee: number | null;
+  formulaTdee: number;
+  deltaKcal: number | null;
+  confidence: MetabolismConfidence;
+  reason: string;
+};
+
+export type MetabolismEstimateInputs = {
+  plan: CurrentPlan;
+  dailyLogs: DailyLog[];
+  weights: WeightEntry[];
+  /** Window length in days (default 7). */
+  windowDays?: number;
+  /** ISO date (YYYY-MM-DD) representing "today"; defaults to latest log/weight. */
+  asOf?: string;
+};
+
+const KCAL_PER_LB = 3500;
+const TDEE_SANITY_FLOOR = 800;
+const TDEE_SANITY_CEILING = 5000;
+
+function latestDate(logs: DailyLog[], weights: WeightEntry[]): string | null {
+  let latest: string | null = null;
+  for (const l of logs) if (latest === null || l.date > latest) latest = l.date;
+  for (const w of weights) if (latest === null || w.date > latest) latest = w.date;
+  return latest;
+}
+
+function isoMinusDays(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+export function estimateMetabolism(inputs: MetabolismEstimateInputs): MetabolismEstimate {
+  const plan = inputs.plan;
+  const windowDays = inputs.windowDays ?? 7;
+  const asOf = inputs.asOf ?? latestDate(inputs.dailyLogs, inputs.weights);
+  const formulaTdee = round0(plan.maintenanceCalories);
+
+  const empty: MetabolismEstimate = {
+    status: "insufficient_weight_data",
+    windowDays,
+    daysLogged: 0,
+    daysExpected: windowDays,
+    avgDailyCalories: 0,
+    loggedVsTargetRatio: 0,
+    weightEntries: 0,
+    weightSpanDays: null,
+    startWeightLbs: null,
+    endWeightLbs: null,
+    weightChangeLbs: null,
+    estimatedTdee: null,
+    formulaTdee,
+    deltaKcal: null,
+    confidence: "low",
+    reason: "No data available.",
+  };
+
+  if (asOf === null) {
+    return { ...empty, reason: "No daily logs or weight entries available." };
+  }
+
+  const windowStart = isoMinusDays(asOf, windowDays - 1);
+  const logsInWindow = inputs.dailyLogs.filter((l) => l.date >= windowStart && l.date <= asOf);
+  const loggedDays = logsInWindow.filter((d) => d.calories > 0);
+  const daysLogged = loggedDays.length;
+  const avgDailyCalories = daysLogged > 0 ? round0(average(loggedDays.map((d) => d.calories))) : 0;
+  const loggedVsTargetRatio =
+    plan.targetCalories > 0 && avgDailyCalories > 0
+      ? round1(avgDailyCalories / plan.targetCalories * 100) / 100
+      : 0;
+
+  const weightsInWindow = [...inputs.weights]
+    .filter((w) => w.date >= windowStart && w.date <= asOf)
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+  const weightEntries = weightsInWindow.length;
+  const startWeight = weightEntries > 0 ? round1(weightsInWindow[0].weightLbs) : null;
+  const endWeight = weightEntries > 0 ? round1(weightsInWindow[weightEntries - 1].weightLbs) : null;
+  const weightSpanDays =
+    weightEntries >= 2
+      ? daysBetween(weightsInWindow[0].date, weightsInWindow[weightEntries - 1].date)
+      : null;
+  const weightChangeLbs =
+    startWeight !== null && endWeight !== null ? round1(endWeight - startWeight) : null;
+
+  const base: MetabolismEstimate = {
+    ...empty,
+    daysLogged,
+    avgDailyCalories,
+    loggedVsTargetRatio,
+    weightEntries,
+    weightSpanDays,
+    startWeightLbs: startWeight,
+    endWeightLbs: endWeight,
+    weightChangeLbs,
+  };
+
+  // Gate 1: adherence — need at least 5/7 days logged.
+  if (daysLogged < Math.ceil(windowDays * 5 / 7)) {
+    return {
+      ...base,
+      status: "low_adherence",
+      reason: `Only ${daysLogged}/${windowDays} days logged in the last ${windowDays} days. Need ≥${Math.ceil(windowDays * 5 / 7)} to estimate metabolism.`,
+      confidence: "low",
+    };
+  }
+
+  // Gate 2: weight data — need ≥2 entries spanning ≥6 days (within a 7-day window).
+  const minSpan = Math.max(1, windowDays - 1);
+  if (weightEntries < 2 || weightSpanDays === null || weightSpanDays < minSpan) {
+    return {
+      ...base,
+      status: "insufficient_weight_data",
+      reason: `Need ≥2 weight entries spanning ≥${minSpan} days; have ${weightEntries} spanning ${weightSpanDays ?? 0} days.`,
+      confidence: "low",
+    };
+  }
+
+  const rawEstimate =
+    avgDailyCalories - ((weightChangeLbs as number) * KCAL_PER_LB) / (weightSpanDays as number);
+  const estimatedTdee = round0(rawEstimate);
+  const deltaKcal = estimatedTdee - formulaTdee;
+
+  // Sanity bounds — physiologically implausible values usually mean bad data.
+  if (estimatedTdee < TDEE_SANITY_FLOOR || estimatedTdee > TDEE_SANITY_CEILING) {
+    return {
+      ...base,
+      status: "out_of_bounds",
+      estimatedTdee,
+      deltaKcal,
+      reason: `Estimate of ${estimatedTdee} kcal/day is outside the plausible range (${TDEE_SANITY_FLOOR}–${TDEE_SANITY_CEILING}). Likely a logging or weigh-in data issue.`,
+      confidence: "low",
+    };
+  }
+
+  // Gate 3: undertracking sniff — logged calories far below target while weight not moving toward goal.
+  const goalDirection: 1 | -1 | 0 =
+    plan.goalType === "lose_weight" ? -1 : plan.goalType === "gain_weight" ? 1 : 0;
+  const movingTowardGoal =
+    goalDirection === 0
+      ? Math.abs(weightChangeLbs as number) < 1
+      : Math.sign(weightChangeLbs as number) === goalDirection;
+  if (
+    goalDirection !== 0 &&
+    !movingTowardGoal &&
+    loggedVsTargetRatio > 0 &&
+    loggedVsTargetRatio < UNDERTRACK_RATIO
+  ) {
+    return {
+      ...base,
+      status: "likely_undertracking",
+      estimatedTdee,
+      deltaKcal,
+      reason: `Logged ~${Math.round(loggedVsTargetRatio * 100)}% of target calories but weight not moving toward goal — estimate likely understates true TDEE due to undertracking.`,
+      confidence: "low",
+    };
+  }
+
+  // Confidence tiers.
+  let confidence: MetabolismConfidence = "low";
+  if (daysLogged >= 6 && weightEntries >= 3 && loggedVsTargetRatio >= 0.85) {
+    confidence = "high";
+  } else if (daysLogged >= 5 && weightEntries >= 2) {
+    confidence = "medium";
+  }
+
+  return {
+    ...base,
+    status: "estimated",
+    estimatedTdee,
+    deltaKcal,
+    confidence,
+    reason:
+      `Estimated from ${daysLogged}/${windowDays} logged days (avg ${avgDailyCalories} kcal/day) and ` +
+      `${weightChangeLbs! >= 0 ? "+" : ""}${weightChangeLbs} lb over ${weightSpanDays} days.`,
+  };
+}

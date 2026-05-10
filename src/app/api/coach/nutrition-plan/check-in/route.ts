@@ -37,6 +37,7 @@ export async function GET(request: Request) {
       latestPlanId: result.latestPlan.id,
       currentPlan: result.currentPlan,
       recommendation: result.recommendation,
+      metabolismEstimate: result.metabolismEstimate,
     });
   } catch (err) {
     console.error("[check-in GET] failed", err);

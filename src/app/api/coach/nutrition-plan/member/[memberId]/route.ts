@@ -24,7 +24,7 @@ export async function GET(
     supabaseAdmin
       .from("coach_nutrition_plans")
       .select(
-        "id, goal_type, target_calories, protein_grams, carbs_grams, fat_grams, fiber_grams, effective_date, last_check_in_date, next_check_in_date, adjustment_reason, previous_plan_id, adherence_snapshot"
+        "id, goal_type, target_calories, maintenance_calories, maintenance_calories_source, maintenance_calories_estimated_at, last_metabolism_estimate, protein_grams, carbs_grams, fat_grams, fiber_grams, effective_date, last_check_in_date, next_check_in_date, adjustment_reason, previous_plan_id, adherence_snapshot"
       )
       .eq("member_id", memberId)
       .order("effective_date", { ascending: false })

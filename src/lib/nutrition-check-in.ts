@@ -3,16 +3,24 @@ import "server-only";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import {
   analyzeNutritionAdjustment,
+  estimateMetabolism,
   type AdjustmentRecommendation,
   type CurrentPlan,
   type DailyLog,
+  type MetabolismEstimate,
   type WeightEntry,
 } from "@/lib/nutrition-adjustment";
 import type { GoalType } from "@/lib/nutrition-calculations";
 
 export const ADHERENCE_WINDOW_DAYS = 14;
 export const WEIGHT_WINDOW_DAYS = 21;
+export const METABOLISM_WINDOW_DAYS = 7;
 export const NEXT_CHECK_IN_DAYS = 10;
+/**
+ * Auto-update threshold: only overwrite stored maintenance_calories when the
+ * empirical estimate differs by more than this many kcal/day, to avoid noise.
+ */
+export const METABOLISM_AUTO_UPDATE_DELTA_KCAL = 100;
 
 export type LatestPlanRow = {
   id: string;
@@ -150,6 +158,7 @@ export type CheckInResult =
       latestPlan: LatestPlanRow;
       currentPlan: CurrentPlan;
       recommendation: AdjustmentRecommendation;
+      metabolismEstimate: MetabolismEstimate;
     };
 
 export async function buildCheckInRecommendation(memberId: string): Promise<CheckInResult> {
@@ -178,7 +187,15 @@ export async function buildCheckInRecommendation(memberId: string): Promise<Chec
     weightWindowDays: WEIGHT_WINDOW_DAYS,
   });
 
-  return { latestPlan, currentPlan, recommendation };
+  const metabolismEstimate = estimateMetabolism({
+    plan: currentPlan,
+    dailyLogs,
+    weights,
+    windowDays: METABOLISM_WINDOW_DAYS,
+    asOf: today,
+  });
+
+  return { latestPlan, currentPlan, recommendation, metabolismEstimate };
 }
 
 export async function applyAdjustmentAsNewPlan(
