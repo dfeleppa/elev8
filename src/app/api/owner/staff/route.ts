@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
   // Promotable = members roster entries not already in staff
   const { data: memberRows, error: memberError } = await supabaseAdmin
     .from("app_users")
-    .select("first_name, last_name, email, role, membership")
+    .select("id, full_name, email, role")
     .order("created_at", { ascending: true });
 
   if (memberError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
@@ -74,15 +74,22 @@ export async function GET(request: NextRequest) {
     .map((row) => {
       const email = normalizeEmail(row.email);
       if (!email || staffEmails.has(email)) return null;
-      const fullName = `${String(row.first_name ?? "").trim()} ${String(row.last_name ?? "").trim()}`.trim();
+      const fullName = normalizeName(row.full_name) ?? email;
       return {
+        id: row.id,
         email,
-        fullName: fullName || email,
-        membership: typeof row.membership === "string" ? row.membership : null,
+        fullName,
+        membership: null,
         role: typeof row.role === "string" ? row.role : "member",
       };
     })
-    .filter(Boolean) as { email: string; fullName: string; membership: string | null; role: string }[];
+    .filter(Boolean) as {
+    id: string;
+    email: string;
+    fullName: string;
+    membership: string | null;
+    role: string;
+  }[];
 
   return NextResponse.json({ staff, promotableMembers });
 }
@@ -177,12 +184,14 @@ export async function PATCH(request: NextRequest) {
 
   const payload = (await request.json().catch(() => null)) as {
     userId?: string;
+    membershipId?: string;
     role?: string;
     coachingPayrate?: number | string | null;
     officePayrate?: number | string | null;
   } | null;
 
-  if (!payload?.userId) return NextResponse.json({ error: "userId is required." }, { status: 400 });
+  const userId = payload?.userId?.trim() || payload?.membershipId?.trim() || "";
+  if (!userId) return NextResponse.json({ error: "userId is required." }, { status: 400 });
 
   if (!isAllowedStaffRole(payload.role)) {
     return NextResponse.json({ error: "role must be one of: coach, admin." }, { status: 400 });
@@ -191,7 +200,7 @@ export async function PATCH(request: NextRequest) {
   const { data: existing } = await supabaseAdmin
     .from("app_users")
     .select("id, role")
-    .eq("id", payload.userId)
+    .eq("id", userId)
     .single();
 
   if (!existing) return NextResponse.json({ error: "User not found." }, { status: 404 });
@@ -211,7 +220,7 @@ export async function PATCH(request: NextRequest) {
       office_payrate: officePayrate,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", payload.userId);
+    .eq("id", userId);
 
   if (updateError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
 
