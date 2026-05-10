@@ -62,13 +62,18 @@ function toDraft(entry: PayrollEntry): EntryDraft {
   };
 }
 
+function normalizeStaffKey(value: string): string {
+  return value.trim().toLowerCase();
+}
+
 function calcPay(
   staffName: string,
   coachingHours: string,
   officeHours: string,
   staffList: StaffMember[]
 ): string {
-  const member = staffList.find((s) => s.name === staffName);
+  const staffKey = normalizeStaffKey(staffName);
+  const member = staffList.find((s) => normalizeStaffKey(s.name) === staffKey);
   if (!member) return "";
   const coaching = parseFloat(coachingHours) || 0;
   const office = parseFloat(officeHours) || 0;
@@ -160,17 +165,19 @@ export default function OwnerPayrollClient() {
       .then((r) => r.json())
       .then((data) => {
         const members: StaffMember[] = (data.staff ?? [])
-          .filter((s: { user?: { fullName?: string } }) => s.user?.fullName)
           .map(
             (s: {
-              user: { fullName: string };
+              user?: { fullName?: string | null; email?: string | null } | null;
               coachingPayrate: number | null;
               officePayrate: number | null;
-            }) => ({
-              name: s.user.fullName,
-              coachingPayrate: Number(s.coachingPayrate ?? 0),
-              officePayrate: Number(s.officePayrate ?? 0),
-            })
+            }) => {
+              const name = s.user?.fullName?.trim() || s.user?.email?.trim() || "Unknown staff";
+              return {
+                name,
+                coachingPayrate: Number(s.coachingPayrate ?? 0),
+                officePayrate: Number(s.officePayrate ?? 0),
+              };
+            }
           )
           .sort((a: StaffMember, b: StaffMember) => a.name.localeCompare(b.name));
         setStaffList(members);
