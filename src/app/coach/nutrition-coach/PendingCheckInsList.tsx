@@ -225,7 +225,7 @@ export default function PendingCheckInsList() {
                 {busyId === item.id ? "Dismissing…" : "Dismiss"}
               </button>
               <Link
-                href={`/coach/nutrition-coach/${item.memberId}`}
+                href={`/coach/nutrition?memberId=${encodeURIComponent(item.memberId)}`}
                 className="rounded-full border border-[var(--line-strong)] px-3 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text)]"
               >
                 View Member

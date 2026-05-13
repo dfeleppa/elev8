@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function LegacyCoachCoachPage() {
-  redirect("/coach/nutrition-coach");
+  redirect("/coach/nutrition");
 }

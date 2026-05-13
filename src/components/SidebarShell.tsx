@@ -72,6 +72,7 @@ const navItems: NavItem[] = [
         minRole: "coach",
         children: [
           { label: "Gym Dashboard", href: "/gym-dashboard", minRole: "coach" },
+          { label: "Nutrition", href: "/coach/nutrition", minRole: "coach" },
           { label: "Schedule", href: "/coach/schedule", minRole: "coach" },
           { label: "Reports - Members", href: "/coach/reports-members", minRole: "coach" },
         ],
@@ -194,6 +195,7 @@ function getNavIcon(href: string) {
     case "/admin/programming/builder":
     case "/member/workout":
       return <Dumbbell {...iconProps} />;
+    case "/coach/nutrition":
     case "/coach/nutrition-coach":
     case "/member/nutrition-coach":
       return <HandPlatter {...iconProps} />;

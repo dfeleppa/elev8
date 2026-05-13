@@ -18,7 +18,7 @@ export default async function OrganizationCoachPage() {
         description="Run the gym-side coaching workflows from one place, from daily floor operations to athlete nutrition oversight."
         links={[
           { label: "Open Gym Dashboard", href: "/gym-dashboard" },
-          { label: "Open Nutrition Coach", href: "/coach/nutrition-coach" },
+          { label: "Open Nutrition", href: "/coach/nutrition" },
           { label: "Open Schedule", href: "/coach/schedule" },
           { label: "Open Member Reports", href: "/coach/reports-members" },
         ]}
