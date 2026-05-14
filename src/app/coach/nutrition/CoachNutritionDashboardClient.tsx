@@ -82,11 +82,27 @@ type CheckInRow = {
 
 type WeightRow = { entry_date: string; value: number; unit: string };
 
+type RecentNutritionDay = {
+  date?: string | null;
+  entryCount: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number | null;
+  calorieTarget?: number | null;
+  proteinTarget?: number | null;
+  carbsTarget?: number | null;
+  fatTarget?: number | null;
+  fiberTarget?: number | null;
+};
+
 type Detail = {
   member: { id: string; full_name: string | null; email: string | null };
   plans: PlanRow[];
   checkIns: CheckInRow[];
   weights: WeightRow[];
+  recentNutritionDays: RecentNutritionDay[];
 };
 
 type LiveRecommendation = {
@@ -163,6 +179,13 @@ function formatDateTime(value: string | null | undefined) {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
   return parsed.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatMacroCell(value: number | null | undefined, target?: number | null) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return "-";
+  const rounded = Math.round(Number(value));
+  const targetNum = typeof target === "number" && Number.isFinite(target) && target > 0 ? Math.round(target) : null;
+  return targetNum ? `${formatNumber(rounded)} / ${formatNumber(targetNum)} g` : `${formatNumber(rounded)} g`;
 }
 
 function titleize(value: string | null | undefined) {
@@ -379,6 +402,7 @@ export default function CoachNutritionDashboardClient() {
             <>
               <CurrentPlanCards plan={currentPlan} />
               <MacroCalculationCard plan={currentPlan} />
+              <RecentNutritionDaysTable days={detail.recentNutritionDays ?? []} />
               <MetabolismCard plan={currentPlan} />
             </>
           ) : (
@@ -400,6 +424,58 @@ export default function CoachNutritionDashboardClient() {
         </section>
       ) : null}
     </div>
+  );
+}
+
+function RecentNutritionDaysTable({ days }: { days: RecentNutritionDay[] }) {
+  return (
+    <section className="panel rounded-3xl p-5">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-[var(--text)]">Recent Nutrition Entries</h2>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            Last 14 tracked days for the selected member. Totals include logged quantity.
+          </p>
+        </div>
+      </div>
+
+      {days.length === 0 ? (
+        <p className="text-sm text-[var(--text-muted)]">No nutrition entries have been logged yet.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-[var(--line)]">
+          <table className="min-w-[820px] w-full text-left text-sm">
+            <thead className="border-b border-[var(--line)] bg-[var(--panel-2)] text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
+              <tr>
+                <th className="px-4 py-3 font-medium">Date</th>
+                <th className="px-4 py-3 text-right font-medium">Calories</th>
+                <th className="px-4 py-3 text-right font-medium">Protein</th>
+                <th className="px-4 py-3 text-right font-medium">Carbs</th>
+                <th className="px-4 py-3 text-right font-medium">Fat</th>
+                <th className="px-4 py-3 text-right font-medium">Fiber</th>
+                <th className="px-4 py-3 text-right font-medium">Entries</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--line)]">
+              {days.map((day) => (
+                <tr key={day.date ?? "unknown"} className="text-[var(--text)]">
+                  <td className="whitespace-nowrap px-4 py-3">{formatDate(day.date)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right">
+                    {day.calorieTarget
+                      ? `${formatNumber(day.calories)} / ${formatNumber(day.calorieTarget)} kcal`
+                      : `${formatNumber(day.calories)} kcal`}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right">{formatMacroCell(day.protein, day.proteinTarget)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right">{formatMacroCell(day.carbs, day.carbsTarget)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right">{formatMacroCell(day.fat, day.fatTarget)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right">{formatMacroCell(day.fiber, day.fiberTarget)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right">{formatNumber(day.entryCount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 
