@@ -2,9 +2,143 @@ import { NextResponse } from "next/server";
 
 import { getCoachNutritionPlan, hasCoachNutritionPlan } from "@/lib/coach-plan";
 import { requireRequestUserContext } from "@/lib/member";
+import { runNutritionQueryWithFallbacks } from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
+
+type NutritionDayRow = {
+  id: string;
+  day_date: string | null;
+  calorie_target?: number | null;
+  protein_target?: number | null;
+  carbs_target?: number | null;
+  fat_target?: number | null;
+  fiber_target?: number | null;
+};
+
+type NutritionEntryRow = {
+  day_id: string | null;
+  quantity?: number | null;
+  calories?: number | null;
+  protein?: number | null;
+  carbs?: number | null;
+  fat?: number | null;
+  fiber?: number | null;
+};
+
+function toFiniteNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function roundNutritionTotal(value: number) {
+  return Math.round(value * 10) / 10;
+}
+
+async function getRecentNutritionDays(userId: string) {
+  const { data: days, error: daysError } = await runNutritionQueryWithFallbacks<NutritionDayRow[]>([
+    () =>
+      supabaseAdmin
+        .from("nutrition_days")
+        .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target, fiber_target")
+        .eq("member_id", userId)
+        .order("day_date", { ascending: false })
+        .limit(90),
+    () =>
+      supabaseAdmin
+        .from("nutrition_days")
+        .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target")
+        .eq("member_id", userId)
+        .order("day_date", { ascending: false })
+        .limit(90),
+  ]);
+
+  if (daysError || !days?.length) {
+    return [];
+  }
+
+  const dayIds = days.map((day) => day.id).filter(Boolean);
+  if (dayIds.length === 0) {
+    return [];
+  }
+
+  const { data: entries, error: entriesError } = await runNutritionQueryWithFallbacks<NutritionEntryRow[]>([
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .select("day_id, quantity, calories, protein, carbs, fat, fiber")
+        .eq("member_id", userId)
+        .in("day_id", dayIds),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .select("day_id, quantity, calories, protein, carbs, fat")
+        .eq("member_id", userId)
+        .in("day_id", dayIds),
+  ]);
+
+  if (entriesError || !entries?.length) {
+    return [];
+  }
+
+  const totalsByDay = new Map<
+    string,
+    {
+      entryCount: number;
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      fiber: number;
+    }
+  >();
+
+  for (const entry of entries) {
+    if (!entry.day_id) continue;
+    const quantity = toFiniteNumber(entry.quantity) || 1;
+    const totals =
+      totalsByDay.get(entry.day_id) ??
+      {
+        entryCount: 0,
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        fiber: 0,
+      };
+
+    totals.entryCount += 1;
+    totals.calories += toFiniteNumber(entry.calories) * quantity;
+    totals.protein += toFiniteNumber(entry.protein) * quantity;
+    totals.carbs += toFiniteNumber(entry.carbs) * quantity;
+    totals.fat += toFiniteNumber(entry.fat) * quantity;
+    totals.fiber += toFiniteNumber(entry.fiber) * quantity;
+    totalsByDay.set(entry.day_id, totals);
+  }
+
+  return days
+    .map((day) => {
+      const totals = totalsByDay.get(day.id);
+      if (!totals) return null;
+
+      return {
+        date: day.day_date,
+        entryCount: totals.entryCount,
+        calories: Math.round(totals.calories),
+        protein: roundNutritionTotal(totals.protein),
+        carbs: roundNutritionTotal(totals.carbs),
+        fat: roundNutritionTotal(totals.fat),
+        fiber: roundNutritionTotal(totals.fiber),
+        calorieTarget: day.calorie_target ?? null,
+        proteinTarget: day.protein_target ?? null,
+        carbsTarget: day.carbs_target ?? null,
+        fatTarget: day.fat_target ?? null,
+        fiberTarget: day.fiber_target ?? null,
+      };
+    })
+    .filter((day): day is NonNullable<typeof day> => day !== null)
+    .slice(0, 14);
+}
 
 export async function GET(request: Request) {
   const { error, userId } = await requireRequestUserContext(request);
@@ -18,7 +152,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ hasPlan, summary: null });
     }
 
-    const [latestPlan, { data: profile, error: profileError }] = await Promise.all([
+    const [latestPlan, { data: profile, error: profileError }, recentNutritionDays] = await Promise.all([
       getCoachNutritionPlan<{
         goal_type: string | null;
         target_weight_lbs: number | null;
@@ -42,6 +176,7 @@ export async function GET(request: Request) {
         .select("current_weight_kg")
         .eq("id", userId)
         .maybeSingle(),
+      getRecentNutritionDays(userId),
     ]);
     if (profileError) {
       return NextResponse.json({ error: "Internal server error." }, { status: 500 });
@@ -113,6 +248,7 @@ export async function GET(request: Request) {
             nextCheckInDate: latestPlan.next_check_in_date,
           }
         : null,
+      recentNutritionDays,
     });
   } catch {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

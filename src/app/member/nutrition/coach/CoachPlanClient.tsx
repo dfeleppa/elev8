@@ -23,6 +23,21 @@ type CoachPlanSummary = {
   nextCheckInDate?: string | null;
 };
 
+type RecentNutritionDay = {
+  date?: string | null;
+  entryCount: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number | null;
+  calorieTarget?: number | null;
+  proteinTarget?: number | null;
+  carbsTarget?: number | null;
+  fatTarget?: number | null;
+  fiberTarget?: number | null;
+};
+
 const GOAL_LABEL: Record<string, string> = {
   lose_weight: "Lose Weight",
   gain_weight: "Gain Weight",
@@ -31,36 +46,46 @@ const GOAL_LABEL: Record<string, string> = {
 };
 
 function formatDate(value: string | null | undefined) {
-  if (!value) return "—";
+  if (!value) return "-";
   const d = new Date(`${value}T00:00:00`);
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 function formatWeight(value: number | null | undefined) {
-  if (value == null) return "—";
+  if (value == null) return "-";
   const num = Number(value);
-  if (!Number.isFinite(num) || num === 0) return "—";
+  if (!Number.isFinite(num) || num === 0) return "-";
   return `${num.toFixed(1)} lb`;
 }
 
 function formatCalories(value: number | null | undefined) {
-  if (value == null) return "—";
+  if (value == null) return "-";
   const num = Math.round(Number(value));
-  if (!Number.isFinite(num) || num <= 0) return "—";
+  if (!Number.isFinite(num) || num <= 0) return "-";
   return `${num} kcal`;
 }
 
 function formatGrams(value: number | null | undefined) {
-  if (value == null) return "—";
+  if (value == null) return "-";
   const num = Number(value);
-  if (!Number.isFinite(num) || num <= 0) return "—";
+  if (!Number.isFinite(num) || num <= 0) return "-";
   return `${Math.round(num)} g`;
 }
 
 
+function formatMacroCell(value: number | null | undefined, target?: number | null) {
+  if (value == null) return "-";
+  const num = Number(value);
+  if (!Number.isFinite(num)) return "-";
+  const rounded = Math.round(num);
+  const targetNum = typeof target === "number" && Number.isFinite(target) && target > 0 ? Math.round(target) : null;
+  return targetNum ? `${rounded} / ${targetNum} g` : `${rounded} g`;
+}
+
 export default function CoachPlanClient() {
   const [summary, setSummary] = useState<CoachPlanSummary | null>(null);
+  const [recentNutritionDays, setRecentNutritionDays] = useState<RecentNutritionDay[]>([]);
   const [hasPlan, setHasPlan] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -73,10 +98,12 @@ export default function CoachPlanClient() {
         if (!payload?.hasPlan) {
           setHasPlan(false);
           setSummary(null);
+          setRecentNutritionDays([]);
           return;
         }
         const s = (payload?.summary ?? null) as CoachPlanSummary | null;
         setSummary(s);
+        setRecentNutritionDays(Array.isArray(payload?.recentNutritionDays) ? payload.recentNutritionDays : []);
         setHasPlan(true);
       })
       .catch(() => {
@@ -184,7 +211,7 @@ export default function CoachPlanClient() {
           <div>
             <dt className="text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">Metabolism source</dt>
             <dd className="mt-1 text-[var(--text)]">
-              {summary?.metabolismSource === "empirical" ? "Empirical" : summary?.metabolismSource === "formula" ? "Formula" : "—"}
+              {summary?.metabolismSource === "empirical" ? "Empirical" : summary?.metabolismSource === "formula" ? "Formula" : "-"}
             </dd>
           </div>
           <div>
@@ -192,6 +219,53 @@ export default function CoachPlanClient() {
             <dd className="mt-1 text-[var(--text)]">{formatDate(summary?.metabolismEstimatedAt)}</dd>
           </div>
         </dl>
+      </Panel>
+
+      <Panel padding="lg">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <Micro as="p">Recent Nutrition</Micro>
+            <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">Last 14 tracked days</h2>
+          </div>
+          <p className="text-xs text-[var(--text-soft)]">Totals include logged quantity</p>
+        </div>
+
+        {recentNutritionDays.length === 0 ? (
+          <p className="mt-5 text-sm text-[var(--text-muted)]">No nutrition entries have been logged yet.</p>
+        ) : (
+          <div className="app-table-shell mt-5 overflow-x-auto">
+            <table className="min-w-[760px] text-left text-sm">
+              <thead className="border-b border-[var(--line)] text-xs uppercase tracking-[0.14em] text-[var(--text-soft)]">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Date</th>
+                  <th className="px-4 py-3 text-right font-medium">Calories</th>
+                  <th className="px-4 py-3 text-right font-medium">Protein</th>
+                  <th className="px-4 py-3 text-right font-medium">Carbs</th>
+                  <th className="px-4 py-3 text-right font-medium">Fat</th>
+                  <th className="px-4 py-3 text-right font-medium">Fiber</th>
+                  <th className="px-4 py-3 text-right font-medium">Entries</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--line)]">
+                {recentNutritionDays.map((day) => (
+                  <tr key={day.date ?? "unknown"} className="text-[var(--text)]">
+                    <td className="px-4 py-3 whitespace-nowrap">{formatDate(day.date)}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      {day.calorieTarget
+                        ? `${Math.round(day.calories).toLocaleString()} / ${Math.round(day.calorieTarget).toLocaleString()} kcal`
+                        : `${Math.round(day.calories).toLocaleString()} kcal`}
+                    </td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">{formatMacroCell(day.protein, day.proteinTarget)}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">{formatMacroCell(day.carbs, day.carbsTarget)}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">{formatMacroCell(day.fat, day.fatTarget)}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">{formatMacroCell(day.fiber, day.fiberTarget)}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">{day.entryCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Panel>
     </div>
   );
