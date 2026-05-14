@@ -170,18 +170,20 @@ describe("analyzeNutritionAdjustment", () => {
     expect(Math.abs(rec.calorieDelta)).toBeLessThanOrEqual(200);
   });
 
-  it("enforces protein floor when current protein is below 0.8g/lb", () => {
+  it("enforces protein floor when current protein is below 0.7g/lb", () => {
     const plan = basePlan({ proteinGrams: 100, currentWeightLbs: 200, targetWeightLbs: 180 });
-    // floor = 0.8 * 180 = 144
+    // floor = 0.7 * 180 = 126
     const inputs: AdjustmentInputs = {
       plan,
       dailyLogs: makeLogs(14, 2500),
       weights: makeWeights(200, -1), // on track
     };
     const rec = analyzeNutritionAdjustment(inputs);
-    expect(rec.guardrails.proteinFloorGrams).toBe(144);
+    expect(rec.guardrails.proteinFloorGrams).toBe(126);
+    expect(rec.guardrails.proteinCeilingGrams).toBe(180);
     expect(rec.warnings.some((w) => w.includes("Protein"))).toBe(true);
-    expect(rec.proposed?.proteinGrams).toBeGreaterThanOrEqual(144);
+    expect(rec.proposed?.proteinGrams).toBeGreaterThanOrEqual(126);
+    expect(rec.proposed?.proteinGrams).toBeLessThanOrEqual(180);
   });
 
   it("sets a fiber floor of at least 25g and 14g/1000kcal", () => {

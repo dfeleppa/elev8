@@ -105,41 +105,41 @@ function mifflinStJeorBmr(weightKg: number, heightCm: number, ageYears: number, 
   return 10 * weightKg + 6.25 * heightCm - 5 * ageYears + sexAdjustment;
 }
 
-function buildMacroTargets(goalType: GoalType, targetCalories: number, weightKg: number) {
-  const proteinPerKg =
-    goalType === "lose_weight"
-      ? 2.2
-      : goalType === "gain_weight"
-        ? 1.8
-        : goalType === "performance_reverse_diet"
-          ? 1.9
-          : 1.8;
+const LBS_PER_KG = 2.20462;
+export const PREFERRED_PROTEIN_GRAMS_PER_LB = 0.8;
+export const MIN_PROTEIN_GRAMS_PER_LB = 0.7;
+export const MAX_PROTEIN_GRAMS_PER_LB = 1.0;
+const IDEAL_PROTEIN_CALORIE_FRACTION = 0.3;
+const IDEAL_FAT_CALORIE_FRACTION = 0.3;
 
-  const fatPerKgBase = goalType === "lose_weight" ? 0.75 : 0.8;
-  const fatPerKgMinimum = 0.6;
+export function buildMacroTargetsFromWeightLbs(targetCalories: number, weightLbs: number) {
+  const safeCalories = safePositive(targetCalories, 1200);
+  const safeWeightLbs = safePositive(weightLbs, 1);
+  const proteinFloor = safeWeightLbs * MIN_PROTEIN_GRAMS_PER_LB;
+  const proteinCeiling = safeWeightLbs * MAX_PROTEIN_GRAMS_PER_LB;
+  const idealProteinGrams = (safeCalories * IDEAL_PROTEIN_CALORIE_FRACTION) / 4;
 
-  let proteinGrams = weightKg * proteinPerKg;
-  let fatGrams = weightKg * fatPerKgBase;
-  let remainingCalories = targetCalories - proteinGrams * 4 - fatGrams * 9;
+  const proteinGrams =
+    idealProteinGrams < proteinFloor
+      ? proteinFloor
+      : idealProteinGrams > proteinCeiling
+        ? proteinCeiling
+        : safeWeightLbs * PREFERRED_PROTEIN_GRAMS_PER_LB;
 
-  if (remainingCalories < 0) {
-    fatGrams = Math.max(weightKg * fatPerKgMinimum, fatGrams + remainingCalories / 9);
-    remainingCalories = targetCalories - proteinGrams * 4 - fatGrams * 9;
-  }
-
-  if (remainingCalories < 0) {
-    const proteinMinimum = weightKg * 1.6;
-    proteinGrams = Math.max(proteinMinimum, proteinGrams + remainingCalories / 4);
-    remainingCalories = targetCalories - proteinGrams * 4 - fatGrams * 9;
-  }
-
-  const carbsGrams = Math.max(0, remainingCalories / 4);
+  const idealFatGrams = (safeCalories * IDEAL_FAT_CALORIE_FRACTION) / 9;
+  const caloriesAfterProtein = safeCalories - proteinGrams * 4;
+  const fatGrams = Math.max(0, Math.min(idealFatGrams, caloriesAfterProtein / 9));
+  const carbsGrams = Math.max(0, (safeCalories - proteinGrams * 4 - fatGrams * 9) / 4);
 
   return {
     proteinGrams: round1(proteinGrams),
     carbsGrams: round1(carbsGrams),
     fatGrams: round1(fatGrams),
   };
+}
+
+function buildMacroTargets(targetCalories: number, weightKg: number) {
+  return buildMacroTargetsFromWeightLbs(targetCalories, weightKg * LBS_PER_KG);
 }
 
 export function calculateNutritionPlan(inputs: CalculationInputs): CalculationResult {
@@ -182,7 +182,7 @@ export function calculateNutritionPlan(inputs: CalculationInputs): CalculationRe
           : 0;
 
   const targetCalories = Math.max(1200, maintenanceCalories + goalAdjustment);
-  const macros = buildMacroTargets(inputs.goalType, targetCalories, weightKg);
+  const macros = buildMacroTargets(targetCalories, weightKg);
 
   return {
     formulaUsed: hasValidBodyFat ? "katch_mcardle" : "mifflin_st_jeor",

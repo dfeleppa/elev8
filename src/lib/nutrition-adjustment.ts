@@ -1,4 +1,10 @@
-import type { GoalType } from "@/lib/nutrition-calculations";
+import {
+  MAX_PROTEIN_GRAMS_PER_LB,
+  MIN_PROTEIN_GRAMS_PER_LB,
+  PREFERRED_PROTEIN_GRAMS_PER_LB,
+  buildMacroTargetsFromWeightLbs,
+  type GoalType,
+} from "@/lib/nutrition-calculations";
 
 /**
  * Pure analyzer that proposes a nutrition plan adjustment based on adherence
@@ -100,6 +106,7 @@ export type Guardrails = {
   calorieCeiling: number;
   perCheckInDeltaCap: number;
   proteinFloorGrams: number;
+  proteinCeilingGrams: number;
   fatFloorGrams: number;
   fiberFloorGrams: number;
 };
@@ -243,7 +250,8 @@ function computeGuardrails(plan: CurrentPlan): Guardrails {
     calorieFloor: Math.max(ABSOLUTE_CALORIE_FLOOR, Math.round(plan.maintenanceCalories * MAINT_FLOOR_FRACTION)),
     calorieCeiling: Math.min(ABSOLUTE_CALORIE_CEILING, Math.round(plan.maintenanceCalories * MAINT_CEILING_FRACTION)),
     perCheckInDeltaCap: MAX_DELTA_PER_CHECK_IN,
-    proteinFloorGrams: round1(0.8 * referenceWeight),
+    proteinFloorGrams: round1(MIN_PROTEIN_GRAMS_PER_LB * referenceWeight),
+    proteinCeilingGrams: round1(MAX_PROTEIN_GRAMS_PER_LB * referenceWeight),
     fatFloorGrams: round1(0.3 * referenceWeight),
     fiberFloorGrams: Math.max(25, Math.round((14 * plan.targetCalories) / 1000)),
   };
@@ -254,32 +262,25 @@ function recomposeMacros(
   newCalories: number,
   guardrails: Guardrails
 ): ProposedMacros {
-  // Hold protein at max(plan protein, floor); hold fat at max(plan fat scaled, floor); fill carbs.
-  let protein = Math.max(plan.proteinGrams, guardrails.proteinFloorGrams);
-  let fat = Math.max(guardrails.fatFloorGrams, plan.fatGrams);
-
-  // If protein + fat already exceed budget, push fat down toward its floor.
-  let remaining = newCalories - protein * 4 - fat * 9;
-  if (remaining < 0) {
-    fat = Math.max(guardrails.fatFloorGrams, fat + remaining / 9);
-    remaining = newCalories - protein * 4 - fat * 9;
-  }
-  // Last resort: shave protein toward its floor.
-  if (remaining < 0) {
-    protein = Math.max(guardrails.proteinFloorGrams, protein + remaining / 4);
-    remaining = newCalories - protein * 4 - fat * 9;
-  }
-  const carbs = Math.max(0, remaining / 4);
-
+  const referenceWeight = plan.targetWeightLbs ?? plan.currentWeightLbs;
+  const macros = buildMacroTargetsFromWeightLbs(newCalories, referenceWeight);
   const fiber = Math.max(plan.fiberGrams ?? 0, guardrails.fiberFloorGrams);
 
   return {
     targetCalories: round0(newCalories),
-    proteinGrams: round1(protein),
-    carbsGrams: round1(carbs),
-    fatGrams: round1(fat),
+    proteinGrams: macros.proteinGrams,
+    carbsGrams: macros.carbsGrams,
+    fatGrams: macros.fatGrams,
     fiberGrams: round0(fiber),
   };
+}
+
+function macroTargetsChanged(plan: CurrentPlan, proposed: ProposedMacros) {
+  return (
+    Math.abs(proposed.proteinGrams - plan.proteinGrams) > 0.5 ||
+    Math.abs(proposed.carbsGrams - plan.carbsGrams) > 0.5 ||
+    Math.abs(proposed.fatGrams - plan.fatGrams) > 0.5
+  );
 }
 
 export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): AdjustmentRecommendation {
@@ -292,13 +293,24 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
   const guardrails = computeGuardrails(plan);
   const warnings: string[] = [];
 
-  // Always fold in protein/fiber floor enforcement, even when calories don't change.
+  // Always fold in macro/fiber target enforcement, even when calories don't change.
   const baselineProposal = recomposeMacros(plan, plan.targetCalories, guardrails);
-  const proteinFloorBumped = baselineProposal.proteinGrams > plan.proteinGrams + 0.5;
+  const macroTargetChanged = macroTargetsChanged(plan, baselineProposal);
+  const proteinFloorBumped = plan.proteinGrams < guardrails.proteinFloorGrams - 0.5;
+  const proteinCeilingLowered = plan.proteinGrams > guardrails.proteinCeilingGrams + 0.5;
   const fiberFloorBumped = (plan.fiberGrams ?? 0) < guardrails.fiberFloorGrams;
+  const baselineShouldBeReturned = macroTargetChanged || fiberFloorBumped;
   if (proteinFloorBumped) {
     warnings.push(
-      `Protein bumped to floor (${guardrails.proteinFloorGrams}g ≈ 0.8 g/lb of reference weight).`
+      `Protein bumped to floor (${guardrails.proteinFloorGrams}g = ${MIN_PROTEIN_GRAMS_PER_LB} g/lb of reference weight).`
+    );
+  } else if (proteinCeilingLowered) {
+    warnings.push(
+      `Protein lowered to ceiling (${guardrails.proteinCeilingGrams}g = ${MAX_PROTEIN_GRAMS_PER_LB} g/lb of reference weight).`
+    );
+  } else if (macroTargetChanged) {
+    warnings.push(
+      `Macros recomposed with ${PREFERRED_PROTEIN_GRAMS_PER_LB} g/lb preferred protein and 30% fat calories.`
     );
   }
   if (fiberFloorBumped) {
@@ -314,7 +326,7 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
       adherence,
       weightTrend,
       guardrails,
-      proposed: proteinFloorBumped || fiberFloorBumped ? baselineProposal : null,
+      proposed: baselineShouldBeReturned ? baselineProposal : null,
       calorieDelta: 0,
     };
   }
@@ -328,7 +340,7 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
       adherence,
       weightTrend,
       guardrails,
-      proposed: proteinFloorBumped || fiberFloorBumped ? baselineProposal : null,
+      proposed: baselineShouldBeReturned ? baselineProposal : null,
       calorieDelta: 0,
     };
   }
@@ -354,7 +366,7 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
       adherence,
       weightTrend,
       guardrails,
-      proposed: proteinFloorBumped || fiberFloorBumped ? baselineProposal : null,
+      proposed: baselineShouldBeReturned ? baselineProposal : null,
       calorieDelta: 0,
     };
   }
@@ -369,7 +381,7 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
         adherence,
         weightTrend,
         guardrails,
-        proposed: proteinFloorBumped || fiberFloorBumped ? baselineProposal : null,
+        proposed: baselineShouldBeReturned ? baselineProposal : null,
         calorieDelta: 0,
       };
     }
@@ -399,7 +411,7 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
       adherence,
       weightTrend,
       guardrails,
-      proposed: proteinFloorBumped || fiberFloorBumped ? baselineProposal : null,
+      proposed: baselineShouldBeReturned ? baselineProposal : null,
       calorieDelta: 0,
     };
   }
