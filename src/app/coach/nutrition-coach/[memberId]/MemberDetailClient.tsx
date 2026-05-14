@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import NutritionCheckInBanner from "@/components/health/NutritionCheckInBanner";
+import { Micro, Panel } from "@/components/ui";
 
 type Member = { id: string; full_name: string | null; email: string | null };
 
@@ -87,6 +88,16 @@ type LiveRecommendation = {
   warnings: string[];
 } | null;
 
+type RecentNutritionHistoryEntry = {
+  date: string;
+  calories: number;
+  carbs: number;
+  protein: number;
+  fat: number;
+  fiber: number;
+  calorieDelta: number | null;
+};
+
 const STATUS_TONE: Record<string, string> = {
   pending: "text-amber-300",
   applied: "text-emerald-300",
@@ -95,8 +106,25 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 function formatNumber(n: number | null | undefined) {
-  if (n === null || n === undefined) return "—";
+  if (n === null || n === undefined) return "-";
   return Math.round(n).toString();
+}
+
+function formatMetric(n: number | null | undefined) {
+  if (n === null || n === undefined) return "-";
+  return Math.round(n).toLocaleString();
+}
+
+function formatDelta(n: number | null) {
+  if (n === null) return "-";
+  const rounded = Math.round(n);
+  return `${rounded > 0 ? "+" : ""}${rounded.toLocaleString()}`;
+}
+
+function formatDate(value: string) {
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 export default function MemberDetailClient({ memberId }: { memberId: string }) {
@@ -104,20 +132,44 @@ export default function MemberDetailClient({ memberId }: { memberId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [liveRec, setLiveRec] = useState<LiveRecommendation>(null);
+  const [history, setHistory] = useState<RecentNutritionHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/coach/nutrition-plan/member/${memberId}`, {
-        cache: "no-store",
-      });
-      const payload = await res.json().catch(() => null);
-      if (!res.ok) {
-        setError(payload?.error ?? "Failed to load.");
+      const [detailRes, historyRes] = await Promise.all([
+        fetch(`/api/coach/nutrition-plan/member/${memberId}`, {
+          cache: "no-store",
+        }),
+        fetch(`/api/nutrition-days?recent=14&memberId=${memberId}`, {
+          cache: "no-store",
+        }),
+      ]);
+
+      const detailPayload = await detailRes.json().catch(() => null);
+      if (!detailRes.ok) {
+        setError(detailPayload?.error ?? "Failed to load.");
         return;
       }
-      setDetail(payload as Detail);
+      setDetail(detailPayload as Detail);
+
+      const historyPayload = await historyRes.json().catch(() => null);
+      if (!historyRes.ok) {
+        setHistory([]);
+        setHistoryError(historyPayload?.error ?? "Failed to load nutrition history.");
+      } else {
+        setHistory(
+          Array.isArray(historyPayload?.history)
+            ? (historyPayload.history as RecentNutritionHistoryEntry[])
+            : []
+        );
+        setHistoryError(null);
+      }
     } catch {
       setError("Failed to load.");
+    } finally {
+      setHistoryLoading(false);
     }
   }, [memberId]);
 
@@ -145,14 +197,12 @@ export default function MemberDetailClient({ memberId }: { memberId: string }) {
   }
 
   if (!detail) {
-    return <p className="text-sm text-[var(--text-muted)]">{error ?? "Loading…"}</p>;
+    return <p className="text-sm text-[var(--text-muted)]">{error ?? "Loading..."}</p>;
   }
 
   const currentPlan = detail.plans[0] ?? null;
   const planChanges = detail.plans.slice(1);
-  const weightSorted = [...detail.weights].sort((a, b) =>
-    a.entry_date < b.entry_date ? 1 : -1
-  );
+  const weightSorted = [...detail.weights].sort((a, b) => (a.entry_date < b.entry_date ? 1 : -1));
   const weights = weightSorted.slice(0, 10);
 
   return (
@@ -171,47 +221,110 @@ export default function MemberDetailClient({ memberId }: { memberId: string }) {
             disabled={running}
             className="rounded-full border border-[var(--accent-cyan)] px-3 py-1 text-xs font-semibold text-[var(--accent-cyan)] hover:bg-[var(--accent-cyan)]/10 disabled:opacity-50"
           >
-            {running ? "Running…" : "Run Analysis Now"}
+            {running ? "Running..." : "Run Analysis Now"}
           </button>
         </div>
         {error ? <p className="mt-2 text-xs text-rose-300">{error}</p> : null}
       </section>
 
-      {/* Live "what would the analyzer say right now" preview */}
       {liveRec ? (
         <section className="panel rounded-3xl p-5">
-          <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
-            Live Analysis
-          </h2>
+          <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Live Analysis</h2>
           <p className="text-sm font-semibold text-[var(--text)]">{liveRec.status}</p>
           <p className="mt-1 text-sm text-[var(--text-muted)]">{liveRec.reason}</p>
           {liveRec.proposed ? (
             <p className="mt-2 text-xs text-[var(--text-muted)]">
-              Would propose:{" "}
-              <span className="text-[var(--text)]">
-                {liveRec.calorieDelta > 0 ? "+" : ""}
-                {liveRec.calorieDelta} kcal → {liveRec.proposed.targetCalories} kcal
-              </span>
+              Would propose: <span className="text-[var(--text)]">{liveRec.calorieDelta > 0 ? "+" : ""}{liveRec.calorieDelta} kcal to {liveRec.proposed.targetCalories} kcal</span>
             </p>
           ) : null}
           {liveRec.warnings.length > 0 ? (
             <ul className="mt-2 list-disc pl-5 text-[11px] text-amber-300/80">
-              {liveRec.warnings.map((w, i) => (
-                <li key={i}>{w}</li>
+              {liveRec.warnings.map((warning, index) => (
+                <li key={index}>{warning}</li>
               ))}
             </ul>
           ) : null}
         </section>
       ) : null}
 
-      {/* Pending check-in banner (reuses the existing component) */}
       <NutritionCheckInBanner memberId={memberId} canManage />
 
-      {/* Current plan */}
+      <Panel padding="lg">
+        <div>
+          <Micro as="p">Recent Daily Entries</Micro>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            Latest 14 logged days with calories, carbs, protein, fat, fiber, and calorie variance vs target.
+          </p>
+        </div>
+
+        <div className="app-table-shell mt-5">
+          <table className="app-table min-w-[760px]">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Calories</th>
+                <th>Carbs</th>
+                <th>Protein</th>
+                <th>Fat</th>
+                <th>Fiber</th>
+                <th>+/- Calories</th>
+              </tr>
+            </thead>
+            <tbody>
+              {historyLoading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index} className="app-table-empty">
+                    <td colSpan={7}>
+                      <div className="h-4 w-40 animate-pulse rounded bg-[var(--panel-2)]" />
+                    </td>
+                  </tr>
+                ))
+              ) : historyError ? (
+                <tr>
+                  <td colSpan={7} className="py-6 text-center text-sm text-rose-400">
+                    {historyError}
+                  </td>
+                </tr>
+              ) : history.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-6 text-center text-sm text-[var(--text-soft)]">
+                    No recent daily entries yet.
+                  </td>
+                </tr>
+              ) : (
+                history.map((entry) => (
+                  <tr key={entry.date}>
+                    <td className="text-sm text-[var(--text-muted)]">{formatDate(entry.date)}</td>
+                    <td className="text-sm text-[var(--text)]">{formatMetric(entry.calories)}</td>
+                    <td className="text-sm text-[var(--text-muted)]">{formatMetric(entry.carbs)} g</td>
+                    <td className="text-sm text-[var(--text-muted)]">{formatMetric(entry.protein)} g</td>
+                    <td className="text-sm text-[var(--text-muted)]">{formatMetric(entry.fat)} g</td>
+                    <td className="text-sm text-[var(--text-muted)]">{formatMetric(entry.fiber)} g</td>
+                    <td
+                      className={
+                        entry.calorieDelta === null
+                          ? "text-sm text-[var(--text-soft)]"
+                          : entry.calorieDelta > 0
+                            ? "text-sm text-amber-300"
+                            : entry.calorieDelta < 0
+                              ? "text-sm text-cyan-300"
+                              : "text-sm text-emerald-300"
+                      }
+                    >
+                      {formatDelta(entry.calorieDelta)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+
       {currentPlan ? (
         <section className="panel rounded-3xl p-5">
           <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
-            Current Plan · effective {currentPlan.effective_date}
+            Current Plan - effective {currentPlan.effective_date}
           </h2>
           <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
             <div>
@@ -238,8 +351,7 @@ export default function MemberDetailClient({ memberId }: { memberId: string }) {
             </div>
           </div>
           <p className="mt-3 text-xs text-[var(--text-muted)]">
-            Last check-in: {currentPlan.last_check_in_date ?? "—"} · Next:{" "}
-            {currentPlan.next_check_in_date ?? "—"}
+            Last check-in: {currentPlan.last_check_in_date ?? "-"} - Next: {currentPlan.next_check_in_date ?? "-"}
           </p>
         </section>
       ) : (
@@ -248,30 +360,22 @@ export default function MemberDetailClient({ memberId }: { memberId: string }) {
         </section>
       )}
 
-      {/* Estimated metabolism */}
-      {currentPlan ? (
-        <MetabolismCard plan={currentPlan} />
-      ) : null}
+      {currentPlan ? <MetabolismCard plan={currentPlan} /> : null}
 
-      {/* Plan history */}
       {planChanges.length > 0 ? (
         <section className="panel rounded-3xl p-5">
-          <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
-            Plan History
-          </h2>
+          <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Plan History</h2>
           <ul className="divide-y divide-[var(--line)] text-sm">
-            {planChanges.map((p) => (
-              <li key={p.id} className="flex items-start justify-between gap-3 py-2">
+            {planChanges.map((plan) => (
+              <li key={plan.id} className="flex items-start justify-between gap-3 py-2">
                 <div>
-                  <p className="text-[var(--text)]">{p.effective_date}</p>
+                  <p className="text-[var(--text)]">{plan.effective_date}</p>
                   <p className="text-xs text-[var(--text-muted)]">
-                    {formatNumber(p.target_calories)} kcal · P{formatNumber(p.protein_grams)} / C
-                    {formatNumber(p.carbs_grams)} / F{formatNumber(p.fat_grams)}
+                    {formatNumber(plan.target_calories)} kcal - P{formatNumber(plan.protein_grams)} / C
+                    {formatNumber(plan.carbs_grams)} / F{formatNumber(plan.fat_grams)}
                   </p>
-                  {p.adjustment_reason ? (
-                    <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-                      {p.adjustment_reason}
-                    </p>
+                  {plan.adjustment_reason ? (
+                    <p className="mt-1 text-[11px] text-[var(--text-muted)]">{plan.adjustment_reason}</p>
                   ) : null}
                 </div>
               </li>
@@ -280,28 +384,23 @@ export default function MemberDetailClient({ memberId }: { memberId: string }) {
         </section>
       ) : null}
 
-      {/* Check-in history */}
       {detail.checkIns.length > 0 ? (
         <section className="panel rounded-3xl p-5">
-          <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
-            Check-In History
-          </h2>
+          <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Check-In History</h2>
           <ul className="divide-y divide-[var(--line)] text-sm">
-            {detail.checkIns.map((c) => (
-              <li key={c.id} className="flex items-start justify-between gap-3 py-2">
+            {detail.checkIns.map((checkIn) => (
+              <li key={checkIn.id} className="flex items-start justify-between gap-3 py-2">
                 <div>
-                  <p className={`text-xs uppercase tracking-[0.18em] ${STATUS_TONE[c.status] ?? ""}`}>
-                    {c.status}
+                  <p className={`text-xs uppercase tracking-[0.18em] ${STATUS_TONE[checkIn.status] ?? ""}`}>
+                    {checkIn.status}
                   </p>
                   <p className="mt-1 text-[var(--text)]">
-                    {c.recommendation.status} · Δ {c.recommendation.calorieDelta} kcal
+                    {checkIn.recommendation.status} - delta {checkIn.recommendation.calorieDelta} kcal
                   </p>
-                  <p className="mt-1 text-xs text-[var(--text-muted)]">
-                    {c.recommendation.reason}
-                  </p>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">{checkIn.recommendation.reason}</p>
                 </div>
                 <p className="shrink-0 text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
-                  {new Date(c.created_at).toLocaleDateString()}
+                  {new Date(checkIn.created_at).toLocaleDateString()}
                 </p>
               </li>
             ))}
@@ -309,18 +408,15 @@ export default function MemberDetailClient({ memberId }: { memberId: string }) {
         </section>
       ) : null}
 
-      {/* Recent weights */}
       {weights.length > 0 ? (
         <section className="panel rounded-3xl p-5">
-          <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
-            Recent Weight Entries
-          </h2>
+          <h2 className="mb-3 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Recent Weight Entries</h2>
           <ul className="grid grid-cols-2 gap-1 text-sm sm:grid-cols-5">
-            {weights.map((w) => (
-              <li key={`${w.entry_date}-${w.value}`} className="flex justify-between gap-2">
-                <span className="text-[var(--text-muted)]">{w.entry_date}</span>
+            {weights.map((weight) => (
+              <li key={`${weight.entry_date}-${weight.value}`} className="flex justify-between gap-2">
+                <span className="text-[var(--text-muted)]">{weight.entry_date}</span>
                 <span className="text-[var(--text)]">
-                  {Number(w.value).toFixed(1)} {w.unit}
+                  {Number(weight.value).toFixed(1)} {weight.unit}
                 </span>
               </li>
             ))}
@@ -367,9 +463,7 @@ function MetabolismCard({ plan }: { plan: PlanRow }) {
   return (
     <section className="panel rounded-3xl p-5">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
-          Estimated Metabolism
-        </h2>
+        <h2 className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Estimated Metabolism</h2>
         {source === "empirical" ? (
           <span className="rounded-full border border-[var(--accent-cyan)]/40 bg-[var(--accent-cyan)]/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[var(--accent-cyan)]">
             Auto-updated
@@ -390,7 +484,7 @@ function MetabolismCard({ plan }: { plan: PlanRow }) {
           <p className="text-2xl font-semibold text-[var(--text)]">
             {estimate?.estimatedTdee !== null && estimate?.estimatedTdee !== undefined
               ? formatNumber(estimate.estimatedTdee)
-              : "—"}
+              : "-"}
             <span className="ml-1 text-xs font-normal text-[var(--text-muted)]">kcal/day</span>
           </p>
         </div>
@@ -405,7 +499,7 @@ function MetabolismCard({ plan }: { plan: PlanRow }) {
             <span
               className={`self-start rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] ${CONFIDENCE_TONE[estimate.confidence]}`}
             >
-              {STATUS_LABEL[estimate.status]} · {estimate.confidence}
+              {STATUS_LABEL[estimate.status]} - {estimate.confidence}
             </span>
           ) : null}
         </div>
@@ -415,15 +509,13 @@ function MetabolismCard({ plan }: { plan: PlanRow }) {
         <p className="mt-3 text-xs text-[var(--text-muted)]">{estimate.reason}</p>
       ) : (
         <p className="mt-3 text-xs text-[var(--text-muted)]">
-          No estimate yet — needs ≥5/7 days logged and ≥2 weigh-ins in the last 7 days.
+          No estimate yet - needs {">= "}5/7 days logged and {">= "}2 weigh-ins in the last 7 days.
         </p>
       )}
 
       {estimate ? (
         <p className="mt-2 text-[11px] text-[var(--text-muted)]">
-          Window: last {estimate.windowDays} days · {estimate.daysLogged}/{estimate.daysExpected}{" "}
-          days logged · {estimate.weightEntries} weigh-ins · updated{" "}
-          {relativeTime(plan.maintenance_calories_estimated_at)}
+          Window: last {estimate.windowDays} days - {estimate.daysLogged}/{estimate.daysExpected} days logged - {estimate.weightEntries} weigh-ins - updated {relativeTime(plan.maintenance_calories_estimated_at)}
         </p>
       ) : null}
     </section>

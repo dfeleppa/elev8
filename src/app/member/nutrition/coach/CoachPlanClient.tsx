@@ -75,8 +75,8 @@ export default function CoachPlanClient() {
           setSummary(null);
           return;
         }
-        const s = (payload?.summary ?? null) as CoachPlanSummary | null;
-        setSummary(s);
+        const nextSummary = (payload?.summary ?? null) as CoachPlanSummary | null;
+        setSummary(nextSummary);
         setHasPlan(true);
       })
       .catch(() => {
@@ -128,10 +128,7 @@ export default function CoachPlanClient() {
           <div>
             <Micro as="p">Plan Overview</Micro>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
-              Goal:{" "}
-              <span className="text-[var(--text)]">
-                {GOAL_LABEL[summary?.goalType ?? ""] ?? "Not set"}
-              </span>
+              Goal: <span className="text-[var(--text)]">{GOAL_LABEL[summary?.goalType ?? ""] ?? "Not set"}</span>
             </p>
           </div>
           <Link

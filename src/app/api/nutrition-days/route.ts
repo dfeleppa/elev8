@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext, requireUserContext } from "@/lib/member";
 import {
   omitNutritionKeys,
   readNutritionNumberField,
+  readNutritionStringField,
   runNutritionQueryWithFallbacks,
 } from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -55,6 +56,15 @@ function shouldRefreshTargetsFromPlan(
   return Number.isFinite(dayUpdatedAt) && Number.isFinite(planUpdatedAt) && planUpdatedAt > dayUpdatedAt;
 }
 
+function clampHistoryLimit(value: string | null) {
+  if (!value) return null;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  return Math.min(parsed, 30);
+}
+
 async function getCoachPlanTargets(memberId: string, date: string) {
   const { data: plan, error } = await runNutritionQueryWithFallbacks([
     () =>
@@ -93,13 +103,118 @@ async function getCoachPlanTargets(memberId: string, date: string) {
   };
 }
 
+async function getRecentNutritionHistory(memberId: string, limit: number) {
+  const fetchWindow = Math.max(limit * 8, 120);
+  const { data: days, error: dayError } = await runNutritionQueryWithFallbacks([
+    () =>
+      supabaseAdmin
+        .from("nutrition_days")
+        .select("id, day_date, calorie_target")
+        .eq("member_id", memberId)
+        .order("day_date", { ascending: false })
+        .limit(fetchWindow),
+  ]);
+
+  if (dayError) {
+    return { history: null, error: dayError };
+  }
+
+  const recentDays = (days ?? []) as Array<{
+    id: string;
+    day_date: string;
+    calorie_target: number | null;
+  }>;
+
+  if (recentDays.length === 0) {
+    return { history: [], error: null };
+  }
+
+  const dayIds = recentDays.map((day) => day.id);
+  const { data: entries, error: entriesError } = await runNutritionQueryWithFallbacks([
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .select("day_id, calories, protein, carbs, fat, fiber, created_at")
+        .in("day_id", dayIds)
+        .order("created_at", { ascending: true }),
+    () =>
+      supabaseAdmin
+        .from("nutrition_entries")
+        .select("day_id, calories, protein, carbs, fat, created_at")
+        .in("day_id", dayIds)
+        .order("created_at", { ascending: true }),
+  ]);
+
+  if (entriesError) {
+    return { history: null, error: entriesError };
+  }
+
+  const totalsByDayId = new Map<
+    string,
+    { calories: number; protein: number; carbs: number; fat: number; fiber: number }
+  >();
+
+  for (const entry of (entries ?? []) as Array<Record<string, unknown>>) {
+    const dayId = readNutritionStringField(entry, "day_id");
+    if (!dayId) continue;
+
+    const current = totalsByDayId.get(dayId) ?? { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
+    current.calories += readNutritionNumberField(entry, "calories") ?? 0;
+    current.protein += readNutritionNumberField(entry, "protein") ?? 0;
+    current.carbs += readNutritionNumberField(entry, "carbs") ?? 0;
+    current.fat += readNutritionNumberField(entry, "fat") ?? 0;
+    current.fiber += readNutritionNumberField(entry, "fiber") ?? 0;
+    totalsByDayId.set(dayId, current);
+  }
+
+  const history = await Promise.all(
+    recentDays
+      .filter((day) => totalsByDayId.has(day.id))
+      .slice(0, limit)
+      .map(async (day) => {
+        const totals = totalsByDayId.get(day.id) ?? { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
+        const fallbackTargets =
+          day.calorie_target === null ? await getCoachPlanTargets(memberId, day.day_date) : null;
+        const calorieTarget = day.calorie_target ?? fallbackTargets?.calorie_target ?? null;
+
+        return {
+          date: day.day_date,
+          calories: totals.calories,
+          carbs: totals.carbs,
+          protein: totals.protein,
+          fat: totals.fat,
+          fiber: totals.fiber,
+          calorieTarget,
+          calorieDelta: calorieTarget === null ? null : totals.calories - calorieTarget,
+        };
+      })
+  );
+
+  return { history, error: null };
+}
+
 export async function GET(request: Request) {
-  const { error: userError, userId } = await requireUserContext();
+  const { error: userError, userId, role } = await requireRequestUserContext(request);
   if (userError || !userId) {
     return NextResponse.json({ error: userError }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
+  const requestedMemberId = searchParams.get("memberId");
+  if (requestedMemberId && !hasRole("coach", role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const targetUserId = requestedMemberId && hasRole("coach", role) ? requestedMemberId : userId;
+  const historyLimit = clampHistoryLimit(searchParams.get("recent"));
+
+  if (historyLimit !== null) {
+    const { history, error } = await getRecentNutritionHistory(targetUserId, historyLimit);
+    if (error) {
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    }
+    return NextResponse.json({ history: history ?? [] });
+  }
+
   const date = searchParams.get("date");
 
   if (!date || !isValidDate(date)) {
@@ -111,14 +226,14 @@ export async function GET(request: Request) {
       supabaseAdmin
         .from("nutrition_days")
         .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target, fiber_target, updated_at")
-        .eq("member_id", userId)
+        .eq("member_id", targetUserId)
         .eq("day_date", date)
         .maybeSingle(),
     () =>
       supabaseAdmin
         .from("nutrition_days")
         .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target, updated_at")
-        .eq("member_id", userId)
+        .eq("member_id", targetUserId)
         .eq("day_date", date)
         .maybeSingle(),
   ]);
@@ -130,10 +245,10 @@ export async function GET(request: Request) {
   let resolvedDay = day;
 
   if (!resolvedDay) {
-    const planTargets = await getCoachPlanTargets(userId, date);
+    const planTargets = await getCoachPlanTargets(targetUserId, date);
     if (planTargets) {
       const payload = {
-        member_id: userId,
+        member_id: targetUserId,
         day_date: date,
         ...planTargets,
         updated_at: new Date().toISOString(),
@@ -160,7 +275,7 @@ export async function GET(request: Request) {
       resolvedDay = createdResult.data;
     }
   } else if (resolvedDay) {
-    const planTargets = await getCoachPlanTargets(userId, date);
+    const planTargets = await getCoachPlanTargets(targetUserId, date);
     if (planTargets && (areTargetsUnset(resolvedDay) || shouldRefreshTargetsFromPlan(resolvedDay, planTargets))) {
       const resolvedExistingDay = resolvedDay as { id: string };
       const resolvedDayId = resolvedExistingDay.id;
@@ -178,7 +293,7 @@ export async function GET(request: Request) {
             .from("nutrition_days")
             .update(payload)
             .eq("id", resolvedDayId)
-            .eq("member_id", userId)
+            .eq("member_id", targetUserId)
             .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target, fiber_target")
             .single(),
         () =>
@@ -186,7 +301,7 @@ export async function GET(request: Request) {
             .from("nutrition_days")
             .update(omitNutritionKeys(payload, ["fiber_target"]))
             .eq("id", resolvedDayId)
-            .eq("member_id", userId)
+            .eq("member_id", targetUserId)
             .select("id, day_date, calorie_target, protein_target, carbs_target, fat_target")
             .single(),
       ]);
