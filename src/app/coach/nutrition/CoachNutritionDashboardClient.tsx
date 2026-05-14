@@ -167,6 +167,13 @@ function formatSigned(value: number | null | undefined, suffix = "") {
   return `${number > 0 ? "+" : ""}${formatNumber(number, Math.abs(number) < 10 ? 1 : 0)}${suffix}`;
 }
 
+function formatMacroDelta(current: number | null | undefined, proposed: number | null | undefined) {
+  if (current === null || current === undefined || proposed === null || proposed === undefined) return null;
+  const delta = Number(proposed) - Number(current);
+  if (!Number.isFinite(delta) || Math.abs(delta) < 0.5) return null;
+  return `${delta > 0 ? "+" : ""}${formatNumber(delta, Math.abs(delta) < 10 ? 1 : 0)}g`;
+}
+
 function formatDate(value: string | null | undefined) {
   if (!value) return "-";
   const parsed = new Date(`${value}T00:00:00`);
@@ -396,7 +403,7 @@ export default function CoachNutritionDashboardClient() {
 
       {!detailLoading && selectedMemberId && detail ? (
         <div className="flex flex-col gap-6">
-          {liveRec ? <LiveAnalysisCard recommendation={liveRec} /> : null}
+          {liveRec ? <LiveAnalysisCard recommendation={liveRec} currentPlan={currentPlan} /> : null}
           <NutritionCheckInBanner memberId={selectedMemberId} canManage />
           {currentPlan ? (
             <>
@@ -648,9 +655,21 @@ function MetabolismCard({ plan }: { plan: PlanRow }) {
   );
 }
 
-function LiveAnalysisCard({ recommendation }: { recommendation: NonNullable<LiveRecommendation> }) {
+function LiveAnalysisCard({
+  recommendation,
+  currentPlan,
+}: {
+  recommendation: NonNullable<LiveRecommendation>;
+  currentPlan: PlanRow | null;
+}) {
   const adherence = recommendation.adherence;
   const trend = recommendation.weightTrend;
+  const proposed = recommendation.proposed;
+  const proteinDelta = formatMacroDelta(currentPlan?.protein_grams, proposed?.proteinGrams);
+  const carbsDelta = formatMacroDelta(currentPlan?.carbs_grams, proposed?.carbsGrams);
+  const fatDelta = formatMacroDelta(currentPlan?.fat_grams, proposed?.fatGrams);
+  const fiberDelta = formatMacroDelta(currentPlan?.fiber_grams, proposed?.fiberGrams);
+
   return (
     <section className="panel rounded-3xl p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -667,6 +686,29 @@ function LiveAnalysisCard({ recommendation }: { recommendation: NonNullable<Live
         ) : null}
       </div>
       <p className="mt-3 text-sm text-[var(--text-muted)]">{recommendation.reason}</p>
+      {proposed ? (
+        <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-4">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">Proposed Macro Targets</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-4">
+            <MiniMetric
+              label="Protein"
+              value={`${formatNumber(proposed.proteinGrams)}g${proteinDelta ? ` (${proteinDelta})` : ""}`}
+            />
+            <MiniMetric
+              label="Carbs"
+              value={`${formatNumber(proposed.carbsGrams)}g${carbsDelta ? ` (${carbsDelta})` : ""}`}
+            />
+            <MiniMetric
+              label="Fat"
+              value={`${formatNumber(proposed.fatGrams)}g${fatDelta ? ` (${fatDelta})` : ""}`}
+            />
+            <MiniMetric
+              label="Fiber"
+              value={`${formatNumber(proposed.fiberGrams)}g${fiberDelta ? ` (${fiberDelta})` : ""}`}
+            />
+          </div>
+        </div>
+      ) : null}
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <MiniMetric
           label="Adherence"

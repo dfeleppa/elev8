@@ -149,7 +149,7 @@ export default function PendingCheckInsList() {
         const adherencePct = Math.round(rec.adherence.adherencePercent * 100);
         const observed = rec.weightTrend.observedWeeklyChangeLbs;
         const expected = rec.weightTrend.expectedWeeklyChangeLbs;
-        const isAdjust = rec.status === "adjust" && rec.proposed;
+        const hasMacroChange = Boolean(rec.proposed);
 
         return (
           <div
@@ -186,7 +186,7 @@ export default function PendingCheckInsList() {
                   <span className="opacity-60"> vs {expected >= 0 ? "+" : ""}{expected}</span>
                 </p>
               </div>
-              {isAdjust && rec.proposed ? (
+              {hasMacroChange && rec.proposed ? (
                 <div>
                   <p className="opacity-70">Proposed</p>
                   <p className="text-[var(--text)]">
@@ -197,6 +197,18 @@ export default function PendingCheckInsList() {
               ) : null}
             </div>
 
+            {hasMacroChange && rec.proposed ? (
+              <div className="mt-3 rounded-xl bg-[var(--panel)] p-3 text-xs text-[var(--text-muted)]">
+                <p>
+                  Macros:{" "}
+                  <span className="text-[var(--text)]">
+                    P {rec.proposed.proteinGrams}g / C {rec.proposed.carbsGrams}g / F{" "}
+                    {rec.proposed.fatGrams}g / Fiber {rec.proposed.fiberGrams}g
+                  </span>
+                </p>
+              </div>
+            ) : null}
+
             {rec.warnings.length > 0 ? (
               <ul className="mt-3 list-disc space-y-1 pl-4 text-[11px] text-amber-300/80">
                 {rec.warnings.map((w, i) => (
@@ -206,7 +218,7 @@ export default function PendingCheckInsList() {
             ) : null}
 
             <div className="mt-3 flex flex-wrap gap-2">
-              {isAdjust ? (
+              {hasMacroChange ? (
                 <button
                   type="button"
                   onClick={() => apply(item)}

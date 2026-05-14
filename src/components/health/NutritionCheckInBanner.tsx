@@ -133,7 +133,7 @@ export default function NutritionCheckInBanner({ memberId, canManage = false }: 
     }
   }
 
-  const isAdjust = rec.status === "adjust" && rec.proposed;
+  const hasMacroChange = Boolean(rec.proposed);
   const adherencePct = Math.round(rec.adherence.adherencePercent * 100);
   const observed = rec.weightTrend.observedWeeklyChangeLbs;
   const expected = rec.weightTrend.expectedWeeklyChangeLbs;
@@ -168,7 +168,7 @@ export default function NutritionCheckInBanner({ memberId, canManage = false }: 
         </div>
       </div>
 
-      {isAdjust && rec.proposed ? (
+      {hasMacroChange && rec.proposed ? (
         <div className="mt-3 rounded-xl bg-[var(--panel)] p-3 text-xs">
           <p className="text-[var(--text-muted)]">
             Proposed:{" "}
@@ -196,7 +196,7 @@ export default function NutritionCheckInBanner({ memberId, canManage = false }: 
 
       {canManage ? (
         <div className="mt-3 flex gap-2">
-          {isAdjust ? (
+          {hasMacroChange ? (
             <button
               type="button"
               onClick={apply}
