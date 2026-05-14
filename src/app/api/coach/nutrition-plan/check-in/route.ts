@@ -70,9 +70,9 @@ export async function POST(request: Request) {
     }
 
     const { latestPlan, recommendation } = result;
-    if (recommendation.status !== "adjust" || !recommendation.proposed) {
+    if (!recommendation.proposed) {
       return NextResponse.json(
-        { error: "No adjustment to apply.", recommendation },
+        { error: "No macro changes to apply.", recommendation },
         { status: 409 }
       );
     }

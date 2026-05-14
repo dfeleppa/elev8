@@ -203,8 +203,8 @@ export async function applyAdjustmentAsNewPlan(
   latestPlan: LatestPlanRow,
   recommendation: AdjustmentRecommendation
 ): Promise<{ newPlanId: string | null; effectiveDate: string; nextCheckInDate: string }> {
-  if (recommendation.status !== "adjust" || !recommendation.proposed) {
-    throw new Error("Recommendation is not applicable");
+  if (!recommendation.proposed) {
+    throw new Error("Recommendation has no macro changes to apply");
   }
 
   const today = todayIsoDate();
@@ -248,6 +248,24 @@ export async function applyAdjustmentAsNewPlan(
     .single();
 
   if (insertError) throw new Error(insertError.message);
+
+  const { error: targetError } = await supabaseAdmin
+    .from("nutrition_days")
+    .upsert(
+      {
+        member_id: memberId,
+        day_date: today,
+        calorie_target: proposed.targetCalories,
+        protein_target: proposed.proteinGrams,
+        carbs_target: proposed.carbsGrams,
+        fat_target: proposed.fatGrams,
+        fiber_target: proposed.fiberGrams,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "member_id,day_date" }
+    );
+
+  if (targetError) throw new Error(targetError.message);
 
   return {
     newPlanId: (inserted?.id as string) ?? null,
