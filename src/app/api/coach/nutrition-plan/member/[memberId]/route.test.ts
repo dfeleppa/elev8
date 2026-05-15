@@ -23,7 +23,7 @@ function memberQuery() {
     select: vi.fn(() => ({
       eq: vi.fn(() => ({
         maybeSingle: vi.fn(async () => ({
-          data: { id: "member-1", full_name: "Alex Bench", email: "alex@example.com" },
+          data: { id: "member-1", full_name: "Alex Bench", email: "alex@example.com", sex: "male" },
           error: null,
         })),
       })),
@@ -85,6 +85,18 @@ function weightsQuery() {
   };
 }
 
+function nutritionDaysQuery() {
+  return {
+    select: vi.fn(() => ({
+      eq: vi.fn(() => ({
+        order: vi.fn(() => ({
+          limit: vi.fn(async () => ({ data: [], error: null })),
+        })),
+      })),
+    })),
+  };
+}
+
 describe("coach nutrition member detail GET", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -103,6 +115,7 @@ describe("coach nutrition member detail GET", () => {
       if (table === "coach_nutrition_plans") return plansQuery(planSelectSpy);
       if (table === "nutrition_check_ins") return checkInsQuery();
       if (table === "health_stat_entries") return weightsQuery();
+      if (table === "nutrition_days") return nutritionDaysQuery();
       throw new Error(`Unexpected table ${table}`);
     });
 
@@ -123,5 +136,6 @@ describe("coach nutrition member detail GET", () => {
       sessions_per_week: 4,
       plan_payload: { ageYears: 35, weightLbs: 180 },
     });
+    expect(payload.member.sex).toBe("male");
   });
 });

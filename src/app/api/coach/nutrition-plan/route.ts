@@ -309,6 +309,7 @@ export async function POST(request: Request) {
           weeklyRatePercentOverride,
           reverseDietWeeklyKcalOverride,
           ageYears,
+          sex,
           bodyFatPercentage,
           proteinBodyFatPercentage: plan.proteinBodyFatPercentage,
           proteinBasis: plan.proteinBasis,

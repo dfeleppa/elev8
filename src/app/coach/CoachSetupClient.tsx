@@ -26,6 +26,7 @@ type LatestPlanPayload = {
   weeklyRatePercentOverride?: number | null;
   reverseDietWeeklyKcalOverride?: number | null;
   weightLbs?: number | null;
+  sex?: "male" | "female" | null;
   bodyFatPercentage?: number | null;
   proteinBodyFatPercentage?: number | null;
   leanBodyMassLbs?: number | null;
@@ -312,6 +313,7 @@ export default function CoachSetupClient({
           weeklyRatePercentOverride: useAdvancedOverride ? toPositiveNumberOrNull(weeklyRatePercentOverride) : null,
           reverseDietWeeklyKcalOverride: useAdvancedOverride ? toNonNegativeNumberOrNull(reverseDietWeeklyKcalOverride) : null,
           weightLbs: currentWeightNumber,
+          sex,
           bodyFatPercentage: measuredBodyFatPercentage,
           proteinBodyFatPercentage: newPlan.proteinBodyFatPercentage,
           leanBodyMassLbs: newPlan.leanBodyMassLbs,

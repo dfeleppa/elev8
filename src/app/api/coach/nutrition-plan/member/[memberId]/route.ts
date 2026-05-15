@@ -154,7 +154,7 @@ export async function GET(
   }
 
   const [memberRes, plansRes, checkInsRes, weightsRes, recentNutritionDays] = await Promise.all([
-    supabaseAdmin.from("app_users").select("id, full_name, email").eq("id", memberId).maybeSingle(),
+    supabaseAdmin.from("app_users").select("id, full_name, email, sex").eq("id", memberId).maybeSingle(),
     supabaseAdmin
       .from("coach_nutrition_plans")
       .select(

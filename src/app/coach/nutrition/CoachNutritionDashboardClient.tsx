@@ -98,7 +98,7 @@ type RecentNutritionDay = {
 };
 
 type Detail = {
-  member: { id: string; full_name: string | null; email: string | null };
+  member: { id: string; full_name: string | null; email: string | null; sex?: "male" | "female" | null };
   plans: PlanRow[];
   checkIns: CheckInRow[];
   weights: WeightRow[];
@@ -208,6 +208,32 @@ function payloadNumber(payload: PlanPayload | null | undefined, key: string) {
 function payloadString(payload: PlanPayload | null | undefined, key: string) {
   const value = payload?.[key];
   return typeof value === "string" ? value : null;
+}
+
+function estimateBodyFatPercentageFromBmi(
+  weightLbs: number | null,
+  heightCm: number | null,
+  ageYears: number | null,
+  sex: string | null
+) {
+  if (
+    weightLbs === null ||
+    heightCm === null ||
+    ageYears === null ||
+    !Number.isFinite(weightLbs) ||
+    !Number.isFinite(heightCm) ||
+    !Number.isFinite(ageYears) ||
+    weightLbs <= 0 ||
+    heightCm <= 0
+  ) {
+    return null;
+  }
+
+  const weightKg = weightLbs / 2.20462;
+  const heightM = heightCm / 100;
+  const bmi = weightKg / (heightM * heightM);
+  const sexValue = sex === "male" ? 1 : 0;
+  return Math.max(5, Math.min(60, 1.2 * bmi + 0.23 * ageYears - 10.8 * sexValue - 5.4));
 }
 
 function StatCard({
@@ -413,7 +439,7 @@ export default function CoachNutritionDashboardClient() {
           {currentPlan ? (
             <>
               <CurrentPlanCards plan={currentPlan} />
-              <MacroCalculationCard plan={currentPlan} />
+              <MacroCalculationCard plan={currentPlan} memberSex={detail.member.sex ?? null} />
               <RecentNutritionDaysTable days={detail.recentNutritionDays ?? []} />
               <MetabolismCard plan={currentPlan} />
             </>
@@ -508,15 +534,24 @@ function CurrentPlanCards({ plan }: { plan: PlanRow }) {
   );
 }
 
-function MacroCalculationCard({ plan }: { plan: PlanRow }) {
+function MacroCalculationCard({ plan, memberSex }: { plan: PlanRow; memberSex: string | null }) {
   const payload = plan.plan_payload ?? {};
   const weightLbs = payloadNumber(payload, "weightLbs");
   const measuredBodyFat = payloadNumber(payload, "bodyFatPercentage");
-  const proteinBodyFat = payloadNumber(payload, "proteinBodyFatPercentage");
-  const leanBodyMassLbs = payloadNumber(payload, "leanBodyMassLbs");
+  const heightCm = payloadNumber(payload, "heightCm");
+  const ageYears = payloadNumber(payload, "ageYears");
+  const payloadSex = payloadString(payload, "sex");
+  const fallbackProteinBodyFat = estimateBodyFatPercentageFromBmi(weightLbs, heightCm, ageYears, payloadSex ?? memberSex);
+  const proteinBodyFat = payloadNumber(payload, "proteinBodyFatPercentage") ?? fallbackProteinBodyFat;
+  const leanBodyMassLbs =
+    payloadNumber(payload, "leanBodyMassLbs") ??
+    (weightLbs !== null && proteinBodyFat !== null ? weightLbs * (1 - proteinBodyFat / 100) : null);
   const proteinBasis = payloadString(payload, "proteinBasis");
   const hasMeasuredBodyFat = measuredBodyFat !== null && measuredBodyFat > 2 && measuredBodyFat < 70;
   const usedBmiEstimate = proteinBasis === "bmi_estimated_body_fat" || !hasMeasuredBodyFat;
+  const expectedProteinGrams = leanBodyMassLbs !== null ? Math.round(leanBodyMassLbs * 10) / 10 : null;
+  const storedProteinMismatch =
+    expectedProteinGrams !== null && Math.abs(plan.protein_grams - expectedProteinGrams) > 0.5;
   const bodyFatDisplay = hasMeasuredBodyFat
     ? `${formatNumber(measuredBodyFat, 1)}%`
     : proteinBodyFat !== null
@@ -527,7 +562,7 @@ function MacroCalculationCard({ plan }: { plan: PlanRow }) {
       ? `${formatNumber(weightLbs, 1)} lb x (1 - ${formatNumber(proteinBodyFat, 1)}% body fat est.) = ${formatNumber(
           leanBodyMassLbs,
           1
-        )} lb lean mass x 1g/lb = ${formatNumber(plan.protein_grams, 1)}g protein`
+        )} lb lean mass x 1g/lb = ${formatNumber(expectedProteinGrams, 1)}g protein`
       : null;
   const formulaTdee = plan.last_metabolism_estimate?.formulaTdee ?? plan.maintenance_calories;
   const derivedBmr =
@@ -571,6 +606,11 @@ function MacroCalculationCard({ plan }: { plan: PlanRow }) {
           {proteinCalculation ? (
             <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-3 text-xs text-amber-100">
               <span className="font-semibold">Protein calculation:</span> {proteinCalculation}
+              {storedProteinMismatch ? (
+                <p className="mt-2 text-amber-200">
+                  Stored target is {formatNumber(plan.protein_grams, 1)}g. Recalculate this plan to apply the lean-mass target.
+                </p>
+              ) : null}
             </div>
           ) : null}
           <div className="mt-4 grid gap-2 text-xs text-[var(--text-muted)] sm:grid-cols-2">
