@@ -170,9 +170,9 @@ describe("analyzeNutritionAdjustment", () => {
     expect(Math.abs(rec.calorieDelta)).toBeLessThanOrEqual(200);
   });
 
-  it("enforces protein floor when current protein is below 0.7g/lb", () => {
+  it("bumps legacy low-protein plans to a conservative fallback target", () => {
     const plan = basePlan({ proteinGrams: 100, currentWeightLbs: 200, targetWeightLbs: 180 });
-    // floor = 0.7 * 180 = 126
+    // Legacy plans may not have lean body mass in the payload, so use a 0.7g/lb fallback.
     const inputs: AdjustmentInputs = {
       plan,
       dailyLogs: makeLogs(14, 2500),
@@ -180,10 +180,22 @@ describe("analyzeNutritionAdjustment", () => {
     };
     const rec = analyzeNutritionAdjustment(inputs);
     expect(rec.guardrails.proteinFloorGrams).toBe(126);
-    expect(rec.guardrails.proteinCeilingGrams).toBe(180);
+    expect(rec.guardrails.proteinCeilingGrams).toBe(126);
     expect(rec.warnings.some((w) => w.includes("Protein"))).toBe(true);
-    expect(rec.proposed?.proteinGrams).toBeGreaterThanOrEqual(126);
-    expect(rec.proposed?.proteinGrams).toBeLessThanOrEqual(180);
+    expect(rec.proposed?.proteinGrams).toBe(126);
+  });
+
+  it("uses stored lean body mass as the protein target during adjustments", () => {
+    const plan = basePlan({ proteinGrams: 150, leanBodyMassLbs: 160 });
+    const inputs: AdjustmentInputs = {
+      plan,
+      dailyLogs: makeLogs(14, 2500),
+      weights: makeWeights(200, -1),
+    };
+    const rec = analyzeNutritionAdjustment(inputs);
+    expect(rec.guardrails.proteinFloorGrams).toBe(160);
+    expect(rec.guardrails.proteinCeilingGrams).toBe(160);
+    expect(rec.proposed?.proteinGrams).toBe(160);
   });
 
   it("sets a fiber floor of at least 25g and 14g/1000kcal", () => {

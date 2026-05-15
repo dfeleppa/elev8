@@ -1,7 +1,5 @@
 import {
-  MAX_PROTEIN_GRAMS_PER_LB,
-  MIN_PROTEIN_GRAMS_PER_LB,
-  PREFERRED_PROTEIN_GRAMS_PER_LB,
+  PROTEIN_GRAMS_PER_LB_LEAN_BODY_MASS,
   buildMacroTargetsFromWeightLbs,
   type GoalType,
 } from "@/lib/nutrition-calculations";
@@ -58,6 +56,8 @@ export type CurrentPlan = {
   currentWeightLbs: number;
   /** Optional target body weight, in lbs. */
   targetWeightLbs?: number | null;
+  /** Lean body mass in lbs when captured by the plan builder. */
+  leanBodyMassLbs?: number | null;
 };
 
 export type AdjustmentInputs = {
@@ -137,6 +137,7 @@ const ADHERENCE_GATE = 0.7;
 const UNDERTRACK_RATIO = 0.85;
 /** Tolerance band around expected weekly change before we adjust. */
 const TOLERANCE_FRAC = 0.4;
+const LEGACY_MIN_PROTEIN_GRAMS_PER_LB = 0.7;
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -246,12 +247,16 @@ function summarizeWeightTrend(plan: CurrentPlan, weights: WeightEntry[], windowD
 
 function computeGuardrails(plan: CurrentPlan): Guardrails {
   const referenceWeight = plan.targetWeightLbs ?? plan.currentWeightLbs;
+  const proteinTarget =
+    plan.leanBodyMassLbs && plan.leanBodyMassLbs > 0
+      ? plan.leanBodyMassLbs * PROTEIN_GRAMS_PER_LB_LEAN_BODY_MASS
+      : Math.max(plan.proteinGrams, referenceWeight * LEGACY_MIN_PROTEIN_GRAMS_PER_LB);
   return {
     calorieFloor: Math.max(ABSOLUTE_CALORIE_FLOOR, Math.round(plan.maintenanceCalories * MAINT_FLOOR_FRACTION)),
     calorieCeiling: Math.min(ABSOLUTE_CALORIE_CEILING, Math.round(plan.maintenanceCalories * MAINT_CEILING_FRACTION)),
     perCheckInDeltaCap: MAX_DELTA_PER_CHECK_IN,
-    proteinFloorGrams: round1(MIN_PROTEIN_GRAMS_PER_LB * referenceWeight),
-    proteinCeilingGrams: round1(MAX_PROTEIN_GRAMS_PER_LB * referenceWeight),
+    proteinFloorGrams: round1(proteinTarget),
+    proteinCeilingGrams: round1(proteinTarget),
     fatFloorGrams: round1(0.3 * referenceWeight),
     fiberFloorGrams: Math.max(25, Math.round((14 * plan.targetCalories) / 1000)),
   };
@@ -263,7 +268,11 @@ function recomposeMacros(
   guardrails: Guardrails
 ): ProposedMacros {
   const referenceWeight = plan.targetWeightLbs ?? plan.currentWeightLbs;
-  const macros = buildMacroTargetsFromWeightLbs(newCalories, referenceWeight);
+  const proteinTarget =
+    plan.leanBodyMassLbs && plan.leanBodyMassLbs > 0
+      ? plan.leanBodyMassLbs * PROTEIN_GRAMS_PER_LB_LEAN_BODY_MASS
+      : Math.max(plan.proteinGrams, referenceWeight * LEGACY_MIN_PROTEIN_GRAMS_PER_LB);
+  const macros = buildMacroTargetsFromWeightLbs(newCalories, proteinTarget);
   const fiber = Math.max(plan.fiberGrams ?? 0, guardrails.fiberFloorGrams);
 
   return {
@@ -302,15 +311,15 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
   const baselineShouldBeReturned = macroTargetChanged || fiberFloorBumped;
   if (proteinFloorBumped) {
     warnings.push(
-      `Protein bumped to floor (${guardrails.proteinFloorGrams}g = ${MIN_PROTEIN_GRAMS_PER_LB} g/lb of reference weight).`
+      `Protein bumped to lean-mass target (${guardrails.proteinFloorGrams}g = ${PROTEIN_GRAMS_PER_LB_LEAN_BODY_MASS} g/lb lean body mass).`
     );
   } else if (proteinCeilingLowered) {
     warnings.push(
-      `Protein lowered to ceiling (${guardrails.proteinCeilingGrams}g = ${MAX_PROTEIN_GRAMS_PER_LB} g/lb of reference weight).`
+      `Protein lowered to lean-mass target (${guardrails.proteinCeilingGrams}g = ${PROTEIN_GRAMS_PER_LB_LEAN_BODY_MASS} g/lb lean body mass).`
     );
   } else if (macroTargetChanged) {
     warnings.push(
-      `Macros recomposed with ${PREFERRED_PROTEIN_GRAMS_PER_LB} g/lb preferred protein and 30% fat calories.`
+      `Macros recomposed with ${PROTEIN_GRAMS_PER_LB_LEAN_BODY_MASS} g/lb lean body mass protein and 30% fat calories.`
     );
   }
   if (fiberFloorBumped) {

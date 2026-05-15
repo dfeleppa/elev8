@@ -26,6 +26,10 @@ export type CalculationResult = {
   proteinGrams: number;
   carbsGrams: number;
   fatGrams: number;
+  leanBodyMassLbs: number;
+  proteinBodyFatPercentage: number;
+  proteinBasis: "measured_body_fat" | "bmi_estimated_body_fat";
+  bodyFatRecommendation: string | null;
   weeklyRatePercent: number;
   reverseDietWeeklyKcal: number;
 };
@@ -106,25 +110,29 @@ function mifflinStJeorBmr(weightKg: number, heightCm: number, ageYears: number, 
 }
 
 const LBS_PER_KG = 2.20462;
-export const PREFERRED_PROTEIN_GRAMS_PER_LB = 0.8;
-export const MIN_PROTEIN_GRAMS_PER_LB = 0.7;
-export const MAX_PROTEIN_GRAMS_PER_LB = 1.0;
-const IDEAL_PROTEIN_CALORIE_FRACTION = 0.3;
+export const PROTEIN_GRAMS_PER_LB_LEAN_BODY_MASS = 1.0;
 const IDEAL_FAT_CALORIE_FRACTION = 0.3;
 
-export function buildMacroTargetsFromWeightLbs(targetCalories: number, weightLbs: number) {
-  const safeCalories = safePositive(targetCalories, 1200);
-  const safeWeightLbs = safePositive(weightLbs, 1);
-  const proteinFloor = safeWeightLbs * MIN_PROTEIN_GRAMS_PER_LB;
-  const proteinCeiling = safeWeightLbs * MAX_PROTEIN_GRAMS_PER_LB;
-  const idealProteinGrams = (safeCalories * IDEAL_PROTEIN_CALORIE_FRACTION) / 4;
+export function estimateBodyFatPercentageFromBmi(
+  weightKg: number,
+  heightCm: number,
+  ageYears: number,
+  sex: AthleteSex
+) {
+  const heightM = safePositive(heightCm, 100) / 100;
+  const bmi = safePositive(weightKg, 1) / (heightM * heightM);
+  const sexValue = sex === "male" ? 1 : 0;
+  return clamp(1.2 * bmi + 0.23 * ageYears - 10.8 * sexValue - 5.4, 5, 60);
+}
 
-  const proteinGrams =
-    idealProteinGrams < proteinFloor
-      ? proteinFloor
-      : idealProteinGrams > proteinCeiling
-        ? proteinCeiling
-        : safeWeightLbs * PREFERRED_PROTEIN_GRAMS_PER_LB;
+function leanBodyMassLbs(weightKg: number, bodyFatPercentage: number) {
+  return weightKg * LBS_PER_KG * (1 - bodyFatPercentage / 100);
+}
+
+export function buildMacroTargetsFromLeanMassLbs(targetCalories: number, leanMassLbs: number) {
+  const safeCalories = safePositive(targetCalories, 1200);
+  const safeLeanMassLbs = safePositive(leanMassLbs, 1);
+  const proteinGrams = safeLeanMassLbs * PROTEIN_GRAMS_PER_LB_LEAN_BODY_MASS;
 
   const idealFatGrams = (safeCalories * IDEAL_FAT_CALORIE_FRACTION) / 9;
   const caloriesAfterProtein = safeCalories - proteinGrams * 4;
@@ -138,8 +146,12 @@ export function buildMacroTargetsFromWeightLbs(targetCalories: number, weightLbs
   };
 }
 
-function buildMacroTargets(targetCalories: number, weightKg: number) {
-  return buildMacroTargetsFromWeightLbs(targetCalories, weightKg * LBS_PER_KG);
+export function buildMacroTargetsFromWeightLbs(targetCalories: number, weightLbs: number) {
+  return buildMacroTargetsFromLeanMassLbs(targetCalories, weightLbs);
+}
+
+function buildMacroTargets(targetCalories: number, leanMassLbs: number) {
+  return buildMacroTargetsFromLeanMassLbs(targetCalories, leanMassLbs);
 }
 
 export function calculateNutritionPlan(inputs: CalculationInputs): CalculationResult {
@@ -153,6 +165,10 @@ export function calculateNutritionPlan(inputs: CalculationInputs): CalculationRe
     Number.isFinite(inputs.bodyFatPercentage) &&
     inputs.bodyFatPercentage > 2 &&
     inputs.bodyFatPercentage < 70;
+  const proteinBodyFatPercentage = hasValidBodyFat
+    ? (inputs.bodyFatPercentage as number)
+    : estimateBodyFatPercentageFromBmi(weightKg, heightCm, ageYears, inputs.sex);
+  const leanMassLbs = leanBodyMassLbs(weightKg, proteinBodyFatPercentage);
 
   const bmr = hasValidBodyFat
     ? katchMcArdleBmr(weightKg, inputs.bodyFatPercentage as number)
@@ -182,7 +198,7 @@ export function calculateNutritionPlan(inputs: CalculationInputs): CalculationRe
           : 0;
 
   const targetCalories = Math.max(1200, maintenanceCalories + goalAdjustment);
-  const macros = buildMacroTargets(targetCalories, weightKg);
+  const macros = buildMacroTargets(targetCalories, leanMassLbs);
 
   return {
     formulaUsed: hasValidBodyFat ? "katch_mcardle" : "mifflin_st_jeor",
@@ -193,6 +209,12 @@ export function calculateNutritionPlan(inputs: CalculationInputs): CalculationRe
     proteinGrams: macros.proteinGrams,
     carbsGrams: macros.carbsGrams,
     fatGrams: macros.fatGrams,
+    leanBodyMassLbs: round1(leanMassLbs),
+    proteinBodyFatPercentage: round1(proteinBodyFatPercentage),
+    proteinBasis: hasValidBodyFat ? "measured_body_fat" : "bmi_estimated_body_fat",
+    bodyFatRecommendation: hasValidBodyFat
+      ? null
+      : "Body fat was estimated from BMI for protein. Recommend testing body fat for a more accurate lean body mass target.",
     weeklyRatePercent: round1(weeklyRatePercent),
     reverseDietWeeklyKcal: round0(reverseDietWeeklyKcal),
   };

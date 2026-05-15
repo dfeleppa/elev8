@@ -14,6 +14,10 @@ type PlanPreview = {
   proteinGrams: number;
   carbsGrams: number;
   fatGrams: number;
+  leanBodyMassLbs: number;
+  proteinBodyFatPercentage: number;
+  proteinBasis: "measured_body_fat" | "bmi_estimated_body_fat";
+  bodyFatRecommendation: string | null;
   weeklyRatePercent: number;
   reverseDietWeeklyKcal: number;
 };
@@ -23,6 +27,9 @@ type LatestPlanPayload = {
   reverseDietWeeklyKcalOverride?: number | null;
   weightLbs?: number | null;
   bodyFatPercentage?: number | null;
+  proteinBodyFatPercentage?: number | null;
+  leanBodyMassLbs?: number | null;
+  proteinBasis?: PlanPreview["proteinBasis"] | null;
 };
 
 type LatestPlan = {
@@ -275,6 +282,9 @@ export default function CoachSetupClient({
           reverseDietWeeklyKcalOverride: useAdvancedOverride && reverseDietWeeklyKcalOverride ? Number(reverseDietWeeklyKcalOverride) : null,
           weightLbs: currentWeightLbs ? Number(currentWeightLbs) : null,
           bodyFatPercentage: bodyFatPercentage ? Number(bodyFatPercentage) : null,
+          proteinBodyFatPercentage: newPlan.proteinBodyFatPercentage,
+          leanBodyMassLbs: newPlan.leanBodyMassLbs,
+          proteinBasis: newPlan.proteinBasis,
         },
       };
       setActivePlan(updatedPlan);
@@ -544,6 +554,9 @@ export default function CoachSetupClient({
                 inputMode="decimal"
                 className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               />
+              <span className="block text-xs text-slate-500">
+                If unknown, test body fat when you can. Until then, protein uses a BMI-based body fat estimate.
+              </span>
             </label>
             <label className="space-y-1">
               <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Height (cm)</span>
@@ -605,9 +618,19 @@ export default function CoachSetupClient({
                 <p className="text-sm text-slate-300">Maintenance: <span className="font-semibold text-slate-100">{planPreview.maintenanceCalories} kcal</span></p>
                 <p className="text-sm text-slate-300">Target: <span className="font-semibold text-slate-100">{planPreview.targetCalories} kcal</span></p>
                 <p className="text-sm text-slate-300">Protein: <span className="font-semibold text-slate-100">{toDisplayNumber(planPreview.proteinGrams)} g</span></p>
+                <p className="text-sm text-slate-300">Lean Mass: <span className="font-semibold text-slate-100">{toDisplayNumber(planPreview.leanBodyMassLbs)} lb</span></p>
+                <p className="text-sm text-slate-300">
+                  Protein basis:{" "}
+                  <span className="font-semibold text-slate-100">
+                    {planPreview.proteinBasis === "measured_body_fat" ? "Measured body fat" : "BMI estimate"}
+                  </span>
+                </p>
                 <p className="text-sm text-slate-300">Carbs: <span className="font-semibold text-slate-100">{toDisplayNumber(planPreview.carbsGrams)} g</span></p>
                 <p className="text-sm text-slate-300">Fat: <span className="font-semibold text-slate-100">{toDisplayNumber(planPreview.fatGrams)} g</span></p>
                 <p className="text-sm text-slate-300">Activity: <span className="font-semibold text-slate-100">x{toDisplayNumber(planPreview.activityMultiplier)}</span></p>
+                {planPreview.bodyFatRecommendation ? (
+                  <p className="sm:col-span-2 text-sm text-amber-300">{planPreview.bodyFatRecommendation}</p>
+                ) : null}
               </div>
             ) : null}
           </div>

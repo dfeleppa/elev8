@@ -136,6 +136,7 @@ async function loadWeights(memberId: string, sinceIso: string): Promise<WeightEn
 export function buildCurrentPlan(plan: LatestPlanRow, latestWeightLbs: number | null): CurrentPlan {
   const payload = plan.plan_payload ?? {};
   const payloadWeightLbs = typeof payload.weightLbs === "number" ? (payload.weightLbs as number) : null;
+  const leanBodyMassLbs = typeof payload.leanBodyMassLbs === "number" ? (payload.leanBodyMassLbs as number) : null;
   const currentWeightLbs = latestWeightLbs ?? payloadWeightLbs ?? Number(plan.target_weight_lbs ?? 0) ?? 0;
   return {
     goalType: plan.goal_type,
@@ -149,6 +150,7 @@ export function buildCurrentPlan(plan: LatestPlanRow, latestWeightLbs: number | 
     reverseDietWeeklyKcal: Number(plan.reverse_diet_weekly_kcal ?? 0),
     currentWeightLbs,
     targetWeightLbs: plan.target_weight_lbs,
+    leanBodyMassLbs,
   };
 }
 
