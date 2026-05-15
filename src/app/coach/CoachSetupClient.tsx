@@ -110,12 +110,12 @@ function formatDate(isoDate: string) {
 function formatProteinCalculation(weightLbs: string, plan: PlanPreview) {
   const parsedWeight = Number(weightLbs);
   if (!Number.isFinite(parsedWeight) || parsedWeight <= 0) {
-    return null;
+    return `${toDisplayNumber(plan.leanBodyMassLbs)} lb lean mass x 1g/lb = ${toDisplayNumber(plan.proteinGrams)}g protein`;
   }
 
   return (
     `${toDisplayNumber(parsedWeight)} lb x (1 - ${toDisplayNumber(plan.proteinBodyFatPercentage)}% body fat est.) = ` +
-    `${toDisplayNumber(plan.leanBodyMassLbs)} lb lean mass -> ${toDisplayNumber(plan.proteinGrams)}g protein`
+    `${toDisplayNumber(plan.leanBodyMassLbs)} lb lean mass x 1g/lb = ${toDisplayNumber(plan.proteinGrams)}g protein`
   );
 }
 
@@ -625,16 +625,17 @@ export default function CoachSetupClient({
 
             {planPreview ? (
               <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 sm:grid-cols-2">
-                {planPreview.proteinBasis === "bmi_estimated_body_fat" ? (
-                  <p className="sm:col-span-2 rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-sm text-amber-100">
-                    Protein calculation: {formatProteinCalculation(currentWeightLbs, planPreview)}
-                  </p>
-                ) : null}
                 <p className="text-sm text-slate-300">Formula: <span className="font-semibold text-slate-100">{planPreview.formulaUsed}</span></p>
                 <p className="text-sm text-slate-300">BMR: <span className="font-semibold text-slate-100">{planPreview.bmr}</span></p>
                 <p className="text-sm text-slate-300">Maintenance: <span className="font-semibold text-slate-100">{planPreview.maintenanceCalories} kcal</span></p>
                 <p className="text-sm text-slate-300">Target: <span className="font-semibold text-slate-100">{planPreview.targetCalories} kcal</span></p>
                 <p className="text-sm text-slate-300">Protein: <span className="font-semibold text-slate-100">{toDisplayNumber(planPreview.proteinGrams)} g</span></p>
+                {planPreview.proteinBasis === "bmi_estimated_body_fat" || !bodyFatPercentage.trim() ? (
+                  <p className="sm:col-span-2 rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-sm text-amber-100">
+                    <span className="font-semibold">Protein calculation:</span>{" "}
+                    {formatProteinCalculation(currentWeightLbs, planPreview)}
+                  </p>
+                ) : null}
                 <p className="text-sm text-slate-300">Lean Mass: <span className="font-semibold text-slate-100">{toDisplayNumber(planPreview.leanBodyMassLbs)} lb</span></p>
                 <p className="text-sm text-slate-300">
                   Protein basis:{" "}
