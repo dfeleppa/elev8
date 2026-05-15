@@ -102,6 +102,21 @@ function toDisplayNumber(value: number) {
   return Number.isFinite(value) ? value.toFixed(1).replace(/\.0$/, "") : "0";
 }
 
+function toPositiveNumberOrNull(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function toNonNegativeNumberOrNull(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function toMeasuredBodyFatOrNull(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 2 && parsed < 70 ? parsed : null;
+}
+
 function formatDate(isoDate: string) {
   const d = new Date(`${isoDate}T00:00:00`);
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
@@ -198,7 +213,7 @@ export default function CoachSetupClient({
         if (typeof prof?.current_weight_kg === "number") {
           setCurrentWeightLbs(String(Math.round(prof.current_weight_kg * 2.20462 * 10) / 10));
         }
-        if (typeof prof?.body_fat_percent === "number") {
+        if (typeof prof?.body_fat_percent === "number" && prof.body_fat_percent > 2 && prof.body_fat_percent < 70) {
           setBodyFatPercentage(String(prof.body_fat_percent));
         }
 
@@ -240,6 +255,10 @@ export default function CoachSetupClient({
     setError(null);
     setMessage(null);
 
+    const currentWeightNumber = toPositiveNumberOrNull(currentWeightLbs);
+    const heightNumber = toPositiveNumberOrNull(heightCm);
+    const measuredBodyFatPercentage = toMeasuredBodyFatOrNull(bodyFatPercentage);
+
     const response = await fetch("/api/coach/nutrition-plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -249,15 +268,15 @@ export default function CoachSetupClient({
         sex,
         birthDate,
         currentWeightLbs,
-        targetWeightLbs: targetWeightLbs ? Number(targetWeightLbs) : null,
+        targetWeightLbs: toPositiveNumberOrNull(targetWeightLbs),
         heightCm,
-        bodyFatPercentage: bodyFatPercentage ? Number(bodyFatPercentage) : null,
-        sessionsPerWeek: sessionsPerWeek ? Number(sessionsPerWeek) : null,
+        bodyFatPercentage: measuredBodyFatPercentage,
+        sessionsPerWeek: toPositiveNumberOrNull(sessionsPerWeek),
         intensityPreset,
         weeklyRatePercentOverride:
-          useAdvancedOverride && weeklyRatePercentOverride ? Number(weeklyRatePercentOverride) : null,
+          useAdvancedOverride ? toPositiveNumberOrNull(weeklyRatePercentOverride) : null,
         reverseDietWeeklyKcalOverride:
-          useAdvancedOverride && reverseDietWeeklyKcalOverride ? Number(reverseDietWeeklyKcalOverride) : null,
+          useAdvancedOverride ? toNonNegativeNumberOrNull(reverseDietWeeklyKcalOverride) : null,
         effectiveDate,
       }),
     });
@@ -290,10 +309,10 @@ export default function CoachSetupClient({
         sessions_per_week: sessionsPerWeek ? Number(sessionsPerWeek) : null,
         effective_date: effectiveDate,
         plan_payload: {
-          weeklyRatePercentOverride: useAdvancedOverride && weeklyRatePercentOverride ? Number(weeklyRatePercentOverride) : null,
-          reverseDietWeeklyKcalOverride: useAdvancedOverride && reverseDietWeeklyKcalOverride ? Number(reverseDietWeeklyKcalOverride) : null,
-          weightLbs: currentWeightLbs ? Number(currentWeightLbs) : null,
-          bodyFatPercentage: bodyFatPercentage ? Number(bodyFatPercentage) : null,
+          weeklyRatePercentOverride: useAdvancedOverride ? toPositiveNumberOrNull(weeklyRatePercentOverride) : null,
+          reverseDietWeeklyKcalOverride: useAdvancedOverride ? toNonNegativeNumberOrNull(reverseDietWeeklyKcalOverride) : null,
+          weightLbs: currentWeightNumber,
+          bodyFatPercentage: measuredBodyFatPercentage,
           proteinBodyFatPercentage: newPlan.proteinBodyFatPercentage,
           leanBodyMassLbs: newPlan.leanBodyMassLbs,
           proteinBasis: newPlan.proteinBasis,
@@ -302,11 +321,11 @@ export default function CoachSetupClient({
       setActivePlan(updatedPlan);
       setProfile((prev) => ({
         ...prev,
-        current_weight_kg: currentWeightLbs ? Number(currentWeightLbs) / 2.20462 : prev?.current_weight_kg,
-        body_fat_percent: bodyFatPercentage ? Number(bodyFatPercentage) : prev?.body_fat_percent,
+        current_weight_kg: currentWeightNumber ? currentWeightNumber / 2.20462 : prev?.current_weight_kg,
+        body_fat_percent: measuredBodyFatPercentage,
         sex,
         birth_date: birthDate || prev?.birth_date,
-        height_cm: heightCm ? Number(heightCm) : prev?.height_cm,
+        height_cm: heightNumber ?? prev?.height_cm,
       }));
       setHasPlan(true);
       setMessage("Plan saved and nutrition targets applied.");
@@ -351,9 +370,12 @@ export default function CoachSetupClient({
   // ── Dashboard (active plan exists) ───────────────────────────────────────
   if (viewMode === "dashboard" && hasPlan && activePlan) {
     const startWeightLbs = activePlan.plan_payload?.weightLbs ?? null;
-    const startBf = activePlan.plan_payload?.bodyFatPercentage ?? null;
+    const payloadStartBf = activePlan.plan_payload?.bodyFatPercentage ?? null;
+    const startBf = typeof payloadStartBf === "number" && payloadStartBf > 2 && payloadStartBf < 70 ? payloadStartBf : null;
     const currentWeightKg = profile?.current_weight_kg ?? null;
-    const currentBf = profile?.body_fat_percent ?? null;
+    const profileCurrentBf = profile?.body_fat_percent ?? null;
+    const currentBf =
+      typeof profileCurrentBf === "number" && profileCurrentBf > 2 && profileCurrentBf < 70 ? profileCurrentBf : null;
     const currentLbs = currentWeightKg !== null ? Math.round(currentWeightKg * 2.20462 * 10) / 10 : null;
 
     const weightDelta =

@@ -205,6 +205,11 @@ function payloadNumber(payload: PlanPayload | null | undefined, key: string) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function payloadString(payload: PlanPayload | null | undefined, key: string) {
+  const value = payload?.[key];
+  return typeof value === "string" ? value : null;
+}
+
 function StatCard({
   label,
   value,
@@ -505,6 +510,25 @@ function CurrentPlanCards({ plan }: { plan: PlanRow }) {
 
 function MacroCalculationCard({ plan }: { plan: PlanRow }) {
   const payload = plan.plan_payload ?? {};
+  const weightLbs = payloadNumber(payload, "weightLbs");
+  const measuredBodyFat = payloadNumber(payload, "bodyFatPercentage");
+  const proteinBodyFat = payloadNumber(payload, "proteinBodyFatPercentage");
+  const leanBodyMassLbs = payloadNumber(payload, "leanBodyMassLbs");
+  const proteinBasis = payloadString(payload, "proteinBasis");
+  const hasMeasuredBodyFat = measuredBodyFat !== null && measuredBodyFat > 2 && measuredBodyFat < 70;
+  const usedBmiEstimate = proteinBasis === "bmi_estimated_body_fat" || !hasMeasuredBodyFat;
+  const bodyFatDisplay = hasMeasuredBodyFat
+    ? `${formatNumber(measuredBodyFat, 1)}%`
+    : proteinBodyFat !== null
+      ? `Unknown (BMI est. ${formatNumber(proteinBodyFat, 1)}%)`
+      : "Unknown";
+  const proteinCalculation =
+    usedBmiEstimate && weightLbs !== null && proteinBodyFat !== null && leanBodyMassLbs !== null
+      ? `${formatNumber(weightLbs, 1)} lb x (1 - ${formatNumber(proteinBodyFat, 1)}% body fat est.) = ${formatNumber(
+          leanBodyMassLbs,
+          1
+        )} lb lean mass x 1g/lb = ${formatNumber(plan.protein_grams, 1)}g protein`
+      : null;
   const formulaTdee = plan.last_metabolism_estimate?.formulaTdee ?? plan.maintenance_calories;
   const derivedBmr =
     formulaTdee && plan.activity_multiplier && plan.activity_multiplier > 0
@@ -544,12 +568,17 @@ function MacroCalculationCard({ plan }: { plan: PlanRow }) {
             <MacroBar label="Carbs" grams={plan.carbs_grams} calories={carbCalories} percent={percent(carbCalories)} tone="bg-[var(--pink)]" />
             <MacroBar label="Fat" grams={plan.fat_grams} calories={fatCalories} percent={percent(fatCalories)} tone="bg-amber-300" />
           </div>
+          {proteinCalculation ? (
+            <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-3 text-xs text-amber-100">
+              <span className="font-semibold">Protein calculation:</span> {proteinCalculation}
+            </div>
+          ) : null}
           <div className="mt-4 grid gap-2 text-xs text-[var(--text-muted)] sm:grid-cols-2">
-            <p>Weight input: <span className="text-[var(--text)]">{formatNumber(payloadNumber(payload, "weightLbs"), 1)} lb</span></p>
+            <p>Weight input: <span className="text-[var(--text)]">{formatNumber(weightLbs, 1)} lb</span></p>
             <p>Target weight: <span className="text-[var(--text)]">{formatNumber(plan.target_weight_lbs, 1)} lb</span></p>
             <p>Height: <span className="text-[var(--text)]">{formatNumber(payloadNumber(payload, "heightCm"), 1)} cm</span></p>
             <p>Age: <span className="text-[var(--text)]">{formatNumber(payloadNumber(payload, "ageYears"))}</span></p>
-            <p>Body fat: <span className="text-[var(--text)]">{formatNumber(payloadNumber(payload, "bodyFatPercentage"), 1)}%</span></p>
+            <p>Body fat: <span className="text-[var(--text)]">{bodyFatDisplay}</span></p>
             <p>Intensity: <span className="text-[var(--text)]">{titleize(plan.intensity_preset)}</span></p>
           </div>
         </div>

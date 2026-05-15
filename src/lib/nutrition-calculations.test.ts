@@ -64,4 +64,21 @@ describe("calculateNutritionPlan protein target", () => {
     expect(plan.proteinGrams).toBe(plan.leanBodyMassLbs);
     expect(plan.bodyFatRecommendation).toContain("Recommend testing body fat");
   });
+
+  it("treats zero body fat as unknown and uses the BMI estimate", () => {
+    const plan = calculateNutritionPlan({
+      goalType: "maintain_weight",
+      weightKg: 200 / 2.20462,
+      heightCm: 178,
+      ageYears: 35,
+      sex: "male",
+      bodyFatPercentage: 0,
+      sessionsPerWeek: 4,
+      intensityPreset: "moderate",
+    });
+
+    expect(plan.proteinBasis).toBe("bmi_estimated_body_fat");
+    expect(plan.leanBodyMassLbs).toBeLessThan(200);
+    expect(plan.proteinGrams).toBe(plan.leanBodyMassLbs);
+  });
 });

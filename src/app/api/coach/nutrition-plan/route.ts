@@ -22,8 +22,16 @@ const intensitySet = new Set<IntensityPreset>(["conservative", "moderate", "aggr
 const sexSet = new Set<AthleteSex>(["male", "female"]);
 
 function toNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toMeasuredBodyFatPercentage(value: unknown) {
+  const parsed = toNumber(value);
+  return parsed !== null && parsed > 2 && parsed < 70 ? parsed : null;
 }
 
 function toIsoDate(value: unknown) {
@@ -203,7 +211,7 @@ export async function POST(request: Request) {
   const currentWeightLbs = toNumber(body?.currentWeightLbs);
   let weightKg: number | null = currentWeightLbs !== null ? currentWeightLbs / 2.20462 : null;
   const heightCm = toNumber(body?.heightCm);
-  const bodyFatPercentage = toNumber(body?.bodyFatPercentage);
+  const bodyFatPercentage = toMeasuredBodyFatPercentage(body?.bodyFatPercentage);
   const weeklyRatePercentOverride = toNumber(body?.weeklyRatePercentOverride);
   const reverseDietWeeklyKcalOverride = toNumber(body?.reverseDietWeeklyKcalOverride);
   const targetWeightLbs = toNumber(body?.targetWeightLbs);
