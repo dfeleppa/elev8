@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { hasRole, requireRequestUserContext } from "@/lib/member";
+import {
+  buildMacroTargetsFromLeanMassLbs,
+  estimateBodyFatPercentageFromBmi,
+  type AthleteSex,
+} from "@/lib/nutrition-calculations";
 import { runNutritionQueryWithFallbacks } from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -26,12 +31,128 @@ type NutritionEntryRow = {
   fiber?: number | null;
 };
 
+const PLAN_SELECT =
+  "id, goal_type, intensity_preset, weekly_rate_percent, reverse_diet_weekly_kcal, target_weight_lbs, maintenance_calories, target_calories, maintenance_calories_source, maintenance_calories_estimated_at, last_metabolism_estimate, protein_grams, carbs_grams, fat_grams, fiber_grams, formula_used, activity_multiplier, sessions_per_week, effective_date, last_check_in_date, next_check_in_date, adjustment_reason, previous_plan_id, adherence_snapshot, plan_payload";
+
+type CoachPlanRow = {
+  id: string;
+  target_calories: number;
+  protein_grams: number;
+  carbs_grams: number;
+  fat_grams: number;
+  effective_date: string | null;
+  plan_payload: Record<string, unknown> | null;
+};
+
 function toFiniteNumber(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
+function toNullableNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
 function roundNutritionTotal(value: number) {
   return Math.round(value * 10) / 10;
+}
+
+function round1(value: number) {
+  return Math.round(value * 10) / 10;
+}
+
+function getPayloadSex(payload: Record<string, unknown>, memberSex: unknown): AthleteSex | null {
+  if (payload.sex === "male" || payload.sex === "female") return payload.sex;
+  if (memberSex === "male" || memberSex === "female") return memberSex;
+  return null;
+}
+
+function getWeightLbs(payload: Record<string, unknown>) {
+  const weightLbs = toNullableNumber(payload.weightLbs);
+  if (weightLbs !== null && weightLbs > 0) return weightLbs;
+  const weightKg = toNullableNumber(payload.weightKg);
+  return weightKg !== null && weightKg > 0 ? weightKg * 2.20462 : null;
+}
+
+async function repairLegacyLeanMassMacros(
+  memberId: string,
+  memberSex: unknown,
+  plan: CoachPlanRow
+) {
+  const payload = plan.plan_payload ?? {};
+  const weightLbs = getWeightLbs(payload);
+  const heightCm = toNullableNumber(payload.heightCm);
+  const ageYears = toNullableNumber(payload.ageYears);
+  const measuredBodyFat = toNullableNumber(payload.bodyFatPercentage);
+  const hasMeasuredBodyFat = measuredBodyFat !== null && measuredBodyFat > 2 && measuredBodyFat < 70;
+  const sex = getPayloadSex(payload, memberSex);
+
+  let proteinBodyFatPercentage = hasMeasuredBodyFat ? measuredBodyFat : toNullableNumber(payload.proteinBodyFatPercentage);
+  if ((proteinBodyFatPercentage === null || proteinBodyFatPercentage <= 2 || proteinBodyFatPercentage >= 70) && weightLbs && heightCm && ageYears && sex) {
+    proteinBodyFatPercentage = estimateBodyFatPercentageFromBmi(weightLbs / 2.20462, heightCm, ageYears, sex);
+  }
+
+  if (!weightLbs || !proteinBodyFatPercentage || proteinBodyFatPercentage <= 2 || proteinBodyFatPercentage >= 70) {
+    return plan;
+  }
+
+  const leanBodyMassLbs = round1(weightLbs * (1 - proteinBodyFatPercentage / 100));
+  const macros = buildMacroTargetsFromLeanMassLbs(plan.target_calories, leanBodyMassLbs);
+  const macroMismatch =
+    Math.abs(plan.protein_grams - macros.proteinGrams) > 0.5 ||
+    Math.abs(plan.carbs_grams - macros.carbsGrams) > 0.5 ||
+    Math.abs(plan.fat_grams - macros.fatGrams) > 0.5;
+  const payloadMissing =
+    toNullableNumber(payload.proteinBodyFatPercentage) === null ||
+    toNullableNumber(payload.leanBodyMassLbs) === null ||
+    payload.proteinBasis !== (hasMeasuredBodyFat ? "measured_body_fat" : "bmi_estimated_body_fat") ||
+    measuredBodyFat === 0;
+
+  if (!macroMismatch && !payloadMissing) {
+    return plan;
+  }
+
+  const nextPayload = {
+    ...payload,
+    weightLbs,
+    sex,
+    bodyFatPercentage: hasMeasuredBodyFat ? measuredBodyFat : null,
+    proteinBodyFatPercentage: round1(proteinBodyFatPercentage),
+    leanBodyMassLbs,
+    proteinBasis: hasMeasuredBodyFat ? "measured_body_fat" : "bmi_estimated_body_fat",
+  };
+
+  const { data: updatedPlan, error } = await supabaseAdmin
+    .from("coach_nutrition_plans")
+    .update({
+      protein_grams: macros.proteinGrams,
+      carbs_grams: macros.carbsGrams,
+      fat_grams: macros.fatGrams,
+      plan_payload: nextPayload,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", plan.id)
+    .eq("member_id", memberId)
+    .select(PLAN_SELECT)
+    .single();
+
+  if (error || !updatedPlan) {
+    return plan;
+  }
+
+  if (plan.effective_date) {
+    await supabaseAdmin
+      .from("nutrition_days")
+      .update({
+        protein_target: macros.proteinGrams,
+        carbs_target: macros.carbsGrams,
+        fat_target: macros.fatGrams,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("member_id", memberId)
+      .eq("day_date", plan.effective_date);
+  }
+
+  return updatedPlan as CoachPlanRow;
 }
 
 async function getRecentNutritionDays(memberId: string) {
@@ -157,9 +278,7 @@ export async function GET(
     supabaseAdmin.from("app_users").select("id, full_name, email, sex").eq("id", memberId).maybeSingle(),
     supabaseAdmin
       .from("coach_nutrition_plans")
-      .select(
-        "id, goal_type, intensity_preset, weekly_rate_percent, reverse_diet_weekly_kcal, target_weight_lbs, maintenance_calories, target_calories, maintenance_calories_source, maintenance_calories_estimated_at, last_metabolism_estimate, protein_grams, carbs_grams, fat_grams, fiber_grams, formula_used, activity_multiplier, sessions_per_week, effective_date, last_check_in_date, next_check_in_date, adjustment_reason, previous_plan_id, adherence_snapshot, plan_payload"
-      )
+      .select(PLAN_SELECT)
       .eq("member_id", memberId)
       .order("effective_date", { ascending: false })
       .limit(20),
@@ -186,9 +305,14 @@ export async function GET(
     return NextResponse.json({ error: "Member not found." }, { status: 404 });
   }
 
+  const plans = [...((plansRes.data ?? []) as CoachPlanRow[])];
+  if (plans[0]) {
+    plans[0] = await repairLegacyLeanMassMacros(memberId, memberRes.data.sex, plans[0]);
+  }
+
   return NextResponse.json({
     member: memberRes.data,
-    plans: plansRes.data ?? [],
+    plans,
     checkIns: checkInsRes.data ?? [],
     weights: weightsRes.data ?? [],
     recentNutritionDays,
