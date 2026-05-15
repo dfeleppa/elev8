@@ -107,6 +107,18 @@ function formatDate(isoDate: string) {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
+function formatProteinCalculation(weightLbs: string, plan: PlanPreview) {
+  const parsedWeight = Number(weightLbs);
+  if (!Number.isFinite(parsedWeight) || parsedWeight <= 0) {
+    return null;
+  }
+
+  return (
+    `${toDisplayNumber(parsedWeight)} lb x (1 - ${toDisplayNumber(plan.proteinBodyFatPercentage)}% body fat est.) = ` +
+    `${toDisplayNumber(plan.leanBodyMassLbs)} lb lean mass -> ${toDisplayNumber(plan.proteinGrams)}g protein`
+  );
+}
+
 function daysSince(isoDate: string) {
   const start = new Date(`${isoDate}T00:00:00`).getTime();
   const now = Date.now();
@@ -613,6 +625,11 @@ export default function CoachSetupClient({
 
             {planPreview ? (
               <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 sm:grid-cols-2">
+                {planPreview.proteinBasis === "bmi_estimated_body_fat" ? (
+                  <p className="sm:col-span-2 rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-sm text-amber-100">
+                    Protein calculation: {formatProteinCalculation(currentWeightLbs, planPreview)}
+                  </p>
+                ) : null}
                 <p className="text-sm text-slate-300">Formula: <span className="font-semibold text-slate-100">{planPreview.formulaUsed}</span></p>
                 <p className="text-sm text-slate-300">BMR: <span className="font-semibold text-slate-100">{planPreview.bmr}</span></p>
                 <p className="text-sm text-slate-300">Maintenance: <span className="font-semibold text-slate-100">{planPreview.maintenanceCalories} kcal</span></p>
