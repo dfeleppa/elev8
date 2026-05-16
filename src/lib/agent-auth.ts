@@ -51,3 +51,22 @@ export function isAuthorizedAgentBearerRequest(request: Request, expectedToken: 
 
   return constantTimeEqual(token, expectedToken);
 }
+
+export function isAuthorizedAgentUrlTokenRequest(request: Request, expectedToken: string) {
+  if (!expectedToken) {
+    return false;
+  }
+
+  const url = new URL(request.url);
+  const token =
+    url.searchParams.get("agentToken")?.trim() ??
+    url.searchParams.get("access_token")?.trim() ??
+    url.searchParams.get("token")?.trim() ??
+    "";
+
+  if (!token) {
+    return false;
+  }
+
+  return constantTimeEqual(token, expectedToken);
+}

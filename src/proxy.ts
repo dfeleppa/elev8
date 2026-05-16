@@ -12,6 +12,7 @@ function isFullyPublic(pathname: string) {
   if (pathname.startsWith("/api/auth")) return true;
   if (pathname.startsWith("/api/agent")) return true;
   if (pathname.startsWith("/api/mcp")) return true;
+  if (pathname.startsWith("/api/oauth")) return true;
   if (pathname.startsWith("/api/cron")) return true;
   if (pathname.startsWith("/api/webhooks/stripe")) return true;
   return false;
