@@ -1,6 +1,14 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
-import { getAgentConfig, isAuthorizedAgentBearerRequest, isAuthorizedAgentRequest } from "@/lib/agent-auth";
+import {
+  isAuthorizedAgentBearerRequest,
+  isAuthorizedAgentRequest,
+  isAuthorizedAgentUrlTokenRequest,
+} from "@/lib/agent-auth";
+import {
+  getOriginFromRequest,
+  verifyMcpAccessToken,
+} from "@/lib/mcp-oauth";
 import { createNutritionMcpServer } from "@/lib/nutrition-mcp";
 
 export const runtime = "nodejs";
@@ -21,28 +29,72 @@ function withCorsHeaders(response: Response) {
 function isAuthorized(request: Request, expectedToken: string) {
   return (
     isAuthorizedAgentBearerRequest(request, expectedToken) ||
-    isAuthorizedAgentRequest(request, expectedToken)
+    isAuthorizedAgentRequest(request, expectedToken) ||
+    isAuthorizedAgentUrlTokenRequest(request, expectedToken)
+  );
+}
+
+function getLegacyAgentConfig() {
+  const token = process.env.AGENT_NUTRITION_TOKEN?.trim() ?? "";
+  const memberId = process.env.AGENT_MEMBER_ID?.trim() ?? "";
+  return { token, memberId };
+}
+
+function getOAuthMemberId(request: Request) {
+  const authorization = request.headers.get("authorization")?.trim() ?? "";
+  const [scheme, token] = authorization.split(/\s+/, 2);
+  if (scheme?.toLowerCase() === "bearer" && token) {
+    try {
+      const oauthAccess = verifyMcpAccessToken(token);
+      if (oauthAccess?.memberId) {
+        return oauthAccess.memberId;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+function getAuthorizedMemberId(request: Request) {
+  const oauthMemberId = getOAuthMemberId(request);
+  if (oauthMemberId) {
+    return oauthMemberId;
+  }
+
+  const { token, memberId } = getLegacyAgentConfig();
+  if (!token || !memberId) {
+    return null;
+  }
+
+  return isAuthorized(request, token) ? memberId : null;
+}
+
+function unauthorizedResponse(request: Request) {
+  const resourceMetadataUrl = `${getOriginFromRequest(request)}/.well-known/oauth-protected-resource/api/mcp/nutrition`;
+  return withCorsHeaders(
+    new Response(JSON.stringify({ error: "Unauthorized." }), {
+      status: 401,
+      headers: {
+        "Content-Type": "application/json",
+        "WWW-Authenticate": `Bearer resource_metadata="${resourceMetadataUrl}"`,
+      },
+    })
   );
 }
 
 async function handleMcpRequest(request: Request) {
-  const { errorResponse, token, memberId } = getAgentConfig();
-  if (errorResponse) {
-    return errorResponse;
-  }
-
-  if (!isAuthorized(request, token)) {
-    return new Response(JSON.stringify({ error: "Unauthorized." }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+  const authorizedMemberId = getAuthorizedMemberId(request);
+  if (!authorizedMemberId) {
+    return unauthorizedResponse(request);
   }
 
   const transport = new WebStandardStreamableHTTPServerTransport({
     enableJsonResponse: true,
     sessionIdGenerator: undefined,
   });
-  const server = createNutritionMcpServer(memberId);
+  const server = createNutritionMcpServer(authorizedMemberId);
   await server.connect(transport);
 
   try {
@@ -62,16 +114,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request) {
-  const { errorResponse, token } = getAgentConfig();
-  if (errorResponse) {
-    return errorResponse;
-  }
-
-  if (!isAuthorized(request, token)) {
-    return new Response(JSON.stringify({ error: "Unauthorized." }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+  if (!getAuthorizedMemberId(request)) {
+    return unauthorizedResponse(request);
   }
 
   return withCorsHeaders(
@@ -100,16 +144,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const { errorResponse, token } = getAgentConfig();
-  if (errorResponse) {
-    return errorResponse;
-  }
-
-  if (!isAuthorized(request, token)) {
-    return new Response(JSON.stringify({ error: "Unauthorized." }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+  if (!getAuthorizedMemberId(request)) {
+    return unauthorizedResponse(request);
   }
 
   return withCorsHeaders(
