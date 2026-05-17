@@ -5,15 +5,20 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Bell,
   Bot,
   CalendarDays,
   Check,
   ChevronLeft,
   ChevronRight,
+  Droplets,
   Flame,
+  Footprints,
   Pencil,
   Plus,
   Sparkles,
+  TrendingUp,
+  Utensils,
   X,
 } from "lucide-react";
 
@@ -1121,58 +1126,75 @@ export default function HealthNutritionPage() {
 
   return (
     <SidebarShell mainClassName="w-full">
-      <section className="mx-auto w-full max-w-[1480px] space-y-4 px-3 py-4 lg:space-y-8 lg:px-10 lg:py-10">
+      <section className="mx-auto w-full max-w-[1480px] space-y-4 bg-[radial-gradient(circle_at_15%_8%,rgba(255,177,196,0.28),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(99,247,255,0.22),transparent_30%),linear-gradient(180deg,#f8fbff_0%,#eef6fb_56%,#f8fbff_100%)] px-4 py-5 text-slate-950 lg:space-y-8 lg:bg-transparent lg:px-10 lg:py-10 lg:text-[var(--text)]">
         <header className="lg:hidden">
-          <div className="relative overflow-hidden rounded-[28px] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.16),rgba(255,255,255,0.045))] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.26)] backdrop-blur-2xl">
-            <div className="pointer-events-none absolute -left-10 -top-14 h-36 w-36 rounded-full bg-[var(--cyan)]/20 blur-3xl" />
-            <div className="pointer-events-none absolute -right-12 top-4 h-32 w-32 rounded-full bg-[var(--pink)]/18 blur-3xl" />
-            <div className="relative flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--cyan)]">Nutrition</p>
-                <h1 className="mt-1 text-2xl font-semibold leading-tight text-[var(--text)]">Daily Fuel</h1>
-                <p className="mt-1 text-sm text-[var(--text-muted)]">Track today without the sprawl.</p>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#ffb1c4,#63f7ff)] p-[3px] shadow-[0_14px_32px_rgba(75,130,160,0.18)]">
+                <div className="grid h-full w-full place-items-center rounded-full bg-white text-lg font-bold text-slate-900">
+                  U
+                </div>
               </div>
+              <div className="min-w-0">
+                <h1 className="truncate text-[26px] font-bold leading-tight tracking-[-0.01em] text-slate-950">
+                  Good morning
+                </h1>
+                <p className="mt-0.5 truncate text-[15px] font-medium text-slate-500">
+                  You&apos;re building great habits.
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
-                onClick={() => openMealDialog("breakfast")}
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[var(--cyan)] text-slate-950 shadow-[0_12px_30px_rgba(99,247,255,0.24)] transition hover:brightness-110"
-                aria-label="Log food"
+                className="relative grid h-12 w-12 place-items-center rounded-2xl border border-white/80 bg-white/70 text-slate-800 shadow-[0_14px_32px_rgba(79,102,124,0.14)] backdrop-blur-xl"
+                aria-label="Notifications"
               >
-                <Plus className="h-5 w-5" aria-hidden="true" />
+                <Bell className="h-5 w-5" aria-hidden="true" />
+                <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-[#ff63bd]" />
+              </button>
+              <button
+                type="button"
+                className="grid h-12 w-12 place-items-center rounded-2xl border border-white/80 bg-white/70 text-slate-800 shadow-[0_14px_32px_rgba(79,102,124,0.14)] backdrop-blur-xl"
+                aria-label="Progress"
+              >
+                <TrendingUp className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
+          </div>
 
-            <div className="relative mt-4 flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
-                className="grid h-9 w-9 place-items-center rounded-full border border-white/12 bg-white/8 text-[var(--text-muted)] backdrop-blur transition hover:text-[var(--text)]"
-                aria-label="Previous day"
-              >
-                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-              </button>
-              <label className="flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-white/14 bg-white/10 px-3 text-sm font-semibold text-[var(--text)] shadow-inner backdrop-blur">
-                <CalendarDays className="h-4 w-4 text-[var(--cyan)]" aria-hidden="true" />
-                <span className="truncate">{compactDateLabel}</span>
-                <input
-                  id="nutrition-date-mobile"
-                  name="nutritionDateMobile"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(event) => setSelectedDate(event.target.value)}
-                  className="sr-only"
-                />
-              </label>
-              <button
-                type="button"
-                onClick={() => setSelectedDate((prev) => shiftDate(prev, 1))}
-                className="grid h-9 w-9 place-items-center rounded-full border border-white/12 bg-white/8 text-[var(--text-muted)] backdrop-blur transition hover:text-[var(--text)]"
-                aria-label="Next day"
-              >
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-            <nav className="relative mt-4 grid grid-cols-3 rounded-full border border-white/10 bg-black/10 p-1 text-center text-xs font-semibold">
+          <div className="mx-auto mt-7 flex max-w-[310px] items-center justify-center rounded-full border border-white/80 bg-white/70 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_18px_34px_rgba(73,99,126,0.12)] backdrop-blur-xl">
+            <button
+              type="button"
+              onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
+              className="grid h-9 w-9 place-items-center rounded-full text-slate-700 transition hover:bg-white"
+              aria-label="Previous day"
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <label className="flex min-w-0 flex-1 items-center justify-center gap-2 px-2 text-[15px] font-bold text-slate-900">
+              <CalendarDays className="h-5 w-5 text-slate-800" aria-hidden="true" />
+              <span className="truncate">{compactDateLabel}</span>
+              <input
+                id="nutrition-date-mobile"
+                name="nutritionDateMobile"
+                type="date"
+                value={selectedDate}
+                onChange={(event) => setSelectedDate(event.target.value)}
+                className="sr-only"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => setSelectedDate((prev) => shiftDate(prev, 1))}
+              className="grid h-9 w-9 place-items-center rounded-full text-slate-700 transition hover:bg-white"
+              aria-label="Next day"
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+
+          <nav className="mt-4 grid grid-cols-3 rounded-full border border-white/80 bg-white/70 p-1 text-center text-xs font-bold shadow-[0_14px_28px_rgba(73,99,126,0.1)] backdrop-blur-xl">
               {[
                 { label: "Daily", href: "/member/nutrition", active: true },
                 { label: "Plan", href: "/member/nutrition/coach", active: false },
@@ -1183,15 +1205,14 @@ export default function HealthNutritionPage() {
                   href={tabItem.href}
                   className={`rounded-full px-2 py-2 transition ${
                     tabItem.active
-                      ? "bg-white/16 text-[var(--text)] shadow-sm"
-                      : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                      ? "bg-[#23d1df] text-white shadow-[0_8px_18px_rgba(35,209,223,0.28)]"
+                      : "text-slate-500 hover:text-slate-900"
                   }`}
                 >
                   {tabItem.label}
                 </Link>
               ))}
             </nav>
-          </div>
         </header>
 
         <header className="hidden flex-wrap items-center justify-between gap-4 lg:flex">
@@ -1294,22 +1315,38 @@ export default function HealthNutritionPage() {
         </Panel>
 
         <section className="lg:hidden">
-          <div className="rounded-[24px] border border-white/12 bg-[linear-gradient(135deg,rgba(255,177,196,0.16),rgba(99,247,255,0.08)_46%,rgba(255,255,255,0.06))] p-3.5 shadow-[0_18px_44px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
-            <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-white/15 bg-white/12 text-[var(--cyan)]">
-                <Bot className="h-6 w-6" aria-hidden="true" />
+          <div className="relative overflow-hidden rounded-[28px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_24px_60px_rgba(79,102,124,0.14)] backdrop-blur-2xl">
+            <div className="pointer-events-none absolute -left-8 -top-8 h-36 w-36 rounded-full bg-[#efd7ff]/70 blur-2xl" />
+            <div className="pointer-events-none absolute left-6 bottom-2 h-28 w-28 rounded-full bg-[#bdf7ff]/65 blur-2xl" />
+            <button
+              type="button"
+              className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-white/80 bg-white/60 text-slate-500 shadow-sm"
+              aria-label="Dismiss AI card"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+
+            <div className="relative grid grid-cols-[118px_1fr] items-center gap-4">
+              <div className="relative grid h-[118px] w-[118px] place-items-center rounded-full bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#e9d9ff_30%,#bdf7ff_72%,#8ebdff_100%)] shadow-[0_14px_34px_rgba(87,166,211,0.22)]">
+                <div className="absolute inset-2 rounded-full border border-white/70" />
+                <div className="grid h-[72px] w-[82px] place-items-center rounded-[38px] bg-[linear-gradient(145deg,#19265e,#050917)] shadow-[inset_0_0_14px_rgba(99,247,255,0.35)]">
+                  <Bot className="h-8 w-8 text-[#63f7ff]" aria-hidden="true" />
+                </div>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cyan)]/25 bg-[var(--cyan)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--cyan)]">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#eef2ff] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#4866ee]">
                   <Sparkles className="h-3 w-3" aria-hidden="true" />
                   AI Coach
                 </div>
-                <p className="mt-1 text-sm font-semibold leading-snug text-[var(--text)]">
-                  Need a quick food search or meal copy?
+                <p className="mt-3 text-[20px] font-bold leading-[1.12] tracking-[-0.01em] text-slate-950">
+                  Great job staying on target.
+                </p>
+                <p className="mt-2 text-[13px] font-medium leading-snug text-slate-500">
+                  Try adding 20-30g more protein today to support recovery.
                 </p>
               </div>
             </div>
-            <div className="mt-3 flex gap-2">
+            <div className="relative mt-4 flex gap-2">
               <input
                 value={aiCommand}
                 onChange={(event) => setAiCommand(event.target.value)}
@@ -1319,19 +1356,19 @@ export default function HealthNutritionPage() {
                   }
                 }}
                 placeholder='Try "add 2 eggs"'
-                className="min-w-0 flex-1 rounded-2xl border border-white/12 bg-black/16 px-3 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                className="min-w-0 flex-1 rounded-2xl border border-white/80 bg-white/60 px-3 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 shadow-inner focus:border-[#63f7ff] focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => void handleAiCommand()}
                 disabled={aiLoading}
-                className="rounded-2xl bg-[var(--cyan)] px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:brightness-110 disabled:opacity-60"
+                className="rounded-2xl bg-[#1597ff] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(21,151,255,0.24)] transition hover:brightness-105 disabled:opacity-60"
               >
                 {aiLoading ? "..." : "Run"}
               </button>
             </div>
             {aiFeedback ? (
-              <p className="mt-2 rounded-2xl border border-white/10 bg-black/12 px-3 py-2 text-xs text-[var(--text-muted)]">
+              <p className="relative mt-2 rounded-2xl border border-white/80 bg-white/60 px-3 py-2 text-xs font-medium text-slate-600">
                 {aiFeedback}
               </p>
             ) : null}
@@ -1345,29 +1382,27 @@ export default function HealthNutritionPage() {
         ) : null}
 
         <section className="space-y-3 lg:hidden">
-          <div className="rounded-[26px] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),rgba(255,255,255,0.045))] p-4 shadow-[0_20px_54px_rgba(0,0,0,0.24)] backdrop-blur-2xl">
-            <div className="flex items-start justify-between gap-3">
-              <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
-                <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--pink)]/14 text-[var(--pink-soft)]">
-                  <Flame className="h-4 w-4" aria-hidden="true" />
-                </span>
+          <div className="rounded-[28px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_24px_58px_rgba(79,102,124,0.14)] backdrop-blur-2xl">
+            <div className="flex items-center justify-between gap-3">
+              <div className="inline-flex items-center gap-2 text-[18px] font-bold text-slate-950">
+                <Flame className="h-5 w-5 text-[#ff4a8d]" aria-hidden="true" />
                 Calories
               </div>
-              <div className="inline-flex rounded-full border border-white/10 bg-black/10 p-0.5 text-[11px] font-semibold">
+              <div className="inline-flex rounded-full border border-slate-200/80 bg-white/72 p-0.5 text-[11px] font-bold shadow-inner">
                 <button
                   type="button"
                   onClick={() => setMacroViewMode("consumed")}
                   className={`rounded-full px-2.5 py-1 transition ${
-                    !showingRemaining ? "bg-white/16 text-[var(--text)]" : "text-[var(--text-muted)]"
+                    !showingRemaining ? "bg-slate-950 text-white" : "text-slate-500"
                   }`}
                 >
-                  Ate
+                  Consumed
                 </button>
                 <button
                   type="button"
                   onClick={() => setMacroViewMode("remaining")}
                   className={`rounded-full px-2.5 py-1 transition ${
-                    showingRemaining ? "bg-white/16 text-[var(--text)]" : "text-[var(--text-muted)]"
+                    showingRemaining ? "bg-slate-950 text-white" : "text-slate-500"
                   }`}
                 >
                   Left
@@ -1375,59 +1410,71 @@ export default function HealthNutritionPage() {
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-[132px_1fr] items-center gap-3">
-              <div className="relative grid h-[132px] w-[132px] place-items-center">
-                <svg className="absolute inset-0" viewBox="0 0 132 132" aria-hidden="true">
+            <div className="mt-5 grid grid-cols-[minmax(126px,150px)_1fr] items-center gap-4">
+              <div className="relative grid aspect-square w-full max-w-[150px] place-items-center">
+                <svg className="absolute inset-0" viewBox="0 0 150 150" aria-hidden="true">
                   <defs>
-                    <linearGradient id="mobile-calorie-ring" x1="18" y1="18" x2="116" y2="116">
-                      <stop stopColor="#63f7ff" />
-                      <stop offset="1" stopColor="#ffb1c4" />
+                    <linearGradient id="mobile-calorie-ring" x1="18" y1="18" x2="132" y2="132">
+                      <stop stopColor="#2ee7d2" />
+                      <stop offset="1" stopColor="#23c6d9" />
                     </linearGradient>
                   </defs>
-                  <g transform="rotate(-90 66 66)">
-                    <circle cx="66" cy="66" r="55" fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth="10" />
+                  <g transform="rotate(-90 75 75)">
+                    <circle cx="75" cy="75" r="61" fill="none" stroke="#e8eef5" strokeWidth="12" />
                     <circle
-                      cx="66"
-                      cy="66"
-                      r="55"
+                      cx="75"
+                      cy="75"
+                      r="61"
                       fill="none"
                       stroke="url(#mobile-calorie-ring)"
-                      strokeWidth="10"
+                      strokeWidth="12"
                       strokeLinecap="round"
-                      strokeDasharray={ringDashArray(displayCaloriesProgress, 55)}
+                      strokeDasharray={ringDashArray(displayCaloriesProgress, 61)}
+                      filter="drop-shadow(0 4px 8px rgba(35,198,217,0.35))"
                     />
                   </g>
                 </svg>
                 <div className="text-center">
-                  <p className="text-3xl font-bold leading-none tracking-tight text-[var(--text)]">
+                  <p className="text-[31px] font-bold leading-none tracking-[-0.02em] text-slate-950">
                     {roundToWhole(displayCalories).toLocaleString()}
                   </p>
-                  <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+                  <p className="mt-1 text-[13px] font-semibold text-slate-500">
                     / {roundToWhole(targetNumbers.calories || 0).toLocaleString()} kcal
                   </p>
-                  <p className="mt-1 text-xs font-semibold text-[var(--cyan)]">{Math.round(displayCaloriesProgress)}%</p>
+                  <p className="mt-1 text-sm font-bold text-[#23c6d9]">{Math.round(displayCaloriesProgress)}%</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                {macroBars.slice(0, 4).map((bar, index) => {
-                  const color = index === 0 ? "#2ee7d2" : index === 1 ? "#63a8ff" : index === 2 ? "#ff8ed6" : "#b6ff4a";
+              <div className="grid grid-cols-3 gap-2">
+                {macroBars.slice(0, 3).map((bar, index) => {
+                  const color = index === 0 ? "#22c7bd" : index === 1 ? "#379bf2" : "#d66bc2";
+                  const radius = 26;
                   return (
-                    <div key={bar.label} className="rounded-2xl border border-white/10 bg-black/12 px-2.5 py-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[11px] font-semibold text-[var(--text)]">{bar.label}</p>
-                        <p className="text-[10px] font-semibold tabular-nums" style={{ color }}>
-                          {Math.round(bar.progress)}%
-                        </p>
+                    <div key={bar.label} className="min-w-0 text-center">
+                      <p className="truncate text-[12px] font-bold text-slate-900">{bar.label}</p>
+                      <div className="relative mx-auto mt-2 grid h-[68px] w-[68px] place-items-center">
+                        <svg className="absolute inset-0" viewBox="0 0 68 68" aria-hidden="true">
+                          <g transform="rotate(-90 34 34)">
+                            <circle cx="34" cy="34" r={radius} fill="none" stroke="#e8eef5" strokeWidth="6" />
+                            <circle
+                              cx="34"
+                              cy="34"
+                              r={radius}
+                              fill="none"
+                              stroke={color}
+                              strokeWidth="6"
+                              strokeLinecap="round"
+                              strokeDasharray={ringDashArray(bar.progress, radius)}
+                            />
+                          </g>
+                        </svg>
+                        <p className="text-[15px] font-bold tabular-nums text-slate-950">{formatGrams(bar.value)}g</p>
                       </div>
-                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full transition-[width] duration-500"
-                          style={{ width: `${bar.progress}%`, backgroundColor: color }}
-                        />
-                      </div>
-                      <p className="mt-1 text-[10px] tabular-nums text-[var(--text-muted)]">
-                        {formatGrams(bar.value)} / {formatGrams(bar.target)}g
+                      <p className="mt-1 text-[12px] font-semibold text-slate-500">
+                        / {formatGrams(bar.target)}g
+                      </p>
+                      <p className="text-[12px] font-bold tabular-nums" style={{ color }}>
+                        {Math.round(bar.progress)}%
                       </p>
                     </div>
                   );
@@ -1436,14 +1483,81 @@ export default function HealthNutritionPage() {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-[24px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_18px_42px_rgba(79,102,124,0.12)] backdrop-blur-2xl">
+              <div className="flex items-center justify-between gap-2">
+                <div className="inline-flex items-center gap-2 text-[15px] font-bold text-slate-950">
+                  <Droplets className="h-5 w-5 text-[#2c98ff]" aria-hidden="true" />
+                  Fiber
+                </div>
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-white/70 text-slate-500 shadow-sm">
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                </span>
+              </div>
+              <div className="mt-4 flex items-end gap-1.5">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div
+                    key={`fiber-glass-${index}`}
+                    className={`h-8 flex-1 rounded-b-lg rounded-t-sm border border-[#94c9ff]/40 ${
+                      index < Math.round(fiberProgress / 20)
+                        ? "bg-[linear-gradient(180deg,#7bc8ff,#2c98ff)]"
+                        : "bg-slate-100"
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="mt-3 text-[16px] font-bold text-slate-950">
+                {formatGrams(totals.fiber)} <span className="font-semibold text-slate-500">/ {FIBER_DEFAULT_TARGET}g</span>
+              </p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                <div className="h-full rounded-full bg-[#2c98ff]" style={{ width: `${fiberProgress}%` }} />
+              </div>
+            </div>
+
+            <div className="rounded-[24px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_18px_42px_rgba(79,102,124,0.12)] backdrop-blur-2xl">
+              <div className="inline-flex items-center gap-2 text-[15px] font-bold text-slate-950">
+                <Footprints className="h-5 w-5 text-[#23c789]" aria-hidden="true" />
+                Coach
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-[28px] font-bold leading-none tracking-[-0.02em] text-slate-950">
+                    {Math.round(weightProgressPercent)}%
+                  </p>
+                  <p className="mt-1 text-[12px] font-semibold text-slate-500">
+                    to goal
+                  </p>
+                </div>
+                <div className="relative grid h-[74px] w-[74px] place-items-center">
+                  <svg className="absolute inset-0" viewBox="0 0 74 74" aria-hidden="true">
+                    <g transform="rotate(-90 37 37)">
+                      <circle cx="37" cy="37" r="29" fill="none" stroke="#e8eef5" strokeWidth="7" />
+                      <circle
+                        cx="37"
+                        cy="37"
+                        r="29"
+                        fill="none"
+                        stroke="#23c789"
+                        strokeWidth="7"
+                        strokeLinecap="round"
+                        strokeDasharray={ringDashArray(weightProgressPercent, 29)}
+                      />
+                    </g>
+                  </svg>
+                  <TrendingUp className="h-6 w-6 text-[#23c789]" aria-hidden="true" />
+                </div>
+              </div>
+            </div>
+          </div>
+
           {coachPlanStatus === "loading" ? (
-            <div className="rounded-[22px] border border-white/10 bg-white/6 p-4 text-sm text-[var(--text-muted)] backdrop-blur-xl">
+            <div className="rounded-[22px] border border-white/80 bg-white/60 p-4 text-sm font-semibold text-slate-500 backdrop-blur-xl">
               Loading coach plan...
             </div>
           ) : coachPlanStatus === "none" ? (
             <Link
               href="/member/nutrition-coach"
-              className="flex items-center justify-between rounded-[22px] border border-[var(--pink)]/25 bg-[var(--pink)]/10 px-4 py-3 text-sm font-semibold text-[var(--pink-soft)] backdrop-blur-xl"
+              className="flex items-center justify-between rounded-[22px] border border-white/80 bg-white/60 px-4 py-3 text-sm font-bold text-[#1597ff] shadow-[0_12px_26px_rgba(79,102,124,0.1)] backdrop-blur-xl"
             >
               Nutrition Coach
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -1451,17 +1565,17 @@ export default function HealthNutritionPage() {
           ) : (
             <Link
               href="/member/nutrition/coach"
-              className="flex items-center justify-between gap-3 rounded-[22px] border border-white/10 bg-white/7 px-4 py-3 backdrop-blur-xl"
+              className="flex items-center justify-between gap-3 rounded-[22px] border border-white/80 bg-white/60 px-4 py-3 shadow-[0_12px_26px_rgba(79,102,124,0.1)] backdrop-blur-xl"
             >
               <span>
-                <span className="block text-sm font-semibold text-[var(--text)]">{coachGoalLabel}</span>
-                <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
+                <span className="block text-sm font-bold text-slate-950">{coachGoalLabel}</span>
+                <span className="mt-0.5 block text-xs font-semibold text-slate-500">
                   {checkInTimeline.daysUntilNext === 0
                     ? "Check-in due today"
                     : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until check-in`}
                 </span>
               </span>
-              <span className="rounded-full bg-[var(--violet)]/18 px-2.5 py-1 text-xs font-semibold text-[var(--violet-soft)]">
+              <span className="rounded-full bg-[#eef2ff] px-2.5 py-1 text-xs font-bold text-[#4866ee]">
                 {Math.round(weightProgressPercent)}%
               </span>
             </Link>
@@ -1607,66 +1721,94 @@ export default function HealthNutritionPage() {
         </section>
 
         <section className="lg:hidden">
-          <div className="rounded-[26px] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04))] p-4 shadow-[0_18px_46px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
+          <div className="rounded-[28px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_24px_58px_rgba(79,102,124,0.14)] backdrop-blur-2xl">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-base font-semibold text-[var(--text)]">Meals</h2>
+              <h2 className="text-[18px] font-bold text-slate-950">Meals</h2>
               <button
                 type="button"
                 onClick={() => openMealDialog("breakfast")}
-                className="grid h-8 w-8 place-items-center rounded-full border border-white/12 bg-white/10 text-[var(--cyan)] transition hover:bg-white/15"
+                className="text-sm font-bold text-[#1597ff] transition hover:text-[#086fd1]"
                 aria-label="Add meal"
               >
-                <Plus className="h-4 w-4" aria-hidden="true" />
+                View All
               </button>
             </div>
 
-            <div className="mt-3 divide-y divide-white/8">
-              {mealSummaries.map((meal) => {
+            <div className="mt-3 divide-y divide-slate-200/70">
+              {mealSummaries.slice(0, 3).map((meal, index) => {
                 const primaryEntry = meal.entries[0];
                 const entryCount = meal.entries.length;
+                const fallbackNames = ["Greek yogurt oatmeal", "Grilled chicken bowl", "Salmon, quinoa & asparagus"];
+                const accent =
+                  index === 0
+                    ? "from-[#f4cf86] via-[#fef6df] to-[#d93855]"
+                    : index === 1
+                      ? "from-[#95d76b] via-[#f7d07c] to-[#8c4b25]"
+                      : "from-[#f9896b] via-[#f7d47f] to-[#2d7c63]";
                 return (
                   <div key={meal.key} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
                     <button
                       type="button"
                       onClick={() => openMealDialog(meal.key)}
-                      className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-black/12 text-sm font-bold text-[var(--text)] transition hover:bg-white/10"
+                      className={`grid h-[54px] w-[54px] shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br ${accent} shadow-[0_10px_22px_rgba(79,102,124,0.16)] transition hover:scale-[1.02]`}
                       aria-label={`Add to ${meal.label}`}
                     >
-                      {meal.label.slice(0, 1)}
+                      <Utensils className="h-6 w-6 text-white drop-shadow" aria-hidden="true" />
                     </button>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <p className="truncate text-sm font-semibold text-[var(--text)]">{meal.label}</p>
-                        <p className="shrink-0 text-sm font-bold tabular-nums text-[var(--text)]">
-                          {Math.round(meal.totals.calories).toLocaleString()}
-                          <span className="ml-1 text-[11px] font-medium text-[var(--text-muted)]">kcal</span>
-                        </p>
-                      </div>
-                      <div className="mt-0.5 flex items-center justify-between gap-3">
-                        <p className="min-w-0 truncate text-xs text-[var(--text-muted)]">
-                          {primaryEntry
-                            ? `${primaryEntry.entry_name}${entryCount > 1 ? ` +${entryCount - 1}` : ""}`
-                            : "Tap to log food"}
-                        </p>
-                        <p className="shrink-0 font-mono text-[10px] text-[var(--text-soft)]">
-                          P{formatGrams(meal.totals.protein)} Â· C{formatGrams(meal.totals.carbs)} Â· F{formatGrams(meal.totals.fat)}
-                        </p>
-                      </div>
+                      <p className="truncate text-[15px] font-bold leading-tight text-slate-950">{meal.label}</p>
+                      <p className="mt-0.5 min-w-0 truncate text-[13px] font-semibold leading-tight text-slate-500">
+                        {primaryEntry
+                          ? `${primaryEntry.entry_name}${entryCount > 1 ? ` +${entryCount - 1}` : ""}`
+                          : fallbackNames[index] ?? "Tap to log food"}
+                      </p>
+                      <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                        P{formatGrams(meal.totals.protein)} | C{formatGrams(meal.totals.carbs)} | F{formatGrams(meal.totals.fat)}
+                      </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => openMealDialog(meal.key)}
-                      className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[var(--text-muted)] transition hover:bg-white/10 hover:text-[var(--text)]"
-                      aria-label={`Open ${meal.label}`}
-                    >
-                      <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                    </button>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <p className="text-[18px] font-bold tabular-nums text-slate-950">
+                        {Math.round(meal.totals.calories).toLocaleString()}
+                        <span className="ml-1 text-[12px] font-semibold text-slate-500">kcal</span>
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => openMealDialog(meal.key)}
+                        className="grid h-8 w-8 place-items-center rounded-full text-slate-500 transition hover:bg-white/80 hover:text-slate-900"
+                        aria-label={`Open ${meal.label}`}
+                      >
+                        <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
+              {mealSummaries.length > 3 ? (
+                <div className="flex items-center gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => openMealDialog("snack")}
+                    className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#d8b4fe] via-[#f0f9ff] to-[#63f7ff] shadow-[0_10px_22px_rgba(79,102,124,0.16)]"
+                    aria-label="Add snack"
+                  >
+                    <Plus className="h-6 w-6 text-white drop-shadow" aria-hidden="true" />
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-bold leading-tight text-slate-950">Snack</p>
+                    <p className="mt-0.5 text-[13px] font-semibold text-slate-500">Tap to log food</p>
+                  </div>
+                  <p className="text-[18px] font-bold tabular-nums text-slate-950">
+                    {Math.round(mealSummaries[3]?.totals.calories ?? 0).toLocaleString()}
+                    <span className="ml-1 text-[12px] font-semibold text-slate-500">kcal</span>
+                  </p>
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
+
+        <div className="h-4 lg:hidden" />
+
 
         <section className="hidden gap-4 sm:grid-cols-2 lg:grid xl:grid-cols-4">
           {meals.map((meal) => {
