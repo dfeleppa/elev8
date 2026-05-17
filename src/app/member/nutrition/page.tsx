@@ -4,7 +4,18 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Pencil, Plus, Sparkles, X } from "lucide-react";
+import {
+  Bot,
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
+  Pencil,
+  Plus,
+  Sparkles,
+  X,
+} from "lucide-react";
 
 import SidebarShell from "@/components/SidebarShell";
 import { AccentCard, Chip, Panel, Micro } from "@/components/ui";
@@ -476,12 +487,39 @@ export default function HealthNutritionPage() {
         .toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
         .toUpperCase();
 
+  const compactDateLabel = selectedDateObj.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
   const MEAL_CHIP_TONE: Record<MealKey, "pink" | "violet" | "lime" | "neutral"> = {
     breakfast: "pink",
     lunch: "violet",
     dinner: "neutral",
     snack: "lime",
   };
+
+  const mealSummaries = useMemo(
+    () =>
+      meals.map((meal) => {
+        const mealEntries = entries.filter((entry) => entry.meal_type === meal.key);
+        const totalsForMeal = mealEntries.reduce(
+          (acc, entry) => {
+            const quantity = toEntryQuantity(entry.quantity);
+            acc.calories += (entry.calories ?? 0) * quantity;
+            acc.protein += (entry.protein ?? 0) * quantity;
+            acc.carbs += (entry.carbs ?? 0) * quantity;
+            acc.fat += (entry.fat ?? 0) * quantity;
+            return acc;
+          },
+          { calories: 0, protein: 0, carbs: 0, fat: 0 }
+        );
+
+        return { ...meal, entries: mealEntries, totals: totalsForMeal };
+      }),
+    [entries]
+  );
 
   const coachWeights = {
     start: Number(coachPlanSummary?.startWeight ?? 0),
@@ -1083,8 +1121,80 @@ export default function HealthNutritionPage() {
 
   return (
     <SidebarShell mainClassName="w-full">
-      <section className="mx-auto w-full max-w-[1480px] space-y-8 px-6 py-8 lg:px-10 lg:py-10">
-        <header className="flex flex-wrap items-center justify-between gap-4">
+      <section className="mx-auto w-full max-w-[1480px] space-y-4 px-3 py-4 lg:space-y-8 lg:px-10 lg:py-10">
+        <header className="lg:hidden">
+          <div className="relative overflow-hidden rounded-[28px] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.16),rgba(255,255,255,0.045))] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.26)] backdrop-blur-2xl">
+            <div className="pointer-events-none absolute -left-10 -top-14 h-36 w-36 rounded-full bg-[var(--cyan)]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -right-12 top-4 h-32 w-32 rounded-full bg-[var(--pink)]/18 blur-3xl" />
+            <div className="relative flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--cyan)]">Nutrition</p>
+                <h1 className="mt-1 text-2xl font-semibold leading-tight text-[var(--text)]">Daily Fuel</h1>
+                <p className="mt-1 text-sm text-[var(--text-muted)]">Track today without the sprawl.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => openMealDialog("breakfast")}
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[var(--cyan)] text-slate-950 shadow-[0_12px_30px_rgba(99,247,255,0.24)] transition hover:brightness-110"
+                aria-label="Log food"
+              >
+                <Plus className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="relative mt-4 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
+                className="grid h-9 w-9 place-items-center rounded-full border border-white/12 bg-white/8 text-[var(--text-muted)] backdrop-blur transition hover:text-[var(--text)]"
+                aria-label="Previous day"
+              >
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <label className="flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-white/14 bg-white/10 px-3 text-sm font-semibold text-[var(--text)] shadow-inner backdrop-blur">
+                <CalendarDays className="h-4 w-4 text-[var(--cyan)]" aria-hidden="true" />
+                <span className="truncate">{compactDateLabel}</span>
+                <input
+                  id="nutrition-date-mobile"
+                  name="nutritionDateMobile"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(event) => setSelectedDate(event.target.value)}
+                  className="sr-only"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => setSelectedDate((prev) => shiftDate(prev, 1))}
+                className="grid h-9 w-9 place-items-center rounded-full border border-white/12 bg-white/8 text-[var(--text-muted)] backdrop-blur transition hover:text-[var(--text)]"
+                aria-label="Next day"
+              >
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            <nav className="relative mt-4 grid grid-cols-3 rounded-full border border-white/10 bg-black/10 p-1 text-center text-xs font-semibold">
+              {[
+                { label: "Daily", href: "/member/nutrition", active: true },
+                { label: "Plan", href: "/member/nutrition/coach", active: false },
+                { label: "AI Coach", href: "/member/nutrition-coach", active: false },
+              ].map((tabItem) => (
+                <Link
+                  key={tabItem.href}
+                  href={tabItem.href}
+                  className={`rounded-full px-2 py-2 transition ${
+                    tabItem.active
+                      ? "bg-white/16 text-[var(--text)] shadow-sm"
+                      : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                  }`}
+                >
+                  {tabItem.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </header>
+
+        <header className="hidden flex-wrap items-center justify-between gap-4 lg:flex">
           <div>
             <h1 className="text-3xl font-semibold text-[var(--text)]">Nutrition</h1>
             <p className="mt-3 text-sm text-[var(--text-muted)]">
@@ -1129,7 +1239,7 @@ export default function HealthNutritionPage() {
           </div>
         </header>
 
-        <Panel padding="md" className="hover-lift">
+        <Panel padding="md" className="hidden hover-lift lg:block">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-[var(--cyan)]/30 bg-[var(--cyan)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--cyan)]">
@@ -1183,13 +1293,182 @@ export default function HealthNutritionPage() {
           ) : null}
         </Panel>
 
+        <section className="lg:hidden">
+          <div className="rounded-[24px] border border-white/12 bg-[linear-gradient(135deg,rgba(255,177,196,0.16),rgba(99,247,255,0.08)_46%,rgba(255,255,255,0.06))] p-3.5 shadow-[0_18px_44px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
+            <div className="flex items-center gap-3">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-white/15 bg-white/12 text-[var(--cyan)]">
+                <Bot className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cyan)]/25 bg-[var(--cyan)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--cyan)]">
+                  <Sparkles className="h-3 w-3" aria-hidden="true" />
+                  AI Coach
+                </div>
+                <p className="mt-1 text-sm font-semibold leading-snug text-[var(--text)]">
+                  Need a quick food search or meal copy?
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <input
+                value={aiCommand}
+                onChange={(event) => setAiCommand(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    void handleAiCommand();
+                  }
+                }}
+                placeholder='Try "add 2 eggs"'
+                className="min-w-0 flex-1 rounded-2xl border border-white/12 bg-black/16 px-3 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => void handleAiCommand()}
+                disabled={aiLoading}
+                className="rounded-2xl bg-[var(--cyan)] px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:brightness-110 disabled:opacity-60"
+              >
+                {aiLoading ? "..." : "Run"}
+              </button>
+            </div>
+            {aiFeedback ? (
+              <p className="mt-2 rounded-2xl border border-white/10 bg-black/12 px-3 py-2 text-xs text-[var(--text-muted)]">
+                {aiFeedback}
+              </p>
+            ) : null}
+          </div>
+        </section>
+
         {error ? (
           <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
             {error}
           </div>
         ) : null}
 
-        <section className="grid gap-6 lg:grid-cols-2">
+        <section className="space-y-3 lg:hidden">
+          <div className="rounded-[26px] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),rgba(255,255,255,0.045))] p-4 shadow-[0_20px_54px_rgba(0,0,0,0.24)] backdrop-blur-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--pink)]/14 text-[var(--pink-soft)]">
+                  <Flame className="h-4 w-4" aria-hidden="true" />
+                </span>
+                Calories
+              </div>
+              <div className="inline-flex rounded-full border border-white/10 bg-black/10 p-0.5 text-[11px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setMacroViewMode("consumed")}
+                  className={`rounded-full px-2.5 py-1 transition ${
+                    !showingRemaining ? "bg-white/16 text-[var(--text)]" : "text-[var(--text-muted)]"
+                  }`}
+                >
+                  Ate
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMacroViewMode("remaining")}
+                  className={`rounded-full px-2.5 py-1 transition ${
+                    showingRemaining ? "bg-white/16 text-[var(--text)]" : "text-[var(--text-muted)]"
+                  }`}
+                >
+                  Left
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-[132px_1fr] items-center gap-3">
+              <div className="relative grid h-[132px] w-[132px] place-items-center">
+                <svg className="absolute inset-0" viewBox="0 0 132 132" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="mobile-calorie-ring" x1="18" y1="18" x2="116" y2="116">
+                      <stop stopColor="#63f7ff" />
+                      <stop offset="1" stopColor="#ffb1c4" />
+                    </linearGradient>
+                  </defs>
+                  <g transform="rotate(-90 66 66)">
+                    <circle cx="66" cy="66" r="55" fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth="10" />
+                    <circle
+                      cx="66"
+                      cy="66"
+                      r="55"
+                      fill="none"
+                      stroke="url(#mobile-calorie-ring)"
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                      strokeDasharray={ringDashArray(displayCaloriesProgress, 55)}
+                    />
+                  </g>
+                </svg>
+                <div className="text-center">
+                  <p className="text-3xl font-bold leading-none tracking-tight text-[var(--text)]">
+                    {roundToWhole(displayCalories).toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+                    / {roundToWhole(targetNumbers.calories || 0).toLocaleString()} kcal
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-[var(--cyan)]">{Math.round(displayCaloriesProgress)}%</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {macroBars.slice(0, 4).map((bar, index) => {
+                  const color = index === 0 ? "#2ee7d2" : index === 1 ? "#63a8ff" : index === 2 ? "#ff8ed6" : "#b6ff4a";
+                  return (
+                    <div key={bar.label} className="rounded-2xl border border-white/10 bg-black/12 px-2.5 py-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[11px] font-semibold text-[var(--text)]">{bar.label}</p>
+                        <p className="text-[10px] font-semibold tabular-nums" style={{ color }}>
+                          {Math.round(bar.progress)}%
+                        </p>
+                      </div>
+                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full transition-[width] duration-500"
+                          style={{ width: `${bar.progress}%`, backgroundColor: color }}
+                        />
+                      </div>
+                      <p className="mt-1 text-[10px] tabular-nums text-[var(--text-muted)]">
+                        {formatGrams(bar.value)} / {formatGrams(bar.target)}g
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {coachPlanStatus === "loading" ? (
+            <div className="rounded-[22px] border border-white/10 bg-white/6 p-4 text-sm text-[var(--text-muted)] backdrop-blur-xl">
+              Loading coach plan...
+            </div>
+          ) : coachPlanStatus === "none" ? (
+            <Link
+              href="/member/nutrition-coach"
+              className="flex items-center justify-between rounded-[22px] border border-[var(--pink)]/25 bg-[var(--pink)]/10 px-4 py-3 text-sm font-semibold text-[var(--pink-soft)] backdrop-blur-xl"
+            >
+              Nutrition Coach
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          ) : (
+            <Link
+              href="/member/nutrition/coach"
+              className="flex items-center justify-between gap-3 rounded-[22px] border border-white/10 bg-white/7 px-4 py-3 backdrop-blur-xl"
+            >
+              <span>
+                <span className="block text-sm font-semibold text-[var(--text)]">{coachGoalLabel}</span>
+                <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
+                  {checkInTimeline.daysUntilNext === 0
+                    ? "Check-in due today"
+                    : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until check-in`}
+                </span>
+              </span>
+              <span className="rounded-full bg-[var(--violet)]/18 px-2.5 py-1 text-xs font-semibold text-[var(--violet-soft)]">
+                {Math.round(weightProgressPercent)}%
+              </span>
+            </Link>
+          )}
+        </section>
+
+        <section className="hidden gap-6 lg:grid lg:grid-cols-2">
           <AccentCard tone="pink">
             <div className="flex items-start justify-between gap-3">
               <Micro onAccent as="p">{macroCardLabel}</Micro>
@@ -1327,7 +1606,69 @@ export default function HealthNutritionPage() {
           )}
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="lg:hidden">
+          <div className="rounded-[26px] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04))] p-4 shadow-[0_18px_46px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-[var(--text)]">Meals</h2>
+              <button
+                type="button"
+                onClick={() => openMealDialog("breakfast")}
+                className="grid h-8 w-8 place-items-center rounded-full border border-white/12 bg-white/10 text-[var(--cyan)] transition hover:bg-white/15"
+                aria-label="Add meal"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="mt-3 divide-y divide-white/8">
+              {mealSummaries.map((meal) => {
+                const primaryEntry = meal.entries[0];
+                const entryCount = meal.entries.length;
+                return (
+                  <div key={meal.key} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                    <button
+                      type="button"
+                      onClick={() => openMealDialog(meal.key)}
+                      className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-black/12 text-sm font-bold text-[var(--text)] transition hover:bg-white/10"
+                      aria-label={`Add to ${meal.label}`}
+                    >
+                      {meal.label.slice(0, 1)}
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="truncate text-sm font-semibold text-[var(--text)]">{meal.label}</p>
+                        <p className="shrink-0 text-sm font-bold tabular-nums text-[var(--text)]">
+                          {Math.round(meal.totals.calories).toLocaleString()}
+                          <span className="ml-1 text-[11px] font-medium text-[var(--text-muted)]">kcal</span>
+                        </p>
+                      </div>
+                      <div className="mt-0.5 flex items-center justify-between gap-3">
+                        <p className="min-w-0 truncate text-xs text-[var(--text-muted)]">
+                          {primaryEntry
+                            ? `${primaryEntry.entry_name}${entryCount > 1 ? ` +${entryCount - 1}` : ""}`
+                            : "Tap to log food"}
+                        </p>
+                        <p className="shrink-0 font-mono text-[10px] text-[var(--text-soft)]">
+                          P{formatGrams(meal.totals.protein)} Â· C{formatGrams(meal.totals.carbs)} Â· F{formatGrams(meal.totals.fat)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openMealDialog(meal.key)}
+                      className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[var(--text-muted)] transition hover:bg-white/10 hover:text-[var(--text)]"
+                      aria-label={`Open ${meal.label}`}
+                    >
+                      <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="hidden gap-4 sm:grid-cols-2 lg:grid xl:grid-cols-4">
           {meals.map((meal) => {
             const mealEntries = entries.filter((entry) => entry.meal_type === meal.key);
             const mealTotals = mealEntries.reduce(
