@@ -11,14 +11,12 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Droplets,
   Flame,
   Footprints,
   Pencil,
   Plus,
   Sparkles,
   TrendingUp,
-  Utensils,
   X,
 } from "lucide-react";
 
@@ -1483,37 +1481,7 @@ export default function HealthNutritionPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-[24px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_18px_42px_rgba(79,102,124,0.12)] backdrop-blur-2xl">
-              <div className="flex items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-2 text-[15px] font-bold text-slate-950">
-                  <Droplets className="h-5 w-5 text-[#2c98ff]" aria-hidden="true" />
-                  Fiber
-                </div>
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-white/70 text-slate-500 shadow-sm">
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                </span>
-              </div>
-              <div className="mt-4 flex items-end gap-1.5">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div
-                    key={`fiber-glass-${index}`}
-                    className={`h-8 flex-1 rounded-b-lg rounded-t-sm border border-[#94c9ff]/40 ${
-                      index < Math.round(fiberProgress / 20)
-                        ? "bg-[linear-gradient(180deg,#7bc8ff,#2c98ff)]"
-                        : "bg-slate-100"
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className="mt-3 text-[16px] font-bold text-slate-950">
-                {formatGrams(totals.fiber)} <span className="font-semibold text-slate-500">/ {FIBER_DEFAULT_TARGET}g</span>
-              </p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full rounded-full bg-[#2c98ff]" style={{ width: `${fiberProgress}%` }} />
-              </div>
-            </div>
-
+          <div>
             <div className="rounded-[24px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_18px_42px_rgba(79,102,124,0.12)] backdrop-blur-2xl">
               <div className="inline-flex items-center gap-2 text-[15px] font-bold text-slate-950">
                 <Footprints className="h-5 w-5 text-[#23c789]" aria-hidden="true" />
@@ -1735,32 +1703,17 @@ export default function HealthNutritionPage() {
             </div>
 
             <div className="mt-3 divide-y divide-slate-200/70">
-              {mealSummaries.slice(0, 3).map((meal, index) => {
+              {mealSummaries.slice(0, 3).map((meal) => {
                 const primaryEntry = meal.entries[0];
                 const entryCount = meal.entries.length;
-                const fallbackNames = ["Greek yogurt oatmeal", "Grilled chicken bowl", "Salmon, quinoa & asparagus"];
-                const accent =
-                  index === 0
-                    ? "from-[#f4cf86] via-[#fef6df] to-[#d93855]"
-                    : index === 1
-                      ? "from-[#95d76b] via-[#f7d07c] to-[#8c4b25]"
-                      : "from-[#f9896b] via-[#f7d47f] to-[#2d7c63]";
                 return (
                   <div key={meal.key} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                    <button
-                      type="button"
-                      onClick={() => openMealDialog(meal.key)}
-                      className={`grid h-[54px] w-[54px] shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br ${accent} shadow-[0_10px_22px_rgba(79,102,124,0.16)] transition hover:scale-[1.02]`}
-                      aria-label={`Add to ${meal.label}`}
-                    >
-                      <Utensils className="h-6 w-6 text-white drop-shadow" aria-hidden="true" />
-                    </button>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[15px] font-bold leading-tight text-slate-950">{meal.label}</p>
                       <p className="mt-0.5 min-w-0 truncate text-[13px] font-semibold leading-tight text-slate-500">
                         {primaryEntry
                           ? `${primaryEntry.entry_name}${entryCount > 1 ? ` +${entryCount - 1}` : ""}`
-                          : fallbackNames[index] ?? "Tap to log food"}
+                          : "No entries logged"}
                       </p>
                       <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
                         P{formatGrams(meal.totals.protein)} | C{formatGrams(meal.totals.carbs)} | F{formatGrams(meal.totals.fat)}
@@ -1785,17 +1738,11 @@ export default function HealthNutritionPage() {
               })}
               {mealSummaries.length > 3 ? (
                 <div className="flex items-center gap-3 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => openMealDialog("snack")}
-                    className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#d8b4fe] via-[#f0f9ff] to-[#63f7ff] shadow-[0_10px_22px_rgba(79,102,124,0.16)]"
-                    aria-label="Add snack"
-                  >
-                    <Plus className="h-6 w-6 text-white drop-shadow" aria-hidden="true" />
-                  </button>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[15px] font-bold leading-tight text-slate-950">Snack</p>
-                    <p className="mt-0.5 text-[13px] font-semibold text-slate-500">Tap to log food</p>
+                    <p className="mt-0.5 text-[13px] font-semibold text-slate-500">
+                      {mealSummaries[3]?.entries[0]?.entry_name ?? "No entries logged"}
+                    </p>
                   </div>
                   <p className="text-[18px] font-bold tabular-nums text-slate-950">
                     {Math.round(mealSummaries[3]?.totals.calories ?? 0).toLocaleString()}
