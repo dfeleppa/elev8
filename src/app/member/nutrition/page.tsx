@@ -1384,7 +1384,7 @@ export default function HealthNutritionPage() {
             <div className="flex items-center justify-between gap-3">
               <div className="inline-flex items-center gap-2 text-[18px] font-bold text-slate-950">
                 <Flame className="h-5 w-5 text-[#ff4a8d]" aria-hidden="true" />
-                Calories
+                Macros
               </div>
               <div className="inline-flex rounded-full border border-slate-200/80 bg-white/72 p-0.5 text-[11px] font-bold shadow-inner">
                 <button
@@ -1443,35 +1443,25 @@ export default function HealthNutritionPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-3">
                 {macroBars.slice(0, 3).map((bar, index) => {
                   const color = index === 0 ? "#22c7bd" : index === 1 ? "#379bf2" : "#d66bc2";
-                  const radius = 26;
                   return (
-                    <div key={bar.label} className="min-w-0 text-center">
-                      <p className="truncate text-[12px] font-bold text-slate-900">{bar.label}</p>
-                      <div className="relative mx-auto mt-2 grid h-[68px] w-[68px] place-items-center">
-                        <svg className="absolute inset-0" viewBox="0 0 68 68" aria-hidden="true">
-                          <g transform="rotate(-90 34 34)">
-                            <circle cx="34" cy="34" r={radius} fill="none" stroke="#e8eef5" strokeWidth="6" />
-                            <circle
-                              cx="34"
-                              cy="34"
-                              r={radius}
-                              fill="none"
-                              stroke={color}
-                              strokeWidth="6"
-                              strokeLinecap="round"
-                              strokeDasharray={ringDashArray(bar.progress, radius)}
-                            />
-                          </g>
-                        </svg>
-                        <p className="text-[15px] font-bold tabular-nums text-slate-950">{formatGrams(bar.value)}g</p>
+                    <div key={bar.label} className="min-w-0">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className="text-[12px] font-bold text-slate-900">{bar.label}</p>
+                        <p className="text-[12px] font-bold tabular-nums text-slate-950">
+                          {formatGrams(bar.value)}
+                          <span className="font-semibold text-slate-500">/{formatGrams(bar.target)}g</span>
+                        </p>
                       </div>
-                      <p className="mt-1 text-[12px] font-semibold text-slate-500">
-                        / {formatGrams(bar.target)}g
-                      </p>
-                      <p className="text-[12px] font-bold tabular-nums" style={{ color }}>
+                      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-200/90">
+                        <div
+                          className="h-full rounded-full transition-[width] duration-500"
+                          style={{ width: `${bar.progress}%`, backgroundColor: color }}
+                        />
+                      </div>
+                      <p className="mt-1 text-right text-[11px] font-bold tabular-nums" style={{ color }}>
                         {Math.round(bar.progress)}%
                       </p>
                     </div>
@@ -1481,51 +1471,14 @@ export default function HealthNutritionPage() {
             </div>
           </div>
 
-          <div>
-            <div className="rounded-[24px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_18px_42px_rgba(79,102,124,0.12)] backdrop-blur-2xl">
-              <div className="inline-flex items-center gap-2 text-[15px] font-bold text-slate-950">
-                <Footprints className="h-5 w-5 text-[#23c789]" aria-hidden="true" />
-                Coach
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-[28px] font-bold leading-none tracking-[-0.02em] text-slate-950">
-                    {Math.round(weightProgressPercent)}%
-                  </p>
-                  <p className="mt-1 text-[12px] font-semibold text-slate-500">
-                    to goal
-                  </p>
-                </div>
-                <div className="relative grid h-[74px] w-[74px] place-items-center">
-                  <svg className="absolute inset-0" viewBox="0 0 74 74" aria-hidden="true">
-                    <g transform="rotate(-90 37 37)">
-                      <circle cx="37" cy="37" r="29" fill="none" stroke="#e8eef5" strokeWidth="7" />
-                      <circle
-                        cx="37"
-                        cy="37"
-                        r="29"
-                        fill="none"
-                        stroke="#23c789"
-                        strokeWidth="7"
-                        strokeLinecap="round"
-                        strokeDasharray={ringDashArray(weightProgressPercent, 29)}
-                      />
-                    </g>
-                  </svg>
-                  <TrendingUp className="h-6 w-6 text-[#23c789]" aria-hidden="true" />
-                </div>
-              </div>
-            </div>
-          </div>
-
           {coachPlanStatus === "loading" ? (
-            <div className="rounded-[22px] border border-white/80 bg-white/60 p-4 text-sm font-semibold text-slate-500 backdrop-blur-xl">
+            <div className="rounded-[24px] border border-[#ff9fb9]/60 bg-[#ffb1c4] p-4 text-sm font-bold text-[#230012] shadow-[0_18px_42px_rgba(255,74,141,0.18)]">
               Loading coach plan...
             </div>
           ) : coachPlanStatus === "none" ? (
             <Link
               href="/member/nutrition-coach"
-              className="flex items-center justify-between rounded-[22px] border border-white/80 bg-white/60 px-4 py-3 text-sm font-bold text-[#1597ff] shadow-[0_12px_26px_rgba(79,102,124,0.1)] backdrop-blur-xl"
+              className="flex items-center justify-between rounded-[24px] border border-[#ff9fb9]/60 bg-[#ffb1c4] px-4 py-4 text-sm font-bold text-[#230012] shadow-[0_18px_42px_rgba(255,74,141,0.18)]"
             >
               Nutrition Coach
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -1533,19 +1486,49 @@ export default function HealthNutritionPage() {
           ) : (
             <Link
               href="/member/nutrition/coach"
-              className="flex items-center justify-between gap-3 rounded-[22px] border border-white/80 bg-white/60 px-4 py-3 shadow-[0_12px_26px_rgba(79,102,124,0.1)] backdrop-blur-xl"
+              className={`block rounded-[24px] border border-[#ff9fb9]/60 bg-[#ffb1c4] p-4 text-[#230012] shadow-[0_18px_42px_rgba(255,74,141,0.18)] ${
+                checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#230012]/70" : ""
+              }`}
             >
-              <span>
-                <span className="block text-sm font-bold text-slate-950">{coachGoalLabel}</span>
-                <span className="mt-0.5 block text-xs font-semibold text-slate-500">
+              <div className="flex items-start justify-between gap-3">
+                <div className="inline-flex items-center gap-2 text-[15px] font-bold">
+                  <Footprints className="h-5 w-5" aria-hidden="true" />
+                  Coach
+                </div>
+                <span className="rounded-full bg-[#230012]/12 px-2.5 py-1 text-xs font-bold">
+                  {Math.round(weightProgressPercent)}% to goal
+                </span>
+              </div>
+              <div className="mt-3 flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-[12px] font-bold uppercase tracking-[0.16em] opacity-70">Goal</p>
+                  <p className="mt-1 text-[26px] font-bold leading-none tracking-[-0.02em]">{coachGoalLabel}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[12px] font-bold uppercase tracking-[0.16em] opacity-70">Next</p>
+                  <p className="mt-1 text-sm font-bold">{checkInTimeline.nextDateLabel}</p>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-10 gap-1">
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <span
+                    key={`mobile-coach-check-bar-${index}`}
+                    className={`h-7 rounded-[4px] ${
+                      index < checkInTimeline.filledBars ? "bg-[#230012]" : "bg-white/40"
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className={`text-sm font-bold ${checkInTimeline.daysUntilNext === 0 ? "uppercase" : ""}`}>
                   {checkInTimeline.daysUntilNext === 0
                     ? "Check-in due today"
                     : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until check-in`}
                 </span>
-              </span>
-              <span className="rounded-full bg-[#eef2ff] px-2.5 py-1 text-xs font-bold text-[#4866ee]">
-                {Math.round(weightProgressPercent)}%
-              </span>
+                <span className="rounded-full bg-[#230012] px-3 py-1.5 text-xs font-bold text-white">
+                  {checkInTimeline.daysUntilNext === 0 ? "Check-In" : "Plan"}
+                </span>
+              </div>
             </Link>
           )}
         </section>
@@ -1688,70 +1671,161 @@ export default function HealthNutritionPage() {
           )}
         </section>
 
-        <section className="lg:hidden">
-          <div className="rounded-[28px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_24px_58px_rgba(79,102,124,0.14)] backdrop-blur-2xl">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[18px] font-bold text-slate-950">Meals</h2>
-              <button
-                type="button"
-                onClick={() => openMealDialog("breakfast")}
-                className="text-sm font-bold text-[#1597ff] transition hover:text-[#086fd1]"
-                aria-label="Add meal"
+        <section className="space-y-3 lg:hidden">
+          <h2 className="px-1 text-[18px] font-bold text-slate-950">Meals</h2>
+          {mealSummaries.map((meal) => {
+            const hasEntries = meal.entries.length > 0;
+            return (
+              <div
+                key={`mobile-meal-${meal.key}`}
+                className="relative rounded-[24px] border border-white/80 bg-white/[0.64] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_18px_42px_rgba(79,102,124,0.12)] backdrop-blur-2xl"
               >
-                View All
-              </button>
-            </div>
-
-            <div className="mt-3 divide-y divide-slate-200/70">
-              {mealSummaries.slice(0, 3).map((meal) => {
-                const primaryEntry = meal.entries[0];
-                const entryCount = meal.entries.length;
-                return (
-                  <div key={meal.key} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[15px] font-bold leading-tight text-slate-950">{meal.label}</p>
-                      <p className="mt-0.5 min-w-0 truncate text-[13px] font-semibold leading-tight text-slate-500">
-                        {primaryEntry
-                          ? `${primaryEntry.entry_name}${entryCount > 1 ? ` +${entryCount - 1}` : ""}`
-                          : "No entries logged"}
-                      </p>
-                      <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                        P{formatGrams(meal.totals.protein)} | C{formatGrams(meal.totals.carbs)} | F{formatGrams(meal.totals.fat)}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <p className="text-[18px] font-bold tabular-nums text-slate-950">
-                        {Math.round(meal.totals.calories).toLocaleString()}
-                        <span className="ml-1 text-[12px] font-semibold text-slate-500">kcal</span>
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => openMealDialog(meal.key)}
-                        className="grid h-8 w-8 place-items-center rounded-full text-slate-500 transition hover:bg-white/80 hover:text-slate-900"
-                        aria-label={`Open ${meal.label}`}
-                      >
-                        <ChevronRight className="h-5 w-5" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-              {mealSummaries.length > 3 ? (
-                <div className="flex items-center gap-3 pt-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-bold leading-tight text-slate-950">Snack</p>
-                    <p className="mt-0.5 text-[13px] font-semibold text-slate-500">
-                      {mealSummaries[3]?.entries[0]?.entry_name ?? "No entries logged"}
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[17px] font-bold leading-tight text-slate-950">{meal.label}</p>
+                    <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                      {Math.round(meal.totals.calories).toLocaleString()} kcal | P{formatGrams(meal.totals.protein)} | C{formatGrams(meal.totals.carbs)} | F{formatGrams(meal.totals.fat)}
                     </p>
                   </div>
-                  <p className="text-[18px] font-bold tabular-nums text-slate-950">
-                    {Math.round(mealSummaries[3]?.totals.calories ?? 0).toLocaleString()}
-                    <span className="ml-1 text-[12px] font-semibold text-slate-500">kcal</span>
-                  </p>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setMealMenuOpen((current) => (current === meal.key ? null : meal.key))}
+                      className="grid h-9 w-9 place-items-center rounded-full text-slate-500 transition hover:bg-white/80 hover:text-slate-900"
+                      aria-label={`Meal actions for ${meal.label}`}
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                        <circle cx="12" cy="5" r="1.7" fill="currentColor" />
+                        <circle cx="12" cy="12" r="1.7" fill="currentColor" />
+                        <circle cx="12" cy="19" r="1.7" fill="currentColor" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMealMenuOpen(null);
+                        openMealDialog(meal.key);
+                      }}
+                      className="grid h-9 w-9 place-items-center rounded-full bg-[#1597ff] text-white shadow-[0_10px_24px_rgba(21,151,255,0.24)] transition hover:brightness-105"
+                      aria-label={`Add to ${meal.label}`}
+                    >
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
-              ) : null}
-            </div>
-          </div>
+
+                {mealMenuOpen === meal.key ? (
+                  <div className="absolute right-4 top-14 z-20 w-44 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_38px_rgba(79,102,124,0.2)]">
+                    <button
+                      type="button"
+                      onClick={() => void deleteMealEntries(meal.key)}
+                      className="block w-full px-4 py-3 text-left text-sm font-semibold text-rose-500 transition hover:bg-slate-50"
+                    >
+                      Delete meal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMealMenuOpen(null);
+                        setCopyDialogMeal(meal.key);
+                        setCopyTargetDate(toLocalDateInputValue(new Date()));
+                        setCopyTargetMeal(meal.key);
+                      }}
+                      disabled={copyingMeal === meal.key}
+                      className="block w-full px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                    >
+                      {copyingMeal === meal.key ? "Copying..." : "Copy meal"}
+                    </button>
+                  </div>
+                ) : null}
+
+                {hasEntries ? (
+                  <div className="mt-4 space-y-3">
+                    {meal.entries.map((entry) => {
+                      const quantity = toEntryQuantity(entry.quantity);
+                      const entryCal = roundToWhole((entry.calories ?? 0) * quantity);
+                      const entryP = formatGrams((entry.protein ?? 0) * quantity);
+                      const entryC = formatGrams((entry.carbs ?? 0) * quantity);
+                      const entryF = formatGrams((entry.fat ?? 0) * quantity);
+                      const isEditingServing = editingEntryId === entry.id;
+                      return (
+                        <div key={`mobile-entry-${entry.id}`} className="rounded-2xl border border-slate-200/80 bg-white/70 p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-[14px] font-bold leading-tight text-slate-950">{entry.entry_name}</p>
+                              <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                                {entryCal} kcal | P{entryP} | C{entryC} | F{entryF}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => deleteEntry(entry.id)}
+                              className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                              aria-label={`Remove ${entry.entry_name}`}
+                            >
+                              <X className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between gap-3">
+                            <span className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">
+                              Servings
+                            </span>
+                            {isEditingServing ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  value={editServingDraft}
+                                  onChange={(event) => setEditServingDraft(event.target.value)}
+                                  onKeyDown={(event) => {
+                                    if (event.key === "Enter") void saveServingSize(entry.id);
+                                    if (event.key === "Escape") {
+                                      setEditingEntryId(null);
+                                      setEditServingDraft("");
+                                    }
+                                  }}
+                                  className="h-9 w-20 rounded-xl border border-slate-200 bg-white px-2 text-sm font-bold text-slate-950 focus:border-[#1597ff] focus:outline-none"
+                                  inputMode="decimal"
+                                  aria-label="Edit servings"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => void saveServingSize(entry.id)}
+                                  className="grid h-9 w-9 place-items-center rounded-full bg-slate-950 text-white"
+                                  aria-label="Save servings"
+                                >
+                                  <Check className="h-4 w-4" aria-hidden="true" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => openServingSizeEditor(entry.id, entry.quantity)}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold text-slate-700 transition hover:border-slate-300"
+                              >
+                                {formatServingSize(quantity)}
+                                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMealMenuOpen(null);
+                      openMealDialog(meal.key);
+                    }}
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white/50 py-4 text-sm font-bold text-slate-500 transition hover:border-[#1597ff] hover:text-[#1597ff]"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    Add food
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </section>
 
         <div className="h-4 lg:hidden" />
@@ -1818,7 +1892,7 @@ export default function HealthNutritionPage() {
                       onClick={() => {
                         setMealMenuOpen(null);
                         setCopyDialogMeal(meal.key);
-                        setCopyTargetDate(selectedDate);
+                        setCopyTargetDate(toLocalDateInputValue(new Date()));
                         setCopyTargetMeal(meal.key);
                       }}
                       disabled={copyingMeal === meal.key}
