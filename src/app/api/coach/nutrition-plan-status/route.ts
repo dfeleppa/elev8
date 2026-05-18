@@ -173,7 +173,7 @@ export async function GET(request: Request) {
       ),
       supabaseAdmin
         .from("app_users")
-        .select("current_weight_kg")
+        .select("current_weight_kg, body_fat_percent")
         .eq("id", userId)
         .maybeSingle(),
       getRecentNutritionDays(userId),
@@ -217,6 +217,10 @@ export async function GET(request: Request) {
             goalType: latestPlan.goal_type,
             startWeight,
             currentWeight,
+            bodyFatPercent:
+              typeof profile?.body_fat_percent === "number" && Number.isFinite(profile.body_fat_percent)
+                ? profile.body_fat_percent
+                : null,
             targetWeight:
               typeof latestPlan.target_weight_lbs === "number" && Number.isFinite(latestPlan.target_weight_lbs)
                 ? latestPlan.target_weight_lbs

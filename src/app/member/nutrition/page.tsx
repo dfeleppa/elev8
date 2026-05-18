@@ -5,7 +5,6 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Bell,
   Bot,
   CalendarDays,
   Check,
@@ -16,7 +15,6 @@ import {
   Pencil,
   Plus,
   Sparkles,
-  TrendingUp,
   X,
 } from "lucide-react";
 
@@ -1126,42 +1124,7 @@ export default function HealthNutritionPage() {
     <SidebarShell mainClassName="w-full">
       <section className="mx-auto w-full max-w-[1480px] space-y-4 bg-[radial-gradient(circle_at_15%_8%,rgba(255,177,196,0.28),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(99,247,255,0.22),transparent_30%),linear-gradient(180deg,#f8fbff_0%,#eef6fb_56%,#f8fbff_100%)] px-4 py-5 text-slate-950 lg:space-y-8 lg:bg-transparent lg:px-10 lg:py-10 lg:text-[var(--text)]">
         <header className="lg:hidden">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#ffb1c4,#63f7ff)] p-[3px] shadow-[0_14px_32px_rgba(75,130,160,0.18)]">
-                <div className="grid h-full w-full place-items-center rounded-full bg-white text-lg font-bold text-slate-900">
-                  U
-                </div>
-              </div>
-              <div className="min-w-0">
-                <h1 className="truncate text-[26px] font-bold leading-tight tracking-[-0.01em] text-slate-950">
-                  Good morning
-                </h1>
-                <p className="mt-0.5 truncate text-[15px] font-medium text-slate-500">
-                  You&apos;re building great habits.
-                </p>
-              </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                className="relative grid h-12 w-12 place-items-center rounded-2xl border border-white/80 bg-white/70 text-slate-800 shadow-[0_14px_32px_rgba(79,102,124,0.14)] backdrop-blur-xl"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5" aria-hidden="true" />
-                <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-[#ff63bd]" />
-              </button>
-              <button
-                type="button"
-                className="grid h-12 w-12 place-items-center rounded-2xl border border-white/80 bg-white/70 text-slate-800 shadow-[0_14px_32px_rgba(79,102,124,0.14)] backdrop-blur-xl"
-                aria-label="Progress"
-              >
-                <TrendingUp className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-
-          <div className="mx-auto mt-7 flex max-w-[310px] items-center justify-center rounded-full border border-white/80 bg-white/70 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_18px_34px_rgba(73,99,126,0.12)] backdrop-blur-xl">
+          <div className="mx-auto flex max-w-[310px] items-center justify-center rounded-full border border-white/80 bg-white/70 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_18px_34px_rgba(73,99,126,0.12)] backdrop-blur-xl">
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}

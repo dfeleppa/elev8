@@ -75,14 +75,25 @@ describe("analyzeNutritionAdjustment", () => {
     expect(rec.status).toBe("insufficient_weight_data");
   });
 
-  it("flags likely_undertracking when logged << target and weight is not moving toward goal", () => {
+  it("returns low_adherence when average calories are far below target", () => {
     const inputs: AdjustmentInputs = {
       plan: basePlan(),
       dailyLogs: makeLogs(14, 1700), // 1700 / 2500 = 0.68 -> < 0.85
       weights: makeWeights(200, 0), // flat weight
     };
     const rec = analyzeNutritionAdjustment(inputs);
-    expect(rec.status).toBe("likely_undertracking");
+    expect(rec.status).toBe("low_adherence");
+    expect(rec.calorieDelta).toBe(0);
+  });
+
+  it("returns low_adherence when average calories are far above target", () => {
+    const inputs: AdjustmentInputs = {
+      plan: basePlan(),
+      dailyLogs: makeLogs(14, 3100), // 124% of target
+      weights: makeWeights(200, -1),
+    };
+    const rec = analyzeNutritionAdjustment(inputs);
+    expect(rec.status).toBe("low_adherence");
     expect(rec.calorieDelta).toBe(0);
   });
 
