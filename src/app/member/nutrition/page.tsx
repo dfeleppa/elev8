@@ -1706,6 +1706,7 @@ export default function HealthNutritionPage() {
                   <div className="mt-4 space-y-3">
                     {meal.entries.map((entry) => {
                       const quantity = toEntryQuantity(entry.quantity);
+                      const servingLabel = `${formatServingSize(quantity)} serving${quantity === 1 ? "" : "s"}`;
                       const entryCal = roundToWhole((entry.calories ?? 0) * quantity);
                       const entryP = formatGrams((entry.protein ?? 0) * quantity);
                       const entryC = formatGrams((entry.carbs ?? 0) * quantity);
@@ -1717,23 +1718,33 @@ export default function HealthNutritionPage() {
                             <div className="min-w-0">
                               <p className="text-[14px] font-bold leading-tight text-slate-950">{entry.entry_name}</p>
                               <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-                                {entryCal} kcal | P{entryP} | C{entryC} | F{entryF}
+                                {servingLabel}, {entryCal} CAL | C{entryC} | P{entryP} | F{entryF}
                               </p>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => deleteEntry(entry.id)}
-                              className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
-                              aria-label={`Remove ${entry.entry_name}`}
-                            >
-                              <X className="h-4 w-4" aria-hidden="true" />
-                            </button>
+                            <div className="flex shrink-0 items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => openServingSizeEditor(entry.id, entry.quantity)}
+                                className="grid h-8 w-8 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                                aria-label={`Edit servings for ${entry.entry_name}`}
+                              >
+                                <Pencil className="h-4 w-4" aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => deleteEntry(entry.id)}
+                                className="grid h-8 w-8 place-items-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                                aria-label={`Remove ${entry.entry_name}`}
+                              >
+                                <X className="h-4 w-4" aria-hidden="true" />
+                              </button>
+                            </div>
                           </div>
-                          <div className="mt-3 flex items-center justify-between gap-3">
-                            <span className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">
-                              Servings
-                            </span>
-                            {isEditingServing ? (
+                          {isEditingServing ? (
+                            <div className="mt-3 flex items-center justify-between gap-3">
+                              <span className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">
+                                Servings
+                              </span>
                               <div className="flex items-center gap-2">
                                 <input
                                   value={editServingDraft}
@@ -1758,17 +1769,8 @@ export default function HealthNutritionPage() {
                                   <Check className="h-4 w-4" aria-hidden="true" />
                                 </button>
                               </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => openServingSizeEditor(entry.id, entry.quantity)}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold text-slate-700 transition hover:border-slate-300"
-                              >
-                                {formatServingSize(quantity)}
-                                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                              </button>
-                            )}
-                          </div>
+                            </div>
+                          ) : null}
                         </div>
                       );
                     })}
