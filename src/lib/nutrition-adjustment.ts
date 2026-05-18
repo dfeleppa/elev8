@@ -133,6 +133,8 @@ const STEP_SMALL = 100;
 const STEP_LARGE = 200;
 /** Adherence below this and we will not adjust calories down. */
 const ADHERENCE_GATE = 0.7;
+const ADHERENCE_MIN_TARGET_RATIO = 0.85;
+const ADHERENCE_MAX_TARGET_RATIO = 1.15;
 /** Logged-vs-target ratio below this when weight is not moving → undertracking flag. */
 const UNDERTRACK_RATIO = 0.85;
 /** Tolerance band around expected weekly change before we adjust. */
@@ -331,6 +333,24 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
     return {
       status: "low_adherence",
       reason: `Only ${adherence.daysLogged}/${adherence.daysExpected} days logged in the last ${adherenceWindow} days. Focus on consistent tracking before changing the plan.`,
+      warnings,
+      adherence,
+      weightTrend,
+      guardrails,
+      proposed: baselineShouldBeReturned ? baselineProposal : null,
+      calorieDelta: 0,
+    };
+  }
+  if (
+    adherence.loggedVsTargetRatio > 0 &&
+    (adherence.loggedVsTargetRatio < ADHERENCE_MIN_TARGET_RATIO ||
+      adherence.loggedVsTargetRatio > ADHERENCE_MAX_TARGET_RATIO)
+  ) {
+    return {
+      status: "low_adherence",
+      reason: `Average logged calories were ~${Math.round(
+        adherence.loggedVsTargetRatio * 100
+      )}% of target. Restart the check-in window and hit the prescribed calories before changing the plan.`,
       warnings,
       adherence,
       weightTrend,

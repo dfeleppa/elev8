@@ -163,11 +163,15 @@ export type CheckInResult =
       metabolismEstimate: MetabolismEstimate;
     };
 
-export async function buildCheckInRecommendation(memberId: string): Promise<CheckInResult> {
-  const latestPlan = await loadLatestPlan(memberId);
-  if (!latestPlan) {
+export async function buildCheckInRecommendation(
+  memberId: string,
+  planOverrides?: Partial<LatestPlanRow>
+): Promise<CheckInResult> {
+  const storedPlan = await loadLatestPlan(memberId);
+  if (!storedPlan) {
     return { error: "No coach nutrition plan found for member.", status: 404 };
   }
+  const latestPlan = { ...storedPlan, ...(planOverrides ?? {}) };
 
   const today = todayIsoDate();
   const adherenceSince = datePlusDays(today, -ADHERENCE_WINDOW_DAYS);
@@ -274,4 +278,35 @@ export async function applyAdjustmentAsNewPlan(
     effectiveDate: today,
     nextCheckInDate: nextCheckIn,
   };
+}
+
+export async function resetCheckInWindow(
+  latestPlan: LatestPlanRow,
+  recommendation: AdjustmentRecommendation
+): Promise<{ effectiveDate: string; nextCheckInDate: string }> {
+  const today = todayIsoDate();
+  const nextCheckIn = datePlusDays(today, NEXT_CHECK_IN_DAYS);
+
+  const { error } = await supabaseAdmin
+    .from("coach_nutrition_plans")
+    .update({
+      goal_type: latestPlan.goal_type,
+      last_check_in_date: today,
+      next_check_in_date: nextCheckIn,
+      plan_payload: latestPlan.plan_payload ?? {},
+      adjustment_reason: recommendation.reason,
+      adherence_snapshot: {
+        adherence: recommendation.adherence,
+        weightTrend: recommendation.weightTrend,
+        guardrails: recommendation.guardrails,
+        calorieDelta: 0,
+        warnings: recommendation.warnings,
+      },
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", latestPlan.id);
+
+  if (error) throw new Error(error.message);
+
+  return { effectiveDate: today, nextCheckInDate: nextCheckIn };
 }
