@@ -66,7 +66,7 @@ function clampHistoryLimit(value: string | null) {
 }
 
 async function getCoachPlanTargets(memberId: string, date: string) {
-  const { data: plan, error } = await runNutritionQueryWithFallbacks([
+  const { data: activePlan, error: activeError } = await runNutritionQueryWithFallbacks([
     () =>
       supabaseAdmin
         .from("coach_nutrition_plans")
@@ -87,8 +87,37 @@ async function getCoachPlanTargets(memberId: string, date: string) {
         .maybeSingle(),
   ]);
 
-  if (error || !plan) {
+  if (activeError) {
     return null;
+  }
+
+  let plan = activePlan;
+
+  if (!plan) {
+    const { data: fallbackPlan, error: fallbackError } = await runNutritionQueryWithFallbacks([
+      () =>
+        supabaseAdmin
+          .from("coach_nutrition_plans")
+          .select("target_calories, protein_grams, carbs_grams, fat_grams, fiber_grams, updated_at")
+          .eq("member_id", memberId)
+          .order("effective_date", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      () =>
+        supabaseAdmin
+          .from("coach_nutrition_plans")
+          .select("target_calories, protein_grams, carbs_grams, fat_grams, updated_at")
+          .eq("member_id", memberId)
+          .order("effective_date", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+    ]);
+
+    if (fallbackError || !fallbackPlan) {
+      return null;
+    }
+
+    plan = fallbackPlan;
   }
 
   const planRecord = plan as Record<string, unknown>;
