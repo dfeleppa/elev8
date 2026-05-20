@@ -120,6 +120,10 @@ async function getCoachPlanTargets(memberId: string, date: string) {
     plan = fallbackPlan;
   }
 
+  if (!plan) {
+    return null;
+  }
+
   const planRecord = plan as Record<string, unknown>;
 
   return {
