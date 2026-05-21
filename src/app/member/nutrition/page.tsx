@@ -1434,8 +1434,8 @@ export default function HealthNutritionPage() {
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="text-[12px] font-bold text-slate-900">{bar.label}</p>
                         <p className="text-[12px] font-bold tabular-nums text-slate-950">
-                          {formatGrams(bar.value)}
-                          <span className="font-semibold text-slate-500">/{formatGrams(bar.target)}g</span>
+                          {roundToWhole(bar.value)}
+                          <span className="font-semibold text-slate-500">/{roundToWhole(bar.target)}g</span>
                         </p>
                       </div>
                       <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-200/90">
@@ -1578,7 +1578,7 @@ export default function HealthNutritionPage() {
                     <div className="flex items-baseline justify-between gap-3">
                       <p className="text-sm">{bar.label}</p>
                       <p className="text-sm font-bold tabular-nums">
-                        {formatGrams(bar.value)}/{formatGrams(bar.target)}g
+                        {roundToWhole(bar.value)}/{roundToWhole(bar.target)}g
                       </p>
                     </div>
                     <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-black/15">
