@@ -20,6 +20,7 @@ import {
 
 import SidebarShell from "@/components/SidebarShell";
 import { AccentCard, Chip, Panel, Micro } from "@/components/ui";
+import { isAICoachVisible } from "@/lib/feature-flags";
 import NutritionTopBar from "./NutritionTopBar";
 
 type NutritionEntry = {
@@ -293,6 +294,8 @@ export default function HealthNutritionPage() {
     fat: "",
   });
   const [macroViewMode, setMacroViewMode] = useState<"consumed" | "remaining">("consumed");
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const showAICoach = isAICoachVisible(userRole);
 
   async function loadFoodLibraries(options?: {
     includeRecent?: boolean;
@@ -383,6 +386,13 @@ export default function HealthNutritionPage() {
 
   useEffect(() => {
     let isActive = true;
+
+    fetch("/api/me")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (isActive && payload?.role) setUserRole(payload.role);
+      })
+      .catch(() => undefined);
 
     fetch("/api/coach/nutrition-plan-status", { cache: "no-store" })
       .then(async (response) => {
@@ -1155,11 +1165,17 @@ export default function HealthNutritionPage() {
             </button>
           </div>
 
-          <nav className="mt-4 grid grid-cols-3 rounded-full border border-white/80 bg-white/70 p-1 text-center text-xs font-bold shadow-[0_14px_28px_rgba(73,99,126,0.1)] backdrop-blur-xl">
+          <nav
+            className={`mt-4 grid ${
+              showAICoach ? "grid-cols-3" : "grid-cols-2"
+            } rounded-full border border-white/80 bg-white/70 p-1 text-center text-xs font-bold shadow-[0_14px_28px_rgba(73,99,126,0.1)] backdrop-blur-xl`}
+          >
               {[
                 { label: "Daily", href: "/member/nutrition", active: true },
                 { label: "Plan", href: "/member/nutrition/coach", active: false },
-                { label: "AI Coach", href: "/member/nutrition-coach", active: false },
+                ...(showAICoach
+                  ? [{ label: "AI Coach", href: "/member/nutrition-coach", active: false }]
+                  : []),
               ].map((tabItem) => (
                 <Link
                   key={tabItem.href}
@@ -1221,6 +1237,7 @@ export default function HealthNutritionPage() {
           </div>
         </header>
 
+        {showAICoach ? (
         <Panel padding="md" className="hidden hover-lift lg:block">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -1274,7 +1291,9 @@ export default function HealthNutritionPage() {
             </div>
           ) : null}
         </Panel>
+        ) : null}
 
+        {showAICoach ? (
         <section className="lg:hidden">
           <div className="relative overflow-hidden rounded-[28px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_24px_60px_rgba(79,102,124,0.14)] backdrop-blur-2xl">
             <div className="pointer-events-none absolute -left-8 -top-8 h-36 w-36 rounded-full bg-[#efd7ff]/70 blur-2xl" />
@@ -1335,6 +1354,7 @@ export default function HealthNutritionPage() {
             ) : null}
           </div>
         </section>
+        ) : null}
 
         {error ? (
           <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">

@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
+
+import { isAICoachVisible } from "@/lib/feature-flags";
 
 type Tab = "daily" | "coach" | "ai-coach";
 
@@ -50,6 +53,22 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
   const datePart = `${now.getDate()} ${MONTH_SHORT[now.getMonth()]} ${now.getFullYear()}`;
   const week = isoWeek(now);
 
+  const [role, setRole] = useState<string | null>(null);
+  useEffect(() => {
+    let isActive = true;
+    fetch("/api/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => {
+        if (isActive && payload?.role) setRole(payload.role);
+      })
+      .catch(() => undefined);
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const visibleTabs = TABS.filter((tab) => tab.id !== "ai-coach" || isAICoachVisible(role));
+
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
       <div
@@ -64,7 +83,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
       </div>
 
       <nav className="flex items-center gap-6 text-[13.5px]">
-        {TABS.map((t) => {
+        {visibleTabs.map((t) => {
           const isActive = t.id === active;
           return (
             <Link
