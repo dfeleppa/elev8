@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bot,
   CalendarDays,
+  Camera,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -69,6 +70,21 @@ type LibraryFood = {
   quantity?: number | null;
 };
 
+type LabelScanResult = {
+  name: string | null;
+  servingSize: number | null;
+  servingUnit: string | null;
+  calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
+  sugar: number | null;
+  fiber: number | null;
+  saturatedFat: number | null;
+  confidence: "low" | "medium" | "high";
+  notes: string | null;
+};
+
 const SERVING_UNIT_OPTIONS = [
   "gram",
   "ounce",
@@ -82,6 +98,29 @@ const SERVING_UNIT_OPTIONS = [
 ] as const;
 
 const DEFAULT_SERVING_UNIT: (typeof SERVING_UNIT_OPTIONS)[number] = "gram";
+
+function normalizeServingUnit(value: string | null | undefined) {
+  const normalized = (value ?? "").trim().toLowerCase();
+  const aliases: Record<string, string> = {
+    g: "gram",
+    grams: "gram",
+    oz: "ounce",
+    ounces: "ounce",
+    ml: "milliliter",
+    milliliters: "milliliter",
+    tbsp: "tablespoon",
+    tablespoons: "tablespoon",
+    tsp: "teaspoon",
+    teaspoons: "teaspoon",
+    servings: "meal",
+    piece: "piece",
+    pieces: "piece",
+  };
+  const candidate = aliases[normalized] ?? normalized;
+  return SERVING_UNIT_OPTIONS.includes(candidate as (typeof SERVING_UNIT_OPTIONS)[number])
+    ? candidate
+    : DEFAULT_SERVING_UNIT;
+}
 
 type CoachPlanSummary = {
   goalType?: string | null;
@@ -179,6 +218,10 @@ function formatServingSize(value: number) {
   return value.toFixed(2);
 }
 
+function toDraftNumber(value: number | null | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? formatGrams(value) : "";
+}
+
 function shiftDate(date: string, deltaDays: number) {
   const next = new Date(`${date}T00:00:00`);
   if (Number.isNaN(next.getTime())) {
@@ -264,7 +307,7 @@ export default function HealthNutritionPage() {
   const [activeMealDialog, setActiveMealDialog] = useState<MealKey | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editServingDraft, setEditServingDraft] = useState("");
-  const [dialogTab, setDialogTab] = useState<"recent" | "mine" | "create" | "usda">("recent");
+  const [dialogTab, setDialogTab] = useState<"recent" | "mine" | "scan" | "create" | "usda">("recent");
   const [dialogSearch, setDialogSearch] = useState("");
   const [dialogLoading, setDialogLoading] = useState(false);
   const [dialogSaving, setDialogSaving] = useState(false);
@@ -288,6 +331,9 @@ export default function HealthNutritionPage() {
     saturatedFat: "",
   });
   const [creatingFood, setCreatingFood] = useState(false);
+  const [labelScanLoading, setLabelScanLoading] = useState(false);
+  const [labelScanError, setLabelScanError] = useState<string | null>(null);
+  const [labelScanResult, setLabelScanResult] = useState<LabelScanResult | null>(null);
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   const [editFoodDraft, setEditFoodDraft] = useState({
     name: "",
@@ -838,6 +884,50 @@ export default function HealthNutritionPage() {
       setSearchError(err instanceof Error ? err.message : "Food search failed.");
     } finally {
       setSearchLoading(false);
+    }
+  }
+
+  async function scanNutritionLabel(file: File | null | undefined) {
+    if (!file) {
+      return;
+    }
+
+    setLabelScanLoading(true);
+    setLabelScanError(null);
+    setLabelScanResult(null);
+    setError(null);
+
+    try {
+      const form = new FormData();
+      form.append("image", file);
+      const response = await fetch("/api/foods/label-scan", {
+        method: "POST",
+        body: form,
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.result) {
+        throw new Error(payload?.error ?? "Label scan failed.");
+      }
+
+      const result = payload.result as LabelScanResult;
+      setLabelScanResult(result);
+      setCreateFoodDraft({
+        name: result.name ?? "",
+        servingSize: toDraftNumber(result.servingSize) || "1",
+        servingUnit: normalizeServingUnit(result.servingUnit),
+        calories: toDraftNumber(result.calories),
+        protein: toDraftNumber(result.protein),
+        carbs: toDraftNumber(result.carbs),
+        fat: toDraftNumber(result.fat),
+        sugar: toDraftNumber(result.sugar),
+        fiber: toDraftNumber(result.fiber),
+        saturatedFat: toDraftNumber(result.saturatedFat),
+      });
+      setDialogTab("create");
+    } catch (err) {
+      setLabelScanError(err instanceof Error ? err.message : "Label scan failed.");
+    } finally {
+      setLabelScanLoading(false);
     }
   }
 
@@ -1700,8 +1790,8 @@ export default function HealthNutritionPage() {
               <div className="mt-4 flex items-center gap-2">
                 {(
                   activeMealDialog
-                    ? (["recent", "mine", "usda", "create"] as const)
-                    : (["recent", "mine", "create"] as const)
+                    ? (["recent", "mine", "scan", "usda", "create"] as const)
+                    : (["recent", "mine", "scan", "create"] as const)
                 ).map((tab) => (
                   <button
                     key={tab}
@@ -1717,15 +1807,65 @@ export default function HealthNutritionPage() {
                       ? "Recents"
                       : tab === "mine"
                         ? "My foods"
-                        : tab === "usda"
-                          ? "USDA"
-                          : "Create food"}
+                        : tab === "scan"
+                          ? "Scan label"
+                          : tab === "usda"
+                            ? "USDA"
+                            : "Create food"}
                   </button>
                 ))}
               </div>
 
-              {dialogTab === "create" ? (
+              {dialogTab === "scan" ? (
+                <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--pink)]/40 bg-[var(--pink)]/12 text-[var(--pink)]">
+                      <Camera className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[var(--text)]">Upload a Nutrition Facts photo</p>
+                      <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
+                        Capture the full label straight-on when possible. You can review and edit every value before saving.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--line-strong)] bg-black/10 px-4 py-8 text-center transition hover:border-[var(--pink)]/50">
+                    <Camera className="h-7 w-7 text-[var(--text-muted)]" aria-hidden="true" />
+                    <span className="mt-3 text-sm font-semibold text-[var(--text)]">
+                      {labelScanLoading ? "Scanning label..." : "Choose or take photo"}
+                    </span>
+                    <span className="mt-1 text-xs text-[var(--text-soft)]">JPG, PNG, or WebP up to 8 MB</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      capture="environment"
+                      disabled={labelScanLoading}
+                      onChange={(event) => {
+                        void scanNutritionLabel(event.target.files?.[0]);
+                        event.currentTarget.value = "";
+                      }}
+                      className="sr-only"
+                    />
+                  </label>
+                  {labelScanError ? (
+                    <div className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-400">
+                      {labelScanError}
+                    </div>
+                  ) : null}
+                  {labelScanResult ? (
+                    <div className="mt-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+                      Label scanned with {labelScanResult.confidence} confidence. Review the filled fields in Create food.
+                    </div>
+                  ) : null}
+                </div>
+              ) : dialogTab === "create" ? (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {labelScanResult ? (
+                    <div className="rounded-2xl border border-[var(--pink)]/25 bg-[var(--pink)]/10 p-3 text-xs leading-5 text-[var(--text-muted)] sm:col-span-2">
+                      Scanned label filled these values with {labelScanResult.confidence} confidence.
+                      {labelScanResult.notes ? ` ${labelScanResult.notes}` : ""}
+                    </div>
+                  ) : null}
                   <label className="space-y-1 sm:col-span-2">
                     <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Food Name</span>
                     <input
