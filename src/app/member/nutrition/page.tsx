@@ -355,7 +355,7 @@ export default function HealthNutritionPage() {
   });
   const [macroViewMode, setMacroViewMode] = useState<"consumed" | "remaining">("consumed");
   const [userRole, setUserRole] = useState<string | null>(null);
-  const showAICoach = isAICoachVisible(userRole);
+  const showAICoach = false && isAICoachVisible(userRole);
 
   async function loadFoodLibraries(options?: {
     includeRecent?: boolean;
