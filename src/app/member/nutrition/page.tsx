@@ -1176,7 +1176,10 @@ export default function HealthNutritionPage() {
     <SidebarShell mainClassName="w-full">
       <section className="premium-main-glow mx-auto flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-5 text-[#17141F] sm:px-8 lg:px-8 lg:py-7">
         <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-5">
-        <header className="mb-[-4px]">
+        <header className="mb-[-6px]">
+          <h1 className="mb-3 text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F]">
+            Nutrition
+          </h1>
           <div className="premium-glass-pill mx-auto flex max-w-[330px] items-center justify-center p-1.5">
             <button
               type="button"
@@ -1209,7 +1212,7 @@ export default function HealthNutritionPage() {
           </div>
 
           <nav
-            className={`mt-3 grid ${
+            className={`mt-2.5 grid ${
               showAICoach ? "grid-cols-3" : "grid-cols-2"
             } premium-glass-pill mx-auto max-w-[430px] p-1 text-center text-xs font-bold`}
           >
@@ -1265,7 +1268,7 @@ export default function HealthNutritionPage() {
                 <p className="mt-3 text-[20px] font-bold leading-[1.12] tracking-[-0.01em] text-[#17141F]">
                   Great job staying on target.
                 </p>
-                <p className="mt-2 text-[13px] font-semibold leading-snug text-[#475467]">
+                <p className="mt-2 text-[13px] font-bold leading-snug text-[#475467]">
                   Try adding 20-30g more protein today to support recovery.
                 </p>
               </div>
@@ -1383,23 +1386,23 @@ export default function HealthNutritionPage() {
                   const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : index === 2 ? "#FF5CA8" : "#7A8699";
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
                   return (
-                    <div key={bar.label} className="min-w-0 rounded-[18px] border border-[#DDE2EA]/80 bg-white/80 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_12px_28px_rgba(16,24,40,0.065)]">
+                    <div key={bar.label} className="min-w-0 rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_14px_30px_rgba(16,24,40,0.075)]">
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="text-[13px] font-extrabold text-[#17141F]">{bar.label}</p>
                         <p
-                          className="text-[14px] font-extrabold tabular-nums text-[#101828]"
+                          className="text-[15px] font-extrabold tabular-nums text-[#101828]"
                           style={statusColor ? { color: statusColor } : undefined}
                         >
                           {roundToWhole(bar.value)}
                           <span
-                            className="font-semibold text-[#667085]"
+                            className="font-bold text-[#5F6B7A]"
                             style={statusColor ? { color: statusColor } : undefined}
                           >
                             /{roundToWhole(bar.target)}g
                           </span>
                         </p>
                       </div>
-                      <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#E4E7EC]">
+                      <div className="mt-3 h-3.5 overflow-hidden rounded-full bg-[#E1E6EE]">
                         <div
                           className="h-full rounded-full transition-[width] duration-500"
                           style={{ width: `${bar.progress}%`, backgroundColor: baseColor }}
@@ -1442,48 +1445,47 @@ export default function HealthNutritionPage() {
                   <Footprints className="h-4 w-4" aria-hidden="true" />
                   Coach Goal
                 </div>
-                <span className="rounded-full border border-[#EAECF0] bg-white/74 px-2.5 py-1 text-xs font-extrabold text-[#475467]">
+                <span className="rounded-full border border-[#DDE2EA] bg-white/78 px-2.5 py-1 text-xs font-extrabold text-[#475467]">
                   {Math.round(weightProgressPercent)}% to goal
                 </span>
               </div>
               <div className="mt-4 flex items-end justify-between gap-3">
                 <div>
-                  <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#667085]">Goal</p>
-                  <p className="mt-1 text-[28px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F]">{coachGoalLabel}</p>
+                  <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#5F6B7A]">Goal</p>
+                  <p className="mt-1 text-[31px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F]">{coachGoalLabel}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#667085]">Next</p>
-                  <p className="mt-1 text-sm font-bold text-[#101828]">{checkInTimeline.nextDateLabel}</p>
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.16em] text-[#5F6B7A]">Next Check-In</p>
+                  <p className="mt-1 text-[15px] font-extrabold text-[#101828]">{checkInTimeline.nextDateLabel}</p>
                 </div>
               </div>
-              <div className="mt-4 rounded-[20px] border border-[#F2D8E7]/80 bg-[#FF5CA8]/[0.045] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+              <div className="mt-4 rounded-[20px] border border-[#DDE2EA]/80 bg-white/60 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
                 <div className="flex items-center justify-between gap-3">
-                  <span className={`text-sm font-extrabold text-[#475467] ${checkInTimeline.daysUntilNext === 0 ? "uppercase text-[#B4236A]" : ""}`}>
+                  <span className={`text-[15px] font-extrabold text-[#344054] ${checkInTimeline.daysUntilNext === 0 ? "uppercase text-[#B4236A]" : ""}`}>
                   {checkInTimeline.daysUntilNext === 0
                     ? "Check-in due today"
                     : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until check-in`}
                   </span>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#98A2B3]">Weekly tracker</span>
                 </div>
                 <div className="mt-3 grid grid-cols-7 gap-1.5">
                   {weeklyCheckInTracker.map((day) => (
                     <span key={`coach-week-${day.label}`} className="min-w-0 text-center">
                       <span
-                        className={`mx-auto block h-9 rounded-[12px] border ${
+                        className={`mx-auto block h-8 rounded-[10px] border ${
                           day.state === "complete"
-                            ? "border-[#FF5CA8]/35 bg-[#FF5CA8]/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
+                            ? "border-[#14D2DC]/45 bg-[#14D2DC]/22 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]"
                             : day.state === "partial"
-                              ? "border-[#14D2DC]/36 bg-[linear-gradient(135deg,rgba(20,210,220,0.22)_0%,rgba(20,210,220,0.22)_50%,rgba(255,255,255,0.72)_50%,rgba(255,255,255,0.72)_100%)]"
-                              : "border-white/80 bg-white/68"
+                              ? "border-[#FF5CA8]/38 bg-[linear-gradient(135deg,rgba(255,92,168,0.2)_0%,rgba(255,92,168,0.2)_50%,rgba(255,255,255,0.74)_50%,rgba(255,255,255,0.74)_100%)]"
+                              : "border-[#DDE2EA] bg-white/72"
                         }`}
                       />
                       <span
-                        className={`mt-1 block text-[10px] font-extrabold uppercase tracking-[0.08em] ${
+                        className={`mt-1.5 block text-[10.5px] font-extrabold uppercase tracking-[0.06em] ${
                           day.state === "complete"
-                            ? "text-[#B4236A]"
+                            ? "text-[#0C7D85]"
                             : day.state === "partial"
-                              ? "text-[#0C7D85]"
-                              : "text-[#98A2B3]"
+                              ? "text-[#B4236A]"
+                              : "text-[#667085]"
                         }`}
                       >
                         {day.label}
@@ -1503,7 +1505,7 @@ export default function HealthNutritionPage() {
 
 
         <section className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
-          <h2 className="px-1 text-[18px] font-bold text-[#17141F] lg:col-span-full">Meals</h2>
+          <h2 className="px-1 text-[19px] font-extrabold text-[#17141F] lg:col-span-full">Meals</h2>
           {mealSummaries.map((meal) => {
             const hasEntries = meal.entries.length > 0;
             return (
@@ -1514,7 +1516,7 @@ export default function HealthNutritionPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[17px] font-bold leading-tight text-[#17141F]">{meal.label}</p>
-                    <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#667085]">
+                    <p className="mt-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-[#5F6B7A]">
                       {Math.round(meal.totals.calories).toLocaleString()} kcal | P{formatGrams(meal.totals.protein)} | C{formatGrams(meal.totals.carbs)} | F{formatGrams(meal.totals.fat)}
                     </p>
                   </div>
@@ -1581,11 +1583,11 @@ export default function HealthNutritionPage() {
                       const entryF = formatGrams((entry.fat ?? 0) * quantity);
                       const isEditingServing = editingEntryId === entry.id;
                       return (
-                        <div key={`mobile-entry-${entry.id}`} className="rounded-2xl border border-[#EAECF0]/90 bg-white/64 p-3">
+                        <div key={`mobile-entry-${entry.id}`} className="rounded-2xl border border-[#DDE2EA]/85 bg-white/70 p-3">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <p className="text-[14px] font-bold leading-tight text-[#17141F]">{entry.entry_name}</p>
-                              <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-[#667085]">
+                              <p className="mt-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#5F6B7A]">
                                 {servingLabel}, {entryCal} CAL | C{entryC} | P{entryP} | F{entryF}
                               </p>
                             </div>
@@ -1650,14 +1652,14 @@ export default function HealthNutritionPage() {
                       setMealMenuOpen(null);
                       openMealDialog(meal.key);
                     }}
-                    className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-[#DDE2EA]/80 bg-white/76 px-4 py-4 text-sm font-bold text-[#667085] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_24px_rgba(16,24,40,0.045)] transition hover:border-[#14D2DC]/55 hover:bg-white/88 hover:text-[#0C7D85] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_12px_28px_rgba(20,210,220,0.12)]"
+                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DDE2EA]/80 bg-white/76 px-4 py-4 text-sm font-bold text-[#667085] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_24px_rgba(16,24,40,0.045)] transition hover:border-[#14D2DC]/45 hover:bg-white/88 hover:text-[#0C7D85] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_12px_28px_rgba(20,210,220,0.1)]"
                   >
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-[#14D2DC] text-[#071A1C] shadow-[0_8px_18px_rgba(20,210,220,0.24)]">
-                      <Plus className="h-4 w-4" aria-hidden="true" />
-                    </span>
                     <span className="text-left">
-                      <span className="block text-[#475467]">No food logged yet</span>
-                      <span className="block text-[12px] font-extrabold text-[#0C7D85]">Add food</span>
+                      <span className="block text-[#344054]">No food logged yet</span>
+                      <span className="block text-[12px] font-extrabold text-[#0C7D85]">Tap to start logging</span>
+                    </span>
+                    <span className="grid h-8 w-8 place-items-center rounded-full border border-[#14D2DC]/35 bg-[#14D2DC]/12 text-[#0C7D85]">
+                      <Plus className="h-4 w-4" aria-hidden="true" />
                     </span>
                   </button>
                 )}

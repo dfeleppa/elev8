@@ -642,11 +642,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </button>
             </div>
 
-            <nav className="mt-5 flex-1 space-y-3.5 overflow-y-auto overscroll-contain pb-4 text-sm">
+            <nav className="mt-5 flex-1 space-y-3 overflow-y-auto overscroll-contain pb-4 text-sm">
               {navSections.map((section) => (
                 <div key={section.label}>
                   <div className="mb-1 px-3">
-                    <Micro className="!text-[9.5px] !font-semibold !tracking-[0.18em] !text-[#667085]">{section.label}</Micro>
+                    <Micro className="!text-[10px] !font-bold !tracking-[0.16em] !text-[#5F6B7A]">{section.label}</Micro>
                   </div>
                   <div className="space-y-1">
                     {section.entries.map((entry) => {
@@ -655,13 +655,13 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                         <Link
                           key={entry.href}
                           href={entry.href}
-                          className={`app-nav-link flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-xs font-semibold ${
+                          className={`app-nav-link flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-xs font-bold ${
                             isActive ? "app-nav-link-active" : ""
                           }`}
                           onClick={() => setMobileSidebarOpen(false)}
                           aria-current={isActive ? "page" : undefined}
                         >
-                          <span className="grid h-5 w-5 place-items-center text-[var(--text-soft)]">{getNavIcon(entry.href)}</span>
+                          <span className="grid h-5 w-5 shrink-0 place-items-center text-[#667085]">{getNavIcon(entry.href)}</span>
                           {entry.label}
                         </Link>
                       );
@@ -782,11 +782,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             })}
           </nav>
         ) : (
-          <nav className="mt-5 space-y-3.5 overflow-y-auto text-sm">
+          <nav className="mt-5 space-y-3 overflow-y-auto text-sm">
             {navSections.map((section) => (
               <div key={section.label}>
                 <div className="mb-1 px-3">
-                  <Micro className="!text-[9.5px] !font-semibold !tracking-[0.18em] !text-[#667085]">{section.label}</Micro>
+                  <Micro className="!text-[10px] !font-bold !tracking-[0.16em] !text-[#5F6B7A]">{section.label}</Micro>
                 </div>
                 <div className="space-y-1">
                   {section.entries.map((entry) => {
@@ -795,12 +795,12 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                       <Link
                         key={entry.href}
                         href={entry.href}
-                        className={`app-nav-link flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-sm font-semibold ${
+                        className={`app-nav-link flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-sm font-bold ${
                           isActive ? "app-nav-link-active" : ""
                         }`}
                         aria-current={isActive ? "page" : undefined}
                       >
-                        <span className="grid h-5 w-5 place-items-center text-[var(--text-soft)]">{getNavIcon(entry.href)}</span>
+                        <span className="grid h-5 w-5 shrink-0 place-items-center text-[#667085]">{getNavIcon(entry.href)}</span>
                         {entry.label}
                       </Link>
                     );
