@@ -5,7 +5,6 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Bot,
   CalendarDays,
   Camera,
   Check,
@@ -15,13 +14,11 @@ import {
   Footprints,
   Pencil,
   Plus,
-  Sparkles,
   X,
 } from "lucide-react";
 
 import SidebarShell from "@/components/SidebarShell";
 import { Panel } from "@/components/ui";
-import { isAICoachVisible } from "@/lib/feature-flags";
 
 type NutritionEntry = {
   id: string;
@@ -293,9 +290,6 @@ export default function HealthNutritionPage() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const searchMeal: MealKey = "lunch";
   const [searchPerformed, setSearchPerformed] = useState(false);
-  const [aiCommand, setAiCommand] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiFeedback, setAiFeedback] = useState<string | null>(null);
   const [coachPlanStatus, setCoachPlanStatus] = useState<"loading" | "has" | "none">("loading");
   const [coachPlanSummary, setCoachPlanSummary] = useState<CoachPlanSummary | null>(null);
   const [copyingMeal, setCopyingMeal] = useState<MealKey | null>(null);
@@ -354,8 +348,6 @@ export default function HealthNutritionPage() {
     fat: "",
   });
   const [macroViewMode, setMacroViewMode] = useState<"consumed" | "remaining">("consumed");
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const showAICoach = false && isAICoachVisible(userRole);
 
   async function loadFoodLibraries(options?: {
     includeRecent?: boolean;
@@ -446,13 +438,6 @@ export default function HealthNutritionPage() {
 
   useEffect(() => {
     let isActive = true;
-
-    fetch("/api/me")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((payload) => {
-        if (isActive && payload?.role) setUserRole(payload.role);
-      })
-      .catch(() => undefined);
 
     fetch("/api/coach/nutrition-plan-status", { cache: "no-store" })
       .then(async (response) => {
@@ -931,101 +916,6 @@ export default function HealthNutritionPage() {
     }
   }
 
-  async function handleAiCommand() {
-    const command = aiCommand.trim();
-    if (!command) {
-      setAiFeedback("Tell me what you want to do, like searching for a food or copying a meal.");
-      return;
-    }
-
-    setAiLoading(true);
-    setAiFeedback(null);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/nutrition-ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          command,
-          selectedDate,
-        }),
-      });
-
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Nutrition assistant failed.");
-      }
-
-      if (payload?.intent?.intent === "search_foods") {
-        const mealKey = (payload.intent.mealType as MealKey | null) ?? searchMeal;
-        setActiveMealDialog(mealKey);
-        setFoodDialogOpen(true);
-        setDialogTab("usda");
-        setSearchResults([]);
-        await runFoodSearch(payload.intent.searchQuery ?? command);
-        setAiFeedback(payload.intent.summary ?? "Food search ready.");
-        return;
-      }
-
-      if (payload?.intent?.intent === "copy_meal") {
-        const targetDate = payload?.result?.targetDate as string | undefined;
-        const feedback = payload?.result?.message ?? payload?.intent?.summary ?? "Meal copied.";
-        setAiFeedback(feedback);
-        setAiCommand("");
-
-        if (targetDate && targetDate !== selectedDate) {
-          setSelectedDate(targetDate);
-        } else {
-          const refresh = await fetch(`/api/nutrition-days?date=${selectedDate}`);
-          const dayPayload = await refresh.json().catch(() => null);
-          if (refresh.ok) {
-            setEntries(dayPayload?.entries ?? []);
-            setTargets({
-              calories: dayPayload?.day?.calorie_target?.toString() ?? "",
-              protein: dayPayload?.day?.protein_target?.toString() ?? "",
-              carbs: dayPayload?.day?.carbs_target?.toString() ?? "",
-              fat: dayPayload?.day?.fat_target?.toString() ?? "",
-            });
-          }
-        }
-        return;
-      }
-
-      if (payload?.intent?.intent === "add_food") {
-        const targetDate = payload?.result?.targetDate as string | undefined;
-        const feedback = payload?.result?.message ?? payload?.intent?.summary ?? "Food added.";
-        setAiFeedback(feedback);
-        setAiCommand("");
-
-        if (targetDate && targetDate !== selectedDate) {
-          setSelectedDate(targetDate);
-        } else {
-          const refresh = await fetch(`/api/nutrition-days?date=${selectedDate}`);
-          const dayPayload = await refresh.json().catch(() => null);
-          if (refresh.ok) {
-            setEntries(dayPayload?.entries ?? []);
-            setTargets({
-              calories: dayPayload?.day?.calorie_target?.toString() ?? "",
-              protein: dayPayload?.day?.protein_target?.toString() ?? "",
-              carbs: dayPayload?.day?.carbs_target?.toString() ?? "",
-              fat: dayPayload?.day?.fat_target?.toString() ?? "",
-            });
-          }
-        }
-        return;
-      }
-
-      setAiFeedback(
-        payload?.intent?.summary ?? "Try something like 'search for greek yogurt' or 'copy my breakfast from yesterday'."
-      );
-    } catch (err) {
-      setAiFeedback(err instanceof Error ? err.message : "Nutrition assistant failed.");
-    } finally {
-      setAiLoading(false);
-    }
-  }
-
   async function addFoodResult(result: FoodSearchResult) {
     const targetMeal = activeMealDialog ?? searchMeal;
     setError(null);
@@ -1301,17 +1191,10 @@ export default function HealthNutritionPage() {
             </button>
           </div>
 
-          <nav
-            className={`mt-2.5 grid ${
-              showAICoach ? "grid-cols-3" : "grid-cols-2"
-            } premium-glass-pill mx-auto max-w-[430px] p-1 text-center text-xs font-bold`}
-          >
+          <nav className="premium-glass-pill mx-auto mt-2.5 grid max-w-[430px] grid-cols-2 p-1 text-center text-xs font-bold">
               {[
                 { label: "Daily", href: "/member/nutrition", active: true },
                 { label: "Plan", href: "/member/nutrition/coach", active: false },
-                ...(showAICoach
-                  ? [{ label: "AI Coach", href: "/member/nutrition-coach", active: false }]
-                  : []),
               ].map((tabItem) => (
                 <Link
                   key={tabItem.href}
@@ -1327,71 +1210,6 @@ export default function HealthNutritionPage() {
               ))}
             </nav>
         </header>
-
-
-
-        {showAICoach ? (
-        <section>
-          <div className="premium-glass-card relative overflow-hidden p-4 sm:p-5">
-            <div className="pointer-events-none absolute -left-10 -top-10 h-28 w-28 rounded-full bg-[#FF5CA8]/10 blur-2xl" />
-            <div className="pointer-events-none absolute left-12 bottom-0 h-24 w-24 rounded-full bg-[#14D2DC]/13 blur-2xl" />
-            <button
-              type="button"
-              className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-white/80 bg-white/70 text-[#667085] shadow-sm transition hover:text-[#17141F]"
-              aria-label="Dismiss AI card"
-            >
-              <X className="h-4 w-4" aria-hidden="true" />
-            </button>
-
-            <div className="relative grid grid-cols-[92px_1fr] items-center gap-4 sm:grid-cols-[104px_1fr]">
-              <div className="relative grid h-[92px] w-[92px] place-items-center rounded-full bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,rgba(20,210,220,0.22)_44%,rgba(255,92,168,0.18)_100%)] shadow-[0_14px_34px_rgba(20,210,220,0.18)] sm:h-[104px] sm:w-[104px]">
-                <div className="absolute inset-2 rounded-full border border-white/70" />
-                <div className="grid h-[58px] w-[66px] place-items-center rounded-[32px] bg-[linear-gradient(145deg,#17141F,#101828)] shadow-[inset_0_0_14px_rgba(20,210,220,0.35)] sm:h-[64px] sm:w-[74px]">
-                  <Bot className="h-7 w-7 text-[#14D2DC]" aria-hidden="true" />
-                </div>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#14D2DC]/12 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#0C7D85]">
-                  <Sparkles className="h-3 w-3" aria-hidden="true" />
-                  AI Coach
-                </div>
-                <p className="mt-3 text-[20px] font-bold leading-[1.12] tracking-[-0.01em] text-[#17141F]">
-                  Great job staying on target.
-                </p>
-                <p className="mt-2 text-[13px] font-bold leading-snug text-[#475467]">
-                  Try adding 20-30g more protein today to support recovery.
-                </p>
-              </div>
-            </div>
-            <div className="relative mt-4 flex gap-2">
-              <input
-                value={aiCommand}
-                onChange={(event) => setAiCommand(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    void handleAiCommand();
-                  }
-                }}
-                placeholder='Try "add 2 eggs"'
-                className="min-w-0 flex-1 rounded-2xl border border-[#D0D5DD]/70 bg-white/78 px-3 py-2.5 text-sm font-semibold text-[#101828] placeholder:text-[#667085] shadow-inner focus:border-[#14D2DC] focus:outline-none focus:ring-4 focus:ring-[#14D2DC]/15"
-              />
-              <button
-                type="button"
-                onClick={() => void handleAiCommand()}
-                disabled={aiLoading}
-                className="rounded-2xl bg-[#14D2DC] px-4 py-2.5 text-sm font-bold text-[#071A1C] shadow-[0_10px_24px_rgba(20,210,220,0.26)] transition hover:brightness-105 disabled:opacity-60"
-              >
-                {aiLoading ? "..." : "Run"}
-              </button>
-            </div>
-            {aiFeedback ? (
-              <p className="relative mt-2 rounded-2xl border border-white/80 bg-white/70 px-3 py-2 text-xs font-semibold text-[#475467]">
-                {aiFeedback}
-              </p>
-            ) : null}
-          </div>
-        </section>
-        ) : null}
 
         {error ? (
           <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">

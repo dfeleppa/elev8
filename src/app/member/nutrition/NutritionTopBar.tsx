@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-
-import { isAICoachVisible } from "@/lib/feature-flags";
 
 type Tab = "daily" | "coach" | "ai-coach";
 
 const TABS: { id: Tab; label: string; href: string }[] = [
   { id: "daily", label: "Daily", href: "/member/nutrition" },
   { id: "coach", label: "Plan", href: "/member/nutrition/coach" },
-  { id: "ai-coach", label: "AI Coach", href: "/member/nutrition-coach" },
 ];
 
 const DAY_NAMES = [
@@ -53,22 +49,6 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
   const datePart = `${now.getDate()} ${MONTH_SHORT[now.getMonth()]} ${now.getFullYear()}`;
   const week = isoWeek(now);
 
-  const [role, setRole] = useState<string | null>(null);
-  useEffect(() => {
-    let isActive = true;
-    fetch("/api/me")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((payload) => {
-        if (isActive && payload?.role) setRole(payload.role);
-      })
-      .catch(() => undefined);
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
-  const visibleTabs = TABS.filter((tab) => tab.id !== "ai-coach" || isAICoachVisible(role));
-
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
       <div
@@ -83,7 +63,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
       </div>
 
       <nav className="premium-glass-pill flex items-center gap-1 p-1 text-[13.5px]">
-        {visibleTabs.map((t) => {
+        {TABS.map((t) => {
           const isActive = t.id === active;
           return (
             <Link

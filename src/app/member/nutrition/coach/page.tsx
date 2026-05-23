@@ -25,11 +25,10 @@ export default async function MemberNutritionCoachPlanPage() {
             </div>
           </div>
 
-          <nav className="mt-4 grid grid-cols-3 rounded-full border border-white/80 bg-white/70 p-1 text-center text-xs font-bold shadow-[0_14px_28px_rgba(73,99,126,0.1)] backdrop-blur-xl">
+          <nav className="mt-4 grid grid-cols-2 rounded-full border border-white/80 bg-white/70 p-1 text-center text-xs font-bold shadow-[0_14px_28px_rgba(73,99,126,0.1)] backdrop-blur-xl">
             {[
               { label: "Daily", href: "/member/nutrition", active: false },
               { label: "Plan", href: "/member/nutrition/coach", active: true },
-              { label: "AI Coach", href: "/member/nutrition-coach", active: false },
             ].map((tabItem) => (
               <Link
                 key={tabItem.href}
