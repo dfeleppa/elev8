@@ -538,15 +538,15 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     </svg>
   );
   const viewToggleBaseCls =
-    "inline-flex items-center justify-center rounded-full px-3 h-9 font-mono text-[10.5px] font-semibold uppercase tracking-[0.18em] transition-colors";
+    "inline-flex items-center justify-center rounded-full px-3 h-8 font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] transition-colors";
   const viewToggleActiveTopbarCls =
-    `${viewToggleBaseCls} border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink-soft)]`;
+    `${viewToggleBaseCls} bg-[#101828] text-white shadow-[0_8px_18px_rgba(16,24,40,0.16)]`;
   const viewToggleActiveSidebarCls =
-    `${viewToggleBaseCls} border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink)]`;
+    `${viewToggleBaseCls} bg-white text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(16,24,40,0.08)]`;
   const viewToggleInactiveTopbarCls =
-    `${viewToggleBaseCls} border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]`;
+    `${viewToggleBaseCls} text-[#667085] hover:bg-white/70 hover:text-[#17141F]`;
   const viewToggleInactiveSidebarCls =
-    `${viewToggleBaseCls} border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:border-[var(--line-focus)] hover:bg-[var(--panel)] hover:text-[var(--text)]`;
+    `${viewToggleBaseCls} text-[#667085] hover:bg-white/60 hover:text-[#17141F]`;
   const handleSignOut = () => {
     setMenuOpen(false);
     void signOut({ callbackUrl: "/login" });
@@ -585,7 +585,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 })}
               </div>
               {showViewToggle ? (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1 rounded-full border border-white/75 bg-white/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                   <button
                     type="button"
                     onClick={() => handleSwitchView("gym")}
@@ -691,7 +691,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         style={{ animationDelay: "0.05s" }}
       >
         <div className="px-2">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex min-h-10 items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => sidebarCollapsed && setSidebarCollapsed(false)}
@@ -727,8 +727,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           </div>
           {showViewToggle ? (
             <div
-              className={`mt-3 flex gap-1.5 ${
-                sidebarCollapsed ? "flex-col items-stretch" : "flex-row items-center justify-stretch"
+              className={`mt-4 gap-1 rounded-[18px] border border-white/75 bg-white/48 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] ${
+                sidebarCollapsed ? "flex flex-col items-stretch" : "grid grid-cols-2"
               }`}
             >
               <button
