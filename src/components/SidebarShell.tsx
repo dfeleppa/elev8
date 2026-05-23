@@ -642,11 +642,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </button>
             </div>
 
-            <nav className="mt-5 flex-1 space-y-3 overflow-y-auto overscroll-contain pb-4 text-sm">
+            <nav className="mt-4 flex-1 space-y-2.5 overflow-y-auto overscroll-contain pb-4 text-sm">
               {navSections.map((section) => (
                 <div key={section.label}>
                   <div className="mb-1 px-3">
-                    <Micro className="!text-[10px] !font-bold !tracking-[0.16em] !text-[#5F6B7A]">{section.label}</Micro>
+                    <Micro className="!text-[10px] !font-bold !tracking-[0.15em] !text-[#4F5B6B]">{section.label}</Micro>
                   </div>
                   <div className="space-y-1">
                     {section.entries.map((entry) => {
@@ -691,7 +691,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         style={{ animationDelay: "0.05s" }}
       >
         <div className="px-2">
-          <div className="flex min-h-10 items-center justify-between gap-2">
+          <div className="flex min-h-11 items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => sidebarCollapsed && setSidebarCollapsed(false)}
@@ -782,11 +782,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             })}
           </nav>
         ) : (
-          <nav className="mt-5 space-y-3 overflow-y-auto text-sm">
+          <nav className="mt-4 space-y-2.5 overflow-y-auto text-sm">
             {navSections.map((section) => (
               <div key={section.label}>
                 <div className="mb-1 px-3">
-                  <Micro className="!text-[10px] !font-bold !tracking-[0.16em] !text-[#5F6B7A]">{section.label}</Micro>
+                  <Micro className="!text-[10px] !font-bold !tracking-[0.15em] !text-[#4F5B6B]">{section.label}</Micro>
                 </div>
                 <div className="space-y-1">
                   {section.entries.map((entry) => {

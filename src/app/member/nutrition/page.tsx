@@ -1265,7 +1265,7 @@ export default function HealthNutritionPage() {
   return (
     <SidebarShell mainClassName="w-full">
       <section className="premium-main-glow mx-auto flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#17141F] sm:px-8 lg:px-8 lg:py-6">
-        <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-5">
+        <div className="mx-auto flex w-full max-w-[1152px] flex-col gap-5">
         <header className="mb-[-8px]">
           <h1 className="mb-2.5 text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F]">
             Nutrition
