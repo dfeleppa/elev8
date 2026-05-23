@@ -89,23 +89,24 @@
 
 /* ---------- LIGHT ---------- */
 :root[data-theme="light"] {
-  --bg: #f6f4ee;
-  --bg-2: #efece2;
-  --panel: #ffffff;
-  --panel-2: #fbf8f1;
-  --panel-3: #f1ebdc;
+  --bg: #f7f5ef;
+  --bg-2: #f1eee6;
+  --panel: rgba(255, 255, 255, 0.78);
+  --panel-2: rgba(255, 255, 255, 0.62);
+  --panel-3: #ebe7dc;
 
   --line: rgba(20, 17, 15, 0.08);
   --line-strong: rgba(20, 17, 15, 0.14);
   --line-focus: rgba(225, 48, 108, 0.35);
 
-  --text: #17181c;
-  --text-muted: #5a6271;
-  --text-soft: #8a8f99;
+  --text: #17141f;
+  --text-muted: #475467;
+  --text-soft: #667085;
   --text-inverse: #fffaf2;
 
-  --pink: #e1306c;
-  --pink-soft: #f09ab8;
+  --pink: #ff5ca8;
+  --pink-soft: #ff8fc2;
+  --cyan: #14d2dc;
   --violet: #6d3dd4;
 
   --shadow-lg: 0 24px 60px rgba(118, 95, 61, 0.16);

@@ -217,7 +217,7 @@ function getNavIcon(href: string) {
 export default function SidebarShell({ children, mainClassName }: SidebarShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [viewMode, setViewMode] = useState<ViewMode>("gym");
   const [userRole, setUserRole] = useState<UserRole>("member");
   const [userName, setUserName] = useState("User");
@@ -253,7 +253,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     }
 
     const storedTheme = window.localStorage.getItem("elev8-theme");
-    const nextTheme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
+    const nextTheme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
     document.documentElement.setAttribute("data-theme", nextTheme);
     setTheme(nextTheme);
   }, []);

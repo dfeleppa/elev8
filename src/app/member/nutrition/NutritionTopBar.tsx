@@ -72,8 +72,8 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
       <div
-        className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest"
-        style={{ color: "var(--text-muted)" }}
+        className="premium-glass-pill flex items-center gap-2 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-widest"
+        style={{ color: "#475467" }}
       >
         <span>{day}</span>
         <span style={{ color: "var(--text-soft)" }}>·</span>
@@ -82,7 +82,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
         <span style={{ color: "var(--text-soft)" }}>Week {week}</span>
       </div>
 
-      <nav className="flex items-center gap-6 text-[13.5px]">
+      <nav className="premium-glass-pill flex items-center gap-1 p-1 text-[13.5px]">
         {visibleTabs.map((t) => {
           const isActive = t.id === active;
           return (
@@ -90,20 +90,13 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
               key={t.id}
               href={t.href}
               className={clsx(
-                "relative inline-flex items-center py-1 transition",
+                "relative inline-flex items-center rounded-full px-4 py-2 transition",
                 isActive
-                  ? "font-semibold text-[var(--pink)]"
-                  : "text-[color:var(--text-muted)] hover:text-[color:var(--text)]",
+                  ? "bg-[#14D2DC] font-semibold text-[#071A1C] shadow-[0_10px_20px_rgba(20,210,220,0.22)]"
+                  : "text-[#667085] hover:bg-white/70 hover:text-[#17141F]",
               )}
             >
               {t.label}
-              {isActive && (
-                <span
-                  aria-hidden
-                  className="absolute left-0 right-0 -bottom-0.5 h-[2px]"
-                  style={{ background: "var(--pink)" }}
-                />
-              )}
             </Link>
           );
         })}

@@ -1157,19 +1157,20 @@ export default function HealthNutritionPage() {
 
   return (
     <SidebarShell mainClassName="w-full">
-      <section className="mx-auto w-full max-w-[1480px] space-y-4 bg-[radial-gradient(circle_at_15%_8%,rgba(255,177,196,0.28),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(99,247,255,0.22),transparent_30%),linear-gradient(180deg,#f8fbff_0%,#eef6fb_56%,#f8fbff_100%)] px-4 py-5 text-slate-950 lg:space-y-6 lg:px-10 lg:py-8">
+      <section className="premium-main-glow mx-auto flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-6 px-5 py-6 text-[#17141F] sm:px-8 lg:px-8 lg:py-8">
+        <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
         <header>
-          <div className="mx-auto flex max-w-[310px] items-center justify-center rounded-full border border-white/80 bg-white/70 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_18px_34px_rgba(73,99,126,0.12)] backdrop-blur-xl">
+          <div className="premium-glass-pill mx-auto flex max-w-[330px] items-center justify-center p-1.5">
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
-              className="grid h-9 w-9 place-items-center rounded-full text-slate-700 transition hover:bg-white"
+              className="grid h-9 w-9 place-items-center rounded-full text-[#475467] transition hover:bg-white hover:text-[#17141F]"
               aria-label="Previous day"
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
-            <label className="flex min-w-0 flex-1 items-center justify-center gap-2 px-2 text-[15px] font-bold text-slate-900">
-              <CalendarDays className="h-5 w-5 text-slate-800" aria-hidden="true" />
+            <label className="flex min-w-0 flex-1 items-center justify-center gap-2 px-2 text-[15px] font-bold text-[#17141F]">
+              <CalendarDays className="h-5 w-5 text-[#14D2DC]" aria-hidden="true" />
               <span className="truncate">{compactDateLabel}</span>
               <input
                 id="nutrition-date-mobile"
@@ -1183,7 +1184,7 @@ export default function HealthNutritionPage() {
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, 1))}
-              className="grid h-9 w-9 place-items-center rounded-full text-slate-700 transition hover:bg-white"
+              className="grid h-9 w-9 place-items-center rounded-full text-[#475467] transition hover:bg-white hover:text-[#17141F]"
               aria-label="Next day"
             >
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
@@ -1193,7 +1194,7 @@ export default function HealthNutritionPage() {
           <nav
             className={`mt-4 grid ${
               showAICoach ? "grid-cols-3" : "grid-cols-2"
-            } rounded-full border border-white/80 bg-white/70 p-1 text-center text-xs font-bold shadow-[0_14px_28px_rgba(73,99,126,0.1)] backdrop-blur-xl`}
+            } premium-glass-pill mx-auto max-w-[430px] p-1 text-center text-xs font-bold`}
           >
               {[
                 { label: "Daily", href: "/member/nutrition", active: true },
@@ -1207,8 +1208,8 @@ export default function HealthNutritionPage() {
                   href={tabItem.href}
                   className={`rounded-full px-2 py-2 transition ${
                     tabItem.active
-                      ? "bg-[#23d1df] text-white shadow-[0_8px_18px_rgba(35,209,223,0.28)]"
-                      : "text-slate-500 hover:text-slate-900"
+                      ? "bg-[#14D2DC] text-[#071A1C] shadow-[0_10px_20px_rgba(20,210,220,0.26)]"
+                      : "text-[#667085] hover:bg-white/70 hover:text-[#17141F]"
                   }`}
                 >
                   {tabItem.label}
@@ -1221,33 +1222,33 @@ export default function HealthNutritionPage() {
 
         {showAICoach ? (
         <section>
-          <div className="relative overflow-hidden rounded-[28px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_24px_60px_rgba(79,102,124,0.14)] backdrop-blur-2xl">
-            <div className="pointer-events-none absolute -left-8 -top-8 h-36 w-36 rounded-full bg-[#efd7ff]/70 blur-2xl" />
-            <div className="pointer-events-none absolute left-6 bottom-2 h-28 w-28 rounded-full bg-[#bdf7ff]/65 blur-2xl" />
+          <div className="premium-glass-card relative overflow-hidden p-4 sm:p-5">
+            <div className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full bg-[#FF5CA8]/14 blur-2xl" />
+            <div className="pointer-events-none absolute left-12 bottom-0 h-28 w-28 rounded-full bg-[#14D2DC]/18 blur-2xl" />
             <button
               type="button"
-              className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-white/80 bg-white/60 text-slate-500 shadow-sm"
+              className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-white/80 bg-white/70 text-[#667085] shadow-sm transition hover:text-[#17141F]"
               aria-label="Dismiss AI card"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
 
-            <div className="relative grid grid-cols-[118px_1fr] items-center gap-4">
-              <div className="relative grid h-[118px] w-[118px] place-items-center rounded-full bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#e9d9ff_30%,#bdf7ff_72%,#8ebdff_100%)] shadow-[0_14px_34px_rgba(87,166,211,0.22)]">
+            <div className="relative grid grid-cols-[92px_1fr] items-center gap-4 sm:grid-cols-[104px_1fr]">
+              <div className="relative grid h-[92px] w-[92px] place-items-center rounded-full bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,rgba(20,210,220,0.22)_44%,rgba(255,92,168,0.18)_100%)] shadow-[0_14px_34px_rgba(20,210,220,0.18)] sm:h-[104px] sm:w-[104px]">
                 <div className="absolute inset-2 rounded-full border border-white/70" />
-                <div className="grid h-[72px] w-[82px] place-items-center rounded-[38px] bg-[linear-gradient(145deg,#19265e,#050917)] shadow-[inset_0_0_14px_rgba(99,247,255,0.35)]">
-                  <Bot className="h-8 w-8 text-[#63f7ff]" aria-hidden="true" />
+                <div className="grid h-[58px] w-[66px] place-items-center rounded-[32px] bg-[linear-gradient(145deg,#17141F,#101828)] shadow-[inset_0_0_14px_rgba(20,210,220,0.35)] sm:h-[64px] sm:w-[74px]">
+                  <Bot className="h-7 w-7 text-[#14D2DC]" aria-hidden="true" />
                 </div>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#eef2ff] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#4866ee]">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#14D2DC]/12 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#0C7D85]">
                   <Sparkles className="h-3 w-3" aria-hidden="true" />
                   AI Coach
                 </div>
-                <p className="mt-3 text-[20px] font-bold leading-[1.12] tracking-[-0.01em] text-slate-950">
+                <p className="mt-3 text-[20px] font-bold leading-[1.12] tracking-[-0.01em] text-[#17141F]">
                   Great job staying on target.
                 </p>
-                <p className="mt-2 text-[13px] font-medium leading-snug text-slate-500">
+                <p className="mt-2 text-[13px] font-semibold leading-snug text-[#475467]">
                   Try adding 20-30g more protein today to support recovery.
                 </p>
               </div>
@@ -1262,19 +1263,19 @@ export default function HealthNutritionPage() {
                   }
                 }}
                 placeholder='Try "add 2 eggs"'
-                className="min-w-0 flex-1 rounded-2xl border border-white/80 bg-white/60 px-3 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 shadow-inner focus:border-[#63f7ff] focus:outline-none"
+                className="min-w-0 flex-1 rounded-2xl border border-[#D0D5DD]/70 bg-white/78 px-3 py-2.5 text-sm font-semibold text-[#101828] placeholder:text-[#667085] shadow-inner focus:border-[#14D2DC] focus:outline-none focus:ring-4 focus:ring-[#14D2DC]/15"
               />
               <button
                 type="button"
                 onClick={() => void handleAiCommand()}
                 disabled={aiLoading}
-                className="rounded-2xl bg-[#1597ff] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(21,151,255,0.24)] transition hover:brightness-105 disabled:opacity-60"
+                className="rounded-2xl bg-[#14D2DC] px-4 py-2.5 text-sm font-bold text-[#071A1C] shadow-[0_10px_24px_rgba(20,210,220,0.26)] transition hover:brightness-105 disabled:opacity-60"
               >
                 {aiLoading ? "..." : "Run"}
               </button>
             </div>
             {aiFeedback ? (
-              <p className="relative mt-2 rounded-2xl border border-white/80 bg-white/60 px-3 py-2 text-xs font-medium text-slate-600">
+              <p className="relative mt-2 rounded-2xl border border-white/80 bg-white/70 px-3 py-2 text-xs font-semibold text-[#475467]">
                 {aiFeedback}
               </p>
             ) : null}
@@ -1289,18 +1290,18 @@ export default function HealthNutritionPage() {
         ) : null}
 
         <section className="space-y-3">
-          <div className="rounded-[28px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_24px_58px_rgba(79,102,124,0.14)] backdrop-blur-2xl">
+          <div className="premium-glass-card p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
-              <div className="inline-flex items-center gap-2 text-[18px] font-bold text-slate-950">
-                <Flame className="h-5 w-5 text-[#ff4a8d]" aria-hidden="true" />
+              <div className="inline-flex items-center gap-2 text-[18px] font-bold text-[#17141F]">
+                <Flame className="h-5 w-5 text-[#FF5CA8]" aria-hidden="true" />
                 Macros
               </div>
-              <div className="inline-flex rounded-full border border-slate-200/80 bg-white/72 p-0.5 text-[11px] font-bold shadow-inner">
+              <div className="inline-flex rounded-full border border-[#D0D5DD]/70 bg-white/70 p-0.5 text-[11px] font-bold shadow-inner">
                 <button
                   type="button"
                   onClick={() => setMacroViewMode("consumed")}
                   className={`rounded-full px-2.5 py-1 transition ${
-                    !showingRemaining ? "bg-slate-950 text-white" : "text-slate-500"
+                    !showingRemaining ? "bg-[#101828] text-white" : "text-[#667085]"
                   }`}
                 >
                   Consumed
@@ -1309,7 +1310,7 @@ export default function HealthNutritionPage() {
                   type="button"
                   onClick={() => setMacroViewMode("remaining")}
                   className={`rounded-full px-2.5 py-1 transition ${
-                    showingRemaining ? "bg-slate-950 text-white" : "text-slate-500"
+                    showingRemaining ? "bg-[#101828] text-white" : "text-[#667085]"
                   }`}
                 >
                   Left
@@ -1317,17 +1318,17 @@ export default function HealthNutritionPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-[minmax(126px,150px)_1fr] items-center gap-4 lg:grid-cols-[minmax(200px,240px)_1fr] lg:gap-8">
-              <div className="relative grid aspect-square w-full max-w-[150px] place-items-center lg:max-w-[240px]">
+            <div className="mt-5 grid gap-5 sm:grid-cols-[minmax(180px,230px)_1fr] sm:items-center lg:gap-8">
+              <div className="relative mx-auto grid aspect-square w-full max-w-[190px] place-items-center lg:max-w-[230px]">
                 <svg className="absolute inset-0" viewBox="0 0 150 150" aria-hidden="true">
                   <defs>
                     <linearGradient id="mobile-calorie-ring" x1="18" y1="18" x2="132" y2="132">
-                      <stop stopColor="#2ee7d2" />
-                      <stop offset="1" stopColor="#23c6d9" />
+                      <stop stopColor="#14D2DC" />
+                      <stop offset="1" stopColor="#0BA7B0" />
                     </linearGradient>
                   </defs>
                   <g transform="rotate(-90 75 75)">
-                    <circle cx="75" cy="75" r="61" fill="none" stroke="#e8eef5" strokeWidth="12" />
+                    <circle cx="75" cy="75" r="61" fill="none" stroke="#E7EAEE" strokeWidth="12" />
                     <circle
                       cx="75"
                       cy="75"
@@ -1337,22 +1338,22 @@ export default function HealthNutritionPage() {
                       strokeWidth="12"
                       strokeLinecap="round"
                       strokeDasharray={ringDashArray(displayCaloriesProgress, 61)}
-                      filter="drop-shadow(0 4px 8px rgba(35,198,217,0.35))"
+                      filter="drop-shadow(0 4px 8px rgba(20,210,220,0.32))"
                     />
                   </g>
                 </svg>
                 <div className="text-center">
                   <p
-                    className="text-[31px] font-bold leading-none tracking-[-0.02em] text-slate-950"
+                    className="text-[34px] font-bold leading-none tracking-[-0.02em] text-[#17141F]"
                     style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
                   >
                     {roundToWhole(displayCalories).toLocaleString()}
                   </p>
-                  <p className="mt-1 text-[13px] font-semibold text-slate-500">
+                  <p className="mt-1 text-[13px] font-bold text-[#475467]">
                     / {roundToWhole(targetNumbers.calories || 0).toLocaleString()} kcal
                   </p>
                   <p
-                    className="mt-1 text-sm font-bold text-[#23c6d9]"
+                    className="mt-1 text-sm font-bold text-[#0BA7B0]"
                     style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
                   >
                     {Math.round(displayCaloriesProgress)}%
@@ -1360,35 +1361,35 @@ export default function HealthNutritionPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {macroBars.map((bar, index) => {
-                  const baseColor = index === 0 ? "#22c7bd" : index === 1 ? "#379bf2" : index === 2 ? "#d66bc2" : "#f59e0b";
+                  const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : index === 2 ? "#FF5CA8" : "#7A8699";
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
                   return (
-                    <div key={bar.label} className="min-w-0">
+                    <div key={bar.label} className="min-w-0 rounded-[18px] border border-[#EAECF0]/90 bg-white/55 p-3">
                       <div className="flex items-baseline justify-between gap-2">
-                        <p className="text-[12px] font-bold text-slate-900">{bar.label}</p>
+                        <p className="text-[12px] font-bold text-[#17141F]">{bar.label}</p>
                         <p
-                          className="text-[12px] font-bold tabular-nums text-slate-950"
+                          className="text-[12px] font-bold tabular-nums text-[#101828]"
                           style={statusColor ? { color: statusColor } : undefined}
                         >
                           {roundToWhole(bar.value)}
                           <span
-                            className="font-semibold text-slate-500"
+                            className="font-semibold text-[#667085]"
                             style={statusColor ? { color: statusColor } : undefined}
                           >
                             /{roundToWhole(bar.target)}g
                           </span>
                         </p>
                       </div>
-                      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-200/90">
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#EAECF0]">
                         <div
                           className="h-full rounded-full transition-[width] duration-500"
                           style={{ width: `${bar.progress}%`, backgroundColor: baseColor }}
                         />
                       </div>
                       <p
-                        className="mt-1 text-right text-[11px] font-bold tabular-nums"
+                        className="mt-1.5 text-right text-[11px] font-bold tabular-nums"
                         style={{ color: statusColor ?? baseColor }}
                       >
                         {Math.round(bar.progress)}%
@@ -1401,41 +1402,42 @@ export default function HealthNutritionPage() {
           </div>
 
           {coachPlanStatus === "loading" ? (
-            <div className="rounded-[24px] border border-[#ff9fb9]/60 bg-[#ffb1c4] p-4 text-sm font-bold text-[#230012] shadow-[0_18px_42px_rgba(255,74,141,0.18)]">
+            <div className="premium-glass-card p-4 text-sm font-bold text-[#475467]">
               Loading coach plan...
             </div>
           ) : coachPlanStatus === "none" ? (
             <Link
               href="/member/nutrition-coach"
-              className="flex items-center justify-between rounded-[24px] border border-[#ff9fb9]/60 bg-[#ffb1c4] px-4 py-4 text-sm font-bold text-[#230012] shadow-[0_18px_42px_rgba(255,74,141,0.18)]"
+              className="premium-glass-card flex items-center justify-between px-4 py-4 text-sm font-bold text-[#17141F]"
             >
               Nutrition Coach
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              <ChevronRight className="h-4 w-4 text-[#FF5CA8]" aria-hidden="true" />
             </Link>
           ) : (
             <Link
               href="/member/nutrition/coach"
-              className={`block rounded-[24px] border border-[#ff9fb9]/60 bg-[#ffb1c4] p-4 text-[#230012] shadow-[0_18px_42px_rgba(255,74,141,0.18)] ${
-                checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#230012]/70" : ""
+              className={`premium-glass-card block p-4 text-[#17141F] ${
+                checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#FF5CA8]/50" : ""
               }`}
             >
+              <div className="mb-4 h-1.5 w-full rounded-full bg-[linear-gradient(90deg,#FF5CA8,#14D2DC)] opacity-80" />
               <div className="flex items-start justify-between gap-3">
-                <div className="inline-flex items-center gap-2 text-[15px] font-bold">
-                  <Footprints className="h-5 w-5" aria-hidden="true" />
-                  Coach
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#FF5CA8]/12 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[#B4236A]">
+                  <Footprints className="h-4 w-4" aria-hidden="true" />
+                  Coach Goal
                 </div>
-                <span className="rounded-full bg-[#230012]/12 px-2.5 py-1 text-xs font-bold">
+                <span className="rounded-full bg-[#101828]/6 px-2.5 py-1 text-xs font-bold text-[#475467]">
                   {Math.round(weightProgressPercent)}% to goal
                 </span>
               </div>
               <div className="mt-3 flex items-end justify-between gap-3">
                 <div>
-                  <p className="text-[12px] font-bold uppercase tracking-[0.16em] opacity-70">Goal</p>
-                  <p className="mt-1 text-[26px] font-bold leading-none tracking-[-0.02em]">{coachGoalLabel}</p>
+                  <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#667085]">Goal</p>
+                  <p className="mt-1 text-[26px] font-bold leading-none tracking-[-0.02em] text-[#17141F]">{coachGoalLabel}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[12px] font-bold uppercase tracking-[0.16em] opacity-70">Next</p>
-                  <p className="mt-1 text-sm font-bold">{checkInTimeline.nextDateLabel}</p>
+                  <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#667085]">Next</p>
+                  <p className="mt-1 text-sm font-bold text-[#101828]">{checkInTimeline.nextDateLabel}</p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-10 gap-1">
@@ -1443,18 +1445,18 @@ export default function HealthNutritionPage() {
                   <span
                     key={`mobile-coach-check-bar-${index}`}
                     className={`h-7 rounded-[4px] ${
-                      index < checkInTimeline.filledBars ? "bg-[#230012]" : "bg-white/40"
+                      index < checkInTimeline.filledBars ? "bg-[linear-gradient(180deg,#FF5CA8,#14D2DC)]" : "bg-[#EAECF0]"
                     }`}
                   />
                 ))}
               </div>
               <div className="mt-3 flex items-center justify-between gap-3">
-                <span className={`text-sm font-bold ${checkInTimeline.daysUntilNext === 0 ? "uppercase" : ""}`}>
+                <span className={`text-sm font-bold text-[#475467] ${checkInTimeline.daysUntilNext === 0 ? "uppercase" : ""}`}>
                   {checkInTimeline.daysUntilNext === 0
                     ? "Check-in due today"
                     : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until check-in`}
                 </span>
-                <span className="rounded-full bg-[#230012] px-3 py-1.5 text-xs font-bold text-white">
+                <span className="rounded-full bg-[#101828] px-3 py-1.5 text-xs font-bold text-white">
                   {checkInTimeline.daysUntilNext === 0 ? "Check-In" : "Plan"}
                 </span>
               </div>
@@ -1464,18 +1466,18 @@ export default function HealthNutritionPage() {
 
 
         <section className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
-          <h2 className="px-1 text-[18px] font-bold text-slate-950 lg:col-span-full">Meals</h2>
+          <h2 className="px-1 text-[18px] font-bold text-[#17141F] lg:col-span-full">Meals</h2>
           {mealSummaries.map((meal) => {
             const hasEntries = meal.entries.length > 0;
             return (
               <div
                 key={`mobile-meal-${meal.key}`}
-                className="relative rounded-[24px] border border-white/80 bg-white/[0.64] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_18px_42px_rgba(79,102,124,0.12)] backdrop-blur-2xl"
+                className="premium-glass-card relative p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[17px] font-bold leading-tight text-slate-950">{meal.label}</p>
-                    <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                    <p className="text-[17px] font-bold leading-tight text-[#17141F]">{meal.label}</p>
+                    <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#667085]">
                       {Math.round(meal.totals.calories).toLocaleString()} kcal | P{formatGrams(meal.totals.protein)} | C{formatGrams(meal.totals.carbs)} | F{formatGrams(meal.totals.fat)}
                     </p>
                   </div>
@@ -1483,7 +1485,7 @@ export default function HealthNutritionPage() {
                     <button
                       type="button"
                       onClick={() => setMealMenuOpen((current) => (current === meal.key ? null : meal.key))}
-                      className="grid h-9 w-9 place-items-center rounded-full text-slate-500 transition hover:bg-white/80 hover:text-slate-900"
+                      className="grid h-9 w-9 place-items-center rounded-full text-[#667085] transition hover:bg-white/80 hover:text-[#17141F]"
                       aria-label={`Meal actions for ${meal.label}`}
                     >
                       <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -1498,7 +1500,7 @@ export default function HealthNutritionPage() {
                         setMealMenuOpen(null);
                         openMealDialog(meal.key);
                       }}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-[#1597ff] text-white shadow-[0_10px_24px_rgba(21,151,255,0.24)] transition hover:brightness-105"
+                      className="grid h-9 w-9 place-items-center rounded-full bg-[#14D2DC] text-[#071A1C] shadow-[0_10px_24px_rgba(20,210,220,0.26)] transition hover:brightness-105"
                       aria-label={`Add to ${meal.label}`}
                     >
                       <Plus className="h-4 w-4" aria-hidden="true" />
@@ -1507,11 +1509,11 @@ export default function HealthNutritionPage() {
                 </div>
 
                 {mealMenuOpen === meal.key ? (
-                  <div className="absolute right-4 top-14 z-20 w-44 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_38px_rgba(79,102,124,0.2)]">
+                  <div className="absolute right-4 top-14 z-20 w-44 overflow-hidden rounded-2xl border border-white/80 bg-white shadow-[0_18px_38px_rgba(16,24,40,0.14)]">
                     <button
                       type="button"
                       onClick={() => void deleteMealEntries(meal.key)}
-                      className="block w-full px-4 py-3 text-left text-sm font-semibold text-rose-500 transition hover:bg-slate-50"
+                      className="block w-full px-4 py-3 text-left text-sm font-semibold text-rose-500 transition hover:bg-[#F7F5EF]"
                     >
                       Delete meal
                     </button>
@@ -1524,7 +1526,7 @@ export default function HealthNutritionPage() {
                         setCopyTargetMeal(meal.key);
                       }}
                       disabled={copyingMeal === meal.key}
-                      className="block w-full px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                      className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#475467] transition hover:bg-[#F7F5EF] disabled:opacity-60"
                     >
                       {copyingMeal === meal.key ? "Copying..." : "Copy meal"}
                     </button>
@@ -1542,11 +1544,11 @@ export default function HealthNutritionPage() {
                       const entryF = formatGrams((entry.fat ?? 0) * quantity);
                       const isEditingServing = editingEntryId === entry.id;
                       return (
-                        <div key={`mobile-entry-${entry.id}`} className="rounded-2xl border border-slate-200/80 bg-white/70 p-3">
+                        <div key={`mobile-entry-${entry.id}`} className="rounded-2xl border border-[#EAECF0]/90 bg-white/64 p-3">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="text-[14px] font-bold leading-tight text-slate-950">{entry.entry_name}</p>
-                              <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                              <p className="text-[14px] font-bold leading-tight text-[#17141F]">{entry.entry_name}</p>
+                              <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-[#667085]">
                                 {servingLabel}, {entryCal} CAL | C{entryC} | P{entryP} | F{entryF}
                               </p>
                             </div>
@@ -1554,7 +1556,7 @@ export default function HealthNutritionPage() {
                               <button
                                 type="button"
                                 onClick={() => openServingSizeEditor(entry.id, entry.quantity)}
-                                className="grid h-8 w-8 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                                className="grid h-8 w-8 place-items-center rounded-full text-[#667085] transition hover:bg-white hover:text-[#17141F]"
                                 aria-label={`Edit servings for ${entry.entry_name}`}
                               >
                                 <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -1562,7 +1564,7 @@ export default function HealthNutritionPage() {
                               <button
                                 type="button"
                                 onClick={() => deleteEntry(entry.id)}
-                                className="grid h-8 w-8 place-items-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                                className="grid h-8 w-8 place-items-center rounded-full text-[#667085] transition hover:bg-rose-50 hover:text-rose-500"
                                 aria-label={`Remove ${entry.entry_name}`}
                               >
                                 <X className="h-4 w-4" aria-hidden="true" />
@@ -1571,7 +1573,7 @@ export default function HealthNutritionPage() {
                           </div>
                           {isEditingServing ? (
                             <div className="mt-3 flex items-center justify-between gap-3">
-                              <span className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">
+                              <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#667085]">
                                 Servings
                               </span>
                               <div className="flex items-center gap-2">
@@ -1585,14 +1587,14 @@ export default function HealthNutritionPage() {
                                       setEditServingDraft("");
                                     }
                                   }}
-                                  className="h-9 w-20 rounded-xl border border-slate-200 bg-white px-2 text-sm font-bold text-slate-950 focus:border-[#1597ff] focus:outline-none"
+                                  className="h-9 w-20 rounded-xl border border-[#D0D5DD] bg-white px-2 text-sm font-bold text-[#101828] focus:border-[#14D2DC] focus:outline-none"
                                   inputMode="decimal"
                                   aria-label="Edit servings"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => void saveServingSize(entry.id)}
-                                  className="grid h-9 w-9 place-items-center rounded-full bg-slate-950 text-white"
+                                  className="grid h-9 w-9 place-items-center rounded-full bg-[#101828] text-white"
                                   aria-label="Save servings"
                                 >
                                   <Check className="h-4 w-4" aria-hidden="true" />
@@ -1611,10 +1613,15 @@ export default function HealthNutritionPage() {
                       setMealMenuOpen(null);
                       openMealDialog(meal.key);
                     }}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white/50 py-4 text-sm font-bold text-slate-500 transition hover:border-[#1597ff] hover:text-[#1597ff]"
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[#D0D5DD] bg-white/54 py-4 text-sm font-bold text-[#667085] transition hover:border-[#14D2DC] hover:text-[#0C7D85]"
                   >
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                    Add food
+                    <span className="grid h-8 w-8 place-items-center rounded-full bg-[#14D2DC] text-[#071A1C]">
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span>
+                      <span className="block text-[#475467]">No food logged yet</span>
+                      <span className="block text-[12px] text-[#0C7D85]">Add food</span>
+                    </span>
                   </button>
                 )}
               </div>
@@ -1623,6 +1630,7 @@ export default function HealthNutritionPage() {
         </section>
 
         <div className="h-4" />
+        </div>
 
 
 
