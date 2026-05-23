@@ -642,10 +642,10 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </button>
             </div>
 
-            <nav className="mt-5 flex-1 space-y-4 overflow-y-auto overscroll-contain pb-4 text-sm">
+            <nav className="mt-5 flex-1 space-y-3.5 overflow-y-auto overscroll-contain pb-4 text-sm">
               {navSections.map((section) => (
                 <div key={section.label}>
-                  <div className="mb-1.5 px-3">
+                  <div className="mb-1 px-3">
                     <Micro className="!text-[9.5px] !font-semibold !tracking-[0.18em] !text-[#667085]">{section.label}</Micro>
                   </div>
                   <div className="space-y-1">
@@ -655,7 +655,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                         <Link
                           key={entry.href}
                           href={entry.href}
-                          className={`app-nav-link flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${
+                          className={`app-nav-link flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-xs font-semibold ${
                             isActive ? "app-nav-link-active" : ""
                           }`}
                           onClick={() => setMobileSidebarOpen(false)}
@@ -782,10 +782,10 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             })}
           </nav>
         ) : (
-          <nav className="mt-5 space-y-4 overflow-y-auto text-sm">
+          <nav className="mt-5 space-y-3.5 overflow-y-auto text-sm">
             {navSections.map((section) => (
               <div key={section.label}>
-                <div className="mb-1.5 px-3">
+                <div className="mb-1 px-3">
                   <Micro className="!text-[9.5px] !font-semibold !tracking-[0.18em] !text-[#667085]">{section.label}</Micro>
                 </div>
                 <div className="space-y-1">
@@ -795,7 +795,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                       <Link
                         key={entry.href}
                         href={entry.href}
-                        className={`app-nav-link flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${
+                        className={`app-nav-link flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-sm font-semibold ${
                           isActive ? "app-nav-link-active" : ""
                         }`}
                         aria-current={isActive ? "page" : undefined}

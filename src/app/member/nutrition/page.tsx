@@ -650,6 +650,23 @@ export default function HealthNutritionPage() {
     };
   }, [coachPlanSummary?.effectiveDate, coachPlanSummary?.lastCheckInDate, coachPlanSummary?.nextCheckInDate]);
 
+  const weeklyCheckInTracker = useMemo(() => {
+    const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const progress = clampPercent((checkInTimeline.filledBars / 10) * 100) / 100;
+    const completeThrough = Math.floor(progress * labels.length);
+    const hasPartial = completeThrough < labels.length && progress > 0 && progress * labels.length > completeThrough;
+
+    return labels.map((label, index) => ({
+      label,
+      state:
+        index < completeThrough
+          ? "complete"
+          : index === completeThrough && hasPartial
+            ? "partial"
+            : "empty",
+    }));
+  }, [checkInTimeline.filledBars]);
+
   async function deleteEntry(entryId: string) {
     setError(null);
     const response = await fetch(`/api/nutrition-entries/${entryId}`, {
@@ -1292,7 +1309,7 @@ export default function HealthNutritionPage() {
         <section className="space-y-3">
           <div className="premium-glass-card p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
-              <div className="inline-flex items-center gap-2 text-[18px] font-bold text-[#17141F]">
+              <div className="inline-flex items-center gap-2 text-[19px] font-extrabold text-[#17141F]">
                 <Flame className="h-5 w-5 text-[#FF5CA8]" aria-hidden="true" />
                 Macros
               </div>
@@ -1366,11 +1383,11 @@ export default function HealthNutritionPage() {
                   const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : index === 2 ? "#FF5CA8" : "#7A8699";
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
                   return (
-                    <div key={bar.label} className="min-w-0 rounded-[20px] border border-white/85 bg-white/72 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_24px_rgba(16,24,40,0.05)]">
+                    <div key={bar.label} className="min-w-0 rounded-[18px] border border-[#DDE2EA]/80 bg-white/80 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_12px_28px_rgba(16,24,40,0.065)]">
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="text-[13px] font-extrabold text-[#17141F]">{bar.label}</p>
                         <p
-                          className="text-[13px] font-extrabold tabular-nums text-[#101828]"
+                          className="text-[14px] font-extrabold tabular-nums text-[#101828]"
                           style={statusColor ? { color: statusColor } : undefined}
                         >
                           {roundToWhole(bar.value)}
@@ -1382,7 +1399,7 @@ export default function HealthNutritionPage() {
                           </span>
                         </p>
                       </div>
-                      <div className="mt-2.5 h-2.5 overflow-hidden rounded-full bg-[#E4E7EC]">
+                      <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#E4E7EC]">
                         <div
                           className="h-full rounded-full transition-[width] duration-500"
                           style={{ width: `${bar.progress}%`, backgroundColor: baseColor }}
@@ -1416,47 +1433,67 @@ export default function HealthNutritionPage() {
           ) : (
             <Link
               href="/member/nutrition/coach"
-              className={`premium-glass-card block p-4 text-[#17141F] ${
+              className={`premium-glass-card block overflow-hidden p-4 text-[#17141F] sm:p-5 ${
                 checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#FF5CA8]/50" : ""
               }`}
             >
-              <div className="mb-4 h-1.5 w-full rounded-full bg-[linear-gradient(90deg,#FF5CA8,#14D2DC)] opacity-80" />
               <div className="flex items-start justify-between gap-3">
                 <div className="inline-flex items-center gap-2 rounded-full bg-[#FF5CA8]/12 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[#B4236A]">
                   <Footprints className="h-4 w-4" aria-hidden="true" />
                   Coach Goal
                 </div>
-                <span className="rounded-full bg-[#101828]/6 px-2.5 py-1 text-xs font-bold text-[#475467]">
+                <span className="rounded-full border border-[#EAECF0] bg-white/74 px-2.5 py-1 text-xs font-extrabold text-[#475467]">
                   {Math.round(weightProgressPercent)}% to goal
                 </span>
               </div>
-              <div className="mt-3 flex items-end justify-between gap-3">
+              <div className="mt-4 flex items-end justify-between gap-3">
                 <div>
                   <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#667085]">Goal</p>
-                  <p className="mt-1 text-[26px] font-bold leading-none tracking-[-0.02em] text-[#17141F]">{coachGoalLabel}</p>
+                  <p className="mt-1 text-[28px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F]">{coachGoalLabel}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#667085]">Next</p>
                   <p className="mt-1 text-sm font-bold text-[#101828]">{checkInTimeline.nextDateLabel}</p>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-10 gap-1">
-                {Array.from({ length: 10 }).map((_, index) => (
-                  <span
-                    key={`mobile-coach-check-bar-${index}`}
-                    className={`h-7 rounded-[4px] ${
-                      index < checkInTimeline.filledBars ? "bg-[linear-gradient(180deg,#FF5CA8,#14D2DC)]" : "bg-[#EAECF0]"
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <span className={`text-sm font-bold text-[#475467] ${checkInTimeline.daysUntilNext === 0 ? "uppercase" : ""}`}>
+              <div className="mt-4 rounded-[20px] border border-[#F2D8E7]/80 bg-[#FF5CA8]/[0.045] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+                <div className="flex items-center justify-between gap-3">
+                  <span className={`text-sm font-extrabold text-[#475467] ${checkInTimeline.daysUntilNext === 0 ? "uppercase text-[#B4236A]" : ""}`}>
                   {checkInTimeline.daysUntilNext === 0
                     ? "Check-in due today"
                     : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until check-in`}
-                </span>
-                <span className="rounded-full bg-[#101828] px-3 py-1.5 text-xs font-bold text-white">
+                  </span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#98A2B3]">Weekly tracker</span>
+                </div>
+                <div className="mt-3 grid grid-cols-7 gap-1.5">
+                  {weeklyCheckInTracker.map((day) => (
+                    <span key={`coach-week-${day.label}`} className="min-w-0 text-center">
+                      <span
+                        className={`mx-auto block h-9 rounded-[12px] border ${
+                          day.state === "complete"
+                            ? "border-[#FF5CA8]/35 bg-[#FF5CA8]/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
+                            : day.state === "partial"
+                              ? "border-[#14D2DC]/36 bg-[linear-gradient(135deg,rgba(20,210,220,0.22)_0%,rgba(20,210,220,0.22)_50%,rgba(255,255,255,0.72)_50%,rgba(255,255,255,0.72)_100%)]"
+                              : "border-white/80 bg-white/68"
+                        }`}
+                      />
+                      <span
+                        className={`mt-1 block text-[10px] font-extrabold uppercase tracking-[0.08em] ${
+                          day.state === "complete"
+                            ? "text-[#B4236A]"
+                            : day.state === "partial"
+                              ? "text-[#0C7D85]"
+                              : "text-[#98A2B3]"
+                        }`}
+                      >
+                        {day.label}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-end">
+                <span className="rounded-full bg-[#101828] px-4 py-2 text-xs font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)]">
                   {checkInTimeline.daysUntilNext === 0 ? "Check-In" : "Plan"}
                 </span>
               </div>
@@ -1613,14 +1650,14 @@ export default function HealthNutritionPage() {
                       setMealMenuOpen(null);
                       openMealDialog(meal.key);
                     }}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/80 bg-white/66 py-4 text-sm font-bold text-[#667085] shadow-[inset_0_1px_0_rgba(255,255,255,0.86)] transition hover:border-[#14D2DC]/45 hover:bg-white/78 hover:text-[#0C7D85]"
+                    className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-[#DDE2EA]/80 bg-white/76 px-4 py-4 text-sm font-bold text-[#667085] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_24px_rgba(16,24,40,0.045)] transition hover:border-[#14D2DC]/55 hover:bg-white/88 hover:text-[#0C7D85] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_12px_28px_rgba(20,210,220,0.12)]"
                   >
-                    <span className="grid h-8 w-8 place-items-center rounded-full bg-[#14D2DC] text-[#071A1C]">
+                    <span className="grid h-9 w-9 place-items-center rounded-full bg-[#14D2DC] text-[#071A1C] shadow-[0_8px_18px_rgba(20,210,220,0.24)]">
                       <Plus className="h-4 w-4" aria-hidden="true" />
                     </span>
-                    <span>
+                    <span className="text-left">
                       <span className="block text-[#475467]">No food logged yet</span>
-                      <span className="block text-[12px] text-[#0C7D85]">Add food</span>
+                      <span className="block text-[12px] font-extrabold text-[#0C7D85]">Add food</span>
                     </span>
                   </button>
                 )}
