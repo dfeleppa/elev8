@@ -627,7 +627,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             onClick={() => setMobileSidebarOpen(false)}
             aria-label="Close menu"
           />
-          <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-6">
+          <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-5">
             <div className="flex items-center justify-between gap-2 px-2">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
                 <Image src={stackedLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
@@ -642,26 +642,26 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </button>
             </div>
 
-            <nav className="mt-6 flex-1 space-y-5 overflow-y-auto overscroll-contain pb-4 text-sm">
+            <nav className="mt-5 flex-1 space-y-4 overflow-y-auto overscroll-contain pb-4 text-sm">
               {navSections.map((section) => (
                 <div key={section.label}>
-                  <div className="mb-1 px-3">
-                    <Micro>{section.label}</Micro>
+                  <div className="mb-1.5 px-3">
+                    <Micro className="!text-[9.5px] !font-semibold !tracking-[0.18em] !text-[#667085]">{section.label}</Micro>
                   </div>
-                  <div className="space-y-0.5">
+                  <div className="space-y-1">
                     {section.entries.map((entry) => {
                       const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
                       return (
                         <Link
                           key={entry.href}
                           href={entry.href}
-                          className={`app-nav-link flex items-center rounded-lg px-3 py-2 text-xs ${
+                          className={`app-nav-link flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${
                             isActive ? "app-nav-link-active" : ""
                           }`}
                           onClick={() => setMobileSidebarOpen(false)}
                           aria-current={isActive ? "page" : undefined}
                         >
-                          <span className="mr-2 text-[var(--text-soft)]">{getNavIcon(entry.href)}</span>
+                          <span className="grid h-5 w-5 place-items-center text-[var(--text-soft)]">{getNavIcon(entry.href)}</span>
                           {entry.label}
                         </Link>
                       );
@@ -685,7 +685,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       )}
 
       <aside
-        className={`app-shell-sidebar card-fade-in fixed inset-y-0 left-0 z-20 hidden px-3 py-6 lg:flex lg:flex-col ${
+        className={`app-shell-sidebar card-fade-in fixed inset-y-0 left-0 z-20 hidden px-3 py-5 lg:flex lg:flex-col ${
           sidebarCollapsed ? "lg:w-20" : "lg:w-64"
         }`}
         style={{ animationDelay: "0.05s" }}
@@ -760,7 +760,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         </div>
 
         {sidebarCollapsed ? (
-          <nav className="mt-6 flex flex-1 flex-col items-center gap-2 overflow-y-auto">
+          <nav className="mt-5 flex flex-1 flex-col items-center gap-1.5 overflow-y-auto">
             {visibleEntries.map((entry) => {
               const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
               return (
@@ -782,25 +782,25 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             })}
           </nav>
         ) : (
-          <nav className="mt-6 space-y-5 overflow-y-auto text-sm">
+          <nav className="mt-5 space-y-4 overflow-y-auto text-sm">
             {navSections.map((section) => (
               <div key={section.label}>
-                <div className="mb-1 px-3">
-                  <Micro>{section.label}</Micro>
+                <div className="mb-1.5 px-3">
+                  <Micro className="!text-[9.5px] !font-semibold !tracking-[0.18em] !text-[#667085]">{section.label}</Micro>
                 </div>
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   {section.entries.map((entry) => {
                     const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
                     return (
                       <Link
                         key={entry.href}
                         href={entry.href}
-                        className={`app-nav-link flex items-center rounded-lg px-3 py-2 text-sm font-medium ${
+                        className={`app-nav-link flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${
                           isActive ? "app-nav-link-active" : ""
                         }`}
                         aria-current={isActive ? "page" : undefined}
                       >
-                        <span className="mr-2 text-[var(--text-soft)]">{getNavIcon(entry.href)}</span>
+                        <span className="grid h-5 w-5 place-items-center text-[var(--text-soft)]">{getNavIcon(entry.href)}</span>
                         {entry.label}
                       </Link>
                     );

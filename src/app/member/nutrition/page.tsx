@@ -1157,9 +1157,9 @@ export default function HealthNutritionPage() {
 
   return (
     <SidebarShell mainClassName="w-full">
-      <section className="premium-main-glow mx-auto flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-6 px-5 py-6 text-[#17141F] sm:px-8 lg:px-8 lg:py-8">
-        <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
-        <header>
+      <section className="premium-main-glow mx-auto flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-5 text-[#17141F] sm:px-8 lg:px-8 lg:py-7">
+        <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-5">
+        <header className="mb-[-4px]">
           <div className="premium-glass-pill mx-auto flex max-w-[330px] items-center justify-center p-1.5">
             <button
               type="button"
@@ -1192,7 +1192,7 @@ export default function HealthNutritionPage() {
           </div>
 
           <nav
-            className={`mt-4 grid ${
+            className={`mt-3 grid ${
               showAICoach ? "grid-cols-3" : "grid-cols-2"
             } premium-glass-pill mx-auto max-w-[430px] p-1 text-center text-xs font-bold`}
           >
@@ -1223,8 +1223,8 @@ export default function HealthNutritionPage() {
         {showAICoach ? (
         <section>
           <div className="premium-glass-card relative overflow-hidden p-4 sm:p-5">
-            <div className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full bg-[#FF5CA8]/14 blur-2xl" />
-            <div className="pointer-events-none absolute left-12 bottom-0 h-28 w-28 rounded-full bg-[#14D2DC]/18 blur-2xl" />
+            <div className="pointer-events-none absolute -left-10 -top-10 h-28 w-28 rounded-full bg-[#FF5CA8]/10 blur-2xl" />
+            <div className="pointer-events-none absolute left-12 bottom-0 h-24 w-24 rounded-full bg-[#14D2DC]/13 blur-2xl" />
             <button
               type="button"
               className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-white/80 bg-white/70 text-[#667085] shadow-sm transition hover:text-[#17141F]"
@@ -1366,11 +1366,11 @@ export default function HealthNutritionPage() {
                   const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : index === 2 ? "#FF5CA8" : "#7A8699";
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
                   return (
-                    <div key={bar.label} className="min-w-0 rounded-[18px] border border-[#EAECF0]/90 bg-white/55 p-3">
+                    <div key={bar.label} className="min-w-0 rounded-[20px] border border-white/85 bg-white/72 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_24px_rgba(16,24,40,0.05)]">
                       <div className="flex items-baseline justify-between gap-2">
-                        <p className="text-[12px] font-bold text-[#17141F]">{bar.label}</p>
+                        <p className="text-[13px] font-extrabold text-[#17141F]">{bar.label}</p>
                         <p
-                          className="text-[12px] font-bold tabular-nums text-[#101828]"
+                          className="text-[13px] font-extrabold tabular-nums text-[#101828]"
                           style={statusColor ? { color: statusColor } : undefined}
                         >
                           {roundToWhole(bar.value)}
@@ -1382,14 +1382,14 @@ export default function HealthNutritionPage() {
                           </span>
                         </p>
                       </div>
-                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#EAECF0]">
+                      <div className="mt-2.5 h-2.5 overflow-hidden rounded-full bg-[#E4E7EC]">
                         <div
                           className="h-full rounded-full transition-[width] duration-500"
                           style={{ width: `${bar.progress}%`, backgroundColor: baseColor }}
                         />
                       </div>
                       <p
-                        className="mt-1.5 text-right text-[11px] font-bold tabular-nums"
+                        className="mt-2 text-right text-[11px] font-extrabold tabular-nums"
                         style={{ color: statusColor ?? baseColor }}
                       >
                         {Math.round(bar.progress)}%
@@ -1613,7 +1613,7 @@ export default function HealthNutritionPage() {
                       setMealMenuOpen(null);
                       openMealDialog(meal.key);
                     }}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[#D0D5DD] bg-white/54 py-4 text-sm font-bold text-[#667085] transition hover:border-[#14D2DC] hover:text-[#0C7D85]"
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/80 bg-white/66 py-4 text-sm font-bold text-[#667085] shadow-[inset_0_1px_0_rgba(255,255,255,0.86)] transition hover:border-[#14D2DC]/45 hover:bg-white/78 hover:text-[#0C7D85]"
                   >
                     <span className="grid h-8 w-8 place-items-center rounded-full bg-[#14D2DC] text-[#071A1C]">
                       <Plus className="h-4 w-4" aria-hidden="true" />
