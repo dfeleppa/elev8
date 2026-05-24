@@ -1155,7 +1155,7 @@ export default function HealthNutritionPage() {
   return (
     <SidebarShell mainClassName="w-full">
       <section className="premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
-        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
+        <div className="flex w-full flex-col gap-5">
         <header className="mb-[-8px]">
           <h1 className="mb-2.5 text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F]">
             Nutrition
@@ -1217,8 +1217,8 @@ export default function HealthNutritionPage() {
           </div>
         ) : null}
 
-        <section className="space-y-3">
-          <div className="premium-glass-card p-4 sm:p-5">
+        <section className="space-y-3 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.8fr)] xl:items-stretch xl:gap-5 xl:space-y-0">
+          <div className="premium-glass-card h-full p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="inline-flex items-center gap-2 text-[19px] font-extrabold text-[#17141F]">
                 <Flame className="h-5 w-5 text-[#FF5CA8]" aria-hidden="true" />
@@ -1336,7 +1336,7 @@ export default function HealthNutritionPage() {
           ) : coachPlanStatus === "none" ? (
             <Link
               href="/member/nutrition-coach"
-              className="premium-glass-card flex items-center justify-between px-4 py-4 text-sm font-bold text-[#17141F]"
+              className="premium-glass-card flex h-full items-center justify-between px-4 py-4 text-sm font-bold text-[#17141F]"
             >
               Nutrition Coach
               <ChevronRight className="h-4 w-4 text-[#FF5CA8]" aria-hidden="true" />
@@ -1344,7 +1344,7 @@ export default function HealthNutritionPage() {
           ) : (
             <Link
               href="/member/nutrition/coach"
-              className={`premium-glass-card block overflow-hidden p-4 text-[#17141F] sm:p-5 ${
+              className={`premium-glass-card flex h-full flex-col overflow-hidden p-4 text-[#17141F] sm:p-5 ${
                 checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#FF5CA8]/50" : ""
               }`}
             >
@@ -1402,7 +1402,7 @@ export default function HealthNutritionPage() {
                   ))}
                 </div>
               </div>
-              <div className="mt-3 flex items-center justify-end">
+              <div className="mt-auto flex items-center justify-end pt-3">
                 <span className="rounded-full bg-[#101828] px-4 py-2 text-xs font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)]">
                   {checkInTimeline.daysUntilNext === 0 ? "Check-In" : "Plan"}
                 </span>
@@ -1412,8 +1412,8 @@ export default function HealthNutritionPage() {
         </section>
 
 
-        <section className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
-          <h2 className="px-1 text-[19px] font-extrabold text-[#17141F] lg:col-span-full">Meals</h2>
+        <section className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 xl:grid-cols-3 2xl:grid-cols-4">
+          <h2 className="px-1 text-[19px] font-extrabold text-[#17141F] md:col-span-full">Meals</h2>
           {mealSummaries.map((meal) => {
             const hasEntries = meal.entries.length > 0;
             return (
