@@ -21,6 +21,14 @@ abstract final class AppColors {
   static const Color emeraldAccent = Color(0xFF34D399);
   static const Color sky300 = Color(0xFF7DD3FC);
 
+  // Web design-system accents (mirrors src/app/globals.css):
+  // pink hero, cyan highlight, violet coach tone.
+  static const Color webPink = Color(0xFFFFB1C4);
+  static const Color webPinkInk = Color(0xFF230012);
+  static const Color webCyan = Color(0xFF63F7FF);
+  static const Color webViolet = Color(0xFFC4B5FD);
+  static const Color webVioletInk = Color(0xFF140A2E);
+
   // Slate scaffold tones for the dark Material 3 base.
   static const Color slate900 = Color(0xFF0F172A);
   static const Color slate950 = Color(0xFF020617);

@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'components/sidebar_shell.dart';
 import 'components/bottom_nav_bar.dart';
 import 'data/repositories/nutrition_repository.dart';
+import 'theme/app_colors.dart';
 
 // ---------------------------------------------------------------------------
 // Providers
@@ -116,10 +117,10 @@ class NutritionScreen extends ConsumerWidget {
                             ),
                           ),
                           if (!isToday)
-                            const Text(
+                            Text(
                               'Tap to open calendar',
                               style: TextStyle(
-                                color: Colors.blueAccent,
+                                color: AppColors.webCyan,
                                 fontSize: 12,
                               ),
                             ),
@@ -335,6 +336,7 @@ class _Dashboard extends ConsumerWidget {
             _MacroRings(
               displayCal: displayCal,
               targetCal: targets.calories,
+              consumedCalories: consumed.calories,
               consumedProtein: consumed.protein,
               targetProtein: targets.protein,
               consumedCarbs: consumed.carbs,
@@ -374,7 +376,7 @@ class _Dashboard extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 
 class _MacroRings extends StatelessWidget {
-  final double displayCal, targetCal;
+  final double displayCal, targetCal, consumedCalories;
   final double consumedProtein, targetProtein;
   final double consumedCarbs, targetCarbs;
   final double consumedFat, targetFat;
@@ -384,6 +386,7 @@ class _MacroRings extends StatelessWidget {
   const _MacroRings({
     required this.displayCal,
     required this.targetCal,
+    required this.consumedCalories,
     required this.consumedProtein,
     required this.targetProtein,
     required this.consumedCarbs,
@@ -398,229 +401,226 @@ class _MacroRings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final calProgress = targetCal <= 0
+        ? 0.0
+        : (consumedCalories / targetCal).clamp(0.0, 1.0);
+    final calToGo = (targetCal - consumedCalories)
+        .clamp(0, double.infinity)
+        .toInt();
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
-      decoration: _glassCard(),
-      child: Row(
-        children: [
-          SizedBox(
-            height: 100,
-            width: 100,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                _ring(
-                  100,
-                  100,
-                  consumedProtein / targetProtein,
-                  Colors.blueAccent.withValues(alpha: 0.15),
-                  Colors.blueAccent,
-                ),
-                _ring(
-                  72,
-                  72,
-                  consumedCarbs / targetCarbs,
-                  Colors.orangeAccent.withValues(alpha: 0.15),
-                  Colors.orangeAccent,
-                ),
-                _ring(
-                  44,
-                  44,
-                  consumedFat / targetFat,
-                  Colors.greenAccent.withValues(alpha: 0.15),
-                  Colors.greenAccent,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _MacroRow(
-                  title: 'Cal',
-                  val1: displayCal.toInt(),
-                  val2: targetCal.toInt(),
-                  isHeader: true,
-                  overLimit: viewMode == ViewMode.remaining && displayCal < 0,
-                ),
-                const SizedBox(height: 20),
-                _MacroRow(
-                  title: 'Protein',
-                  dotColor: Colors.blueAccent,
-                  val1: viewMode == ViewMode.remaining
-                      ? remainingProtein.toInt()
-                      : consumedProtein.toInt(),
-                  val2: targetProtein.toInt(),
-                  overLimit:
-                      viewMode == ViewMode.remaining && remainingProtein < 0,
-                ),
-                const SizedBox(height: 16),
-                _MacroRow(
-                  title: 'Carbs',
-                  dotColor: Colors.orangeAccent,
-                  val1: viewMode == ViewMode.remaining
-                      ? remainingCarbs.toInt()
-                      : consumedCarbs.toInt(),
-                  val2: targetCarbs.toInt(),
-                  overLimit:
-                      viewMode == ViewMode.remaining && remainingCarbs < 0,
-                ),
-                const SizedBox(height: 16),
-                _MacroRow(
-                  title: 'Fat',
-                  dotColor: Colors.greenAccent,
-                  val1: viewMode == ViewMode.remaining
-                      ? remainingFat.toInt()
-                      : consumedFat.toInt(),
-                  val2: targetFat.toInt(),
-                  overLimit: viewMode == ViewMode.remaining && remainingFat < 0,
-                ),
-              ],
-            ),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+      decoration: BoxDecoration(
+        color: AppColors.webPink,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.webPink.withValues(alpha: 0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _ring(
-    double size,
-    double strokeRadius,
-    double progress,
-    Color bg,
-    Color fg,
-  ) {
-    return SizedBox(
-      height: size,
-      width: size,
-      child: Stack(
-        alignment: Alignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            height: size,
-            width: size,
-            child: CircularProgressIndicator(
-              value: 1.0,
-              strokeWidth: 9,
-              backgroundColor: Colors.transparent,
-              valueColor: AlwaysStoppedAnimation<Color>(bg),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                viewMode == ViewMode.remaining
+                    ? 'CALORIES LEFT'
+                    : 'CALORIES CONSUMED',
+                style: TextStyle(
+                  color: AppColors.webPinkInk.withValues(alpha: 0.7),
+                  fontSize: 11,
+                  letterSpacing: 1.8,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '$calToGo kcal to go',
+                  style: TextStyle(
+                    color: AppColors.webPinkInk,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(
-            height: size,
-            width: size,
-            child: CircularProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              strokeWidth: 9,
-              backgroundColor: Colors.transparent,
-              valueColor: AlwaysStoppedAnimation<Color>(fg),
-              strokeCap: StrokeCap.round,
-            ),
+          const SizedBox(height: 18),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 132,
+                width: 132,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      height: 132,
+                      width: 132,
+                      child: CircularProgressIndicator(
+                        value: 1.0,
+                        strokeWidth: 11,
+                        backgroundColor: Colors.transparent,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.black.withValues(alpha: 0.14),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 132,
+                      width: 132,
+                      child: CircularProgressIndicator(
+                        value: calProgress,
+                        strokeWidth: 11,
+                        backgroundColor: Colors.transparent,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.webPinkInk,
+                        ),
+                        strokeCap: StrokeCap.round,
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          displayCal.toInt().toString(),
+                          style: TextStyle(
+                            color: AppColors.webPinkInk,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'of ${targetCal.toInt()}',
+                          style: TextStyle(
+                            color: AppColors.webPinkInk.withValues(alpha: 0.6),
+                            fontSize: 10,
+                            letterSpacing: 1.4,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${(calProgress * 100).round()}%',
+                          style: TextStyle(
+                            color: AppColors.webPinkInk,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _MacroBar(
+                      label: 'Protein',
+                      value: consumedProtein,
+                      target: targetProtein,
+                    ),
+                    const SizedBox(height: 12),
+                    _MacroBar(
+                      label: 'Carbs',
+                      value: consumedCarbs,
+                      target: targetCarbs,
+                    ),
+                    const SizedBox(height: 12),
+                    _MacroBar(
+                      label: 'Fat',
+                      value: consumedFat,
+                      target: targetFat,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
-    );
-  }
-
-  BoxDecoration _glassCard() {
-    return BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
-          blurRadius: 10,
-          offset: const Offset(0, 4),
-        ),
-      ],
     );
   }
 }
 
-class _MacroRow extends StatelessWidget {
-  final String title;
-  final Color? dotColor;
-  final int val1, val2;
-  final bool isHeader;
-  final bool overLimit;
+class _MacroBar extends StatelessWidget {
+  final String label;
+  final double value;
+  final double target;
 
-  const _MacroRow({
-    required this.title,
-    this.dotColor,
-    required this.val1,
-    required this.val2,
-    this.isHeader = false,
-    this.overLimit = false,
+  const _MacroBar({
+    required this.label,
+    required this.value,
+    required this.target,
   });
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isHeader
-        ? const Color(0xFF020617)
-        : (overLimit ? Colors.redAccent : const Color(0xFF020617));
-    return Row(
+    final progress = target <= 0 ? 0.0 : (value / target).clamp(0.0, 1.0);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Spacer(),
-        if (dotColor != null)
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: dotColor!.withValues(alpha: 0.5),
-                  blurRadius: 4,
-                ),
-              ],
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: AppColors.webPinkInk,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        if (dotColor == null) const SizedBox(width: 8),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 55,
-          child: Text(
-            title,
-            textAlign: TextAlign.left,
-            style: TextStyle(
-              color: isHeader ? textColor : Colors.black54,
-              fontWeight: isHeader ? FontWeight.bold : FontWeight.w500,
-              fontSize: 15,
+            Text(
+              '${value.toInt()}/${target.toInt()}g',
+              style: TextStyle(
+                color: AppColors.webPinkInk,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 4,
+            backgroundColor: Colors.black.withValues(alpha: 0.15),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              AppColors.webPinkInk.withValues(alpha: 0.85),
             ),
           ),
         ),
-        const SizedBox(width: 14),
-        SizedBox(
-          width: 50,
-          child: Text(
-            val1.toString(),
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-            ),
-          ),
-        ),
-        const SizedBox(width: 4),
+        const SizedBox(height: 2),
         Text(
-          '/',
+          '${(progress * 100).round()}%',
           style: TextStyle(
-            color: Colors.black.withValues(alpha: 0.25),
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(width: 4),
-        SizedBox(
-          width: 40,
-          child: Text(
-            val2.toString(),
-            textAlign: TextAlign.left,
-            style: const TextStyle(color: Colors.black54, fontSize: 14),
+            color: AppColors.webPinkInk.withValues(alpha: 0.6),
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       ],
@@ -678,7 +678,7 @@ class _CoachCardState extends ConsumerState<_CoachCard> {
   BoxDecoration _coachDecoration() {
     return BoxDecoration(
       gradient: const LinearGradient(
-        colors: [Color(0xFF0EA5E9), Color(0xFF2563EB)],
+        colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ),
@@ -695,7 +695,7 @@ class _NoCoachCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0EA5E9), Color(0xFF2563EB)],
+          colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -722,7 +722,7 @@ class _NoCoachCard extends StatelessWidget {
           ElevatedButton(
             onPressed: () => context.push('/coach-setup'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blueAccent,
+              backgroundColor: AppColors.webVioletInk,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -754,7 +754,7 @@ class _RealCoachCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0EA5E9), Color(0xFF2563EB)],
+          colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -1363,7 +1363,7 @@ class _MealsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF0EA5E9), Color(0xFF2563EB)],
+                colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),

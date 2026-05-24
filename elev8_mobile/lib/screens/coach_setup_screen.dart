@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../data/repositories/nutrition_repository.dart';
 import '../services/coach_api_service.dart';
+import '../theme/app_colors.dart';
 
 // ─── Entry point ─────────────────────────────────────────────────────────────
 
@@ -386,7 +387,7 @@ class _StepIndicator extends StatelessWidget {
                   Expanded(
                     child: Container(
                       height: 2,
-                      color: done ? const Color(0xFF63f7ff) : Colors.white12,
+                      color: done ? AppColors.webCyan : Colors.white12,
                     ),
                   ),
                 if (i > 0) const SizedBox(width: 6),
@@ -398,13 +399,13 @@ class _StepIndicator extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: done
-                            ? const Color(0xFF63f7ff)
+                            ? AppColors.webCyan
                             : active
-                            ? const Color(0xFF0EA5E9)
+                            ? AppColors.webCyan
                             : Colors.white10,
                         border: active
                             ? Border.all(
-                                color: const Color(0xFF63f7ff),
+                                color: AppColors.webCyan,
                                 width: 2,
                               )
                             : null,
@@ -444,7 +445,7 @@ class _StepIndicator extends StatelessWidget {
                   Expanded(
                     child: Container(
                       height: 2,
-                      color: done ? const Color(0xFF63f7ff) : Colors.white12,
+                      color: done ? AppColors.webCyan : Colors.white12,
                     ),
                   ),
               ],
@@ -492,7 +493,7 @@ class _BottomNav extends StatelessWidget {
           FilledButton(
             onPressed: canNext ? onNext : null,
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF0EA5E9),
+              backgroundColor: AppColors.webCyan,
               disabledBackgroundColor: Colors.white12,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               shape: RoundedRectangleBorder(
@@ -575,12 +576,12 @@ class _Step1Goal extends StatelessWidget {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFF0EA5E9).withValues(alpha: 0.15)
+                      ? AppColors.webCyan.withValues(alpha: 0.15)
                       : Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFF63f7ff)
+                        ? AppColors.webCyan
                         : Colors.white12,
                     width: isSelected ? 1.5 : 1,
                   ),
@@ -592,14 +593,14 @@ class _Step1Goal extends StatelessWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFF0EA5E9).withValues(alpha: 0.3)
+                            ? AppColors.webCyan.withValues(alpha: 0.3)
                             : Colors.white10,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         g.icon,
                         color: isSelected
-                            ? const Color(0xFF63f7ff)
+                            ? AppColors.webCyan
                             : Colors.white38,
                         size: 22,
                       ),
@@ -631,7 +632,7 @@ class _Step1Goal extends StatelessWidget {
                     if (isSelected)
                       const Icon(
                         Icons.check_circle,
-                        color: Color(0xFF63f7ff),
+                        color: AppColors.webCyan,
                         size: 20,
                       ),
                   ],
@@ -728,7 +729,7 @@ class _Step2Body extends StatelessWidget {
                 builder: (ctx, child) => Theme(
                   data: Theme.of(ctx).copyWith(
                     colorScheme: const ColorScheme.dark(
-                      primary: Color(0xFF0EA5E9),
+                      primary: AppColors.webCyan,
                     ),
                   ),
                   child: child!,
@@ -834,11 +835,11 @@ class _SexButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: selected
-                ? const Color(0xFF0EA5E9).withValues(alpha: 0.15)
+                ? AppColors.webCyan.withValues(alpha: 0.15)
                 : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected ? const Color(0xFF63f7ff) : Colors.white12,
+              color: selected ? AppColors.webCyan : Colors.white12,
               width: selected ? 1.5 : 1,
             ),
           ),
@@ -847,7 +848,7 @@ class _SexButton extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: selected ? const Color(0xFF63f7ff) : Colors.white38,
+                color: selected ? AppColors.webCyan : Colors.white38,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -971,7 +972,7 @@ class _Step3Training extends StatelessWidget {
                 builder: (ctx, child) => Theme(
                   data: Theme.of(ctx).copyWith(
                     colorScheme: const ColorScheme.dark(
-                      primary: Color(0xFF0EA5E9),
+                      primary: AppColors.webCyan,
                     ),
                   ),
                   child: child!,
@@ -1016,11 +1017,11 @@ class _Step3Training extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: selected
-                      ? const Color(0xFF0EA5E9).withValues(alpha: 0.15)
+                      ? AppColors.webCyan.withValues(alpha: 0.15)
                       : Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: selected ? const Color(0xFF63f7ff) : Colors.white12,
+                    color: selected ? AppColors.webCyan : Colors.white12,
                     width: selected ? 1.5 : 1,
                   ),
                 ),
@@ -1029,7 +1030,7 @@ class _Step3Training extends StatelessWidget {
                     Icon(
                       i.icon,
                       color: selected
-                          ? const Color(0xFF63f7ff)
+                          ? AppColors.webCyan
                           : Colors.white38,
                       size: 22,
                     ),
@@ -1059,7 +1060,7 @@ class _Step3Training extends StatelessWidget {
                     if (selected)
                       const Icon(
                         Icons.check_circle,
-                        color: Color(0xFF63f7ff),
+                        color: AppColors.webCyan,
                         size: 20,
                       ),
                   ],
@@ -1128,7 +1129,7 @@ class _Step4Preview extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: Color(0xFF63f7ff)),
+            CircularProgressIndicator(color: AppColors.webCyan),
             SizedBox(height: 16),
             Text(
               'Calculating your plan…',
@@ -1172,7 +1173,7 @@ class _Step4Preview extends StatelessWidget {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Try Again'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF0EA5E9),
+                  backgroundColor: AppColors.webCyan,
                 ),
               ),
             ],
@@ -1204,32 +1205,35 @@ class _Step4Preview extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Primary targets
+          // Primary targets — pink hero, mirroring the macros card on member/nutrition.
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0EA5E9), Color(0xFF2563EB)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppColors.webPink,
               borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.webPink.withValues(alpha: 0.35),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.local_fire_department,
-                      color: Colors.white70,
-                      size: 16,
+                      color: AppColors.webPinkInk,
+                      size: 18,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       '${p.targetCalories.round()} kcal / day',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: AppColors.webPinkInk,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1240,9 +1244,9 @@ class _Step4Preview extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _MacroChip('Protein', p.proteinGrams, Colors.pink.shade300),
-                    _MacroChip('Carbs', p.carbsGrams, Colors.amber.shade300),
-                    _MacroChip('Fat', p.fatGrams, Colors.cyan.shade300),
+                    _MacroChip('Protein', p.proteinGrams, AppColors.webPinkInk),
+                    _MacroChip('Carbs', p.carbsGrams, AppColors.webPinkInk),
+                    _MacroChip('Fat', p.fatGrams, AppColors.webPinkInk),
                   ],
                 ),
               ],
@@ -1293,7 +1297,8 @@ class _Step4Preview extends StatelessWidget {
             child: FilledButton(
               onPressed: applying ? null : onApply,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF0EA5E9),
+                backgroundColor: AppColors.webVioletInk,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -1345,7 +1350,10 @@ class _MacroChip extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 12),
+          style: TextStyle(
+            color: color.withValues(alpha: 0.7),
+            fontSize: 12,
+          ),
         ),
       ],
     );
@@ -1444,7 +1452,7 @@ class _NumField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0EA5E9)),
+          borderSide: const BorderSide(color: AppColors.webCyan),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
