@@ -11,7 +11,7 @@ export default async function MemberWorkoutPage() {
   }
 
   return (
-    <SidebarShell mainClassName="mx-auto w-full max-w-3xl px-4 py-6">
+    <SidebarShell mainClassName="w-full">
       <MemberWorkoutClient />
     </SidebarShell>
   );

@@ -102,6 +102,7 @@ function fullDayLabel(dateStr: string) {
     weekday: "long",
     month: "long",
     day: "numeric",
+    year: "numeric",
   });
 }
 
@@ -121,10 +122,10 @@ function roundToNearest5(n: number) {
 }
 
 function blockIcon(type: string) {
-  if (type === "warmup") return <Flame className="h-4 w-4 text-orange-400" />;
-  if (type === "lift") return <Dumbbell className="h-4 w-4 text-blue-400" />;
-  if (type === "cooldown") return <Snowflake className="h-4 w-4 text-cyan-400" />;
-  return <Zap className="h-4 w-4 text-yellow-400" />;
+  if (type === "warmup") return <Flame className="h-4 w-4" />;
+  if (type === "lift") return <Dumbbell className="h-4 w-4" />;
+  if (type === "cooldown") return <Snowflake className="h-4 w-4" />;
+  return <Zap className="h-4 w-4" />;
 }
 
 const SCORE_LABEL: Record<string, string> = {
@@ -134,6 +135,24 @@ const SCORE_LABEL: Record<string, string> = {
   distance: "Distance",
   calories: "Calories",
 };
+
+function cleanWorkoutText(value: string | null) {
+  return (value ?? "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\r/g, "")
+    .split(/\n|(?:\s{2,})|(?:\s*-\s+)/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+}
+
+function blockAccent(type: Block["block_type"]) {
+  if (type === "warmup") return "#FF5CA8";
+  if (type === "lift") return "#17141F";
+  if (type === "cooldown") return "#14D2DC";
+  return "#14D2DC";
+}
 
 // ---------------------------------------------------------------------------
 // Main Component
@@ -319,9 +338,231 @@ export default function MemberWorkoutClient() {
 
   const day = dayCache[selectedDay];
   const blocks = day?.blocks ?? [];
+  const selectedTrackName = tracks.find((track) => track.id === trackId)?.name ?? "Fitness";
+  const primaryBlock =
+    blocks.find((block) => block.block_type === "workout") ??
+    blocks.find((block) => block.block_type === "lift") ??
+    blocks[0] ??
+    null;
+  const scoreTypeLabel = primaryBlock ? SCORE_LABEL[primaryBlock.score_type] ?? "Not scored" : "Not scored";
+  const recordStatus = primaryBlock && myResults[primaryBlock.id] ? "Recorded" : "Not recorded";
+  const equipmentSummary = primaryBlock?.description?.toLowerCase().includes("hyrox")
+    ? "Run, Ski, Row, Wall Balls"
+    : "See workout details";
 
   return (
-    <div className="space-y-6">
+    <div className="premium-main-glow min-h-[calc(100vh-3.5rem)] w-full px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
+      <div className="flex w-full flex-col gap-5">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="font-head text-[28px] font-bold leading-tight tracking-normal text-[#17141F] sm:text-[32px]">
+              Workout
+            </h1>
+            <p className="mt-1 text-[15px] font-medium text-[#475467]">
+              {fullDayLabel(selectedDay)} · {selectedTrackName} Track
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/70 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#667085]">Track</span>
+            <select
+              value={trackId ?? ""}
+              onChange={(e) => handleTrackSelect(e.target.value)}
+              className="min-w-[120px] bg-transparent text-sm font-bold text-[#17141F] outline-none"
+              aria-label="Select workout track"
+            >
+              {tracks.length === 0 ? (
+                <option value="">Loading</option>
+              ) : (
+                tracks.map((track) => (
+                  <option key={track.id} value={track.id}>
+                    {track.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+        </header>
+
+        <section className="premium-glass-card p-3 sm:p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="flex min-w-0 flex-1 overflow-x-auto gap-2 pb-0.5 scrollbar-none">
+              {stripDays.map((d) => {
+                const { dow, num } = labelDay(d);
+                const isToday = d === todayKey();
+                const isSelected = d === selectedDay;
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setSelectedDay(d)}
+                    className={`flex min-w-[72px] flex-col items-center rounded-[20px] border px-2 py-3 text-center transition md:flex-1 ${
+                      isSelected
+                        ? "border-white/80 bg-[linear-gradient(135deg,rgba(255,92,168,0.92),rgba(20,210,220,0.88))] text-white shadow-[0_14px_30px_rgba(20,210,220,0.18),0_10px_24px_rgba(255,92,168,0.16)]"
+                        : "border-[rgba(16,24,40,0.08)] bg-white/64 text-[#475467] hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)]"
+                    }`}
+                  >
+                    <span
+                      className={`text-[10px] font-bold uppercase leading-none tracking-[0.16em] ${
+                        isSelected ? "text-white/86" : isToday ? "text-[#0D98A1]" : "text-[#667085]"
+                      }`}
+                    >
+                      {isToday ? `${dow} Today` : dow}
+                    </span>
+                    <span className={`mt-1.5 text-[24px] font-bold leading-none ${isSelected ? "text-white" : "text-[#17141F]"}`}>
+                      {num}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => datePickerRef.current?.showPicker?.() ?? datePickerRef.current?.click()}
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-[#17141F] text-white shadow-[0_12px_28px_rgba(16,24,40,0.18)] transition hover:bg-[#101828]"
+              aria-label="Pick date"
+            >
+              <Calendar className="h-4 w-4" />
+            </button>
+            <input
+              ref={datePickerRef}
+              type="date"
+              value={selectedDay}
+              onChange={(e) => {
+                if (e.target.value) setSelectedDay(e.target.value);
+              }}
+              className="sr-only"
+            />
+          </div>
+        </section>
+
+        {weekLoading && <span className="text-xs font-semibold text-[#667085]">Loading workout...</span>}
+
+        <section className="grid w-full gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.65fr)]">
+          <div className="premium-glass-card min-h-[420px] p-4 sm:p-5">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Today&apos;s Workout</p>
+                <h2 className="mt-1 text-[24px] font-bold leading-tight text-[#17141F]">{fullDayLabel(selectedDay)}</h2>
+              </div>
+              <span className="rounded-full border border-[rgba(20,210,220,0.22)] bg-[rgba(20,210,220,0.09)] px-3 py-1 text-xs font-bold text-[#0D98A1]">
+                {selectedTrackName}
+              </span>
+            </div>
+
+            {blocks.length === 0 && !weekLoading ? (
+              <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[24px] border border-[rgba(16,24,40,0.08)] bg-white/62 p-8 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[rgba(20,210,220,0.18)] bg-[rgba(20,210,220,0.08)] text-[#0D98A1]">
+                  <Calendar className="h-6 w-6" />
+                </div>
+                <h3 className="mt-5 text-xl font-bold text-[#17141F]">Rest day</h3>
+                <p className="mt-2 max-w-md text-sm font-medium leading-6 text-[#667085]">
+                  No programming is scheduled for this selected day.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {blocks.map((block) => (
+                  <BlockCard
+                    key={block.id}
+                    block={block}
+                    myResult={myResults[block.id] ?? null}
+                    leaderboard={leaderboards[block.id] ?? null}
+                    leaderboardOpen={leaderboardOpen[block.id] ?? false}
+                    userId={userId}
+                    onToggleLeaderboard={() =>
+                      setLeaderboardOpen((prev) => ({ ...prev, [block.id]: !prev[block.id] }))
+                    }
+                    onRecord={() => setRecordBlock(block)}
+                    onHistory={() => openHistory(block)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <aside className="flex flex-col gap-5">
+            <div className="premium-glass-card p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Workout Summary</p>
+                  <h2 className="mt-1 text-[22px] font-bold leading-tight text-[#17141F]">Training focus</h2>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(20,210,220,0.11)] text-[#0D98A1]">
+                  <Zap className="h-5 w-5" />
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-3">
+                {[
+                  ["Track", selectedTrackName],
+                  ["Focus", primaryBlock?.description?.toLowerCase().includes("hyrox") ? "HYROX / Engine" : "Training"],
+                  ["Score Type", scoreTypeLabel],
+                  ["Time Domain", primaryBlock?.score_type === "time" ? "Long" : "Variable"],
+                  ["Equipment", equipmentSummary],
+                  ["Record Status", recordStatus],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex items-center justify-between gap-4 rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/66 px-4 py-3">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">{label}</span>
+                    <span className="text-right text-sm font-bold text-[#17141F]">{value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                disabled={!primaryBlock || !(primaryBlock.block_type === "lift" || primaryBlock.block_type === "workout")}
+                onClick={() => primaryBlock && setRecordBlock(primaryBlock)}
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#14D2DC] px-4 py-3 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Plus className="h-4 w-4" />
+                Record Score
+              </button>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                <button type="button" className="rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 px-4 py-2.5 text-sm font-bold text-[#17141F] transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)]">
+                  View Scaling
+                </button>
+                <button type="button" className="rounded-2xl border border-[rgba(255,92,168,0.18)] bg-[rgba(255,92,168,0.08)] px-4 py-2.5 text-sm font-bold text-[#B42368] transition hover:bg-[rgba(255,92,168,0.12)]">
+                  Ask AI Coach
+                </button>
+              </div>
+            </div>
+
+            <div className="premium-glass-card p-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Coach Note</p>
+              <p className="mt-3 text-sm font-semibold leading-6 text-[#475467]">
+                Pace the first run. Keep transitions tight. Save your push for the final wall balls.
+              </p>
+            </div>
+          </aside>
+        </section>
+
+        {recordBlock && (
+          <RecordModal
+            block={recordBlock}
+            trackId={trackId!}
+            dayDate={selectedDay}
+            userId={userId!}
+            onClose={() => setRecordBlock(null)}
+            onSaved={() => {
+              afterRecord(recordBlock.id);
+              setRecordBlock(null);
+            }}
+          />
+        )}
+
+        {historyBlock && (
+          <HistoryPanel
+            block={historyBlock}
+            entries={historyEntries}
+            loading={historyLoading}
+            onClose={() => setHistoryBlock(null)}
+          />
+        )}
+
+        <div className="hidden">
       {/* ── Track selector ── */}
       {tracks.length > 1 && (
         <div className="flex items-center gap-2">
@@ -447,6 +688,8 @@ export default function MemberWorkoutClient() {
         />
       )}
     </div>
+      </div>
+    </div>
   );
 }
 
@@ -479,17 +722,24 @@ function BlockCard({
   const showRecord = block.block_type === "lift" || block.block_type === "workout";
   const showHistory = !!block.movement_id;
   const showLeaderboard = block.leaderboard_enabled;
+  const descriptionLines = cleanWorkoutText(block.description);
+  const accent = blockAccent(block.block_type);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel-2)]">
+    <div className="overflow-hidden rounded-[26px] border border-[rgba(16,24,40,0.08)] bg-white/72 shadow-[0_18px_38px_rgba(16,24,40,0.08)]">
       {/* Header */}
-      <div className="flex items-start gap-3 px-4 pt-4 pb-3">
-        <div className="mt-0.5">{blockIcon(block.block_type)}</div>
+      <div className="flex items-start gap-3 px-5 pt-5 pb-4">
+        <div
+          className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_12px_26px_rgba(16,24,40,0.12)]"
+          style={{ backgroundColor: accent }}
+        >
+          {blockIcon(block.block_type)}
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-base font-bold text-[var(--text)]">{block.title}</h2>
+            <h2 className="text-[22px] font-bold leading-tight text-[#17141F]">{block.title}</h2>
             {scoreLabel && (
-              <span className="rounded-full border border-[var(--line)] bg-[var(--panel-2)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
+              <span className="rounded-full border border-[rgba(20,210,220,0.22)] bg-[rgba(20,210,220,0.09)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#0D98A1]">
                 {scoreLabel}
               </span>
             )}
@@ -513,20 +763,39 @@ function BlockCard({
       </div>
 
       {/* Description */}
-      {block.description && (
-        <p className="px-4 pb-3 text-sm leading-relaxed text-[var(--text-muted)] whitespace-pre-wrap">
-          {block.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()}
-        </p>
+      {descriptionLines.length > 0 && (
+        <div className="mx-5 mb-4 rounded-[22px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-4">
+          {block.block_type === "workout" ? (
+            <ol className="grid gap-2 md:grid-cols-2">
+              {descriptionLines.map((line, index) => (
+                <li key={`${line}-${index}`} className="flex gap-3 rounded-2xl bg-white/62 px-3 py-2.5 text-sm font-semibold leading-5 text-[#344054]">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#17141F] text-[11px] font-bold text-white">
+                    {index + 1}
+                  </span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {descriptionLines.map((line, index) => (
+                <p key={`${line}-${index}`} className="rounded-2xl bg-white/62 px-3 py-2.5 text-sm font-semibold leading-5 text-[#344054]">
+                  {line}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Levels */}
       {block.levels.length > 0 && (
-        <div className="mx-4 mb-3 space-y-1">
+        <div className="mx-5 mb-4 grid gap-2">
           {block.levels.map((lv) => (
-            <div key={lv.id} className="rounded-lg border border-[var(--line)] bg-[var(--panel-2)] px-3 py-2">
-              <p className="text-xs font-semibold text-[var(--text-muted)]">{lv.title}</p>
+            <div key={lv.id} className="rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/66 px-4 py-3">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#667085]">{lv.title}</p>
               {lv.instructions && (
-                <p className="mt-0.5 text-xs text-[var(--text-soft)]">{lv.instructions}</p>
+                <p className="mt-1 text-sm font-medium leading-6 text-[#475467]">{lv.instructions}</p>
               )}
             </div>
           ))}

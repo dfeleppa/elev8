@@ -11,7 +11,7 @@ export default async function MemberClassSchedulePage() {
   }
 
   return (
-    <SidebarShell mainClassName="mx-auto w-full max-w-6xl px-5 py-10 lg:py-16">
+    <SidebarShell mainClassName="w-full">
       <MemberScheduleClient />
     </SidebarShell>
   );

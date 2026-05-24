@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, LoaderCircle, User, Users, XCircle } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  LoaderCircle,
+  User,
+  Users,
+  XCircle,
+} from "lucide-react";
 
 type ReservedMember = {
   id: string;
@@ -57,14 +67,6 @@ function addDays(dateKey: string, amount: number): string {
   return toLocalDateString(date);
 }
 
-function formatTime(value: string) {
-  const [hours = "00", minutes = "00"] = value.split(":");
-  const hourNumber = Number(hours);
-  const suffix = hourNumber >= 12 ? "PM" : "AM";
-  const hour12 = hourNumber % 12 === 0 ? 12 : hourNumber % 12;
-  return `${hour12}:${minutes} ${suffix}`;
-}
-
 function formatDuration(minutes: number) {
   if (minutes < 60) {
     return `${minutes} min`;
@@ -73,6 +75,17 @@ function formatDuration(minutes: number) {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   return remainingMinutes > 0 ? `${hours}h ${remainingMinutes} min` : `${hours}h`;
+}
+
+function formatClassTimeRange(value: string, durationMinutes: number) {
+  const [hours = "00", minutes = "00"] = value.split(":");
+  const start = new Date();
+  start.setHours(Number(hours), Number(minutes), 0, 0);
+  const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+  const format = (date: Date) =>
+    date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+
+  return `${format(start)} - ${format(end)}`;
 }
 
 function formatRailDay(dateKey: string) {
@@ -116,7 +129,6 @@ function getSessionStatusCopy(session: ScheduleSession) {
     return {
       title: "Reserved",
       body: "Your spot is locked in for this class.",
-      tone: "text-emerald-500",
     };
   }
 
@@ -126,7 +138,6 @@ function getSessionStatusCopy(session: ScheduleSession) {
       body: session.reservationCutoffAt
         ? `Reservations closed at ${formatCutoff(session.reservationCutoffAt)}.`
         : "Reservations are closed for this class.",
-      tone: "text-amber-500",
     };
   }
 
@@ -134,33 +145,36 @@ function getSessionStatusCopy(session: ScheduleSession) {
     return {
       title: "Class full",
       body: "This class has reached capacity.",
-      tone: "text-rose-500",
     };
   }
 
   return {
     title: "Open for reservations",
-    body: session.size_limit > 0
-      ? `${session.capacityRemaining} spot${session.capacityRemaining === 1 ? "" : "s"} remaining.`
-      : "Unlimited spots available.",
-    tone: "text-sky-500",
+    body:
+      session.size_limit > 0
+        ? `${session.capacityRemaining} spot${session.capacityRemaining === 1 ? "" : "s"} remaining.`
+        : "Unlimited spots available.",
   };
 }
 
 function canReserve(session: ScheduleSession) {
-  if (session.isReservedByCurrentUser) {
-    return false;
-  }
-
-  if (session.isReservationClosed) {
-    return false;
-  }
-
-  if (session.size_limit > 0 && session.capacityRemaining === 0) {
-    return false;
-  }
-
+  if (session.isReservedByCurrentUser) return false;
+  if (session.isReservationClosed) return false;
+  if (session.size_limit > 0 && session.capacityRemaining === 0) return false;
   return true;
+}
+
+function statusPillClass(session: ScheduleSession) {
+  if (session.isReservedByCurrentUser) {
+    return "border-emerald-400/30 bg-emerald-500/10 text-emerald-700";
+  }
+  if (session.isReservationClosed) {
+    return "border-amber-400/35 bg-amber-500/10 text-amber-700";
+  }
+  if (session.size_limit > 0 && session.capacityRemaining === 0) {
+    return "border-rose-400/30 bg-rose-500/10 text-rose-700";
+  }
+  return "border-[rgba(20,210,220,0.28)] bg-[rgba(20,210,220,0.09)] text-[#0D98A1]";
 }
 
 export default function MemberScheduleClient() {
@@ -266,322 +280,397 @@ export default function MemberScheduleClient() {
   }
 
   const sessionsLabel = `${sessions.length} class${sessions.length === 1 ? "" : "es"} scheduled`;
+  const totalReservations = sessions.reduce((total, session) => total + session.reservedCount, 0);
+  const openSessions = sessions.filter((session) => canReserve(session));
+  const nextAvailableSession = openSessions[0] ?? sessions[0] ?? null;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-3xl font-semibold text-[var(--text)]">Class Schedule</h1>
-          <p className="mt-1 text-sm text-[var(--text-soft)]">
+    <div className="premium-main-glow min-h-[calc(100vh-3.5rem)] w-full px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
+      <div className="flex w-full flex-col gap-5">
+        <header className="flex flex-col gap-1.5">
+          <h1 className="font-head text-[28px] font-bold leading-tight tracking-normal text-[#17141F] sm:text-[32px]">
+            Class Schedule
+          </h1>
+          <p className="text-[15px] font-medium text-[#475467]">
             {loading ? "Loading daily schedule..." : `${formatLongDate(selectedDate)} · ${sessionsLabel}`}
           </p>
-        </div>
+        </header>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setRailStart((prev) => addDays(prev, -7))}
-            className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
-            aria-label="Previous week"
-          >
-            <ChevronLeft size={16} />
-          </button>
+        <section className="premium-glass-card p-3 sm:p-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setRailStart((prev) => addDays(prev, -7))}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:border-[rgba(20,210,220,0.26)] hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+              aria-label="Previous week"
+            >
+              <ChevronLeft size={17} />
+            </button>
 
-          <div className="min-w-0 flex-1 overflow-x-auto md:overflow-x-visible">
-            <div className="flex min-w-max gap-1.5 md:min-w-0 md:w-full">
-              {dayRail.map((dateKey) => {
-                const isSelected = dateKey === selectedDate;
-                const isToday = dateKey === todayKey;
-                const label = formatRailDay(dateKey);
+            <div className="min-w-0 flex-1 overflow-x-auto md:overflow-x-visible">
+              <div className="flex min-w-max gap-2 md:min-w-0 md:w-full">
+                {dayRail.map((dateKey) => {
+                  const isSelected = dateKey === selectedDate;
+                  const isToday = dateKey === todayKey;
+                  const label = formatRailDay(dateKey);
 
-                return (
-                  <button
-                    key={dateKey}
-                    type="button"
-                    onClick={() => setSelectedDate(dateKey)}
-                    className={`flex w-[62px] shrink-0 flex-col items-center rounded-2xl border px-1.5 py-2.5 text-center transition md:w-auto md:flex-1 md:shrink ${
-                      isSelected
-                        ? "border-transparent bg-[linear-gradient(160deg,#ff4a8d,#8b5cf6)] shadow-[0_8px_24px_rgba(255,74,141,0.40)]"
-                        : "border-[var(--line)] bg-[var(--panel-2)] hover:border-[var(--line-strong)] hover:bg-[var(--panel)]"
-                    }`}
-                  >
-                    <span className={`whitespace-nowrap text-[8px] font-bold uppercase leading-none ${
-                      isSelected ? "tracking-[0.12em] text-white/80" : isToday ? "tracking-[0.12em] text-[var(--cyan)]" : "tracking-[0.16em] text-[var(--text-muted)]"
-                    }`}>
-                      {isToday ? `${label.weekday} TODAY` : label.weekday}
-                    </span>
-                    <span className={`mt-1.5 text-[22px] font-bold leading-none ${
-                      isSelected ? "text-white" : "text-[var(--text)]"
-                    }`}>
-                      {label.dayNum}
-                    </span>
-                    <span className={`mt-1 text-[10px] font-medium leading-none ${
-                      isSelected ? "text-white/70" : "text-[var(--text-muted)]"
-                    }`}>
-                      {label.month}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setRailStart((prev) => addDays(prev, 7))}
-            className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
-            aria-label="Next week"
-          >
-            <ChevronRight size={16} />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedDate(todayKey);
-              setRailStart(addDays(todayKey, -7));
-            }}
-            className="shrink-0 rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--panel)]"
-          >
-            Today
-          </button>
-
-          <button
-            type="button"
-            onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
-            className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:bg-[var(--panel)] hover:text-[var(--text)]"
-            aria-label="Choose a date"
-          >
-            <CalendarDays size={16} />
-          </button>
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={selectedDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
-            className="sr-only"
-            aria-hidden="true"
-            tabIndex={-1}
-          />
-        </div>
-      </div>
-
-      {error ? (
-        <div className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-500">
-          {error}
-        </div>
-      ) : null}
-
-      {message ? (
-        <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500">
-          {message}
-        </div>
-      ) : null}
-
-      {loading ? (
-        <div className="flex min-h-[320px] items-center justify-center rounded-[28px] border border-[var(--line)] bg-[var(--panel-2)] text-sm text-[var(--text-muted)]">
-          Loading classes...
-        </div>
-      ) : sessions.length === 0 ? (
-        <div className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-2)] p-8 text-center shadow-[0_26px_70px_rgba(0,0,0,0.25)]">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-soft)]">
-            <CalendarDays size={28} />
-          </div>
-          <h2 className="mt-5 text-xl font-semibold text-[var(--text)]">No classes on this day</h2>
-          <p className="mt-2 text-sm text-[var(--text-soft)]">
-            Pick another date from the bar above or use the calendar picker to jump somewhere else.
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {sessions.map((session) => {
-            const coachLabel = session.default_coach?.full_name ?? session.default_coach?.email ?? null;
-            const status = getSessionStatusCopy(session);
-            const isPending = pendingSessionId === session.id;
-            const reserveEnabled = canReserve(session);
-
-            return (
-              <article
-                key={`${session.id}-${session.classDate}`}
-                className="hover-lift relative overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--panel)] shadow-[0_4px_16px_rgba(0,0,0,0.07)]"
-              >
-                {/* Colored top accent band */}
-                <div
-                  className="absolute inset-x-0 top-0 h-1"
-                  style={{ backgroundColor: session.calendar_color }}
-                />
-
-                <div className="flex flex-col gap-5 p-5 pt-6 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="min-w-0 flex-1 space-y-3">
-                    {/* Title + track badge */}
-                    <div className="flex flex-wrap items-center gap-2">
+                  return (
+                    <button
+                      key={dateKey}
+                      type="button"
+                      onClick={() => setSelectedDate(dateKey)}
+                      className={`flex w-[72px] shrink-0 flex-col items-center rounded-[20px] border px-2 py-3 text-center transition md:w-auto md:flex-1 md:shrink ${
+                        isSelected
+                          ? "border-white/80 bg-[linear-gradient(135deg,rgba(255,92,168,0.92),rgba(20,210,220,0.88))] text-white shadow-[0_14px_30px_rgba(20,210,220,0.18),0_10px_24px_rgba(255,92,168,0.16)]"
+                          : "border-[rgba(16,24,40,0.08)] bg-white/64 text-[#475467] hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)]"
+                      }`}
+                    >
                       <span
-                        className="inline-block h-3 w-3 flex-shrink-0 rounded-full"
-                        style={{ backgroundColor: session.calendar_color }}
-                      />
-                      <h2 className="text-lg font-semibold text-[var(--text)]">{session.name}</h2>
-                      {session.track ? (
-                        <span
-                          className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.18em]"
-                          style={{
-                            color: session.calendar_color,
-                            backgroundColor: `${session.calendar_color}22`,
-                          }}
-                        >
-                          {session.track.name}
-                        </span>
-                      ) : null}
-                    </div>
-
-                    {/* Meta row */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-muted)]">
-                      <span className="inline-flex items-center gap-1.5">
-                        <Clock3 size={14} />
-                        <span className="font-medium text-[var(--text)]">{formatTime(session.class_time)}</span>
-                        <span className="text-[var(--text-soft)]">· {formatDuration(session.duration_minutes)}</span>
-                      </span>
-                      {coachLabel ? (
-                        <span className="inline-flex items-center gap-1.5">
-                          <User size={14} />
-                          {coachLabel}
-                        </span>
-                      ) : null}
-                    </div>
-
-                    {/* Capacity + status row */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      {/* Status pill */}
-                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
-                        session.isReservedByCurrentUser
-                          ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-500"
-                          : session.isReservationClosed
-                            ? "border-amber-400/30 bg-amber-500/10 text-amber-500"
-                            : session.size_limit > 0 && session.capacityRemaining === 0
-                              ? "border-rose-400/30 bg-rose-500/10 text-rose-500"
-                              : "border-sky-400/30 bg-sky-500/10 text-sky-500"
-                      }`}>
-                        {session.isReservedByCurrentUser ? <CheckCircle2 size={12} /> : null}
-                        {status.title}
-                      </span>
-
-                      {/* Roster button */}
-                      <button
-                        type="button"
-                        onClick={() => setRosterSession(session)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--panel-2)] px-3 py-1 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
-                      >
-                        <Users size={12} />
-                        {session.size_limit > 0
-                          ? `${session.reservedCount} / ${session.size_limit}`
-                          : `${session.reservedCount} reserved`}
-                      </button>
-                    </div>
-
-                    {/* Capacity bar */}
-                    {session.size_limit > 0 ? (
-                      <div className="h-1.5 w-full max-w-[200px] overflow-hidden rounded-full bg-[var(--line-strong)]">
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{
-                            width: `${Math.min(100, (session.reservedCount / session.size_limit) * 100)}%`,
-                            backgroundColor: session.calendar_color,
-                          }}
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="flex flex-col gap-3 lg:min-w-[200px] lg:items-end">
-                    {session.isReservedByCurrentUser ? (
-                      <button
-                        type="button"
-                        onClick={() => void mutateReservation(session, "DELETE")}
-                        disabled={isPending}
-                        className="inline-flex min-w-[170px] items-center justify-center gap-2 rounded-2xl border border-rose-400/30 bg-rose-500/8 px-4 py-2.5 text-sm font-semibold text-rose-500 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isPending ? <LoaderCircle size={15} className="animate-spin" /> : <XCircle size={15} />}
-                        Cancel reservation
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => void mutateReservation(session, "POST")}
-                        disabled={!reserveEnabled || isPending}
-                        className={`inline-flex min-w-[170px] items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                          reserveEnabled
-                            ? "bg-[linear-gradient(135deg,#ff4a8d,#8b5cf6)] text-white shadow-[0_6px_20px_rgba(255,74,141,0.3)] hover:brightness-110"
-                            : "border border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-soft)]"
+                        className={`whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.16em] ${
+                          isSelected ? "text-white/86" : isToday ? "text-[#0D98A1]" : "text-[#667085]"
                         }`}
                       >
-                        {isPending ? <LoaderCircle size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
-                        {session.isReservationClosed
-                          ? "Reservation closed"
-                          : session.size_limit > 0 && session.capacityRemaining === 0
-                            ? "Class full"
-                            : "Reserve spot"}
-                      </button>
-                    )}
+                        {isToday ? `${label.weekday} Today` : label.weekday}
+                      </span>
+                      <span
+                        className={`mt-1.5 text-[24px] font-bold leading-none ${
+                          isSelected ? "text-white" : "text-[#17141F]"
+                        }`}
+                      >
+                        {label.dayNum}
+                      </span>
+                      <span
+                        className={`mt-1 text-[11px] font-semibold leading-none ${
+                          isSelected ? "text-white/78" : "text-[#667085]"
+                        }`}
+                      >
+                        {label.month}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-                    <p className="max-w-[200px] text-right text-xs text-[var(--text-soft)]">
-                      {session.reservationCutoffAt
-                        ? `Closes ${formatCutoff(session.reservationCutoffAt)}`
-                        : "Open until class starts"}
-                    </p>
-                  </div>
+            <button
+              type="button"
+              onClick={() => setRailStart((prev) => addDays(prev, 7))}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:border-[rgba(20,210,220,0.26)] hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+              aria-label="Next week"
+            >
+              <ChevronRight size={17} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedDate(todayKey);
+                setRailStart(addDays(todayKey, -7));
+              }}
+              className="hidden shrink-0 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-4 py-2.5 text-sm font-bold text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:border-[rgba(20,210,220,0.26)] hover:bg-[rgba(20,210,220,0.08)] sm:inline-flex"
+            >
+              Today
+            </button>
+
+            <button
+              type="button"
+              onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-[#17141F] text-white shadow-[0_12px_28px_rgba(16,24,40,0.18)] transition hover:bg-[#101828]"
+              aria-label="Choose a date"
+            >
+              <CalendarDays size={17} />
+            </button>
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+              className="sr-only"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+          </div>
+        </section>
+
+        {error ? (
+          <div className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-600">
+            {error}
+          </div>
+        ) : null}
+
+        {message ? (
+          <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700">
+            {message}
+          </div>
+        ) : null}
+
+        <section className="grid w-full gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(340px,0.7fr)]">
+          <div className="premium-glass-card min-h-[360px] p-4 sm:p-5">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Today&apos;s Classes</p>
+                <h2 className="mt-1 text-[22px] font-bold leading-tight text-[#17141F]">Book your training block</h2>
+              </div>
+              <span className="rounded-full border border-[rgba(20,210,220,0.22)] bg-[rgba(20,210,220,0.09)] px-3 py-1 text-xs font-bold text-[#0D98A1]">
+                {sessionsLabel}
+              </span>
+            </div>
+
+            {loading ? (
+              <div className="flex min-h-[260px] items-center justify-center rounded-[24px] border border-[rgba(16,24,40,0.08)] bg-white/62 text-sm font-semibold text-[#667085]">
+                Loading classes...
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="flex min-h-[260px] flex-col items-center justify-center rounded-[24px] border border-[rgba(16,24,40,0.08)] bg-white/62 p-8 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[rgba(20,210,220,0.18)] bg-[rgba(20,210,220,0.08)] text-[#0D98A1]">
+                  <CalendarDays size={25} />
                 </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
+                <h3 className="mt-5 text-xl font-bold text-[#17141F]">No classes on this day</h3>
+                <p className="mt-2 max-w-md text-sm font-medium leading-6 text-[#667085]">
+                  Pick another date from the strip above or use the calendar picker to jump somewhere else.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {sessions.map((session) => {
+                  const coachLabel = session.default_coach?.full_name ?? session.default_coach?.email ?? null;
+                  const status = getSessionStatusCopy(session);
+                  const isPending = pendingSessionId === session.id;
+                  const reserveEnabled = canReserve(session);
 
-      {rosterSession ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[28px] border border-[var(--line)] bg-[var(--bg)] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+                  return (
+                    <article
+                      key={`${session.id}-${session.classDate}`}
+                      className="hover-lift relative overflow-hidden rounded-[26px] border border-[rgba(16,24,40,0.08)] bg-white/72 shadow-[0_18px_38px_rgba(16,24,40,0.08)]"
+                    >
+                      <div
+                        className="absolute inset-y-0 left-0 w-1.5"
+                        style={{ backgroundColor: session.calendar_color }}
+                      />
+
+                      <div className="flex flex-col gap-5 p-5 pl-6 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0 flex-1 space-y-4">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full shadow-[0_0_0_5px_rgba(20,210,220,0.08)]"
+                              style={{ backgroundColor: session.calendar_color }}
+                            />
+                            <h3 className="text-[24px] font-bold leading-tight text-[#17141F]">{session.name}</h3>
+                            {session.track ? (
+                              <span
+                                className="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em]"
+                                style={{
+                                  color: session.calendar_color,
+                                  backgroundColor: `${session.calendar_color}22`,
+                                }}
+                              >
+                                {session.track.name}
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+                            <div className="rounded-[18px] border border-[rgba(16,24,40,0.07)] bg-white/72 p-3">
+                              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Time</p>
+                              <p className="mt-1 text-sm font-bold text-[#17141F]">
+                                {formatClassTimeRange(session.class_time, session.duration_minutes)}
+                              </p>
+                            </div>
+                            <div className="rounded-[18px] border border-[rgba(16,24,40,0.07)] bg-white/72 p-3">
+                              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Duration</p>
+                              <p className="mt-1 text-sm font-bold text-[#17141F]">{formatDuration(session.duration_minutes)}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setRosterSession(session)}
+                              className="rounded-[18px] border border-[rgba(16,24,40,0.07)] bg-white/72 p-3 text-left transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)]"
+                            >
+                              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Reserved</p>
+                              <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-bold text-[#17141F]">
+                                <Users size={14} />
+                                {session.size_limit > 0 ? `${session.reservedCount} / ${session.size_limit}` : session.reservedCount}
+                              </p>
+                            </button>
+                            <div className="rounded-[18px] border border-[rgba(16,24,40,0.07)] bg-white/72 p-3">
+                              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Closes</p>
+                              <p className="mt-1 text-sm font-bold text-[#17141F]">
+                                {session.reservationCutoffAt ? formatCutoff(session.reservationCutoffAt) : "Class start"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium text-[#667085]">
+                            {coachLabel ? (
+                              <span className="inline-flex items-center gap-1.5">
+                                <User size={14} />
+                                {coachLabel}
+                              </span>
+                            ) : null}
+                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${statusPillClass(session)}`}>
+                              {session.isReservedByCurrentUser ? <CheckCircle2 size={12} /> : null}
+                              {status.title}
+                            </span>
+                          </div>
+
+                          {session.size_limit > 0 ? (
+                            <div className="h-2.5 w-full max-w-[360px] overflow-hidden rounded-full bg-[#EAECF0]">
+                              <div
+                                className="h-full rounded-full bg-[linear-gradient(90deg,#14D2DC,#FF5CA8)] transition-all"
+                                style={{
+                                  width: `${Math.min(100, (session.reservedCount / session.size_limit) * 100)}%`,
+                                }}
+                              />
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="flex flex-col gap-3 lg:min-w-[200px] lg:items-end">
+                          {session.isReservedByCurrentUser ? (
+                            <button
+                              type="button"
+                              onClick={() => void mutateReservation(session, "DELETE")}
+                              disabled={isPending}
+                              className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {isPending ? <LoaderCircle size={15} className="animate-spin" /> : <XCircle size={15} />}
+                              Cancel reservation
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => void mutateReservation(session, "POST")}
+                              disabled={!reserveEnabled || isPending}
+                              className={`inline-flex min-w-[180px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                reserveEnabled
+                                  ? "bg-[#14D2DC] text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] hover:brightness-105"
+                                  : "border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#667085]"
+                              }`}
+                            >
+                              {isPending ? <LoaderCircle size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+                              {session.isReservationClosed
+                                ? "Reservation closed"
+                                : session.size_limit > 0 && session.capacityRemaining === 0
+                                  ? "Class full"
+                                  : "Reserve spot"}
+                            </button>
+                          )}
+
+                          <p className="max-w-[220px] text-right text-xs font-semibold leading-5 text-[#667085]">{status.body}</p>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <aside className="premium-glass-card flex h-full flex-col p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-soft)]">Reserved Members</p>
-                <h3 className="mt-2 text-xl font-semibold text-[var(--text)]">{rosterSession.name}</h3>
-                <p className="mt-1 text-sm text-[var(--text-soft)]">{formatLongDate(rosterSession.classDate)}</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Reservation Summary</p>
+                <h2 className="mt-1 text-[22px] font-bold leading-tight text-[#17141F]">Selected day</h2>
               </div>
-              <button
-                type="button"
-                onClick={() => setRosterSession(null)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
-                aria-label="Close reserved members list"
-              >
-                <XCircle size={18} />
-              </button>
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(255,92,168,0.11)] text-[#D92D7D]">
+                <CalendarDays size={20} />
+              </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
-              <p className="text-sm text-[var(--text-muted)]">
-                {rosterSession.size_limit > 0
-                  ? `${rosterSession.reservedCount} of ${rosterSession.size_limit} spots reserved`
-                  : `${rosterSession.reservedCount} members reserved`}
-              </p>
+            <div className="mt-5 rounded-[24px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-4">
+              <p className="text-sm font-bold text-[#17141F]">{formatLongDate(selectedDate)}</p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#667085]">{sessionsLabel}</p>
+            </div>
 
-              {rosterSession.reservedMembers.length === 0 ? (
-                <p className="mt-4 text-sm text-[var(--text-soft)]">No one has reserved this class yet.</p>
-              ) : (
-                <div className="mt-4 space-y-2">
-                  {rosterSession.reservedMembers.map((member, index) => (
-                    <div
-                      key={`${member.id}-${index}`}
-                      className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-3 py-3"
-                    >
-                      <span className="text-sm font-medium text-[var(--text)]">{member.name}</span>
-                      <span className="text-xs text-[var(--text-soft)]">
-                        {member.reservedAt ? new Date(member.reservedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : ""}
-                      </span>
-                    </div>
-                  ))}
+            <div className="mt-4 grid gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+              <div className="rounded-[20px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Classes</p>
+                <p className="mt-2 text-3xl font-bold text-[#17141F]">{sessions.length}</p>
+              </div>
+              <div className="rounded-[20px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Reserved</p>
+                <p className="mt-2 text-3xl font-bold text-[#17141F]">{totalReservations}</p>
+              </div>
+              <div className="rounded-[20px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Open</p>
+                <p className="mt-2 text-3xl font-bold text-[#17141F]">{openSessions.length}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex-1 rounded-[24px] border border-[rgba(20,210,220,0.16)] bg-[linear-gradient(135deg,rgba(20,210,220,0.08),rgba(255,255,255,0.68))] p-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#667085]">Next available</p>
+              {nextAvailableSession ? (
+                <div className="mt-3">
+                  <p className="text-lg font-bold text-[#17141F]">{nextAvailableSession.name}</p>
+                  <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-[#475467]">
+                    <Clock3 size={14} />
+                    {formatClassTimeRange(nextAvailableSession.class_time, nextAvailableSession.duration_minutes)}
+                  </p>
+                  <p className="mt-3 text-sm font-medium leading-6 text-[#667085]">
+                    {getSessionStatusCopy(nextAvailableSession).body}
+                  </p>
                 </div>
+              ) : (
+                <p className="mt-3 text-sm font-medium leading-6 text-[#667085]">
+                  No classes are available for reservation on this selected day.
+                </p>
               )}
             </div>
+          </aside>
+        </section>
+
+        {rosterSession ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm">
+            <div className="premium-glass-card w-full max-w-md p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Reserved Members</p>
+                  <h3 className="mt-2 text-xl font-bold text-[#17141F]">{rosterSession.name}</h3>
+                  <p className="mt-1 text-sm font-medium text-[#667085]">{formatLongDate(rosterSession.classDate)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRosterSession(null)}
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#667085] transition hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+                  aria-label="Close reserved members list"
+                >
+                  <XCircle size={18} />
+                </button>
+              </div>
+
+              <div className="mt-5 rounded-[24px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-4">
+                <p className="text-sm font-semibold text-[#475467]">
+                  {rosterSession.size_limit > 0
+                    ? `${rosterSession.reservedCount} of ${rosterSession.size_limit} spots reserved`
+                    : `${rosterSession.reservedCount} members reserved`}
+                </p>
+
+                {rosterSession.reservedMembers.length === 0 ? (
+                  <p className="mt-4 text-sm font-medium text-[#667085]">No one has reserved this class yet.</p>
+                ) : (
+                  <div className="mt-4 space-y-2">
+                    {rosterSession.reservedMembers.map((member, index) => (
+                      <div
+                        key={`${member.id}-${index}`}
+                        className="flex items-center justify-between rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-3"
+                      >
+                        <span className="text-sm font-bold text-[#17141F]">{member.name}</span>
+                        <span className="text-xs font-semibold text-[#667085]">
+                          {member.reservedAt
+                            ? new Date(member.reservedAt).toLocaleTimeString("en-US", {
+                                hour: "numeric",
+                                minute: "2-digit",
+                              })
+                            : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }
