@@ -66,6 +66,14 @@ class CoachPlanStatus {
   final double? startWeight; // lbs
   final double? currentWeight; // lbs
   final double? targetWeight; // lbs
+  final double? bodyFatPercent;
+  final double? estimatedMetabolism; // kcal/day
+  final String? metabolismSource; // "formula" | "empirical"
+  final DateTime? metabolismEstimatedAt;
+  final double? targetCalories;
+  final double? proteinGrams;
+  final double? carbsGrams;
+  final double? fatGrams;
   final DateTime? effectiveDate;
   final DateTime? lastCheckInDate;
   final DateTime? nextCheckInDate;
@@ -76,10 +84,20 @@ class CoachPlanStatus {
     this.startWeight,
     this.currentWeight,
     this.targetWeight,
+    this.bodyFatPercent,
+    this.estimatedMetabolism,
+    this.metabolismSource,
+    this.metabolismEstimatedAt,
+    this.targetCalories,
+    this.proteinGrams,
+    this.carbsGrams,
+    this.fatGrams,
     this.effectiveDate,
     this.lastCheckInDate,
     this.nextCheckInDate,
   });
+
+  bool get checkInDueToday => daysUntilCheckIn <= 0;
 
   String get goalLabel {
     return NutritionGoal.fromString(goalType)?.label ??
@@ -708,24 +726,26 @@ class NutritionRepository {
         );
       }
 
-      double? parseNumeric(dynamic v) =>
-          v == null ? null : double.tryParse(v.toString());
+      DateTime? parseDate(dynamic v) =>
+          v is String ? DateTime.tryParse(v) : null;
 
       return CoachPlanStatus(
         hasPlan: true,
         goalType: summary['goalType'] as String?,
-        startWeight: parseNumeric(summary['startWeight']),
-        currentWeight: parseNumeric(summary['currentWeight']),
-        targetWeight: parseNumeric(summary['targetWeight']),
-        effectiveDate: summary['effectiveDate'] != null
-            ? DateTime.tryParse(summary['effectiveDate'] as String)
-            : null,
-        lastCheckInDate: summary['lastCheckInDate'] != null
-            ? DateTime.tryParse(summary['lastCheckInDate'] as String)
-            : null,
-        nextCheckInDate: summary['nextCheckInDate'] != null
-            ? DateTime.tryParse(summary['nextCheckInDate'] as String)
-            : null,
+        startWeight: _parseNumeric(summary['startWeight']),
+        currentWeight: _parseNumeric(summary['currentWeight']),
+        targetWeight: _parseNumeric(summary['targetWeight']),
+        bodyFatPercent: _parseNumeric(summary['bodyFatPercent']),
+        estimatedMetabolism: _parseNumeric(summary['estimatedMetabolism']),
+        metabolismSource: summary['metabolismSource'] as String?,
+        metabolismEstimatedAt: parseDate(summary['metabolismEstimatedAt']),
+        targetCalories: _parseNumeric(summary['targetCalories']),
+        proteinGrams: _parseNumeric(summary['proteinGrams']),
+        carbsGrams: _parseNumeric(summary['carbsGrams']),
+        fatGrams: _parseNumeric(summary['fatGrams']),
+        effectiveDate: parseDate(summary['effectiveDate']),
+        lastCheckInDate: parseDate(summary['lastCheckInDate']),
+        nextCheckInDate: parseDate(summary['nextCheckInDate']),
       );
     } catch (e) {
       debugPrint('[NutritionRepo] fetchCoachPlanStatus (API) failed, falling back to Supabase: $e');

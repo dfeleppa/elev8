@@ -60,6 +60,28 @@ class CoachPlanStatusResponse {
   CoachPlanStatusResponse({required this.hasPlan, required this.summary});
 }
 
+/// Result of a member-initiated 10-day check-in submission.
+///
+/// [action] is one of:
+///  - "adjusted": macros were recalculated and a new plan was applied
+///  - "counter_reset": the system reset the check-in window (e.g. low adherence)
+///  - "held": no change; review again next window
+class CheckInResult {
+  final String action;
+  final DateTime? nextCheckInDate;
+  final int? calorieDelta;
+  final String? message;
+
+  CheckInResult({
+    required this.action,
+    this.nextCheckInDate,
+    this.calorieDelta,
+    this.message,
+  });
+
+  bool get adjusted => action == 'adjusted';
+}
+
 class CoachApiService {
   static String get _baseUrl => Env.webAppUrl;
 
@@ -217,6 +239,39 @@ class CoachApiService {
     }
     final body = jsonDecode(resp.body) as Map<String, dynamic>;
     return CoachPlanPreview.fromJson(body['plan'] as Map<String, dynamic>);
+  }
+
+  /// Submits a member 10-day check-in. Server confirms bodyweight + body fat,
+  /// re-evaluates adherence, and either applies a macro adjustment, resets
+  /// the window, or holds the current plan.
+  static Future<CheckInResult> submitCheckIn({
+    required double bodyWeightLbs,
+    required double bodyFatPercent,
+    required String goalType,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/api/coach/nutrition-plan/check-in');
+    final resp = await http.post(
+      uri,
+      headers: _headers,
+      body: jsonEncode({
+        'bodyWeightLbs': bodyWeightLbs,
+        'bodyFatPercent': bodyFatPercent,
+        'goalType': goalType,
+      }),
+    );
+    if (resp.statusCode != 200) {
+      _throwApiError('Submit check-in', resp);
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final recommendation = body['recommendation'] as Map<String, dynamic>?;
+    final nextDate = body['nextCheckInDate'];
+    final delta = recommendation?['calorieDelta'];
+    return CheckInResult(
+      action: body['action'] as String? ?? 'held',
+      nextCheckInDate: nextDate is String ? DateTime.tryParse(nextDate) : null,
+      calorieDelta: delta is num ? delta.toInt() : null,
+      message: recommendation?['message'] as String?,
+    );
   }
 
   /// Saves the plan to the database and applies targets to nutrition_days.

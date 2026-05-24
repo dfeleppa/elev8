@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'components/sidebar_shell.dart';
 import 'components/bottom_nav_bar.dart';
 import 'data/repositories/nutrition_repository.dart';
+import 'services/coach_api_service.dart';
 import 'theme/app_colors.dart';
 
 // ---------------------------------------------------------------------------
@@ -296,6 +297,7 @@ class _Dashboard extends ConsumerWidget {
       protein: _num(data?['protein_target'], 180),
       carbs: _num(data?['carbs_target'], 250),
       fat: _num(data?['fat_target'], 80),
+      fiber: _num(data?['fiber_target'], 30),
     );
 
     final entries = (data?['nutrition_entries'] as List<dynamic>?) ?? [];
@@ -303,16 +305,23 @@ class _Dashboard extends ConsumerWidget {
     // Single pass over entries — previously this was four separate
     // `.fold()` calls, scanning the list four times per build. With ~50
     // entries that's 200 iterations on every viewMode toggle.
-    double cal = 0, pro = 0, carb = 0, fat = 0;
+    double cal = 0, pro = 0, carb = 0, fat = 0, fib = 0;
     for (final e in entries) {
       final q = _qty(e['quantity']);
       cal += _num(e['calories']) * q;
       pro += _num(e['protein']) * q;
       carb += _num(e['carbs']) * q;
       fat += _num(e['fat']) * q;
+      fib += _num(e['fiber']) * q;
     }
 
-    final consumed = (calories: cal, protein: pro, carbs: carb, fat: fat);
+    final consumed = (
+      calories: cal,
+      protein: pro,
+      carbs: carb,
+      fat: fat,
+      fiber: fib,
+    );
     final remaining = (
       calories: targets.calories - consumed.calories,
       protein: targets.protein - consumed.protein,
@@ -343,6 +352,8 @@ class _Dashboard extends ConsumerWidget {
               targetCarbs: targets.carbs,
               consumedFat: consumed.fat,
               targetFat: targets.fat,
+              consumedFiber: consumed.fiber,
+              targetFiber: targets.fiber,
               viewMode: viewMode,
               remainingProtein: remaining.protein,
               remainingCarbs: remaining.carbs,
@@ -380,6 +391,7 @@ class _MacroRings extends StatelessWidget {
   final double consumedProtein, targetProtein;
   final double consumedCarbs, targetCarbs;
   final double consumedFat, targetFat;
+  final double consumedFiber, targetFiber;
   final ViewMode viewMode;
   final double remainingProtein, remainingCarbs, remainingFat;
 
@@ -393,6 +405,8 @@ class _MacroRings extends StatelessWidget {
     required this.targetCarbs,
     required this.consumedFat,
     required this.targetFat,
+    required this.consumedFiber,
+    required this.targetFiber,
     required this.viewMode,
     required this.remainingProtein,
     required this.remainingCarbs,
@@ -539,17 +553,23 @@ class _MacroRings extends StatelessWidget {
                       value: consumedProtein,
                       target: targetProtein,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     _MacroBar(
                       label: 'Carbs',
                       value: consumedCarbs,
                       target: targetCarbs,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     _MacroBar(
                       label: 'Fat',
                       value: consumedFat,
                       target: targetFat,
+                    ),
+                    const SizedBox(height: 10),
+                    _MacroBar(
+                      label: 'Fiber',
+                      value: consumedFiber,
+                      target: targetFiber,
                     ),
                   ],
                 ),
@@ -826,6 +846,27 @@ class _RealCoachCard extends StatelessWidget {
                   _WeightProgress(plan: plan),
                   const SizedBox(height: 12),
                   _CheckInTimeline(plan: plan),
+                  if (plan.checkInDueToday) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => _showCheckInSheet(context),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.webPink,
+                          foregroundColor: AppColors.webPinkInk,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          'Start 10-day check-in',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -849,12 +890,36 @@ class _RealCoachCard extends StatelessWidget {
                       value: '${plan.targetWeight!.toStringAsFixed(1)} lb',
                     ),
                   const Spacer(),
-                  Text(
-                    plan.daysUntilCheckIn == 0
-                        ? 'Check-in today'
-                        : '${plan.daysUntilCheckIn}d until check-in',
-                    style: const TextStyle(color: Colors.white54, fontSize: 12),
-                  ),
+                  if (plan.checkInDueToday)
+                    GestureDetector(
+                      onTap: () => _showCheckInSheet(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.webPink,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          'Check-in due',
+                          style: TextStyle(
+                            color: AppColors.webPinkInk,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Text(
+                      '${plan.daysUntilCheckIn}d until check-in',
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -871,6 +936,18 @@ class _RealCoachCard extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) => _CoachSettingsSheet(plan: plan),
+    );
+  }
+
+  void _showCheckInSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1E293B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _CheckInSheet(plan: plan),
     );
   }
 }
@@ -1327,13 +1404,247 @@ class _GoalOption extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Check-in Sheet — 10-day review form
+// ---------------------------------------------------------------------------
+
+class _CheckInSheet extends ConsumerStatefulWidget {
+  final CoachPlanStatus plan;
+  const _CheckInSheet({required this.plan});
+
+  @override
+  ConsumerState<_CheckInSheet> createState() => _CheckInSheetState();
+}
+
+class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
+  late final TextEditingController _weightCtrl;
+  late final TextEditingController _bfCtrl;
+  late NutritionGoal _goal;
+  bool _submitting = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _weightCtrl = TextEditingController(
+      text: widget.plan.currentWeight?.toStringAsFixed(1) ?? '',
+    );
+    _bfCtrl = TextEditingController(
+      text: widget.plan.bodyFatPercent?.toStringAsFixed(1) ?? '',
+    );
+    _goal =
+        NutritionGoal.fromString(widget.plan.goalType) ??
+        NutritionGoal.maintain;
+  }
+
+  @override
+  void dispose() {
+    _weightCtrl.dispose();
+    _bfCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final weight = double.tryParse(_weightCtrl.text.trim());
+    final bf = double.tryParse(_bfCtrl.text.trim());
+    if (weight == null || weight <= 0) {
+      setState(() => _error = 'Enter a valid bodyweight in pounds.');
+      return;
+    }
+    if (bf == null || bf <= 0 || bf >= 100) {
+      setState(() => _error = 'Body fat must be between 1 and 99 percent.');
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      final result = await CoachApiService.submitCheckIn(
+        bodyWeightLbs: weight,
+        bodyFatPercent: bf,
+        goalType: _goal.id,
+      );
+      if (!mounted) return;
+      ref.invalidate(coachPlanStatusProvider);
+      Navigator.pop(context);
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      final delta = result.calorieDelta;
+      final msg = switch (result.action) {
+        'adjusted' when delta != null && delta != 0 =>
+          'Check-in applied. Calories ${delta > 0 ? 'increased' : 'decreased'} by ${delta.abs()} kcal/day.',
+        'adjusted' => 'Check-in applied. Plan updated.',
+        'counter_reset' =>
+          'Check-in window reset — log more consistently before the next review.',
+        _ => 'Check-in recorded. Plan held steady.',
+      };
+      messenger?.showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = 'Could not submit check-in. Try again.';
+      });
+      debugPrint('[CheckInSheet] submit failed: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + viewInsets),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '10-day check-in',
+            style: TextStyle(
+              color: AppColors.webPink,
+              fontSize: 11,
+              letterSpacing: 1.8,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Confirm your numbers',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'If tracking was adherent, your calories will adjust based on progress.',
+            style: TextStyle(color: Colors.white60, fontSize: 12),
+          ),
+          const SizedBox(height: 20),
+          _CheckInField(
+            label: 'Bodyweight (lbs)',
+            controller: _weightCtrl,
+          ),
+          const SizedBox(height: 12),
+          _CheckInField(
+            label: 'Body fat (%)',
+            controller: _bfCtrl,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Goal',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...NutritionGoal.values.map(
+            (g) => _GoalOption(
+              goal: g,
+              isSelected: _goal == g,
+              onTap: () => setState(() => _goal = g),
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              _error!,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+            ),
+          ],
+          const SizedBox(height: 20),
+          FilledButton(
+            onPressed: _submitting ? null : _submit,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.webPink,
+              foregroundColor: AppColors.webPinkInk,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: _submitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text(
+                    'Submit check-in',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CheckInField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+
+  const _CheckInField({required this.label, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white60),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.05),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.webCyan, width: 1.5),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Meals Card
 // ---------------------------------------------------------------------------
 
 class _MealsCard extends StatelessWidget {
   final List<dynamic> entries;
   final DateTime selectedDate;
-  final ({double calories, double protein, double carbs, double fat}) consumed;
+  final ({
+    double calories,
+    double protein,
+    double carbs,
+    double fat,
+    double fiber,
+  })
+  consumed;
 
   const _MealsCard({
     required this.entries,
