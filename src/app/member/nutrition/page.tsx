@@ -1217,7 +1217,7 @@ export default function HealthNutritionPage() {
           </div>
         ) : null}
 
-        <section className="space-y-3 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.8fr)] xl:items-stretch xl:gap-5 xl:space-y-0">
+        <section className="space-y-3 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.55fr)] lg:items-stretch lg:gap-5 lg:space-y-0 2xl:grid-cols-[minmax(0,1fr)_minmax(440px,0.5fr)]">
           <div className="premium-glass-card h-full p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="inline-flex items-center gap-2 text-[19px] font-extrabold text-[#17141F]">
