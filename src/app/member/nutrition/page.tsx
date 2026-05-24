@@ -1156,8 +1156,8 @@ export default function HealthNutritionPage() {
     <SidebarShell mainClassName="w-full">
       <section className="premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
         <div className="flex w-full flex-col gap-5">
-        <header className="mb-[-8px]">
-          <h1 className="mb-2.5 text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F]">
+        <header className="mb-[-4px] flex flex-col items-center">
+          <h1 className="mb-2 text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F]">
             Nutrition
           </h1>
           <div className="premium-glass-pill mx-auto flex max-w-[330px] items-center justify-center p-1.5">
@@ -1191,7 +1191,7 @@ export default function HealthNutritionPage() {
             </button>
           </div>
 
-          <nav className="premium-glass-pill mx-auto mt-2.5 grid max-w-[430px] grid-cols-2 p-1 text-center text-xs font-bold">
+          <nav className="premium-glass-pill mx-auto mt-2 grid w-full max-w-[430px] grid-cols-2 p-1 text-center text-xs font-bold">
               {[
                 { label: "Daily", href: "/member/nutrition", active: true },
                 { label: "Plan", href: "/member/nutrition/coach", active: false },
@@ -1218,7 +1218,7 @@ export default function HealthNutritionPage() {
         ) : null}
 
         <section className="space-y-3 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.55fr)] lg:items-stretch lg:gap-5 lg:space-y-0 2xl:grid-cols-[minmax(0,1fr)_minmax(440px,0.5fr)]">
-          <div className="premium-glass-card h-full p-4 sm:p-5">
+          <div className="premium-glass-card flex h-full flex-col p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="inline-flex items-center gap-2 text-[19px] font-extrabold text-[#17141F]">
                 <Flame className="h-5 w-5 text-[#FF5CA8]" aria-hidden="true" />
@@ -1246,7 +1246,7 @@ export default function HealthNutritionPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid gap-5 sm:grid-cols-[minmax(180px,230px)_1fr] sm:items-center lg:gap-8">
+            <div className="mt-5 grid flex-1 gap-5 sm:grid-cols-[minmax(180px,230px)_1fr] sm:items-center lg:gap-8">
               <div className="relative mx-auto grid aspect-square w-full max-w-[190px] place-items-center lg:max-w-[230px]">
                 <svg className="absolute inset-0" viewBox="0 0 150 150" aria-hidden="true">
                   <defs>
