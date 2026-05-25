@@ -1218,17 +1218,17 @@ export default function HealthNutritionPage() {
         ) : null}
 
         <section className="space-y-3 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.55fr)] lg:items-stretch lg:gap-5 lg:space-y-0 2xl:grid-cols-[minmax(0,1fr)_minmax(440px,0.5fr)]">
-          <div className="premium-glass-card flex h-full flex-col p-4 sm:p-5">
+          <div className="premium-glass-card flex h-full flex-col p-3 sm:p-5">
             <div className="flex items-center justify-between gap-3">
-              <div className="inline-flex items-center gap-2 text-[19px] font-extrabold text-[#17141F]">
-                <Flame className="h-5 w-5 text-[#FF5CA8]" aria-hidden="true" />
+              <div className="inline-flex items-center gap-1.5 text-[16px] font-extrabold text-[#17141F] sm:gap-2 sm:text-[19px]">
+                <Flame className="h-4 w-4 text-[#FF5CA8] sm:h-5 sm:w-5" aria-hidden="true" />
                 Macros
               </div>
-              <div className="inline-flex rounded-full border border-[#D0D5DD]/70 bg-white/70 p-0.5 text-[11px] font-bold shadow-inner">
+              <div className="inline-flex rounded-full border border-[#D0D5DD]/70 bg-white/70 p-0.5 text-[10px] font-bold shadow-inner sm:text-[11px]">
                 <button
                   type="button"
                   onClick={() => setMacroViewMode("consumed")}
-                  className={`rounded-full px-2.5 py-1 transition ${
+                  className={`rounded-full px-2 py-1 transition sm:px-2.5 ${
                     !showingRemaining ? "bg-[#101828] text-white" : "text-[#667085]"
                   }`}
                 >
@@ -1237,7 +1237,7 @@ export default function HealthNutritionPage() {
                 <button
                   type="button"
                   onClick={() => setMacroViewMode("remaining")}
-                  className={`rounded-full px-2.5 py-1 transition ${
+                  className={`rounded-full px-2 py-1 transition sm:px-2.5 ${
                     showingRemaining ? "bg-[#101828] text-white" : "text-[#667085]"
                   }`}
                 >
@@ -1246,8 +1246,37 @@ export default function HealthNutritionPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid flex-1 gap-5 sm:grid-cols-[minmax(180px,230px)_1fr] sm:items-center lg:gap-8">
-              <div className="relative mx-auto grid aspect-square w-full max-w-[190px] place-items-center lg:max-w-[230px]">
+            <div className="mt-3 sm:hidden">
+              <div className="flex items-end justify-between gap-3 rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 px-3 py-2.5">
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#667085]">Calories</p>
+                  <p
+                    className="mt-0.5 text-[24px] font-extrabold leading-none text-[#17141F]"
+                    style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
+                  >
+                    {roundToWhole(displayCalories).toLocaleString()}
+                    <span className="text-[12px] font-bold text-[#667085]">
+                      /{roundToWhole(targetNumbers.calories || 0).toLocaleString()}
+                    </span>
+                  </p>
+                </div>
+                <p
+                  className="text-[13px] font-extrabold text-[#0BA7B0]"
+                  style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
+                >
+                  {Math.round(displayCaloriesProgress)}%
+                </p>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#E1E6EE]">
+                <div
+                  className="h-full rounded-full bg-[#14D2DC] transition-[width] duration-500"
+                  style={{ width: `${displayCaloriesProgress}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="mt-3 grid flex-1 gap-3 sm:mt-5 sm:grid-cols-[minmax(180px,230px)_1fr] sm:items-center sm:gap-5 lg:gap-8">
+              <div className="relative mx-auto hidden aspect-square w-full max-w-[190px] place-items-center sm:grid lg:max-w-[230px]">
                 <svg className="absolute inset-0" viewBox="0 0 150 150" aria-hidden="true">
                   <defs>
                     <linearGradient id="mobile-calorie-ring" x1="18" y1="18" x2="132" y2="132">
@@ -1289,16 +1318,16 @@ export default function HealthNutritionPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3">
                 {macroBars.map((bar, index) => {
                   const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : index === 2 ? "#FF5CA8" : "#7A8699";
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
                   return (
-                    <div key={bar.label} className="min-w-0 rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_14px_30px_rgba(16,24,40,0.075)]">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p className="text-[13px] font-extrabold text-[#17141F]">{bar.label}</p>
+                    <div key={bar.label} className="min-w-0 rounded-[14px] border border-[#D4DAE4]/85 bg-white/84 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)] sm:rounded-[18px] sm:p-4 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_14px_30px_rgba(16,24,40,0.075)]">
+                      <div className="min-w-0 sm:flex sm:items-baseline sm:justify-between sm:gap-2">
+                        <p className="truncate text-[10.5px] font-extrabold text-[#17141F] sm:text-[13px]">{bar.label}</p>
                         <p
-                          className="text-[15px] font-extrabold tabular-nums text-[#101828]"
+                          className="mt-0.5 truncate text-[12px] font-extrabold tabular-nums text-[#101828] sm:mt-0 sm:text-[15px]"
                           style={statusColor ? { color: statusColor } : undefined}
                         >
                           {roundToWhole(bar.value)}
@@ -1310,14 +1339,14 @@ export default function HealthNutritionPage() {
                           </span>
                         </p>
                       </div>
-                      <div className="mt-3 h-3.5 overflow-hidden rounded-full bg-[#E1E6EE]">
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#E1E6EE] sm:mt-3 sm:h-3.5">
                         <div
                           className="h-full rounded-full transition-[width] duration-500"
                           style={{ width: `${bar.progress}%`, backgroundColor: baseColor }}
                         />
                       </div>
                       <p
-                        className="mt-2 text-right text-[11px] font-extrabold tabular-nums"
+                        className="mt-1 hidden text-right text-[11px] font-extrabold tabular-nums sm:block"
                         style={{ color: statusColor ?? baseColor }}
                       >
                         {Math.round(bar.progress)}%
@@ -1344,42 +1373,42 @@ export default function HealthNutritionPage() {
           ) : (
             <Link
               href="/member/nutrition/coach"
-              className={`premium-glass-card flex h-full flex-col overflow-hidden p-4 text-[#17141F] sm:p-5 ${
+              className={`premium-glass-card flex h-full flex-col overflow-hidden p-3 text-[#17141F] sm:p-5 ${
                 checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#FF5CA8]/50" : ""
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#FF5CA8]/12 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[#B4236A]">
-                  <Footprints className="h-4 w-4" aria-hidden="true" />
+              <div className="flex items-center justify-between gap-2">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FF5CA8]/12 px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-[0.12em] text-[#B4236A] sm:gap-2 sm:px-3 sm:text-[11px] sm:tracking-[0.16em]">
+                  <Footprints className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                   Coach Goal
                 </div>
-                <span className="rounded-full border border-[#DDE2EA] bg-white/78 px-2.5 py-1 text-xs font-extrabold text-[#475467]">
+                <span className="rounded-full border border-[#DDE2EA] bg-white/78 px-2 py-0.5 text-[10.5px] font-extrabold text-[#475467] sm:px-2.5 sm:py-1 sm:text-xs">
                   {Math.round(weightProgressPercent)}% to goal
                 </span>
               </div>
-              <div className="mt-4 flex items-end justify-between gap-3">
+              <div className="mt-3 flex items-end justify-between gap-3 sm:mt-4">
                 <div>
-                  <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#5F6B7A]">Goal</p>
-                  <p className="mt-1 text-[31px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F]">{coachGoalLabel}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#5F6B7A] sm:text-[12px] sm:tracking-[0.16em]">Goal</p>
+                  <p className="mt-0.5 text-[23px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:mt-1 sm:text-[31px]">{coachGoalLabel}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[12px] font-extrabold uppercase tracking-[0.16em] text-[#5F6B7A]">Next Check-In</p>
-                  <p className="mt-1 text-[15px] font-extrabold text-[#101828]">{checkInTimeline.nextDateLabel}</p>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#5F6B7A] sm:text-[12px] sm:tracking-[0.16em]">Next</p>
+                  <p className="mt-0.5 text-[12px] font-extrabold text-[#101828] sm:mt-1 sm:text-[15px]">{checkInTimeline.nextDateLabel}</p>
                 </div>
               </div>
-              <div className="mt-4 rounded-[20px] border border-[#DDE2EA]/80 bg-white/60 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
+              <div className="mt-3 rounded-[16px] border border-[#DDE2EA]/80 bg-white/60 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] sm:mt-4 sm:rounded-[20px] sm:p-3.5">
                 <div className="flex items-center justify-between gap-3">
-                  <span className={`text-[15px] font-extrabold text-[#344054] ${checkInTimeline.daysUntilNext === 0 ? "uppercase text-[#B4236A]" : ""}`}>
+                  <span className={`text-[12.5px] font-extrabold text-[#344054] sm:text-[15px] ${checkInTimeline.daysUntilNext === 0 ? "uppercase text-[#B4236A]" : ""}`}>
                   {checkInTimeline.daysUntilNext === 0
                     ? "Check-in due today"
                     : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until check-in`}
                   </span>
                 </div>
-                <div className="mt-3 grid grid-cols-7 gap-1.5">
+                <div className="mt-2 grid grid-cols-7 gap-1 sm:mt-3 sm:gap-1.5">
                   {weeklyCheckInTracker.map((day) => (
                     <span key={`coach-week-${day.label}`} className="min-w-0 text-center">
                       <span
-                        className={`mx-auto block h-8 rounded-[10px] border ${
+                        className={`mx-auto block h-5 rounded-[7px] border sm:h-8 sm:rounded-[10px] ${
                           day.state === "complete"
                             ? "border-[#14D2DC]/45 bg-[#14D2DC]/22 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]"
                             : day.state === "partial"
@@ -1388,7 +1417,7 @@ export default function HealthNutritionPage() {
                         }`}
                       />
                       <span
-                        className={`mt-1.5 block text-[10.5px] font-extrabold uppercase tracking-[0.06em] ${
+                        className={`mt-1 block text-[8.5px] font-extrabold uppercase tracking-[0.02em] sm:mt-1.5 sm:text-[10.5px] sm:tracking-[0.06em] ${
                           day.state === "complete"
                             ? "text-[#0C7D85]"
                             : day.state === "partial"
@@ -1396,14 +1425,15 @@ export default function HealthNutritionPage() {
                               : "text-[#667085]"
                         }`}
                       >
-                        {day.label}
+                        <span className="sm:hidden">{day.label.slice(0, 1)}</span>
+                        <span className="hidden sm:inline">{day.label}</span>
                       </span>
                     </span>
                   ))}
                 </div>
               </div>
-              <div className="mt-auto flex items-center justify-end pt-3">
-                <span className="rounded-full bg-[#101828] px-4 py-2 text-xs font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)]">
+              <div className="mt-auto flex items-center justify-end pt-2 sm:pt-3">
+                <span className="rounded-full bg-[#101828] px-3 py-1.5 text-[11px] font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] sm:px-4 sm:py-2 sm:text-xs">
                   {checkInTimeline.daysUntilNext === 0 ? "Check-In" : "Plan"}
                 </span>
               </div>
