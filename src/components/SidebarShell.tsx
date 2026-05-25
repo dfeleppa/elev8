@@ -567,7 +567,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
-            <Image src={wideLogoSrc} alt={brandLogoAlt} width={128} height={32} className="h-8 w-auto object-contain" />
+            <div className="min-w-0 flex-1" />
             <div className="relative flex min-w-0 items-center justify-end">
               <button
                 type="button"
@@ -653,18 +653,16 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             onClick={() => setMobileSidebarOpen(false)}
             aria-label="Close menu"
           />
-          <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-5">
-            <div className="flex items-center justify-between gap-2 px-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-                <Image src={stackedLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
-              </span>
+          <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-3">
+            <div className="flex items-center justify-between gap-2 rounded-[20px] border border-white/75 bg-white/58 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
+              <Image src={wideLogoSrc} alt={brandLogoAlt} width={132} height={34} className="h-8 w-auto object-contain" />
               <button
                 type="button"
                 onClick={() => setMobileSidebarOpen(false)}
-                className="rounded-full border border-[var(--line-strong)] p-2 text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 text-[#17141F] transition hover:bg-[rgba(20,210,220,0.08)]"
                 aria-label="Close menu"
               >
-                {hamburgerIcon}
+                <Menu className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 

@@ -1156,11 +1156,11 @@ export default function HealthNutritionPage() {
     <SidebarShell mainClassName="w-full">
       <section className="premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
         <div className="flex w-full flex-col gap-5">
-        <header className="mb-[-4px] flex flex-col items-center">
+        <header className="-mt-[60px] mb-[-4px] flex flex-col items-center sm:mt-0">
           <h1 className="mb-2 hidden text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:block">
             Nutrition
           </h1>
-          <div className="premium-glass-pill mx-auto flex max-w-[330px] items-center justify-center p-1.5">
+          <div className="premium-glass-pill mx-auto flex w-full max-w-[220px] items-center justify-center p-1.5 sm:max-w-[330px]">
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
@@ -1191,24 +1191,6 @@ export default function HealthNutritionPage() {
             </button>
           </div>
 
-          <nav className="premium-glass-pill mx-auto mt-2 grid w-full max-w-[430px] grid-cols-2 p-1 text-center text-xs font-bold">
-              {[
-                { label: "Daily", href: "/member/nutrition", active: true },
-                { label: "Plan", href: "/member/nutrition/coach", active: false },
-              ].map((tabItem) => (
-                <Link
-                  key={tabItem.href}
-                  href={tabItem.href}
-                  className={`rounded-full px-2 py-2 transition ${
-                    tabItem.active
-                      ? "bg-[#14D2DC] text-[#071A1C] shadow-[0_10px_20px_rgba(20,210,220,0.26)]"
-                      : "text-[#667085] hover:bg-white/70 hover:text-[#17141F]"
-                  }`}
-                >
-                  {tabItem.label}
-                </Link>
-              ))}
-            </nav>
         </header>
 
         {error ? (
@@ -1420,11 +1402,13 @@ export default function HealthNutritionPage() {
                   {Math.round(weightProgressPercent)}% to goal
                 </span>
               </div>
-              <div className="mt-3 sm:mt-4">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#5F6B7A] sm:text-[12px] sm:tracking-[0.16em]">Goal</p>
-                  <p className="mt-0.5 text-[23px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:mt-1 sm:text-[31px]">{coachGoalLabel}</p>
-                </div>
+              <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4">
+                <p className="min-w-0 truncate text-[16px] font-extrabold leading-tight text-[#17141F] sm:text-[19px]">
+                  Goal: {coachGoalLabel}
+                </p>
+                <span className="shrink-0 rounded-full bg-[#101828] px-3 py-1.5 text-[11px] font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] sm:px-4 sm:py-2 sm:text-xs">
+                  {checkInTimeline.daysUntilNext === 0 ? "Check-In" : "Plan"}
+                </span>
               </div>
               <div className="mt-3 rounded-[16px] border border-[#DDE2EA]/80 bg-white/60 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] sm:mt-4 sm:rounded-[20px] sm:p-3.5">
                 <div className="flex items-center justify-between gap-3">
@@ -1461,11 +1445,6 @@ export default function HealthNutritionPage() {
                     </span>
                   ))}
                 </div>
-              </div>
-              <div className="mt-auto flex items-center justify-end pt-2 sm:pt-3">
-                <span className="rounded-full bg-[#101828] px-3 py-1.5 text-[11px] font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] sm:px-4 sm:py-2 sm:text-xs">
-                  {checkInTimeline.daysUntilNext === 0 ? "Check-In" : "Plan"}
-                </span>
               </div>
             </Link>
           )}
