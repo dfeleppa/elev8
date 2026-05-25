@@ -285,30 +285,27 @@ export default function MemberScheduleClient() {
   const nextAvailableSession = openSessions[0] ?? sessions[0] ?? null;
 
   return (
-    <div className="premium-main-glow min-h-[calc(100vh-3.5rem)] w-full px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
-      <div className="flex w-full flex-col gap-5">
-        <header className="flex flex-col gap-1.5">
-          <h1 className="font-head text-[28px] font-bold leading-tight tracking-normal text-[#17141F] sm:text-[32px]">
+    <div className="premium-main-glow min-h-[calc(100vh-3.5rem)] w-full px-3 py-3 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
+      <div className="flex w-full flex-col gap-3 sm:gap-5">
+        <header className="hidden min-h-10 items-center sm:flex">
+          <h1 className="font-head text-[22px] font-bold leading-tight tracking-normal text-[#17141F] sm:text-[32px]">
             Class Schedule
           </h1>
-          <p className="text-[15px] font-medium text-[#475467]">
-            {loading ? "Loading daily schedule..." : `${formatLongDate(selectedDate)} · ${sessionsLabel}`}
-          </p>
         </header>
 
-        <section className="premium-glass-card p-3 sm:p-4">
-          <div className="flex items-center gap-2">
+        <section className="premium-glass-card p-2 sm:p-4">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => setRailStart((prev) => addDays(prev, -7))}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:border-[rgba(20,210,220,0.26)] hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+              className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:border-[rgba(20,210,220,0.26)] hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F] sm:flex"
               aria-label="Previous week"
             >
               <ChevronLeft size={17} />
             </button>
 
             <div className="min-w-0 flex-1 overflow-x-auto md:overflow-x-visible">
-              <div className="flex min-w-max gap-2 md:min-w-0 md:w-full">
+              <div className="flex min-w-max gap-1 md:min-w-0 md:w-full md:gap-2">
                 {dayRail.map((dateKey) => {
                   const isSelected = dateKey === selectedDate;
                   const isToday = dateKey === todayKey;
@@ -319,28 +316,28 @@ export default function MemberScheduleClient() {
                       key={dateKey}
                       type="button"
                       onClick={() => setSelectedDate(dateKey)}
-                      className={`flex w-[72px] shrink-0 flex-col items-center rounded-[20px] border px-2 py-3 text-center transition md:w-auto md:flex-1 md:shrink ${
+                      className={`flex w-[44px] shrink-0 flex-col items-center rounded-xl border px-1 py-2 text-center transition sm:w-[72px] sm:rounded-[20px] sm:px-2 sm:py-3 md:w-auto md:flex-1 md:shrink ${
                         isSelected
                           ? "border-white/80 bg-[linear-gradient(135deg,rgba(255,92,168,0.92),rgba(20,210,220,0.88))] text-white shadow-[0_14px_30px_rgba(20,210,220,0.18),0_10px_24px_rgba(255,92,168,0.16)]"
                           : "border-[rgba(16,24,40,0.08)] bg-white/64 text-[#475467] hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)]"
                       }`}
                     >
                       <span
-                        className={`whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.16em] ${
+                        className={`whitespace-nowrap text-[9px] font-bold uppercase leading-none sm:text-[10px] sm:tracking-[0.16em] ${
                           isSelected ? "text-white/86" : isToday ? "text-[#0D98A1]" : "text-[#667085]"
                         }`}
                       >
-                        {isToday ? `${label.weekday} Today` : label.weekday}
+                        {label.weekday}
                       </span>
                       <span
-                        className={`mt-1.5 text-[24px] font-bold leading-none ${
+                        className={`mt-1 text-[19px] font-bold leading-none sm:mt-1.5 sm:text-[24px] ${
                           isSelected ? "text-white" : "text-[#17141F]"
                         }`}
                       >
                         {label.dayNum}
                       </span>
                       <span
-                        className={`mt-1 text-[11px] font-semibold leading-none ${
+                        className={`mt-0.5 text-[9px] font-semibold leading-none sm:mt-1 sm:text-[11px] ${
                           isSelected ? "text-white/78" : "text-[#667085]"
                         }`}
                       >
@@ -355,7 +352,7 @@ export default function MemberScheduleClient() {
             <button
               type="button"
               onClick={() => setRailStart((prev) => addDays(prev, 7))}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:border-[rgba(20,210,220,0.26)] hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+              className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:border-[rgba(20,210,220,0.26)] hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F] sm:flex"
               aria-label="Next week"
             >
               <ChevronRight size={17} />
@@ -375,7 +372,7 @@ export default function MemberScheduleClient() {
             <button
               type="button"
               onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-[#17141F] text-white shadow-[0_12px_28px_rgba(16,24,40,0.18)] transition hover:bg-[#101828]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[rgba(16,24,40,0.08)] bg-[#17141F] text-white shadow-[0_12px_28px_rgba(16,24,40,0.18)] transition hover:bg-[#101828] sm:h-10 sm:w-10 sm:rounded-2xl"
               aria-label="Choose a date"
             >
               <CalendarDays size={17} />
@@ -405,8 +402,8 @@ export default function MemberScheduleClient() {
         ) : null}
 
         <section className="grid w-full gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(340px,0.7fr)]">
-          <div className="premium-glass-card min-h-[360px] p-4 sm:p-5">
-            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div className="premium-glass-card min-h-[360px] p-2 sm:p-5">
+            <div className="mb-4 hidden flex-wrap items-end justify-between gap-3 sm:flex">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Today&apos;s Classes</p>
                 <h2 className="mt-1 text-[22px] font-bold leading-tight text-[#17141F]">Book your training block</h2>
@@ -431,7 +428,7 @@ export default function MemberScheduleClient() {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid gap-2 sm:gap-4">
                 {sessions.map((session) => {
                   const coachLabel = session.default_coach?.full_name ?? session.default_coach?.email ?? null;
                   const status = getSessionStatusCopy(session);
@@ -441,14 +438,71 @@ export default function MemberScheduleClient() {
                   return (
                     <article
                       key={`${session.id}-${session.classDate}`}
-                      className="hover-lift relative overflow-hidden rounded-[26px] border border-[rgba(16,24,40,0.08)] bg-white/72 shadow-[0_18px_38px_rgba(16,24,40,0.08)]"
+                      className="hover-lift relative overflow-hidden rounded-lg border border-[rgba(16,24,40,0.08)] bg-white/76 shadow-[0_8px_18px_rgba(16,24,40,0.08)] sm:rounded-[26px] sm:bg-white/72 sm:shadow-[0_18px_38px_rgba(16,24,40,0.08)]"
                     >
                       <div
                         className="absolute inset-y-0 left-0 w-1.5"
                         style={{ backgroundColor: session.calendar_color }}
                       />
 
-                      <div className="flex flex-col gap-5 p-5 pl-6 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex items-center gap-2 px-3 py-2 pl-4 sm:hidden">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[13px] font-bold leading-tight text-[#8A94A3]">
+                            {formatClassTimeRange(session.class_time, session.duration_minutes)}
+                          </p>
+                          <h3 className="mt-0.5 truncate text-[15px] font-bold leading-tight text-[#475467]">
+                            {session.name}
+                          </h3>
+                          {coachLabel ? (
+                            <p className="mt-0.5 truncate text-[12px] font-medium leading-tight text-[#8A94A3]">
+                              {coachLabel}
+                            </p>
+                          ) : null}
+                          <p className="mt-1 truncate text-[11px] font-semibold leading-tight text-rose-300">
+                            {status.title}
+                          </p>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setRosterSession(session)}
+                            className="text-right text-[20px] font-bold leading-none text-[#667085]"
+                            aria-label={`View reserved members for ${session.name}`}
+                          >
+                            {session.reservedCount}
+                            {session.size_limit > 0 ? (
+                              <span className="text-[12px] font-semibold text-[#8A94A3]">/{session.size_limit}</span>
+                            ) : null}
+                          </button>
+                          {session.isReservedByCurrentUser ? (
+                            <button
+                              type="button"
+                              onClick={() => void mutateReservation(session, "DELETE")}
+                              disabled={isPending}
+                              className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-500/12 text-rose-600 disabled:opacity-60"
+                              aria-label="Cancel reservation"
+                            >
+                              {isPending ? <LoaderCircle size={16} className="animate-spin" /> : <XCircle size={16} />}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => void mutateReservation(session, "POST")}
+                              disabled={!reserveEnabled || isPending}
+                              className="flex h-9 w-9 items-center justify-center rounded-full text-[#0D807B] disabled:cursor-not-allowed disabled:opacity-45"
+                              style={{ backgroundColor: `${session.calendar_color}66` }}
+                              aria-label={
+                                reserveEnabled ? `Reserve ${session.name}` : `${session.name} is not available`
+                              }
+                            >
+                              {isPending ? <LoaderCircle size={16} className="animate-spin" /> : <Users size={17} />}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="hidden flex-col gap-5 p-5 pl-6 sm:flex lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0 flex-1 space-y-4">
                           <div className="flex flex-wrap items-center gap-2">
                             <span
@@ -565,7 +619,7 @@ export default function MemberScheduleClient() {
             )}
           </div>
 
-          <aside className="premium-glass-card flex h-full flex-col p-5">
+          <aside className="premium-glass-card hidden h-full flex-col p-5 xl:flex">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Reservation Summary</p>

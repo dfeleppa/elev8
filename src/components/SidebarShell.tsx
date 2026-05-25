@@ -159,6 +159,17 @@ const ATHLETE_SECTIONS = [
   { label: "Account",  hrefs: ["/member/account-dashboard", "/member/store"] },
 ] as const;
 
+const mobileTitleRoutes = [
+  ["/member/nutrition/coach", "Nutrition Coach"],
+  ["/member/nutrition-coach", "Nutrition Coach"],
+  ["/member/athlete-dashboard", "Athlete"],
+  ["/member/account-dashboard", "Account"],
+  ["/member/class-schedule", "Class Schedule"],
+  ["/member/nutrition", "Nutrition"],
+  ["/member/workout", "Workout"],
+  ["/member/store", "Store"],
+] as const;
+
 function getNavIcon(href: string) {
   const iconClass = "h-[18px] w-[18px]";
   const iconProps = {
@@ -435,6 +446,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
   const firstName = userName.trim().split(/\s+/)[0] || "User";
   const showMobileMemberNav = pathname?.startsWith("/member");
+  const mobileTopBarTitle =
+    mobileTitleRoutes.find(([href]) => pathname === href || pathname?.startsWith(href + "/"))?.[1] ?? "";
 
   const visibleNavItems = navItems
     .filter((item) => canViewRole(item.minRole))
@@ -568,7 +581,13 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
-            <div className="min-w-0 flex-1" />
+            <div className="min-w-0 flex-1 text-center">
+              {mobileTopBarTitle ? (
+                <h1 className="truncate font-head text-[18px] font-bold leading-tight text-[#17141F]">
+                  {mobileTopBarTitle}
+                </h1>
+              ) : null}
+            </div>
             <div className="relative flex min-w-0 items-center justify-end">
               <button
                 type="button"
