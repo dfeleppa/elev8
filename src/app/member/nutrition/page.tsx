@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Atom,
-  CalendarDays,
   Camera,
   Check,
   ChevronLeft,
@@ -312,6 +311,7 @@ export default function HealthNutritionPage() {
   const [myFoods, setMyFoods] = useState<LibraryFood[]>([]);
   const recentFoodsFetchedAtRef = useRef(0);
   const myFoodsFetchedAtRef = useRef(0);
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [createFoodDraft, setCreateFoodDraft] = useState({
     name: "",
     servingSize: "1",
@@ -561,11 +561,17 @@ export default function HealthNutritionPage() {
   const macroBars = showingRemaining ? remainingMacroBars : consumedMacroBars;
 
   const selectedDateObj = new Date(`${selectedDate}T00:00:00`);
-  const compactDateLabel = selectedDateObj.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const todayDate = new Date();
+  const todayValue = toLocalDateInputValue(todayDate);
+  const compactDateLabel =
+    selectedDate === todayValue
+      ? `Today, ${selectedDateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+      : selectedDateObj.toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "short",
+          day: "numeric",
+          ...(selectedDateObj.getFullYear() !== todayDate.getFullYear() ? { year: "numeric" } : {}),
+        });
 
   const mealSummaries = useMemo(
     () =>
@@ -1160,7 +1166,7 @@ export default function HealthNutritionPage() {
           <h1 className="mb-2 hidden text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:block">
             Nutrition
           </h1>
-          <div className="premium-glass-pill mx-auto flex w-full max-w-[220px] items-center justify-center p-1.5 sm:max-w-[330px]">
+          <div className="premium-glass-pill mx-auto flex w-full max-w-[292px] items-center justify-center p-1.5 sm:max-w-[330px]">
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
@@ -1169,10 +1175,23 @@ export default function HealthNutritionPage() {
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
-            <label className="flex min-w-0 flex-1 items-center justify-center gap-2 px-2 text-[15px] font-bold text-[#17141F]">
-              <CalendarDays className="h-5 w-5 text-[#14D2DC]" aria-hidden="true" />
-              <span className="truncate">{compactDateLabel}</span>
+            <div className="flex min-w-0 flex-1 items-center justify-center px-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (dateInputRef.current?.showPicker) {
+                    dateInputRef.current.showPicker();
+                    return;
+                  }
+                  dateInputRef.current?.click();
+                }}
+                className="min-w-0 rounded-full px-3 py-2 text-center text-[14px] font-extrabold leading-none text-[#17141F] transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#14D2DC]/35 sm:text-[15px]"
+                aria-label="Open date picker"
+              >
+                <span className="block truncate">{compactDateLabel}</span>
+              </button>
               <input
+                ref={dateInputRef}
                 id="nutrition-date-mobile"
                 name="nutritionDateMobile"
                 type="date"
@@ -1180,7 +1199,7 @@ export default function HealthNutritionPage() {
                 onChange={(event) => setSelectedDate(event.target.value)}
                 className="sr-only"
               />
-            </label>
+            </div>
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, 1))}

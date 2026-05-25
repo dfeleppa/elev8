@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { Micro } from "@/components/ui";
 import {
   Activity,
+  Apple,
   BarChart3,
   Bot,
   Briefcase,
@@ -145,8 +146,8 @@ const mobileQuickLinks = [
   { label: "Workout", href: "/member/workout", icon: <Dumbbell className="h-5 w-5" aria-hidden="true" /> },
   { label: "Chat", href: null, icon: <MessageCircle className="h-5 w-5" aria-hidden="true" /> },
   { label: "Athlete", href: "/member/athlete-dashboard", icon: <Activity className="h-5 w-5" aria-hidden="true" /> },
-  { label: "Calendar", href: "/member/class-schedule", icon: <CalendarDays className="h-5 w-5" aria-hidden="true" /> },
-  { label: "Store", href: "/member/store", icon: <ShoppingBag className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Schedule", href: "/member/class-schedule", icon: <CalendarDays className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Nutrition", href: "/member/nutrition", icon: <Apple className="h-5 w-5" aria-hidden="true" /> },
 ] as const;
 
 /** Static section groupings for the athlete view nav */
