@@ -19,6 +19,9 @@ import {
   FileText,
   HandPlatter,
   LogOut,
+  Menu,
+  MessageCircle,
+  MoreVertical,
   PlugZap,
   Settings,
   ShieldCheck,
@@ -139,9 +142,11 @@ const navItems: NavItem[] = [
 ];
 
 const mobileQuickLinks = [
-  { label: "Workout", href: "/member/workout", icon: <Dumbbell className="h-4 w-4" aria-hidden="true" /> },
-  { label: "Nutrition", href: "/member/nutrition", icon: <HandPlatter className="h-4 w-4" aria-hidden="true" /> },
-  { label: "Classes", href: "/member/class-schedule", icon: <CalendarDays className="h-4 w-4" aria-hidden="true" /> },
+  { label: "Workout", href: "/member/workout", icon: <Dumbbell className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Chat", href: null, icon: <MessageCircle className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Athlete", href: "/member/athlete-dashboard", icon: <Activity className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Calendar", href: "/member/class-schedule", icon: <CalendarDays className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Store", href: "/member/store", icon: <ShoppingBag className="h-5 w-5" aria-hidden="true" /> },
 ] as const;
 
 /** Static section groupings for the athlete view nav */
@@ -428,6 +433,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
   const firstName = userName.trim().split(/\s+/)[0] || "User";
+  const showMobileMemberNav = pathname?.startsWith("/member");
 
   const visibleNavItems = navItems
     .filter((item) => canViewRole(item.minRole))
@@ -539,12 +545,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   );
   const viewToggleBaseCls =
     "inline-flex items-center justify-center rounded-full px-3 h-8 font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] transition-colors";
-  const viewToggleActiveTopbarCls =
-    `${viewToggleBaseCls} bg-[#101828] text-white shadow-[0_8px_18px_rgba(16,24,40,0.16)]`;
   const viewToggleActiveSidebarCls =
     `${viewToggleBaseCls} bg-white text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(16,24,40,0.08)]`;
-  const viewToggleInactiveTopbarCls =
-    `${viewToggleBaseCls} text-[#667085] hover:bg-white/70 hover:text-[#17141F]`;
   const viewToggleInactiveSidebarCls =
     `${viewToggleBaseCls} text-[#667085] hover:bg-white/60 hover:text-[#17141F]`;
   const handleSignOut = () => {
@@ -555,69 +557,93 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   return (
     <div className="relative z-10 min-h-screen">
       <div className="lg:hidden">
-        <div className="app-shell-topbar px-5 py-4">
+        <div className="app-shell-topbar px-5 py-3">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
-              className="flex items-center gap-3 text-left"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:bg-[rgba(20,210,220,0.08)]"
               aria-label="Open menu"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)]">
-                <Image src={stackedLogoSrc} alt={brandLogoAlt} width={28} height={28} className="h-7 w-7 object-contain" />
-              </span>
+              <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
-            <div className="flex min-w-0 items-center justify-end gap-2">
-              <div className="flex items-center gap-2">
-                {mobileQuickLinks.map((link) => {
-                  const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={isActive ? "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--pink)]/35 bg-[var(--pink)]/12 text-[var(--pink-soft)] transition-colors" : "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"}
-                      aria-label={link.label}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      {link.icon}
-                    </Link>
-                  );
-                })}
-              </div>
-              {showViewToggle ? (
-                <div className="flex items-center gap-1 rounded-full border border-white/75 bg-white/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+            <Image src={wideLogoSrc} alt={brandLogoAlt} width={128} height={32} className="h-8 w-auto object-contain" />
+            <div className="relative flex min-w-0 items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+                aria-label="More options"
+                aria-expanded={menuOpen}
+              >
+                <MoreVertical className="h-5 w-5" aria-hidden="true" />
+              </button>
+              {menuOpen ? (
+                <div className="absolute right-0 top-12 z-40 w-52 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/92 p-2 shadow-[0_20px_50px_rgba(16,24,40,0.16)] backdrop-blur-xl">
                   <button
                     type="button"
-                    onClick={() => handleSwitchView("gym")}
-                    className={viewMode === "gym" ? viewToggleActiveTopbarCls : viewToggleInactiveTopbarCls}
-                    aria-pressed={viewMode === "gym"}
-                    aria-label="Gym view"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      toggleTheme();
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#17141F] transition hover:bg-[rgba(20,210,220,0.08)]"
                   >
-                    Gym
+                    {themeIcon}
+                    {themeToggleLabel}
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleSwitchView("athlete")}
-                    className={viewMode === "athlete" ? viewToggleActiveTopbarCls : viewToggleInactiveTopbarCls}
-                    aria-pressed={viewMode === "athlete"}
-                    aria-label="Member view"
+                    onClick={handleSignOut}
+                    className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#17141F] transition hover:bg-[rgba(255,92,168,0.08)]"
                   >
-                    Member
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    Sign out
                   </button>
                 </div>
               ) : null}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
-                aria-label={themeToggleLabel}
-              >
-                {themeIcon}
-              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {showMobileMemberNav ? (
+        <nav className="fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 rounded-[24px] border border-white/80 bg-white/82 p-1.5 shadow-[0_18px_48px_rgba(16,24,40,0.18)] backdrop-blur-xl lg:hidden" aria-label="Member mobile navigation">
+          {mobileQuickLinks.map((link) => {
+            const isActive = link.href ? pathname === link.href || pathname.startsWith(link.href + "/") : false;
+            if (!link.href) {
+              return (
+                <button
+                  key={link.label}
+                  type="button"
+                  disabled
+                  className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 text-[#98A2B3] opacity-70"
+                  aria-label={`${link.label} coming soon`}
+                >
+                  {link.icon}
+                  <span className="truncate text-[10px] font-bold">{link.label}</span>
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 transition ${
+                  isActive
+                    ? "bg-[#14D2DC] text-[#071317] shadow-[0_10px_22px_rgba(20,210,220,0.24)]"
+                    : "text-[#667085] hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+                }`}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={link.label}
+              >
+                {link.icon}
+                <span className="truncate text-[10px] font-bold">{link.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      ) : null}
 
       {mobileSidebarOpen && (
         <div className="fixed inset-0 z-30 lg:hidden">
@@ -941,7 +967,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           </div>
         ) : null}
 
-        <main className={mainClasses}>{children}</main>
+        <main className={`${mainClasses} ${showMobileMemberNav ? "pb-28 lg:pb-0" : ""}`}>{children}</main>
       </div>
     </div>
   );
