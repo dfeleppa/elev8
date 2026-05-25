@@ -84,11 +84,12 @@ class NutritionScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
+          top: false,
           child: Column(
             children: [
               // ---- Date Header ----
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1654,68 +1655,23 @@ class _MealsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    // Render each meal as its own standalone white card, mirroring the
+    // web's responsive meal grid which collapses to one card per row on
+    // mobile widths.
+    return Column(
+      children: [
+        for (var i = 0; i < _mealKeys.length; i++) ...[
+          _MealRow(
+            mealKey: _mealKeys[i],
+            entries: entries
+                .where((e) => e['meal_type'] == _mealKeys[i])
+                .toList(),
+            selectedDate: selectedDate,
+            isLast: true,
           ),
+          if (i < _mealKeys.length - 1) const SizedBox(height: 12),
         ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: const Row(
-              children: [
-                Text(
-                  'MEALS',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Meal rows
-          ..._mealKeys.asMap().entries.map((mapEntry) {
-            final i = mapEntry.key;
-            final mealKey = mapEntry.value;
-            final mealEntries = entries
-                .where((e) => e['meal_type'] == mealKey)
-                .toList();
-            final isLast = i == _mealKeys.length - 1;
-            return Column(
-              children: [
-                _MealRow(
-                  mealKey: mealKey,
-                  entries: mealEntries,
-                  selectedDate: selectedDate,
-                  isLast: isLast,
-                ),
-                if (!isLast) const Divider(height: 1, color: Colors.black12),
-              ],
-            );
-          }),
-        ],
-      ),
+      ],
     );
   }
 }
@@ -1733,94 +1689,100 @@ class _MealRow extends ConsumerWidget {
     required this.isLast,
   });
 
-  double _mealCalories() {
-    return entries.fold(
-      0.0,
-      (s, e) => s + _num(e['calories']) * _qty(e['quantity']),
-    );
+  ({double cal, double p, double c, double f}) _mealTotals() {
+    double cal = 0, p = 0, c = 0, f = 0;
+    for (final e in entries) {
+      final q = _qty(e['quantity']);
+      cal += _num(e['calories']) * q;
+      p += _num(e['protein']) * q;
+      c += _num(e['carbs']) * q;
+      f += _num(e['fat']) * q;
+    }
+    return (cal: cal, p: p, c: c, f: f);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final totals = _mealTotals();
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(18, 16, 12, 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: isLast
-            ? const BorderRadius.vertical(bottom: Radius.circular(24))
-            : null,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                _mealLabel(mealKey),
-                style: const TextStyle(
-                  color: Color(0xFF020617),
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _mealLabel(mealKey),
+                      style: const TextStyle(
+                        color: Color(0xFF020617),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${totals.cal.toInt()} KCAL  |  P${totals.p.toInt()}  |  C${totals.c.toInt()}  |  F${totals.f.toInt()}',
+                      style: TextStyle(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        fontSize: 11,
+                        letterSpacing: 0.6,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Row(
-                children: [
-                  Text(
-                    '${_mealCalories().toInt()} kcal',
-                    style: const TextStyle(
-                      color: Colors.black45,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+              GestureDetector(
+                onTap: () => _showMealActions(context, ref),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Icon(
+                    Icons.more_vert,
+                    color: Colors.black38,
+                    size: 20,
                   ),
-                  const SizedBox(width: 4),
-                  // Actions menu
-                  GestureDetector(
-                    onTap: () => _showMealActions(context, ref),
-                    child: const Icon(
-                      Icons.more_vert,
-                      color: Colors.black26,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  // Add button
-                  GestureDetector(
-                    onTap: () => _openAddFood(context, ref),
-                    child: const Icon(
-                      Icons.add_circle,
-                      color: Color(0xFFE11D8A),
-                      size: 28,
-                    ),
-                  ),
-                ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              _RoundAddButton(
+                size: 36,
+                onTap: () => _openAddFood(context, ref),
               ),
             ],
           ),
 
-          // Entry list
-          if (entries.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            // Stable key on each entry so Flutter reuses the State of
-            // _FoodEntryRow across parent rebuilds instead of disposing +
-            // reconstructing on every viewMode toggle / data refresh.
+          const SizedBox(height: 12),
+
+          // Entry list OR inner empty-state card (mirrors web).
+          if (entries.isNotEmpty)
             ...entries.map(
               (entry) => _FoodEntryRow(
+                // Stable key so Flutter reuses _FoodEntryRow State across
+                // viewMode toggles and refreshes instead of rebuilding.
                 key: ValueKey(entry['id']),
                 entry: entry,
                 selectedDate: selectedDate,
               ),
-            ),
-          ] else ...[
-            const SizedBox(height: 12),
-            const Center(
-              child: Text(
-                'No entries yet.',
-                style: TextStyle(color: Colors.black26, fontSize: 13),
-              ),
-            ),
-          ],
+            )
+          else
+            _EmptyMealSlot(onTap: () => _openAddFood(context, ref)),
         ],
       ),
     );
@@ -1927,6 +1889,102 @@ class _MealRow extends ConsumerWidget {
         sourceDate: selectedDate,
         sourceMeal: mealKey,
         ref: ref,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Meal-row helpers: round add button + empty-state slot
+// ---------------------------------------------------------------------------
+
+class _RoundAddButton extends StatelessWidget {
+  final double size;
+  final VoidCallback onTap;
+  final bool outlined;
+
+  const _RoundAddButton({
+    required this.size,
+    required this.onTap,
+    this.outlined = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: outlined
+              ? AppColors.cyanAccent.withValues(alpha: 0.12)
+              : AppColors.cyanAccent,
+          border: outlined
+              ? Border.all(
+                  color: AppColors.cyanAccent.withValues(alpha: 0.6),
+                  width: 1.5,
+                )
+              : null,
+        ),
+        child: Icon(
+          Icons.add,
+          color: outlined ? AppColors.cyanAccent : Colors.white,
+          size: size * 0.55,
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyMealSlot extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _EmptyMealSlot({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+        decoration: BoxDecoration(
+          color: AppColors.cyanAccent.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.cyanAccent.withValues(alpha: 0.18),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No food logged yet',
+                    style: TextStyle(
+                      color: Colors.black.withValues(alpha: 0.55),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Tap to start logging',
+                    style: TextStyle(
+                      color: AppColors.cyanAccent,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _RoundAddButton(size: 30, onTap: onTap, outlined: true),
+          ],
+        ),
       ),
     );
   }
