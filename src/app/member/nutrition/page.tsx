@@ -5,13 +5,13 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Atom,
   CalendarDays,
   Camera,
   Check,
   ChevronLeft,
   ChevronRight,
   Flame,
-  Footprints,
   Pencil,
   Plus,
   X,
@@ -1246,8 +1246,8 @@ export default function HealthNutritionPage() {
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-[104px_minmax(0,1fr)] items-center gap-3 sm:hidden">
-              <div className="relative grid aspect-square place-items-center rounded-[20px] border border-[#D4DAE4]/85 bg-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)]">
+            <div className="mt-2.5 grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2.5 sm:hidden">
+              <div className="relative grid aspect-square place-items-center rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)]">
                 <svg className="absolute inset-2" viewBox="0 0 150 150" aria-hidden="true">
                   <defs>
                     <linearGradient id="mobile-calorie-ring-compact" x1="18" y1="18" x2="132" y2="132">
@@ -1271,7 +1271,7 @@ export default function HealthNutritionPage() {
                 </svg>
                 <div className="text-center">
                   <p
-                    className="text-[20px] font-extrabold leading-none text-[#17141F]"
+                    className="text-[18px] font-extrabold leading-none text-[#17141F]"
                     style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
                   >
                     {roundToWhole(displayCalories).toLocaleString()}
@@ -1282,28 +1282,27 @@ export default function HealthNutritionPage() {
                 </div>
               </div>
 
-              <div className="grid gap-2">
+              <div className="grid gap-1.5">
                 {macroBars.slice(0, 3).map((bar, index) => {
                   const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : "#FF5CA8";
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
+                  const shortLabel = index === 0 ? "P" : index === 1 ? "C" : "F";
                   return (
-                    <div key={`mobile-macro-${bar.label}`} className="min-w-0 rounded-[14px] border border-[#D4DAE4]/85 bg-white/84 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p className="text-[11px] font-extrabold text-[#17141F]">{bar.label}</p>
-                        <p
-                          className="text-[11px] font-extrabold tabular-nums text-[#101828]"
-                          style={statusColor ? { color: statusColor } : undefined}
-                        >
-                          {roundToWhole(bar.value)}
-                          <span className="font-bold text-[#667085]">/{roundToWhole(bar.target)}g</span>
-                        </p>
-                      </div>
-                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#E1E6EE]">
+                    <div key={`mobile-macro-${bar.label}`} className="grid min-w-0 grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2 rounded-[12px] border border-[#D4DAE4]/85 bg-white/84 px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
+                      <p className="text-[12px] font-extrabold text-[#17141F]">{shortLabel}</p>
+                      <div className="h-1.5 min-w-0 overflow-hidden rounded-full bg-[#E1E6EE]">
                         <div
                           className="h-full rounded-full transition-[width] duration-500"
                           style={{ width: `${bar.progress}%`, backgroundColor: baseColor }}
                         />
                       </div>
+                      <p
+                        className="text-[11px] font-extrabold tabular-nums text-[#101828]"
+                        style={statusColor ? { color: statusColor } : undefined}
+                      >
+                        {roundToWhole(bar.value)}
+                        <span className="font-bold text-[#667085]">/{roundToWhole(bar.target)}g</span>
+                      </p>
                     </div>
                   );
                 })}
@@ -1412,23 +1411,19 @@ export default function HealthNutritionPage() {
                 checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#FF5CA8]/50" : ""
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FF5CA8]/12 px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-[0.12em] text-[#B4236A] sm:gap-2 sm:px-3 sm:text-[11px] sm:tracking-[0.16em]">
-                  <Footprints className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
-                  Coach Goal
+              <div className="flex items-center justify-between gap-3">
+                <div className="inline-flex items-center gap-1.5 text-[16px] font-extrabold text-[#17141F] sm:gap-2 sm:text-[19px]">
+                  <Atom className="h-4 w-4 text-[#FF5CA8] sm:h-5 sm:w-5" aria-hidden="true" />
+                  Coach
                 </div>
                 <span className="rounded-full border border-[#DDE2EA] bg-white/78 px-2 py-0.5 text-[10.5px] font-extrabold text-[#475467] sm:px-2.5 sm:py-1 sm:text-xs">
                   {Math.round(weightProgressPercent)}% to goal
                 </span>
               </div>
-              <div className="mt-3 flex items-end justify-between gap-3 sm:mt-4">
+              <div className="mt-3 sm:mt-4">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#5F6B7A] sm:text-[12px] sm:tracking-[0.16em]">Goal</p>
                   <p className="mt-0.5 text-[23px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:mt-1 sm:text-[31px]">{coachGoalLabel}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#5F6B7A] sm:text-[12px] sm:tracking-[0.16em]">Next</p>
-                  <p className="mt-0.5 text-[12px] font-extrabold text-[#101828] sm:mt-1 sm:text-[15px]">{checkInTimeline.nextDateLabel}</p>
                 </div>
               </div>
               <div className="mt-3 rounded-[16px] border border-[#DDE2EA]/80 bg-white/60 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] sm:mt-4 sm:rounded-[20px] sm:p-3.5">
