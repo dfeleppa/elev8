@@ -1166,7 +1166,7 @@ export default function HealthNutritionPage() {
           <h1 className="mb-2 hidden text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:block">
             Nutrition
           </h1>
-          <div className="premium-glass-pill mx-auto flex w-full max-w-[292px] items-center justify-center p-1.5 sm:max-w-[330px]">
+          <div className="premium-glass-pill mx-auto flex w-full max-w-[calc(100vw-136px)] items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
@@ -1185,7 +1185,7 @@ export default function HealthNutritionPage() {
                   }
                   dateInputRef.current?.click();
                 }}
-                className="min-w-0 rounded-full px-3 py-2 text-center text-[14px] font-extrabold leading-none text-[#17141F] transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#14D2DC]/35 sm:text-[15px]"
+                className="min-w-0 rounded-full px-2 py-2 text-center text-[13px] font-extrabold leading-none text-[#17141F] transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#14D2DC]/35 min-[380px]:px-3 min-[380px]:text-[14px] sm:text-[15px]"
                 aria-label="Open date picker"
               >
                 <span className="block truncate">{compactDateLabel}</span>
@@ -1422,8 +1422,8 @@ export default function HealthNutritionPage() {
                 </span>
               </div>
               <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4">
-                <p className="min-w-0 truncate text-[16px] font-extrabold leading-tight text-[#17141F] sm:text-[19px]">
-                  Goal: {coachGoalLabel}
+                <p className="min-w-0 truncate text-[16px] font-semibold leading-tight text-[#17141F] sm:text-[19px]">
+                  Goal: <span className="font-extrabold">{coachGoalLabel}</span>
                 </p>
                 <span className="shrink-0 rounded-full bg-[#101828] px-3 py-1.5 text-[11px] font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] sm:px-4 sm:py-2 sm:text-xs">
                   {checkInTimeline.daysUntilNext === 0 ? "Check-In" : "Plan"}

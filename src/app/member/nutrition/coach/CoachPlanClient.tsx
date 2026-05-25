@@ -76,9 +76,9 @@ function metricCard(label: string, value: string, accent: MetricAccent = "neutra
         : "border-[rgba(16,24,40,0.08)] bg-white/66";
 
   return (
-    <div key={label} className={`rounded-[20px] border p-4 ${accentClass}`}>
-      <dt className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">{label}</dt>
-      <dd className="mt-2 text-lg font-bold leading-tight text-[#17141F]">{value}</dd>
+    <div key={label} className={`rounded-[16px] border p-3 sm:rounded-[20px] sm:p-4 ${accentClass}`}>
+      <dt className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#667085] sm:text-[11px]">{label}</dt>
+      <dd className="mt-1 text-base font-bold leading-tight text-[#17141F] sm:mt-2 sm:text-lg">{value}</dd>
     </div>
   );
 }
@@ -223,19 +223,19 @@ export default function CoachPlanClient() {
   }
 
   return (
-    <div className="grid w-full gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.65fr)]">
-      <div className="flex flex-col gap-5">
+    <div className="grid w-full gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.65fr)]">
+      <div className="flex flex-col gap-4 sm:gap-5">
         <div className="hidden lg:block">
           <NutritionCheckInBanner />
         </div>
 
       {checkInDue ? (
-        <div className="premium-glass-card p-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="premium-glass-card p-4 sm:p-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B42368]">Check-In Due</p>
-              <h2 className="mt-1 text-[22px] font-bold text-[#17141F]">Weekly coach review</h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#B42368] sm:text-[11px]">Check-In Due</p>
+              <h2 className="mt-1 text-[20px] font-bold text-[#17141F] sm:text-[22px]">Weekly coach review</h2>
+              <p className="mt-1 text-sm font-semibold leading-5 text-[#667085] sm:mt-2 sm:leading-6">
                 Confirm bodyweight, body fat, and goal. If tracking was adherent, the app will adjust calories based on progress.
               </p>
             </div>
@@ -244,33 +244,33 @@ export default function CoachPlanClient() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
-            <label className="block space-y-2 text-xs font-bold uppercase tracking-[0.14em] text-[#667085]">
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <label className="block space-y-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085] sm:text-xs">
               Bodyweight
               <input
                 value={checkInWeight}
                 onChange={(event) => setCheckInWeight(event.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-3 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-2.5 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none sm:py-3"
                 placeholder="lb"
               />
             </label>
-            <label className="block space-y-2 text-xs font-bold uppercase tracking-[0.14em] text-[#667085]">
+            <label className="block space-y-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085] sm:text-xs">
               Body fat
               <input
                 value={checkInBodyFat}
                 onChange={(event) => setCheckInBodyFat(event.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-3 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-2.5 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none sm:py-3"
                 placeholder="%"
               />
             </label>
-            <label className="block space-y-2 text-xs font-bold uppercase tracking-[0.14em] text-[#667085]">
+            <label className="block space-y-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085] sm:text-xs">
               Goal
               <select
                 value={checkInGoal}
                 onChange={(event) => setCheckInGoal(event.target.value)}
-                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-3 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-2.5 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none sm:py-3"
               >
                 {Object.entries(GOAL_LABEL).map(([value, label]) => (
                   <option key={value} value={value}>
@@ -288,58 +288,55 @@ export default function CoachPlanClient() {
             type="button"
             onClick={() => void submitCheckIn()}
             disabled={checkInBusy}
-            className="mt-5 rounded-2xl bg-[#14D2DC] px-5 py-3 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105 disabled:opacity-60"
+            className="mt-4 rounded-2xl bg-[#14D2DC] px-5 py-2.5 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105 disabled:opacity-60 sm:py-3"
           >
             {checkInBusy ? "Checking in..." : "Complete check-in"}
           </button>
         </div>
       ) : null}
 
-      <div className="premium-glass-card p-5">
-        <div className="flex items-start justify-between gap-4">
+      <div className="premium-glass-card p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3 sm:gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Plan Overview</p>
-            <h2 className="mt-1 text-[28px] font-bold leading-tight text-[#17141F]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Plan Overview</p>
+            <h2 className="mt-1 text-[24px] font-bold leading-tight text-[#17141F] sm:text-[28px]">
               {GOAL_LABEL[summary?.goalType ?? ""] ?? "Not set"}
             </h2>
-            <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
-              Active daily targets and progress markers from your coach plan.
-            </p>
           </div>
           <Link
             href="/member/nutrition-coach"
-            className="rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 px-4 py-2.5 text-sm font-bold text-[#17141F] transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)]"
+            className="shrink-0 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 px-3 py-2 text-xs font-bold text-[#17141F] transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)] sm:px-4 sm:py-2.5 sm:text-sm"
           >
             Change Plan
           </Link>
         </div>
 
-        <dl className="mt-5 grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+        <dl className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 2xl:grid-cols-3">
           {progressMetrics.map(([label, value]) => metricCard(label, value))}
         </dl>
       </div>
       </div>
 
-      <aside className="flex flex-col gap-5">
-        <div className="premium-glass-card p-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Daily Targets</p>
-          <div className="mt-4 rounded-[24px] border border-[rgba(20,210,220,0.18)] bg-[rgba(20,210,220,0.08)] p-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Calories</p>
-            <p className="mt-2 text-4xl font-bold leading-none text-[#17141F]">{formatCalories(summary?.targetCalories)}</p>
-            <p className="mt-2 text-sm font-semibold text-[#667085]">Estimated metabolism: {formatCalories(summary?.estimatedMetabolism)}</p>
+      <aside className="flex flex-col gap-4 sm:gap-5">
+        <div className="premium-glass-card p-4 sm:p-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Daily Targets</p>
+          <div className="mt-3 rounded-[20px] border border-[rgba(20,210,220,0.18)] bg-[rgba(20,210,220,0.08)] p-3 sm:mt-4 sm:rounded-[24px] sm:p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#667085] sm:text-[11px]">Calories</p>
+            <p className="mt-1 text-3xl font-bold leading-none text-[#17141F] sm:mt-2 sm:text-4xl">{formatCalories(summary?.targetCalories)}</p>
+            <p className="mt-1 text-xs font-semibold text-[#667085] sm:mt-2 sm:text-sm">Metabolism: {formatCalories(summary?.estimatedMetabolism)}</p>
           </div>
 
-          <dl className="mt-3 grid gap-3">
+          <dl className="mt-3 grid gap-2 sm:gap-3">
             {macroTargets.map(([label, value, accent]) => metricCard(label, value, accent))}
           </dl>
         </div>
 
-        <div className="premium-glass-card p-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Check-In Status</p>
-          <h2 className="mt-1 text-[22px] font-bold text-[#17141F]">
+        <div className="premium-glass-card p-4 sm:p-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Check-In Status</p>
+          <h2 className="mt-1 text-[20px] font-bold text-[#17141F] sm:text-[22px]">
             {checkInDue ? "Due now" : daysUntilCheckIn === null ? "Not scheduled" : `${daysUntilCheckIn} days away`}
           </h2>
-          <div className="mt-4 grid gap-3">
+          <div className="mt-3 grid gap-2 sm:mt-4 sm:gap-3">
             {metricCard("Next check-in", formatDate(summary?.nextCheckInDate), checkInDue ? "pink" : "teal")}
             {metricCard(
               "Metabolism source",
@@ -349,9 +346,9 @@ export default function CoachPlanClient() {
           </div>
         </div>
 
-        <div className="premium-glass-card p-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Coach Note</p>
-          <p className="mt-3 text-sm font-semibold leading-6 text-[#475467]">
+        <div className="premium-glass-card p-4 sm:p-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Coach Note</p>
+          <p className="mt-2 text-sm font-semibold leading-5 text-[#475467] sm:mt-3 sm:leading-6">
             Keep your logging consistent and use the check-in cadence to let the plan adjust from real progress, not guesswork.
           </p>
         </div>

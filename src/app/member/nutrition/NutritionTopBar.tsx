@@ -10,59 +10,28 @@ const TABS: { id: Tab; label: string; href: string }[] = [
   { id: "coach", label: "Plan", href: "/member/nutrition/coach" },
 ];
 
-const DAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
-const MONTH_SHORT = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-function isoWeek(d: Date) {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const day = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  return Math.ceil(((date.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
-}
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function NutritionTopBar({ active }: { active: Tab }) {
   const now = new Date();
   const day = DAY_NAMES[now.getDay()];
-  const datePart = `${now.getDate()} ${MONTH_SHORT[now.getMonth()]} ${now.getFullYear()}`;
-  const week = isoWeek(now);
+  const datePart = `${MONTH_SHORT[now.getMonth()]} ${now.getDate()}`;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+    <div className="flex w-full min-w-0 items-center justify-between gap-2 lg:w-auto lg:gap-6">
       <div
-        className="premium-glass-pill flex items-center gap-2 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-widest"
+        className="premium-glass-pill flex min-w-0 items-center gap-1.5 px-3 py-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] sm:gap-2 sm:px-4 sm:text-[11px]"
         style={{ color: "#475467" }}
       >
-        <span>{day}</span>
+        <span className="shrink-0">{day}</span>
         <span style={{ color: "var(--text-soft)" }}>·</span>
-        <span style={{ color: "var(--text-soft)" }}>{datePart}</span>
-        <span style={{ color: "var(--text-soft)" }}>·</span>
-        <span style={{ color: "var(--text-soft)" }}>Week {week}</span>
+        <span className="truncate" style={{ color: "var(--text-soft)" }}>
+          {datePart}
+        </span>
       </div>
 
-      <nav className="premium-glass-pill flex items-center gap-1 p-1 text-[13.5px]">
+      <nav className="premium-glass-pill flex shrink-0 items-center gap-1 p-1 text-[12px] sm:text-[13.5px]">
         {TABS.map((t) => {
           const isActive = t.id === active;
           return (
@@ -70,7 +39,7 @@ export default function NutritionTopBar({ active }: { active: Tab }) {
               key={t.id}
               href={t.href}
               className={clsx(
-                "relative inline-flex items-center rounded-full px-4 py-2 transition",
+                "relative inline-flex items-center rounded-full px-3 py-1.5 transition sm:px-4 sm:py-2",
                 isActive
                   ? "bg-[#14D2DC] font-semibold text-[#071A1C] shadow-[0_10px_20px_rgba(20,210,220,0.22)]"
                   : "text-[#667085] hover:bg-white/70 hover:text-[#17141F]",

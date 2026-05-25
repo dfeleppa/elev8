@@ -630,9 +630,9 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 transition ${
+                className={`relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 transition ${
                   isActive
-                    ? "bg-[#14D2DC] text-[#071317] shadow-[0_10px_22px_rgba(20,210,220,0.24)]"
+                    ? "bg-white/55 text-[#17141F] after:absolute after:bottom-1 after:left-1/2 after:h-0.5 after:w-7 after:-translate-x-1/2 after:rounded-full after:bg-[#14D2DC] after:shadow-[0_0_12px_rgba(20,210,220,0.42)]"
                     : "text-[#667085] hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
                 }`}
                 aria-current={isActive ? "page" : undefined}

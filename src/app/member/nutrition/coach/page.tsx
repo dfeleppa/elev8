@@ -14,15 +14,12 @@ export default async function MemberNutritionCoachPlanPage() {
   return (
     <SidebarShell mainClassName="w-full">
       <section className="premium-main-glow min-h-[calc(100vh-3.5rem)] w-full px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
-        <div className="flex w-full flex-col gap-5">
-          <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="font-head text-[28px] font-bold leading-tight tracking-normal text-[#17141F] sm:text-[32px]">
+        <div className="flex w-full flex-col gap-4 sm:gap-5">
+          <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="-mt-[56px] flex h-10 items-center justify-center sm:mt-0 sm:h-auto sm:justify-start">
+              <h1 className="max-w-[calc(100vw-136px)] truncate text-center font-head text-[18px] font-extrabold leading-tight tracking-normal text-[#17141F] sm:max-w-none sm:text-left sm:text-[32px]">
                 Nutrition Plan
               </h1>
-              <p className="mt-1 text-[15px] font-medium text-[#475467]">
-                Review coach targets, weekly check-ins, and progress notes.
-              </p>
             </div>
             <NutritionTopBar active="coach" />
           </header>
