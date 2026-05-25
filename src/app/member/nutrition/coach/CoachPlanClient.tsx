@@ -30,6 +30,8 @@ const GOAL_LABEL: Record<string, string> = {
   performance_reverse_diet: "Performance / Reverse Diet",
 };
 
+type MetricAccent = "teal" | "pink" | "neutral";
+
 function formatDate(value: string | null | undefined) {
   if (!value) return "-";
   const d = new Date(`${value}T00:00:00`);
@@ -63,6 +65,22 @@ function formatGrams(value: number | null | undefined) {
   const num = Number(value);
   if (!Number.isFinite(num) || num <= 0) return "-";
   return `${Math.round(num)} g`;
+}
+
+function metricCard(label: string, value: string, accent: MetricAccent = "neutral") {
+  const accentClass =
+    accent === "teal"
+      ? "border-[rgba(20,210,220,0.18)] bg-[rgba(20,210,220,0.08)]"
+      : accent === "pink"
+        ? "border-[rgba(255,92,168,0.18)] bg-[rgba(255,92,168,0.08)]"
+        : "border-[rgba(16,24,40,0.08)] bg-white/66";
+
+  return (
+    <div key={label} className={`rounded-[20px] border p-4 ${accentClass}`}>
+      <dt className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">{label}</dt>
+      <dd className="mt-2 text-lg font-bold leading-tight text-[#17141F]">{value}</dd>
+    </div>
+  );
 }
 
 
@@ -110,24 +128,25 @@ export default function CoachPlanClient() {
 
   if (loading) {
     return (
-      <div className="rounded-[24px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_18px_42px_rgba(79,102,124,0.12)] backdrop-blur-2xl lg:rounded-[10px] lg:border-[var(--line)] lg:bg-[var(--panel)] lg:p-6 lg:shadow-[var(--shadow-md)]">
-        <p className="text-sm font-semibold text-slate-500 lg:text-[var(--text-muted)]">Loading coach plan...</p>
+      <div className="premium-glass-card p-5">
+        <p className="text-sm font-semibold text-[#667085]">Loading coach plan...</p>
       </div>
     );
   }
 
   if (!hasPlan) {
     return (
-      <div className="flex flex-col items-start gap-4 rounded-[24px] border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_18px_42px_rgba(79,102,124,0.12)] backdrop-blur-2xl lg:rounded-[10px] lg:border-[var(--line)] lg:bg-[var(--panel)] lg:p-6 lg:shadow-[var(--shadow-md)]">
+      <div className="premium-glass-card flex min-h-[320px] flex-col items-start justify-center gap-4 p-6">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400 lg:text-[var(--text-soft)]">No active plan</p>
-          <p className="mt-3 text-sm font-medium text-slate-500 lg:text-[var(--text-muted)]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">No active plan</p>
+          <h2 className="mt-2 text-2xl font-bold text-[#17141F]">Start your coach plan</h2>
+          <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-[#667085]">
             You don&apos;t have an active nutrition plan yet. Set one up to get target macros and weekly check-ins.
           </p>
         </div>
         <Link
           href="/member/nutrition-coach"
-          className="rounded-xl bg-[#ffb1c4] px-5 py-2 text-xs font-bold uppercase tracking-widest text-[#230012] transition hover:brightness-105 lg:accent-pink lg:text-current"
+          className="rounded-2xl bg-[#14D2DC] px-5 py-3 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105"
         >
           Start a plan
         </Link>
@@ -139,6 +158,23 @@ export default function CoachPlanClient() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const checkInDue = nextCheckInDate !== null && !Number.isNaN(nextCheckInDate.getTime()) && nextCheckInDate <= today;
+  const daysUntilCheckIn =
+    nextCheckInDate && !Number.isNaN(nextCheckInDate.getTime())
+      ? Math.max(0, Math.ceil((nextCheckInDate.getTime() - today.getTime()) / 86_400_000))
+      : null;
+  const macroTargets: Array<[string, string, MetricAccent]> = [
+    ["Protein", formatGrams(summary?.proteinGrams), "teal"],
+    ["Carbs", formatGrams(summary?.carbsGrams), "neutral"],
+    ["Fat", formatGrams(summary?.fatGrams), "pink"],
+  ];
+  const progressMetrics = [
+    ["Start weight", formatWeight(summary?.startWeight)],
+    ["Current weight", formatWeight(summary?.currentWeight)],
+    ["Target weight", formatWeight(summary?.targetWeight)],
+    ["Body fat", formatBodyFat(summary?.bodyFatPercent)],
+    ["Plan started", formatDate(summary?.effectiveDate)],
+    ["Last check-in", formatDate(summary?.lastCheckInDate)],
+  ];
 
   async function submitCheckIn() {
     setCheckInBusy(true);
@@ -187,52 +223,54 @@ export default function CoachPlanClient() {
   }
 
   return (
-    <div className="space-y-4 lg:space-y-6">
-      <div className="hidden lg:block">
-        <NutritionCheckInBanner />
-      </div>
+    <div className="grid w-full gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.65fr)]">
+      <div className="flex flex-col gap-5">
+        <div className="hidden lg:block">
+          <NutritionCheckInBanner />
+        </div>
 
       {checkInDue ? (
-        <div className="rounded-[24px] border border-[#ff9fb9]/60 bg-[#ffb1c4] p-4 text-[#230012] shadow-[0_18px_42px_rgba(255,74,141,0.18)] lg:rounded-[10px] lg:border-[var(--pink)]/40 lg:bg-[var(--panel)] lg:p-6 lg:text-[var(--text)] lg:shadow-[var(--shadow-md)]">
+        <div className="premium-glass-card p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] opacity-70 lg:text-[var(--text-soft)]">Check-In Due</p>
-              <p className="mt-2 text-sm font-semibold opacity-80 lg:text-[var(--text-muted)]">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B42368]">Check-In Due</p>
+              <h2 className="mt-1 text-[22px] font-bold text-[#17141F]">Weekly coach review</h2>
+              <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
                 Confirm bodyweight, body fat, and goal. If tracking was adherent, the app will adjust calories based on progress.
               </p>
             </div>
-            <div className="w-fit rounded-full bg-[#230012]/12 px-3 py-1 text-xs font-bold lg:bg-[var(--pink)]/12 lg:text-[var(--pink)]">
+            <div className="w-fit rounded-full border border-[rgba(255,92,168,0.18)] bg-[rgba(255,92,168,0.08)] px-3 py-1 text-xs font-bold text-[#B42368]">
               10-day review
             </div>
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-3">
-            <label className="block space-y-2 text-xs font-bold uppercase tracking-[0.14em] opacity-70 lg:text-[var(--text-soft)]">
+            <label className="block space-y-2 text-xs font-bold uppercase tracking-[0.14em] text-[#667085]">
               Bodyweight
               <input
                 value={checkInWeight}
                 onChange={(event) => setCheckInWeight(event.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-white/70 bg-white/70 px-3 py-2 text-sm font-bold normal-case tracking-normal text-slate-950 focus:border-[#230012]/30 focus:outline-none lg:border-[var(--line-strong)] lg:bg-[var(--panel-2)] lg:text-[var(--text)] lg:focus:border-[var(--pink)]/50"
+                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-3 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
                 placeholder="lb"
               />
             </label>
-            <label className="block space-y-2 text-xs font-bold uppercase tracking-[0.14em] opacity-70 lg:text-[var(--text-soft)]">
+            <label className="block space-y-2 text-xs font-bold uppercase tracking-[0.14em] text-[#667085]">
               Body fat
               <input
                 value={checkInBodyFat}
                 onChange={(event) => setCheckInBodyFat(event.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-white/70 bg-white/70 px-3 py-2 text-sm font-bold normal-case tracking-normal text-slate-950 focus:border-[#230012]/30 focus:outline-none lg:border-[var(--line-strong)] lg:bg-[var(--panel-2)] lg:text-[var(--text)] lg:focus:border-[var(--pink)]/50"
+                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-3 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
                 placeholder="%"
               />
             </label>
-            <label className="block space-y-2 text-xs font-bold uppercase tracking-[0.14em] opacity-70 lg:text-[var(--text-soft)]">
+            <label className="block space-y-2 text-xs font-bold uppercase tracking-[0.14em] text-[#667085]">
               Goal
               <select
                 value={checkInGoal}
                 onChange={(event) => setCheckInGoal(event.target.value)}
-                className="w-full rounded-xl border border-white/70 bg-white/70 px-3 py-2 text-sm font-bold normal-case tracking-normal text-slate-950 focus:border-[#230012]/30 focus:outline-none lg:border-[var(--line-strong)] lg:bg-[var(--panel-2)] lg:text-[var(--text)] lg:focus:border-[var(--pink)]/50"
+                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-3 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
               >
                 {Object.entries(GOAL_LABEL).map(([value, label]) => (
                   <option key={value} value={value}>
@@ -243,91 +281,81 @@ export default function CoachPlanClient() {
             </label>
           </div>
 
-          {checkInError ? <p className="mt-3 text-sm font-bold text-rose-700 lg:text-rose-300">{checkInError}</p> : null}
-          {checkInResult ? <p className="mt-3 text-sm font-bold text-emerald-900 lg:text-emerald-300">{checkInResult}</p> : null}
+          {checkInError ? <p className="mt-3 text-sm font-bold text-rose-700">{checkInError}</p> : null}
+          {checkInResult ? <p className="mt-3 text-sm font-bold text-emerald-700">{checkInResult}</p> : null}
 
           <button
             type="button"
             onClick={() => void submitCheckIn()}
             disabled={checkInBusy}
-            className="mt-5 rounded-xl bg-[#230012] px-5 py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-60 lg:bg-[var(--pink)] lg:text-slate-950 lg:hover:brightness-110"
+            className="mt-5 rounded-2xl bg-[#14D2DC] px-5 py-3 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105 disabled:opacity-60"
           >
             {checkInBusy ? "Checking in..." : "Complete check-in"}
           </button>
         </div>
       ) : null}
 
-      <div className="rounded-[24px] border border-[#ff9fb9]/60 bg-[#ffb1c4] p-4 text-[#230012] shadow-[0_18px_42px_rgba(255,74,141,0.18)] lg:rounded-[10px] lg:border-[var(--line)] lg:bg-[var(--panel)] lg:p-6 lg:text-[var(--text)] lg:shadow-[var(--shadow-md)]">
+      <div className="premium-glass-card p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] opacity-70 lg:text-[var(--text-soft)]">Plan Overview</p>
-            <p className="mt-2 text-[26px] font-bold leading-none tracking-[-0.02em] lg:text-lg lg:tracking-normal">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Plan Overview</p>
+            <h2 className="mt-1 text-[28px] font-bold leading-tight text-[#17141F]">
               {GOAL_LABEL[summary?.goalType ?? ""] ?? "Not set"}
+            </h2>
+            <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
+              Active daily targets and progress markers from your coach plan.
             </p>
           </div>
           <Link
             href="/member/nutrition-coach"
-            className="hidden rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--pink)]/40 hover:text-[var(--pink)] lg:block"
+            className="rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 px-4 py-2.5 text-sm font-bold text-[#17141F] transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)]"
           >
             Change Plan
           </Link>
         </div>
 
-        <dl className="mt-5 grid grid-cols-2 gap-2 text-sm md:grid-cols-3 lg:gap-x-6 lg:gap-y-4">
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Start weight</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">{formatWeight(summary?.startWeight)}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Current weight</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">{formatWeight(summary?.currentWeight)}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Target weight</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">{formatWeight(summary?.targetWeight)}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Body fat</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">{formatBodyFat(summary?.bodyFatPercent)}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Plan started</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">{formatDate(summary?.effectiveDate)}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Last check-in</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">{formatDate(summary?.lastCheckInDate)}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Next check-in</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">{formatDate(summary?.nextCheckInDate)}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Estimated metabolism</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">{formatCalories(summary?.estimatedMetabolism)}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Daily calorie target</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">{formatCalories(summary?.targetCalories)}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Macros (P/C/F)</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">
-              {formatGrams(summary?.proteinGrams)} / {formatGrams(summary?.carbsGrams)} / {formatGrams(summary?.fatGrams)}
-            </dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Metabolism source</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">
-              {summary?.metabolismSource === "empirical" ? "Empirical" : summary?.metabolismSource === "formula" ? "Formula" : "-"}
-            </dd>
-          </div>
-          <div className="rounded-2xl bg-white/35 p-3 lg:bg-transparent lg:p-0">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-60 lg:text-[var(--text-soft)]">Estimate updated</dt>
-            <dd className="mt-1 font-bold lg:font-normal lg:text-[var(--text)]">{formatDate(summary?.metabolismEstimatedAt)}</dd>
-          </div>
+        <dl className="mt-5 grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+          {progressMetrics.map(([label, value]) => metricCard(label, value))}
         </dl>
       </div>
+      </div>
+
+      <aside className="flex flex-col gap-5">
+        <div className="premium-glass-card p-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Daily Targets</p>
+          <div className="mt-4 rounded-[24px] border border-[rgba(20,210,220,0.18)] bg-[rgba(20,210,220,0.08)] p-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Calories</p>
+            <p className="mt-2 text-4xl font-bold leading-none text-[#17141F]">{formatCalories(summary?.targetCalories)}</p>
+            <p className="mt-2 text-sm font-semibold text-[#667085]">Estimated metabolism: {formatCalories(summary?.estimatedMetabolism)}</p>
+          </div>
+
+          <dl className="mt-3 grid gap-3">
+            {macroTargets.map(([label, value, accent]) => metricCard(label, value, accent))}
+          </dl>
+        </div>
+
+        <div className="premium-glass-card p-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Check-In Status</p>
+          <h2 className="mt-1 text-[22px] font-bold text-[#17141F]">
+            {checkInDue ? "Due now" : daysUntilCheckIn === null ? "Not scheduled" : `${daysUntilCheckIn} days away`}
+          </h2>
+          <div className="mt-4 grid gap-3">
+            {metricCard("Next check-in", formatDate(summary?.nextCheckInDate), checkInDue ? "pink" : "teal")}
+            {metricCard(
+              "Metabolism source",
+              summary?.metabolismSource === "empirical" ? "Empirical" : summary?.metabolismSource === "formula" ? "Formula" : "-"
+            )}
+            {metricCard("Estimate updated", formatDate(summary?.metabolismEstimatedAt))}
+          </div>
+        </div>
+
+        <div className="premium-glass-card p-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Coach Note</p>
+          <p className="mt-3 text-sm font-semibold leading-6 text-[#475467]">
+            Keep your logging consistent and use the check-in cadence to let the plan adjust from real progress, not guesswork.
+          </p>
+        </div>
+      </aside>
 
     </div>
   );
