@@ -1246,32 +1246,67 @@ export default function HealthNutritionPage() {
               </div>
             </div>
 
-            <div className="mt-3 sm:hidden">
-              <div className="flex items-end justify-between gap-3 rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 px-3 py-2.5">
-                <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#667085]">Calories</p>
+            <div className="mt-3 grid grid-cols-[104px_minmax(0,1fr)] items-center gap-3 sm:hidden">
+              <div className="relative grid aspect-square place-items-center rounded-[20px] border border-[#D4DAE4]/85 bg-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)]">
+                <svg className="absolute inset-2" viewBox="0 0 150 150" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="mobile-calorie-ring-compact" x1="18" y1="18" x2="132" y2="132">
+                      <stop stopColor="#14D2DC" />
+                      <stop offset="1" stopColor="#0BA7B0" />
+                    </linearGradient>
+                  </defs>
+                  <g transform="rotate(-90 75 75)">
+                    <circle cx="75" cy="75" r="57" fill="none" stroke="#E7EAEE" strokeWidth="13" />
+                    <circle
+                      cx="75"
+                      cy="75"
+                      r="57"
+                      fill="none"
+                      stroke="url(#mobile-calorie-ring-compact)"
+                      strokeWidth="13"
+                      strokeLinecap="round"
+                      strokeDasharray={ringDashArray(displayCaloriesProgress, 57)}
+                    />
+                  </g>
+                </svg>
+                <div className="text-center">
                   <p
-                    className="mt-0.5 text-[24px] font-extrabold leading-none text-[#17141F]"
+                    className="text-[20px] font-extrabold leading-none text-[#17141F]"
                     style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
                   >
                     {roundToWhole(displayCalories).toLocaleString()}
-                    <span className="text-[12px] font-bold text-[#667085]">
-                      /{roundToWhole(targetNumbers.calories || 0).toLocaleString()}
-                    </span>
+                  </p>
+                  <p className="mt-0.5 text-[9.5px] font-extrabold uppercase tracking-[0.08em] text-[#667085]">
+                    kcal
                   </p>
                 </div>
-                <p
-                  className="text-[13px] font-extrabold text-[#0BA7B0]"
-                  style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
-                >
-                  {Math.round(displayCaloriesProgress)}%
-                </p>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#E1E6EE]">
-                <div
-                  className="h-full rounded-full bg-[#14D2DC] transition-[width] duration-500"
-                  style={{ width: `${displayCaloriesProgress}%` }}
-                />
+
+              <div className="grid gap-2">
+                {macroBars.slice(0, 3).map((bar, index) => {
+                  const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : "#FF5CA8";
+                  const statusColor = STATUS_TEXT_COLOR[bar.status];
+                  return (
+                    <div key={`mobile-macro-${bar.label}`} className="min-w-0 rounded-[14px] border border-[#D4DAE4]/85 bg-white/84 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className="text-[11px] font-extrabold text-[#17141F]">{bar.label}</p>
+                        <p
+                          className="text-[11px] font-extrabold tabular-nums text-[#101828]"
+                          style={statusColor ? { color: statusColor } : undefined}
+                        >
+                          {roundToWhole(bar.value)}
+                          <span className="font-bold text-[#667085]">/{roundToWhole(bar.target)}g</span>
+                        </p>
+                      </div>
+                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#E1E6EE]">
+                        <div
+                          className="h-full rounded-full transition-[width] duration-500"
+                          style={{ width: `${bar.progress}%`, backgroundColor: baseColor }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -1318,7 +1353,7 @@ export default function HealthNutritionPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3">
+              <div className="hidden grid-cols-4 gap-2 sm:grid sm:grid-cols-2 sm:gap-3">
                 {macroBars.map((bar, index) => {
                   const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : index === 2 ? "#FF5CA8" : "#7A8699";
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
