@@ -4,18 +4,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import {
-  uiBannerErrorClass,
-  uiBannerSuccessClass,
-  uiButtonGhostClass,
-  uiButtonPrimaryClass,
-  uiCopyClass,
-  uiFieldClass,
-  uiKickerClass,
-  uiLabelClass,
-  uiSurfaceClass,
-  uiTitleSmClass,
-} from "@/components/ui";
 
 export default function LoginClient() {
   const router = useRouter();
@@ -34,6 +22,11 @@ export default function LoginClient() {
       : authError === "invite_required"
         ? "Create an account with your invitation code before signing in with Google."
       : null;
+
+  const labelClass =
+    "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600";
+  const inputClass =
+    "w-full rounded-xl border border-slate-200 bg-white/85 px-4 py-3 text-sm text-slate-950 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-[#ff7fa4] focus:ring-4 focus:ring-[#ffb1c4]/25";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,15 +51,15 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f7fbfa] px-4 text-slate-950">
       {/* Background gradient hazes */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(255,177,196,0.18),transparent_62%)] blur-[80px]" />
-        <div className="absolute -right-24 top-16 h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(99,247,255,0.12),transparent_58%)] blur-[70px]" />
-        <div className="absolute bottom-0 left-1/2 h-[350px] w-[600px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,74,141,0.1),transparent_55%)] blur-[60px]" />
+        <div className="absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(255,177,196,0.36),transparent_62%)] blur-[80px]" />
+        <div className="absolute -right-24 top-16 h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(99,247,255,0.24),transparent_58%)] blur-[70px]" />
+        <div className="absolute bottom-0 left-1/2 h-[350px] w-[600px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,228,237,0.9),transparent_55%)] blur-[60px]" />
       </div>
 
-      <div className={`card-fade-in ${uiSurfaceClass} relative z-10 w-full max-w-md px-8 py-10`}>
+      <div className="card-fade-in relative z-10 w-full max-w-md rounded-[28px] border border-white/80 bg-white/78 px-8 py-10 shadow-[0_28px_80px_rgba(79,102,124,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-2xl">
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <img
@@ -74,23 +67,23 @@ export default function LoginClient() {
             alt="Lyfe Fitness"
             className="h-auto w-44"
           />
-          <p className={`${uiKickerClass} text-white/70`}>Lyfe Fitness</p>
-          <h1 className={uiTitleSmClass}>
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Lyfe Fitness</p>
+          <h1 className="font-[family-name:var(--font-brand-heading)] text-2xl font-bold text-slate-950">
             Welcome back
           </h1>
-          <p className={`${uiCopyClass} text-center text-sm text-slate-300`}>Sign in to your Lyfe Fitness account</p>
+          <p className="text-center text-sm font-medium text-slate-600">Sign in to your Lyfe Fitness account</p>
         </div>
 
         {/* Success banner */}
         {registered && (
-          <div className={`${uiBannerSuccessClass} mb-6 text-center`}>
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-800">
             Account created successfully. Sign in to continue.
           </div>
         )}
 
         {/* Error banner */}
         {(error || externalError) && (
-          <div className={`${uiBannerErrorClass} mb-6 text-center`}>
+          <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-center text-sm font-medium text-rose-800">
             {error ?? externalError}
           </div>
         )}
@@ -98,7 +91,7 @@ export default function LoginClient() {
         {/* Email/password form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className={uiLabelClass}>
+            <label htmlFor="email" className={labelClass}>
               Email
             </label>
             <input
@@ -108,12 +101,12 @@ export default function LoginClient() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={uiFieldClass}
+              className={inputClass}
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label htmlFor="password" className={uiLabelClass}>
+            <label htmlFor="password" className={labelClass}>
               Password
             </label>
             <input
@@ -123,14 +116,14 @@ export default function LoginClient() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={uiFieldClass}
+              className={inputClass}
               placeholder="Enter your password"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className={`${uiButtonPrimaryClass} w-full`}
+            className="w-full rounded-xl bg-[#ffb1c4] px-4 py-3 text-sm font-bold text-[#17141f] shadow-[0_16px_34px_rgba(255,126,164,0.28)] transition hover:bg-[#ffc4d3] disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
@@ -138,11 +131,11 @@ export default function LoginClient() {
 
         {/* Divider */}
         <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[var(--line)]" />
-          <span className="text-xs font-medium uppercase tracking-widest text-slate-300">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">
             or continue with
           </span>
-          <div className="h-px flex-1 bg-[var(--line)]" />
+          <div className="h-px flex-1 bg-slate-200" />
         </div>
 
         {/* OAuth buttons */}
@@ -150,7 +143,7 @@ export default function LoginClient() {
           <button
             type="button"
             onClick={() => signIn("google", { callbackUrl })}
-            className={`${uiButtonGhostClass} w-full`}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-white"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
               <path
@@ -176,9 +169,9 @@ export default function LoginClient() {
         </div>
 
         {/* Register link */}
-        <p className="mt-8 text-center text-sm text-slate-300">
+        <p className="mt-8 text-center text-sm font-medium text-slate-600">
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-medium text-[var(--pink)] transition hover:brightness-110">
+          <Link href="/register" className="font-bold text-[#d94679] transition hover:text-[#b9285f]">
             Create one
           </Link>
         </p>

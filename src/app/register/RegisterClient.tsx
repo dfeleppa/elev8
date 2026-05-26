@@ -57,18 +57,20 @@ export default function RegisterClient() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm text-slate-100 placeholder:text-white/25 focus:border-[#ffb1c4]/60 focus:outline-none";
+    "w-full rounded-xl border border-slate-200 bg-white/85 px-4 py-3 text-sm text-slate-950 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-[#ff7fa4] focus:ring-4 focus:ring-[#ffb1c4]/25";
+  const labelClass =
+    "mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600";
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f7fbfa] px-4 py-8 text-slate-950">
       {/* Background gradient hazes */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(255,177,196,0.18),transparent_62%)] blur-[80px]" />
-        <div className="absolute -right-24 top-16 h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(99,247,255,0.12),transparent_58%)] blur-[70px]" />
-        <div className="absolute bottom-0 left-1/2 h-[350px] w-[600px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,74,141,0.1),transparent_55%)] blur-[60px]" />
+        <div className="absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(255,177,196,0.36),transparent_62%)] blur-[80px]" />
+        <div className="absolute -right-24 top-16 h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(99,247,255,0.24),transparent_58%)] blur-[70px]" />
+        <div className="absolute bottom-0 left-1/2 h-[350px] w-[600px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,228,237,0.9),transparent_55%)] blur-[60px]" />
       </div>
 
-      <div className="card-fade-in glass-panel relative z-10 w-full max-w-md rounded-2xl px-8 py-10">
+      <div className="card-fade-in relative z-10 w-full max-w-md rounded-[28px] border border-white/80 bg-white/78 px-8 py-10 shadow-[0_28px_80px_rgba(79,102,124,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-2xl">
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <img
@@ -76,15 +78,15 @@ export default function RegisterClient() {
             alt="Lyfe Fitness"
             className="h-auto w-44"
           />
-          <h1 className="font-[family-name:var(--font-brand-heading)] text-2xl font-bold text-slate-100">
+          <h1 className="font-[family-name:var(--font-brand-heading)] text-2xl font-bold text-slate-950">
             Create your account
           </h1>
-          <p className="text-sm text-slate-300">Join Lyfe Fitness to get started</p>
+          <p className="text-sm font-medium text-slate-600">Join Lyfe Fitness to get started</p>
         </div>
 
         {/* Error banner */}
         {error && (
-          <div className="mb-6 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-center text-sm text-rose-300">
+          <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-center text-sm font-medium text-rose-800">
             {error}
           </div>
         )}
@@ -92,7 +94,7 @@ export default function RegisterClient() {
         {/* Registration form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="fullName" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/70">
+            <label htmlFor="fullName" className={labelClass}>
               Full Name
             </label>
             <input
@@ -107,7 +109,7 @@ export default function RegisterClient() {
             />
           </div>
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/70">
+            <label htmlFor="email" className={labelClass}>
               Email
             </label>
             <input
@@ -122,7 +124,7 @@ export default function RegisterClient() {
             />
           </div>
           <div>
-            <label htmlFor="invitationCode" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/70">
+            <label htmlFor="invitationCode" className={labelClass}>
               Invitation Code
             </label>
             <input
@@ -137,7 +139,7 @@ export default function RegisterClient() {
             />
           </div>
           <div>
-            <label htmlFor="password" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/70">
+            <label htmlFor="password" className={labelClass}>
               Password
             </label>
             <input
@@ -152,7 +154,7 @@ export default function RegisterClient() {
             />
           </div>
           <div>
-            <label htmlFor="confirmPassword" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/70">
+            <label htmlFor="confirmPassword" className={labelClass}>
               Confirm Password
             </label>
             <input
@@ -169,16 +171,16 @@ export default function RegisterClient() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-[#ffb1c4] px-4 py-3 text-sm font-semibold text-[#0c1118] transition hover:bg-[#ffc4d3] disabled:opacity-50"
+            className="w-full rounded-xl bg-[#ffb1c4] px-4 py-3 text-sm font-bold text-[#17141f] shadow-[0_16px_34px_rgba(255,126,164,0.28)] transition hover:bg-[#ffc4d3] disabled:opacity-50"
           >
             {loading ? "Creating account..." : "Create Account"}
           </button>
         </form>
 
         {/* Login link */}
-        <p className="mt-8 text-center text-sm text-slate-300">
+        <p className="mt-8 text-center text-sm font-medium text-slate-600">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-[#ffb1c4] transition hover:text-[#ffc4d3]">
+          <Link href="/login" className="font-bold text-[#d94679] transition hover:text-[#b9285f]">
             Sign in
           </Link>
         </p>

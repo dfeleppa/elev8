@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 
+import {
+  ActionButton,
+  GlassCard,
+  MetricRow,
+} from "@/components/member-dashboard/PremiumDashboard";
 import type { StatGroup } from "./health-stats-config";
 
 type StatValue = {
@@ -235,21 +240,24 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
       )}
       {hideHeader && errorMessage && <p className="mb-4 text-sm text-rose-400">{errorMessage}</p>}
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-3">
+      <section className="mt-6 grid gap-5 lg:grid-cols-3">
         {groups.map((group) => (
-          <div
+          <GlassCard
             key={group.title}
-            className="panel rounded-3xl p-6"
+            className="flex min-h-full flex-col"
           >
-            <h2 className="text-lg font-semibold text-[var(--text)]">{group.title}</h2>
+            <div>
+              <h2 className="text-xl font-bold text-[#17141F]">{group.title}</h2>
+              <p className="mt-1 text-sm font-medium leading-5 text-[#667085]">{group.description}</p>
+            </div>
 
             {group.slug === "body-comp" ? (
               <>
-                <div className="mt-4 flex gap-3">
-                  <div className="flex flex-1 items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3">
-                    <span className="text-sm font-semibold text-[var(--text)]">Sex</span>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="flex items-center justify-between rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/66 px-4 py-3">
+                    <span className="text-sm font-bold text-[#17141F]">Sex</span>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold capitalize text-[var(--text)]">
+                      <span className="text-sm font-bold capitalize text-[#17141F]">
                         {isLoading ? "..." : athleteProfile.sex ?? "--"}
                       </span>
                       <button
@@ -259,15 +267,15 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                           setProfileBirthDate(athleteProfile.birthDate ?? "");
                           setIsEditingProfile(true);
                         }}
-                        className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
+                        className="rounded-full border border-[rgba(16,24,40,0.08)] bg-white/70 px-3 py-1 text-[11px] font-bold text-[#667085] transition hover:text-[#17141F]"
                       >
                         Edit
                       </button>
                     </div>
                   </div>
-                  <div className="flex flex-1 items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3">
-                    <span className="text-sm font-semibold text-[var(--text)]">Age</span>
-                    <span className="text-sm font-semibold text-[var(--text)]">
+                  <div className="flex items-center justify-between rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/66 px-4 py-3">
+                    <span className="text-sm font-bold text-[#17141F]">Age</span>
+                    <span className="text-sm font-bold text-[#17141F]">
                       {isLoading ? "..." : athleteProfile.age ?? "--"}
                     </span>
                   </div>
@@ -275,22 +283,18 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
 
                 <div className="mt-4 grid gap-3">
                   {group.stats.map((stat) => (
-                    <div
+                    <MetricRow
                       key={stat.key}
-                      className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3"
-                    >
-                      <span className="text-sm font-semibold text-[var(--text)]">{stat.label}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-[var(--text)]">{statDisplayValue(stat.key)}</span>
-                        <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">{statDisplayUnit(stat.key)}</span>
-                      </div>
-                    </div>
+                      label={stat.label}
+                      value={statDisplayValue(stat.key)}
+                      unit={statDisplayUnit(stat.key)}
+                    />
                   ))}
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Log Today&apos;s Weight</p>
-                  <form onSubmit={handleLogBodyComp} className="mt-3 flex items-center gap-2">
+                <div className="mt-4 rounded-[22px] border border-[rgba(20,210,220,0.16)] bg-[rgba(20,210,220,0.06)] px-4 py-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#667085]">Log Today&apos;s Weight</p>
+                  <form onSubmit={handleLogBodyComp} className="mt-3 flex flex-wrap items-center gap-2">
                     <input
                       type="number"
                       inputMode="decimal"
@@ -308,7 +312,7 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                           setLogBodyWeight("");
                         }
                       }}
-                      className="w-20 min-w-0 rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] outline-none focus:border-emerald-400/60"
+                      className="h-11 w-24 min-w-0 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 text-sm font-bold text-[#17141F] placeholder:text-[#98A2B3] outline-none focus:border-[rgba(20,210,220,0.55)]"
                       required
                     />
                     <input
@@ -328,17 +332,17 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                           setLogBodyFat("");
                         }
                       }}
-                      className="w-16 min-w-0 rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] outline-none focus:border-emerald-400/60"
+                      className="h-11 w-24 min-w-0 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 text-sm font-bold text-[#17141F] placeholder:text-[#98A2B3] outline-none focus:border-[rgba(20,210,220,0.55)]"
                     />
-                    <button
+                    <ActionButton
                       type="submit"
                       disabled={isLogging || !logBodyWeight.trim()}
-                      className="shrink-0 rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white active:scale-95 transition-transform shadow-[0_4px_20px_rgba(255,177,196,0.2)] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="h-11 shrink-0 px-5 text-xs"
                     >
                       {isLogging ? "..." : "Add"}
-                    </button>
+                    </ActionButton>
                     {logSuccess && (
-                      <span className="shrink-0 text-xs text-emerald-500 font-medium">Saved!</span>
+                      <span className="shrink-0 text-xs font-bold text-[#0D98A1]">Saved!</span>
                     )}
                   </form>
                 </div>
@@ -346,62 +350,58 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
             ) : (
               <div className="mt-4 grid gap-3">
                 {group.stats.map((stat) => (
-                  <div
+                  <MetricRow
                     key={stat.key}
-                    className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3"
-                  >
-                    <span className="text-sm font-semibold text-[var(--text)]">{stat.label}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-[var(--text)]">
-                        {isLoading ? "..." : values[stat.key]?.value ? values[stat.key].value : "-"}
-                      </span>
-                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">{stat.unit}</span>
-                    </div>
-                  </div>
+                    label={stat.label}
+                    value={isLoading ? "..." : values[stat.key]?.value ? values[stat.key].value : "-"}
+                    unit={stat.unit}
+                  />
                 ))}
                 {group.slug !== "conditioning" && (
-                  <button
+                  <ActionButton
                     type="button"
                     onClick={onLogLift}
-                    className="mt-2 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2.5 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--pink)]/30 hover:text-[var(--text)]"
+                    variant="secondary"
+                    className="mt-2 w-full"
                   >
                     Log Lift
-                  </button>
+                  </ActionButton>
                 )}
                 {group.slug === "conditioning" && (
-                  <button
+                  <ActionButton
                     type="button"
-                    className="mt-2 w-full rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2.5 text-sm font-medium text-[var(--text-muted)] transition hover:border-[var(--pink)]/30 hover:text-[var(--text)]"
+                    variant="secondary"
+                    className="mt-2 w-full"
                   >
                     Log Benchmark
-                  </button>
+                  </ActionButton>
                 )}
               </div>
             )}
-          </div>
+          </GlassCard>
         ))}
       </section>
 
       {isEditingProfile ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="panel w-full max-w-sm rounded-2xl p-6 shadow-xl">
+          <GlassCard className="w-full max-w-sm shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-[var(--text)]">Edit Athlete Info</h3>
               <button
                 type="button"
                 onClick={cancelProfileEdit}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#667085] transition hover:text-[#17141F]"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] mb-1">Sex</label>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#667085]">Sex</label>
                 <select
                   value={profileSex}
                   onChange={(e) => setProfileSex(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)]"
+                  className="h-11 w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 text-sm font-bold text-[#17141F]"
                 >
                   <option value="">Not set</option>
                   <option value="male">Male</option>
@@ -409,33 +409,33 @@ export default function HealthStatsPanel({ title, description, groups, hideHeade
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] mb-1">Birth Date</label>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#667085]">Birth Date</label>
                 <input
                   type="date"
                   value={profileBirthDate}
                   onChange={(e) => setProfileBirthDate(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)]"
+                  className="h-11 w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 text-sm font-bold text-[#17141F]"
                 />
               </div>
               <div className="flex gap-2 pt-2">
-                <button
+                <ActionButton
                   type="button"
                   onClick={saveProfile}
                   disabled={isSavingProfile}
-                  className="flex-1 rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:brightness-110 active:scale-95 shadow-[0_4px_20px_rgba(255,177,196,0.2)] disabled:opacity-60"
+                  className="flex-1"
                 >
                   {isSavingProfile ? "Saving..." : "Save"}
-                </button>
-                <button
+                </ActionButton>
+                <ActionButton
                   type="button"
                   onClick={cancelProfileEdit}
-                  className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:text-[var(--text)]"
+                  variant="secondary"
                 >
                   Cancel
-                </button>
+                </ActionButton>
               </div>
             </div>
-          </div>
+          </GlassCard>
         </div>
       ) : null}
     </section>
