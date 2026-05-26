@@ -1,8 +1,10 @@
 import type { NextAuthOptions } from "next-auth";
 import type { JWT } from "next-auth/jwt";
+import { cookies } from "next/headers";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
+import { INVITATION_TICKET_COOKIE, verifyInvitationTicket } from "./invitation-code";
 import { getClientIpFromHeaders, rateLimitByKey } from "./rate-limit";
 import { loginWithEmailPassword, upsertSupabaseAuthOAuthUser } from "./supabase-auth-admin";
 
@@ -80,7 +82,16 @@ export const authOptions: NextAuthOptions = {
       const email = user.email;
       if (!email) return false;
 
-      const result = await upsertSupabaseAuthOAuthUser(email, user.name ?? null);
+      const cookieStore = await cookies();
+      const hasInvitationTicket = verifyInvitationTicket(
+        cookieStore.get(INVITATION_TICKET_COOKIE)?.value
+      );
+
+      const result = await upsertSupabaseAuthOAuthUser(
+        email,
+        user.name ?? null,
+        hasInvitationTicket
+      );
       if (!result.ok) return result.redirect;
       return true;
     },

@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { verifyInvitationCode } from "@/lib/invitation-code";
+import {
+  createInvitationTicket,
+  getInvitationTicketMaxAgeSeconds,
+  INVITATION_TICKET_COOKIE,
+  verifyInvitationCode,
+} from "@/lib/invitation-code";
 import { rateLimit } from "@/lib/rate-limit";
-import { registerWithEmailPassword } from "@/lib/supabase-auth-admin";
 
-// 5 attempts per IP per 15 minutes. Caps brute-force account creation and
-// the email-enumeration attack vector (probing whether a given email already
-// has an account by reading the 409 vs 200 response).
+// 5 attempts per IP per 15 minutes. Caps invitation-code guessing before a
+// user is allowed into the Google OAuth account creation flow.
 const REGISTER_LIMIT = 5;
 const REGISTER_WINDOW_MS = 15 * 60 * 1000;
 
@@ -20,27 +23,8 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const fullName = (body.fullName ?? "").trim();
-    const email = (body.email ?? "").trim().toLowerCase();
-    const password = body.password ?? "";
     const invitationCode = body.invitationCode ?? "";
 
-    // Validation
-    if (!fullName) {
-      return NextResponse.json({ error: "Full name is required." }, { status: 400 });
-    }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json(
-        { error: "A valid email address is required." },
-        { status: 400 }
-      );
-    }
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: "Password must be at least 8 characters." },
-        { status: 400 }
-      );
-    }
     if (!(await verifyInvitationCode(invitationCode))) {
       return NextResponse.json(
         { error: "A valid invitation code is required to create an account." },
@@ -48,22 +32,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await registerWithEmailPassword(fullName, email, password);
-
-    if (!result.ok) {
-      if (result.code === "already_exists") {
-        return NextResponse.json(
-          { error: "This email is already in our system. Try signing in or resetting your password." },
-          { status: 409 }
-        );
-      }
-      return NextResponse.json(
-        { error: result.code === "supabase_error" ? result.message : "Failed to create account." },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ ok: true });
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set(INVITATION_TICKET_COOKIE, createInvitationTicket(), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: getInvitationTicketMaxAgeSeconds(),
+      path: "/",
+    });
+    return response;
   } catch {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }

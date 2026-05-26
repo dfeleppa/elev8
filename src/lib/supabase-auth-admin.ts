@@ -270,7 +270,8 @@ export async function loginWithEmailPassword(
  */
 export async function upsertSupabaseAuthOAuthUser(
   email: string,
-  fullName: string | null
+  fullName: string | null,
+  hasInvitationTicket = false
 ): Promise<{ ok: true; supabaseUserId: string } | { ok: false; redirect: string }> {
   const normalizedEmail = normalizeEmail(email);
   if (!normalizedEmail) {
@@ -287,17 +288,25 @@ export async function upsertSupabaseAuthOAuthUser(
     | { id: string; email: string; supabase_auth_uid?: string | null }
     | null;
 
-  if (!appUserRow) {
+  if (!appUserRow && !hasInvitationTicket) {
     return { ok: false, redirect: "/login?error=invite_required" };
   }
 
-  await supabaseAdmin
-    .from("app_users")
-    .update({
+  if (appUserRow) {
+    await supabaseAdmin
+      .from("app_users")
+      .update({
+        full_name: fullName,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", appUserRow.id);
+  } else {
+    await supabaseAdmin.from("app_users").insert({
+      email: normalizedEmail,
       full_name: fullName,
       updated_at: new Date().toISOString(),
-    })
-    .eq("id", appUserRow.id);
+    });
+  }
 
   const cachedAuthUid = await findAuthUserIdByEmail(normalizedEmail);
   if (cachedAuthUid) {
