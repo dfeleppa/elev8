@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Target, X } from "lucide-react";
 
 import NutritionCheckInBanner from "./NutritionCheckInBanner";
 
@@ -211,14 +211,32 @@ export default function NutritionCoachCard() {
 
   if (status === "none") {
     return (
-      <div className="flex flex-col items-center justify-center panel rounded-3xl p-6 min-h-[120px] gap-3">
-        <p className="text-sm text-[var(--text-muted)]">No coach plan active.</p>
+      <div className="panel relative flex min-h-[220px] overflow-hidden rounded-3xl p-6">
+        <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-[rgba(99,247,255,0.16)] blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-14 -left-8 h-36 w-36 rounded-full bg-[rgba(255,177,196,0.22)] blur-3xl" />
+        <div className="relative flex w-full flex-col justify-between gap-6">
+          <div>
+            <div className="mb-4 grid h-11 w-11 place-items-center rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--pink)]">
+              <Target className="h-5 w-5" aria-hidden />
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
+              Nutrition Coach
+            </p>
+            <h3 className="mt-2 text-xl font-semibold leading-tight text-[var(--text)]">
+              Build your first plan
+            </h3>
+            <p className="mt-2 max-w-sm text-sm leading-5 text-[var(--text-muted)]">
+              Set your goal, starting weight, and targets so your dashboard can show macros, progress, and check-ins.
+            </p>
+          </div>
         <Link
-          href="/member/nutrition-coach"
-          className="rounded-full bg-gradient-to-r from-[#00c5ff] to-[#39a8ff] px-6 py-2.5 text-sm font-semibold text-[#031525] transition hover:brightness-110"
+          href="/member/nutrition/coach"
+          className="inline-flex w-fit items-center gap-2 rounded-full bg-[var(--pink)] px-5 py-2.5 text-sm font-semibold text-[#0c1118] shadow-[0_14px_30px_rgba(255,177,196,0.22)] transition hover:brightness-110"
         >
-          Nutrition Coach
+          Start plan
+          <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
+        </div>
       </div>
     );
   }

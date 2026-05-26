@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyInvitationCode } from "@/lib/invitation-code";
 import { rateLimit } from "@/lib/rate-limit";
 import { registerWithEmailPassword } from "@/lib/supabase-auth-admin";
 
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
     const fullName = (body.fullName ?? "").trim();
     const email = (body.email ?? "").trim().toLowerCase();
     const password = body.password ?? "";
+    const invitationCode = body.invitationCode ?? "";
 
     // Validation
     if (!fullName) {
@@ -37,6 +39,12 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Password must be at least 8 characters." },
         { status: 400 }
+      );
+    }
+    if (!(await verifyInvitationCode(invitationCode))) {
+      return NextResponse.json(
+        { error: "A valid invitation code is required to create an account." },
+        { status: 403 }
       );
     }
 

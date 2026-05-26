@@ -287,21 +287,17 @@ export async function upsertSupabaseAuthOAuthUser(
     | { id: string; email: string; supabase_auth_uid?: string | null }
     | null;
 
-  if (appUserRow) {
-    await supabaseAdmin
-      .from("app_users")
-      .update({
-        full_name: fullName,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", appUserRow.id);
-  } else {
-    await supabaseAdmin.from("app_users").insert({
-      email: normalizedEmail,
+  if (!appUserRow) {
+    return { ok: false, redirect: "/login?error=invite_required" };
+  }
+
+  await supabaseAdmin
+    .from("app_users")
+    .update({
       full_name: fullName,
       updated_at: new Date().toISOString(),
-    });
-  }
+    })
+    .eq("id", appUserRow.id);
 
   const cachedAuthUid = await findAuthUserIdByEmail(normalizedEmail);
   if (cachedAuthUid) {

@@ -145,7 +145,7 @@ export default function CoachPlanClient() {
           </p>
         </div>
         <Link
-          href="/member/nutrition-coach"
+          href="/member/nutrition/coach"
           className="rounded-2xl bg-[#14D2DC] px-5 py-3 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105"
         >
           Start a plan
@@ -304,7 +304,7 @@ export default function CoachPlanClient() {
             </h2>
           </div>
           <Link
-            href="/member/nutrition-coach"
+            href="/member/nutrition/coach"
             className="shrink-0 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 px-3 py-2 text-xs font-bold text-[#17141F] transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)] sm:px-4 sm:py-2.5 sm:text-sm"
           >
             Change Plan

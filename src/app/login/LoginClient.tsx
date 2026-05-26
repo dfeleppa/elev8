@@ -31,6 +31,8 @@ export default function LoginClient() {
   const externalError =
     authError === "reserved_email"
       ? "This email already exists in an organization's member roster and cannot be used to create an app account."
+      : authError === "invite_required"
+        ? "Create an account with your invitation code before signing in with Google."
       : null;
 
   async function handleSubmit(e: React.FormEvent) {
