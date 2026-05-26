@@ -71,13 +71,15 @@ export default function RegisterClient() {
       <div className="card-fade-in glass-panel relative z-10 w-full max-w-md rounded-2xl px-8 py-10">
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/5 text-base font-bold text-slate-100">
-            LF
-          </span>
+          <img
+            src="/dark_wide.png"
+            alt="Lyfe Fitness"
+            className="h-auto w-44"
+          />
           <h1 className="font-[family-name:var(--font-brand-heading)] text-2xl font-bold text-slate-100">
             Create your account
           </h1>
-          <p className="text-sm text-slate-400">Join Lyfe Fitness to get started</p>
+          <p className="text-sm text-slate-300">Join Lyfe Fitness to get started</p>
         </div>
 
         {/* Error banner */}
@@ -90,7 +92,7 @@ export default function RegisterClient() {
         {/* Registration form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="fullName" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/50">
+            <label htmlFor="fullName" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/70">
               Full Name
             </label>
             <input
@@ -105,7 +107,7 @@ export default function RegisterClient() {
             />
           </div>
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/50">
+            <label htmlFor="email" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/70">
               Email
             </label>
             <input
@@ -120,7 +122,7 @@ export default function RegisterClient() {
             />
           </div>
           <div>
-            <label htmlFor="invitationCode" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/50">
+            <label htmlFor="invitationCode" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/70">
               Invitation Code
             </label>
             <input
@@ -135,7 +137,7 @@ export default function RegisterClient() {
             />
           </div>
           <div>
-            <label htmlFor="password" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/50">
+            <label htmlFor="password" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/70">
               Password
             </label>
             <input
@@ -150,7 +152,7 @@ export default function RegisterClient() {
             />
           </div>
           <div>
-            <label htmlFor="confirmPassword" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/50">
+            <label htmlFor="confirmPassword" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/70">
               Confirm Password
             </label>
             <input
@@ -174,7 +176,7 @@ export default function RegisterClient() {
         </form>
 
         {/* Login link */}
-        <p className="mt-8 text-center text-sm text-slate-400">
+        <p className="mt-8 text-center text-sm text-slate-300">
           Already have an account?{" "}
           <Link href="/login" className="font-medium text-[#ffb1c4] transition hover:text-[#ffc4d3]">
             Sign in

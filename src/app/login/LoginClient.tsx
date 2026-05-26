@@ -69,14 +69,16 @@ export default function LoginClient() {
       <div className={`card-fade-in ${uiSurfaceClass} relative z-10 w-full max-w-md px-8 py-10`}>
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--line-strong)] bg-[color:color-mix(in_srgb,var(--pink)_12%,transparent)] text-base font-bold text-[var(--text)]">
-            LF
-          </span>
-          <p className={uiKickerClass}>Lyfe Fitness</p>
+          <img
+            src="/dark_wide.png"
+            alt="Lyfe Fitness"
+            className="h-auto w-44"
+          />
+          <p className={`${uiKickerClass} text-white/70`}>Lyfe Fitness</p>
           <h1 className={uiTitleSmClass}>
             Welcome back
           </h1>
-          <p className={`${uiCopyClass} text-center text-sm`}>Sign in to your Lyfe Fitness account</p>
+          <p className={`${uiCopyClass} text-center text-sm text-slate-300`}>Sign in to your Lyfe Fitness account</p>
         </div>
 
         {/* Success banner */}
@@ -137,7 +139,7 @@ export default function LoginClient() {
         {/* Divider */}
         <div className="my-6 flex items-center gap-3">
           <div className="h-px flex-1 bg-[var(--line)]" />
-          <span className="text-xs font-medium uppercase tracking-widest text-[var(--text-soft)]">
+          <span className="text-xs font-medium uppercase tracking-widest text-slate-300">
             or continue with
           </span>
           <div className="h-px flex-1 bg-[var(--line)]" />
@@ -174,7 +176,7 @@ export default function LoginClient() {
         </div>
 
         {/* Register link */}
-        <p className="mt-8 text-center text-sm text-[var(--text-muted)]">
+        <p className="mt-8 text-center text-sm text-slate-300">
           Don&apos;t have an account?{" "}
           <Link href="/register" className="font-medium text-[var(--pink)] transition hover:brightness-110">
             Create one
