@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Clock3,
   LoaderCircle,
   User,
   Users,
@@ -67,16 +66,6 @@ function addDays(dateKey: string, amount: number): string {
   return toLocalDateString(date);
 }
 
-function formatDuration(minutes: number) {
-  if (minutes < 60) {
-    return `${minutes} min`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes} min` : `${hours}h`;
-}
-
 function formatClassTimeRange(value: string, durationMinutes: number) {
   const [hours = "00", minutes = "00"] = value.split(":");
   const start = new Date();
@@ -106,54 +95,27 @@ function formatLongDate(dateKey: string) {
   });
 }
 
-function formatCutoff(value: string | null) {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 function getSessionStatusCopy(session: ScheduleSession) {
   if (session.isReservedByCurrentUser) {
     return {
       title: "Reserved",
-      body: "Your spot is locked in for this class.",
     };
   }
 
   if (session.isReservationClosed) {
     return {
       title: "Reservation closed",
-      body: session.reservationCutoffAt
-        ? `Reservations closed at ${formatCutoff(session.reservationCutoffAt)}.`
-        : "Reservations are closed for this class.",
     };
   }
 
   if (session.size_limit > 0 && session.capacityRemaining === 0) {
     return {
       title: "Class full",
-      body: "This class has reached capacity.",
     };
   }
 
   return {
     title: "Open for reservations",
-    body:
-      session.size_limit > 0
-        ? `${session.capacityRemaining} spot${session.capacityRemaining === 1 ? "" : "s"} remaining.`
-        : "Unlimited spots available.",
   };
 }
 
@@ -280,9 +242,6 @@ export default function MemberScheduleClient() {
   }
 
   const sessionsLabel = `${sessions.length} class${sessions.length === 1 ? "" : "es"} scheduled`;
-  const totalReservations = sessions.reduce((total, session) => total + session.reservedCount, 0);
-  const openSessions = sessions.filter((session) => canReserve(session));
-  const nextAvailableSession = openSessions[0] ?? sessions[0] ?? null;
 
   return (
     <div className="premium-main-glow min-h-[calc(100vh-3.5rem)] w-full px-3 py-3 text-[#17141F] sm:px-8 lg:px-10 lg:py-5 2xl:px-12">
@@ -401,12 +360,11 @@ export default function MemberScheduleClient() {
           </div>
         ) : null}
 
-        <section className="grid w-full gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(340px,0.7fr)]">
+        <section className="w-full">
           <div className="premium-glass-card min-h-[320px] p-2 sm:p-4">
             <div className="mb-3 hidden flex-wrap items-end justify-between gap-3 sm:flex">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Today&apos;s Classes</p>
-                <h2 className="mt-0.5 text-[20px] font-bold leading-tight text-[#17141F]">Book your training block</h2>
               </div>
               <span className="rounded-full border border-[rgba(20,210,220,0.22)] bg-[rgba(20,210,220,0.09)] px-3 py-1 text-xs font-bold text-[#0D98A1]">
                 {sessionsLabel}
@@ -523,16 +481,12 @@ export default function MemberScheduleClient() {
                             ) : null}
                           </div>
 
-                          <div className="grid gap-2.5 sm:grid-cols-2 2xl:grid-cols-4">
+                          <div className="grid gap-2.5 sm:grid-cols-2 xl:max-w-[520px]">
                             <div className="rounded-[16px] border border-[rgba(16,24,40,0.07)] bg-white/72 p-2.5">
                               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Time</p>
                               <p className="mt-1 text-sm font-bold text-[#17141F]">
                                 {formatClassTimeRange(session.class_time, session.duration_minutes)}
                               </p>
-                            </div>
-                            <div className="rounded-[16px] border border-[rgba(16,24,40,0.07)] bg-white/72 p-2.5">
-                              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Duration</p>
-                              <p className="mt-1 text-sm font-bold text-[#17141F]">{formatDuration(session.duration_minutes)}</p>
                             </div>
                             <button
                               type="button"
@@ -545,12 +499,6 @@ export default function MemberScheduleClient() {
                                 {session.size_limit > 0 ? `${session.reservedCount} / ${session.size_limit}` : session.reservedCount}
                               </p>
                             </button>
-                            <div className="rounded-[16px] border border-[rgba(16,24,40,0.07)] bg-white/72 p-2.5">
-                              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Closes</p>
-                              <p className="mt-1 text-sm font-bold text-[#17141F]">
-                                {session.reservationCutoffAt ? formatCutoff(session.reservationCutoffAt) : "Class start"}
-                              </p>
-                            </div>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium text-[#667085]">
@@ -566,16 +514,6 @@ export default function MemberScheduleClient() {
                             </span>
                           </div>
 
-                          {session.size_limit > 0 ? (
-                            <div className="h-2.5 w-full max-w-[360px] overflow-hidden rounded-full bg-[#EAECF0]">
-                              <div
-                                className="h-full rounded-full bg-[linear-gradient(90deg,#14D2DC,#FF5CA8)] transition-all"
-                                style={{
-                                  width: `${Math.min(100, (session.reservedCount / session.size_limit) * 100)}%`,
-                                }}
-                              />
-                            </div>
-                          ) : null}
                         </div>
 
                         <div className="flex flex-col gap-2.5 lg:min-w-[190px] lg:items-end">
@@ -609,7 +547,6 @@ export default function MemberScheduleClient() {
                             </button>
                           )}
 
-                          <p className="max-w-[220px] text-right text-xs font-semibold leading-4 text-[#667085]">{status.body}</p>
                         </div>
                       </div>
                     </article>
@@ -619,57 +556,6 @@ export default function MemberScheduleClient() {
             )}
           </div>
 
-          <aside className="premium-glass-card hidden h-full flex-col p-4 xl:flex">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Reservation Summary</p>
-                <h2 className="mt-0.5 text-[20px] font-bold leading-tight text-[#17141F]">Selected day</h2>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(255,92,168,0.11)] text-[#D92D7D]">
-                <CalendarDays size={20} />
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-[20px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-3.5">
-              <p className="text-sm font-bold text-[#17141F]">{formatLongDate(selectedDate)}</p>
-              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#667085]">{sessionsLabel}</p>
-            </div>
-
-            <div className="mt-3 grid gap-2.5 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
-              <div className="rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Classes</p>
-                <p className="mt-1 text-2xl font-bold text-[#17141F]">{sessions.length}</p>
-              </div>
-              <div className="rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Reserved</p>
-                <p className="mt-1 text-2xl font-bold text-[#17141F]">{totalReservations}</p>
-              </div>
-              <div className="rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Open</p>
-                <p className="mt-1 text-2xl font-bold text-[#17141F]">{openSessions.length}</p>
-              </div>
-            </div>
-
-            <div className="mt-3 flex-1 rounded-[20px] border border-[rgba(20,210,220,0.16)] bg-[linear-gradient(135deg,rgba(20,210,220,0.08),rgba(255,255,255,0.68))] p-3.5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#667085]">Next available</p>
-              {nextAvailableSession ? (
-                <div className="mt-2">
-                  <p className="text-lg font-bold text-[#17141F]">{nextAvailableSession.name}</p>
-                  <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-[#475467]">
-                    <Clock3 size={14} />
-                    {formatClassTimeRange(nextAvailableSession.class_time, nextAvailableSession.duration_minutes)}
-                  </p>
-                  <p className="mt-2 text-sm font-medium leading-5 text-[#667085]">
-                    {getSessionStatusCopy(nextAvailableSession).body}
-                  </p>
-                </div>
-              ) : (
-                <p className="mt-3 text-sm font-medium leading-6 text-[#667085]">
-                  No classes are available for reservation on this selected day.
-                </p>
-              )}
-            </div>
-          </aside>
         </section>
 
         {rosterSession ? (
