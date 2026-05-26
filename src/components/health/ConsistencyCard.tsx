@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Flame } from "lucide-react";
-import { Micro } from "@/components/ui";
+import { GlassCard } from "@/components/member-dashboard/PremiumDashboard";
 
 type DayStatus = "empty" | "logged" | "pr";
 
@@ -12,9 +12,9 @@ type ConsistencyData = {
 };
 
 const STATUS_CLASS: Record<DayStatus, string> = {
-  empty: "bg-[var(--panel-2)] opacity-50",
-  logged: "bg-[#5c2d4a]",
-  pr: "bg-gradient-to-br from-[var(--pink)] to-[var(--violet)]",
+  empty: "bg-white/60 opacity-70",
+  logged: "bg-[#14D2DC]",
+  pr: "bg-[#FF5CA8]",
 };
 
 export default function ConsistencyCard() {
@@ -39,21 +39,21 @@ export default function ConsistencyCard() {
   const streak = data?.streak ?? 0;
 
   return (
-    <div className="panel p-6 fade-in">
+    <GlassCard className="fade-in">
       {/* Header row */}
       <div className="flex items-start justify-between">
         <div>
-          <Micro as="p">Consistency</Micro>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Consistency</p>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-heading text-5xl font-bold leading-none text-[var(--text)]">
+            <span className="font-head text-5xl font-bold leading-none text-[#17141F]">
               {streak}
             </span>
-            <span className="text-sm text-[var(--text-muted)]">day streak</span>
+            <span className="text-sm font-semibold text-[#667085]">day streak</span>
           </div>
         </div>
 
         {/* Fire badge */}
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--pink)] to-[var(--violet)] shadow-[0_4px_14px_rgba(255,74,141,0.35)]">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(255,92,168,0.1)] text-[#B42368]">
           <Flame className="h-5 w-5 text-white" />
         </div>
       </div>
@@ -72,18 +72,18 @@ export default function ConsistencyCard() {
       {/* Legend */}
       <div className="mt-4 flex items-center gap-4">
         <div className="flex items-center gap-1.5">
-          <div className="h-2.5 w-2.5 rounded-sm bg-gradient-to-br from-[var(--pink)] to-[var(--violet)]" />
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-soft)]">
+          <div className="h-2.5 w-2.5 rounded-sm bg-[#FF5CA8]" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#667085]">
             PR Day
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="h-2.5 w-2.5 rounded-sm bg-[#5c2d4a]" />
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-soft)]">
+          <div className="h-2.5 w-2.5 rounded-sm bg-[#14D2DC]" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#667085]">
             Logged
           </span>
         </div>
       </div>
-    </div>
+    </GlassCard>
   );
 }
