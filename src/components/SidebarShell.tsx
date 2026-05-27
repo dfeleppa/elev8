@@ -113,6 +113,7 @@ const navItems: NavItem[] = [
         children: [
           { label: "Athlete Dashboard", href: "/member/athlete-dashboard", minRole: "member" },
           { label: "Workout", href: "/member/workout", minRole: "member" },
+          { label: "Chat", href: "/member/chat", minRole: "member" },
           { label: "Nutrition", href: "/member/nutrition", minRole: "member" },
           { label: "Class Schedule", href: "/member/class-schedule", minRole: "member" },
           { label: "Account Dashboard", href: "/member/account-dashboard", minRole: "member" },
@@ -142,9 +143,9 @@ const navItems: NavItem[] = [
   },
 ];
 
-const mobileQuickLinks = [
+const mobileQuickLinks: Array<{ label: string; href: string | null; icon: ReactNode }> = [
   { label: "Workout", href: "/member/workout", icon: <Dumbbell className="h-5 w-5" aria-hidden="true" /> },
-  { label: "Chat", href: null, icon: <MessageCircle className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Chat", href: "/member/chat", icon: <MessageCircle className="h-5 w-5" aria-hidden="true" /> },
   { label: "Athlete", href: "/member/athlete-dashboard", icon: <Activity className="h-5 w-5" aria-hidden="true" /> },
   { label: "Schedule", href: "/member/class-schedule", icon: <CalendarDays className="h-5 w-5" aria-hidden="true" /> },
   { label: "Nutrition", href: "/member/nutrition", icon: <Apple className="h-5 w-5" aria-hidden="true" /> },
@@ -154,6 +155,7 @@ const mobileQuickLinks = [
 const ATHLETE_SECTIONS = [
   { label: "Today",    hrefs: ["/member/athlete-dashboard"] },
   { label: "Train",    hrefs: ["/member/workout"] },
+  { label: "Community", hrefs: ["/member/chat"] },
   { label: "Schedule", hrefs: ["/member/class-schedule"] },
   { label: "Nutrition",hrefs: ["/member/nutrition", "/member/nutrition/coach", "/member/nutrition-coach"] },
   { label: "Account",  hrefs: ["/member/account-dashboard", "/member/store"] },
@@ -162,6 +164,7 @@ const ATHLETE_SECTIONS = [
 const mobileTitleRoutes = [
   ["/member/nutrition/coach", "Nutrition Coach"],
   ["/member/nutrition-coach", "Nutrition Coach"],
+  ["/member/chat", "Chat"],
   ["/member/athlete-dashboard", "Athlete"],
   ["/member/account-dashboard", "Account"],
   ["/member/class-schedule", "Class Schedule"],
@@ -212,6 +215,8 @@ function getNavIcon(href: string) {
     case "/admin/programming/builder":
     case "/member/workout":
       return <Dumbbell {...iconProps} />;
+    case "/member/chat":
+      return <MessageCircle {...iconProps} />;
     case "/coach/nutrition":
     case "/coach/nutrition-coach":
     case "/member/nutrition-coach":
