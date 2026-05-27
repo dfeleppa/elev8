@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { CHAT_IMAGE_TYPES, CHAT_MAX_IMAGE_SIZE, isChatThreadSlug, sanitizeChatBody } from "@/lib/chat";
+import { CHAT_IMAGE_TYPES, CHAT_MAX_IMAGE_SIZE, CHAT_THREADS, isChatThreadSlug, sanitizeChatBody } from "@/lib/chat";
 import { requireUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -27,7 +27,98 @@ type ThreadLookup = {
   id: string;
   slug: string;
   name: string;
+  source: "chat" | "social";
 };
+
+type UserProfile = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  role: string | null;
+};
+
+function isMissingChatTable(error: { code?: string; message?: string } | null | undefined) {
+  return error?.code === "PGRST205" || error?.message?.includes("chat_threads");
+}
+
+async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const { data } = await supabaseAdmin
+    .from("app_users")
+    .select("id, full_name, email, role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  return (data as UserProfile | null) ?? null;
+}
+
+async function findOrCreateSocialThread(slug: string) {
+  if (!isChatThreadSlug(slug)) {
+    return { thread: null, error: "Invalid chat thread." };
+  }
+
+  const configuredThread = CHAT_THREADS.find((thread) => thread.slug === slug);
+  if (!configuredThread) {
+    return { thread: null, error: "Invalid chat thread." };
+  }
+
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("social_conversations")
+    .select("id, participant_name, participant_handle, metadata")
+    .eq("platform", "elev8")
+    .eq("conversation_type", "chat_thread")
+    .eq("external_conversation_id", `chat:${slug}`)
+    .maybeSingle();
+
+  if (existingError) {
+    return { thread: null, error: "Failed to load fallback chat thread." };
+  }
+
+  if (existing?.id) {
+    return {
+      thread: {
+        id: existing.id,
+        slug,
+        name: existing.participant_name ?? configuredThread.name,
+        source: "social" as const,
+      },
+      error: null,
+    };
+  }
+
+  const { data: inserted, error: insertError } = await supabaseAdmin
+    .from("social_conversations")
+    .insert({
+      platform: "elev8",
+      conversation_type: "chat_thread",
+      external_conversation_id: `chat:${slug}`,
+      participant_name: configuredThread.name,
+      participant_handle: slug,
+      status: "open",
+      priority: "normal",
+      metadata: {
+        chatThreadSlug: slug,
+        description: configuredThread.description,
+        sortOrder: configuredThread.sortOrder,
+      },
+      updated_at: new Date().toISOString(),
+    })
+    .select("id, participant_name")
+    .single();
+
+  if (insertError || !inserted?.id) {
+    return { thread: null, error: "Failed to create fallback chat thread." };
+  }
+
+  return {
+    thread: {
+      id: inserted.id,
+      slug,
+      name: inserted.participant_name ?? configuredThread.name,
+      source: "social" as const,
+    },
+    error: null,
+  };
+}
 
 async function findThread(slug: string) {
   if (!isChatThreadSlug(slug)) {
@@ -41,10 +132,17 @@ async function findThread(slug: string) {
     .maybeSingle();
 
   if (error) {
+    if (isMissingChatTable(error)) {
+      return findOrCreateSocialThread(slug);
+    }
     return { thread: null, error: "Failed to load chat thread." };
   }
 
-  return { thread: (data as ThreadLookup | null) ?? null, error: data ? null : "Chat thread not found." };
+  const row = data as Omit<ThreadLookup, "source"> | null;
+  return {
+    thread: row ? { ...row, source: "chat" as const } : null,
+    error: data ? null : "Chat thread not found.",
+  };
 }
 
 function normalizeLimit(value: string | null) {
@@ -82,6 +180,31 @@ function formatMessage(row: Record<string, unknown>) {
   };
 }
 
+function formatSocialMessage(row: Record<string, unknown>) {
+  const metadata = (row.metadata ?? {}) as {
+    imageUrl?: string | null;
+    imageStoragePath?: string | null;
+    authorUserId?: string | null;
+    authorName?: string | null;
+    authorRole?: string | null;
+  };
+  const senderName = typeof row.sender_name === "string" && row.sender_name.trim() ? row.sender_name : null;
+
+  return {
+    id: row.id,
+    body: row.body ?? "",
+    imageUrl: metadata.imageUrl ?? null,
+    imageStoragePath: metadata.imageStoragePath ?? null,
+    createdAt: row.sent_at,
+    updatedAt: row.created_at ?? row.sent_at,
+    author: {
+      id: metadata.authorUserId ?? null,
+      name: metadata.authorName?.trim() || senderName || "User",
+      role: metadata.authorRole ?? "member",
+    },
+  };
+}
+
 export async function GET(request: NextRequest) {
   const { error } = await requireUserContext();
   if (error) {
@@ -95,6 +218,23 @@ export async function GET(request: NextRequest) {
   }
 
   const limit = normalizeLimit(request.nextUrl.searchParams.get("limit"));
+
+  if (thread.source === "social") {
+    const { data, error: messagesError } = await supabaseAdmin
+      .from("social_messages")
+      .select("id, body, sender_name, sent_at, metadata, created_at")
+      .eq("social_conversation_id", thread.id)
+      .order("sent_at", { ascending: false })
+      .limit(limit);
+
+    if (messagesError) {
+      return NextResponse.json({ error: "Failed to load chat messages." }, { status: 500 });
+    }
+
+    const messages = ((data ?? []) as Array<Record<string, unknown>>).reverse().map(formatSocialMessage);
+    return NextResponse.json({ thread, messages });
+  }
+
   const { data, error: messagesError } = await supabaseAdmin
     .from("chat_messages")
     .select(MESSAGE_SELECT)
@@ -174,6 +314,47 @@ export async function POST(request: NextRequest) {
 
     const { data: publicUrlData } = supabaseAdmin.storage.from("chat-uploads").getPublicUrl(imageStoragePath);
     imageUrl = publicUrlData.publicUrl;
+  }
+
+  if (thread.source === "social") {
+    const profile = await getUserProfile(userId);
+    const authorName = profile?.full_name?.trim() || profile?.email?.trim() || "User";
+    const now = new Date().toISOString();
+
+    const { data, error: insertError } = await supabaseAdmin
+      .from("social_messages")
+      .insert({
+        social_conversation_id: thread.id,
+        direction: "inbound",
+        body,
+        sender_name: authorName,
+        sent_at: now,
+        needs_response: false,
+        metadata: {
+          chatMessage: true,
+          imageUrl,
+          imageStoragePath,
+          authorUserId: userId,
+          authorName,
+          authorRole: profile?.role ?? "member",
+        },
+      })
+      .select("id, body, sender_name, sent_at, metadata, created_at")
+      .single();
+
+    if (insertError || !data) {
+      return NextResponse.json({ error: "Failed to send chat message." }, { status: 500 });
+    }
+
+    await supabaseAdmin
+      .from("social_conversations")
+      .update({
+        last_message_at: now,
+        updated_at: now,
+      })
+      .eq("id", thread.id);
+
+    return NextResponse.json({ message: formatSocialMessage(data as Record<string, unknown>) }, { status: 201 });
   }
 
   const { data, error: insertError } = await supabaseAdmin

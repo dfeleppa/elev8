@@ -2,6 +2,32 @@ export const CHAT_THREAD_SLUGS = ["main", "nutrition", "competition"] as const;
 
 export type ChatThreadSlug = (typeof CHAT_THREAD_SLUGS)[number];
 
+export const CHAT_THREADS: Array<{
+  slug: ChatThreadSlug;
+  name: string;
+  description: string;
+  sortOrder: number;
+}> = [
+  {
+    slug: "main",
+    name: "Main",
+    description: "General gym announcements, questions, and daily conversation.",
+    sortOrder: 10,
+  },
+  {
+    slug: "nutrition",
+    name: "Nutrition",
+    description: "Food, macros, meal ideas, and nutrition coaching discussion.",
+    sortOrder: 20,
+  },
+  {
+    slug: "competition",
+    name: "Competition",
+    description: "Competition prep, events, strategy, and leaderboard talk.",
+    sortOrder: 30,
+  },
+];
+
 export const CHAT_IMAGE_TYPES: Record<string, string> = {
   "image/png": ".png",
   "image/jpeg": ".jpg",
