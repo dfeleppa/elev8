@@ -67,18 +67,20 @@ async function findOrCreateSocialThread(slug: string) {
     .eq("platform", "elev8")
     .eq("conversation_type", "chat_thread")
     .eq("external_conversation_id", `chat:${slug}`)
-    .maybeSingle();
+    .order("created_at", { ascending: true })
+    .limit(1);
 
   if (existingError) {
     return { thread: null, error: "Failed to load fallback chat thread." };
   }
 
-  if (existing?.id) {
+  const existingThread = Array.isArray(existing) ? existing[0] : null;
+  if (existingThread?.id) {
     return {
       thread: {
-        id: existing.id,
+        id: existingThread.id,
         slug,
-        name: existing.participant_name ?? configuredThread.name,
+        name: existingThread.participant_name ?? configuredThread.name,
         source: "social" as const,
       },
       error: null,

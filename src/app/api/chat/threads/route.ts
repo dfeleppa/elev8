@@ -63,11 +63,23 @@ async function ensureSocialChatThreads() {
   const rows = ((existing ?? []) as SocialThreadRow[]).filter((row) =>
     CHAT_THREADS.some((thread) => thread.slug === row.metadata?.chatThreadSlug)
   );
-  const existingSlugs = new Set(rows.map((row) => row.metadata?.chatThreadSlug));
+  const dedupedRows = Array.from(
+    rows
+      .sort((a, b) => a.created_at.localeCompare(b.created_at))
+      .reduce((map, row) => {
+        const slug = row.metadata?.chatThreadSlug;
+        if (slug && !map.has(slug)) {
+          map.set(slug, row);
+        }
+        return map;
+      }, new Map<string, SocialThreadRow>())
+      .values()
+  );
+  const existingSlugs = new Set(dedupedRows.map((row) => row.metadata?.chatThreadSlug));
   const missing = CHAT_THREADS.filter((thread) => !existingSlugs.has(thread.slug));
 
   if (missing.length === 0) {
-    return rows;
+    return dedupedRows;
   }
 
   const { data: inserted, error: insertError } = await supabaseAdmin
@@ -95,7 +107,7 @@ async function ensureSocialChatThreads() {
     throw new Error("Failed to create fallback chat threads.");
   }
 
-  return [...rows, ...((inserted ?? []) as SocialThreadRow[])];
+  return [...dedupedRows, ...((inserted ?? []) as SocialThreadRow[])];
 }
 
 async function getFallbackThreadsResponse() {
