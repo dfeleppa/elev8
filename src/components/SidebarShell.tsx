@@ -151,6 +151,20 @@ const mobileQuickLinks: Array<{ label: string; href: string | null; icon: ReactN
   { label: "Nutrition", href: "/member/nutrition", icon: <Apple className="h-5 w-5" aria-hidden="true" /> },
 ] as const;
 
+/**
+ * Prioritized gym-side bottom nav links. Role-filtered then sliced to the top 4,
+ * so each role lands on destinations it can actually reach. A "More" button is
+ * appended at render time to open the full sidebar for everything else.
+ */
+const gymQuickLinks: { label: string; href: string; icon: ReactNode; minRole: UserRole }[] = [
+  { label: "Dashboard", href: "/gym-dashboard", minRole: "coach", icon: <BarChart3 className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Schedule", href: "/coach/schedule", minRole: "coach", icon: <CalendarDays className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Programming", href: "/admin/programming", minRole: "admin", icon: <Dumbbell className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Members", href: "/owner/members", minRole: "owner", icon: <Users className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Nutrition", href: "/coach/nutrition", minRole: "coach", icon: <HandPlatter className="h-5 w-5" aria-hidden="true" /> },
+  { label: "Reports", href: "/coach/reports-members", minRole: "coach", icon: <ClipboardList className="h-5 w-5" aria-hidden="true" /> },
+];
+
 /** Static section groupings for the athlete view nav */
 const ATHLETE_SECTIONS = [
   { label: "Today",    hrefs: ["/member/athlete-dashboard"] },
@@ -451,6 +465,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
   const firstName = userName.trim().split(/\s+/)[0] || "User";
   const showMobileMemberNav = pathname?.startsWith("/member");
+  const isGymRoute =
+    pathname?.startsWith("/owner") ||
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/coach") ||
+    pathname?.startsWith("/management") ||
+    pathname?.startsWith("/gym-dashboard");
+  const showMobileGymNav = Boolean(isGymRoute) && canAccessGymView;
+  const visibleGymQuickLinks = gymQuickLinks.filter((link) => canViewRole(link.minRole)).slice(0, 4);
   const mobileTopBarTitle =
     mobileTitleRoutes.find(([href]) => pathname === href || pathname?.startsWith(href + "/"))?.[1] ?? "";
 
@@ -576,7 +598,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   return (
     <div className="relative z-10 min-h-screen">
       <div className="lg:hidden">
-        <div className="app-shell-topbar px-5 py-3">
+        <div className="app-shell-topbar relative z-40 px-5 py-3">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -604,7 +626,24 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 <MoreVertical className="h-5 w-5" aria-hidden="true" />
               </button>
               {menuOpen ? (
-                <div className="absolute right-0 top-12 z-40 w-52 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/92 p-2 shadow-[0_20px_50px_rgba(16,24,40,0.16)] backdrop-blur-xl">
+                <div className="absolute right-0 top-12 z-50 w-52 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/92 p-2 shadow-[0_20px_50px_rgba(16,24,40,0.16)] backdrop-blur-xl">
+                  {canAccessGymView ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        handleSwitchView(showMobileMemberNav ? "gym" : "athlete");
+                      }}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#17141F] transition hover:bg-[rgba(20,210,220,0.08)]"
+                    >
+                      {showMobileMemberNav ? (
+                        <Briefcase className="h-4 w-4" aria-hidden="true" />
+                      ) : (
+                        <Activity className="h-4 w-4" aria-hidden="true" />
+                      )}
+                      {showMobileMemberNav ? "Switch to Gym" : "Switch to Member"}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => {
@@ -670,8 +709,41 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         </nav>
       ) : null}
 
+      {showMobileGymNav ? (
+        <nav className="fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 rounded-[24px] border border-white/80 bg-white/82 p-1.5 shadow-[0_18px_48px_rgba(16,24,40,0.18)] backdrop-blur-xl lg:hidden" aria-label="Gym mobile navigation">
+          {visibleGymQuickLinks.map((link) => {
+            const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 transition ${
+                  isActive
+                    ? "bg-white/55 text-[#17141F] after:absolute after:bottom-1 after:left-1/2 after:h-0.5 after:w-7 after:-translate-x-1/2 after:rounded-full after:bg-[#14D2DC] after:shadow-[0_0_12px_rgba(20,210,220,0.42)]"
+                    : "text-[#667085] hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+                }`}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={link.label}
+              >
+                {link.icon}
+                <span className="truncate text-[10px] font-bold">{link.label}</span>
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen(true)}
+            className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 text-[#667085] transition hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+            aria-label="More menu"
+          >
+            <Menu className="h-5 w-5" aria-hidden="true" />
+            <span className="truncate text-[10px] font-bold">More</span>
+          </button>
+        </nav>
+      ) : null}
+
       {mobileSidebarOpen && (
-        <div className="fixed inset-0 z-30 lg:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-black/75"
@@ -990,7 +1062,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           </div>
         ) : null}
 
-        <main className={`${mainClasses} ${showMobileMemberNav ? "pb-28 lg:pb-0" : ""}`}>{children}</main>
+        <main className={`${mainClasses} ${showMobileMemberNav || showMobileGymNav ? "pb-28 lg:pb-0" : ""}`}>{children}</main>
       </div>
     </div>
   );
