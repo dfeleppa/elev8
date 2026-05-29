@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowRight,
   Atom,
   Camera,
   Check,
@@ -13,6 +14,8 @@ import {
   Flame,
   Pencil,
   Plus,
+  Salad,
+  Sparkles,
   X,
 } from "lucide-react";
 
@@ -1398,13 +1401,52 @@ export default function HealthNutritionPage() {
               Loading coach plan...
             </div>
           ) : coachPlanStatus === "none" ? (
-            <Link
-              href="/member/nutrition-coach"
-              className="premium-glass-card flex h-full items-center justify-between px-4 py-4 text-sm font-bold text-[#17141F]"
-            >
-              Nutrition Coach
-              <ChevronRight className="h-4 w-4 text-[#FF5CA8]" aria-hidden="true" />
-            </Link>
+            <div className="premium-glass-card flex h-full flex-col overflow-hidden p-5 text-[#17141F] sm:p-6">
+              {/* Macro ring visual */}
+              <div className="relative mx-auto mb-4 flex h-40 w-full max-w-[280px] items-center justify-center sm:mb-5 sm:h-48">
+                <div className="relative flex h-32 w-32 items-center justify-center sm:h-36 sm:w-36">
+                  <span className="absolute inset-0 rounded-full border border-[rgba(20,210,220,0.28)]" aria-hidden="true" />
+                  <span className="absolute inset-[10px] rounded-full border border-[rgba(255,92,168,0.2)]" aria-hidden="true" />
+                  <span
+                    className="relative flex h-[88px] w-[88px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_28%,rgba(20,210,220,0.42),rgba(255,92,168,0.34))] shadow-[inset_0_2px_10px_rgba(255,255,255,0.7),0_12px_26px_rgba(20,210,220,0.18)] sm:h-24 sm:w-24"
+                    aria-hidden="true"
+                  >
+                    <Salad className="h-9 w-9 text-[#0B7C84] sm:h-10 sm:w-10" />
+                  </span>
+                </div>
+                {/* Floating macro chips */}
+                <span className="absolute left-0 top-[42%] rounded-[12px] border border-[rgba(20,210,220,0.22)] bg-white/82 px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
+                  <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#0B7C84]">Protein</span>
+                  <span className="block text-[13px] font-extrabold leading-none text-[#0B7C84]">30%</span>
+                </span>
+                <span className="absolute right-1 top-2 rounded-[12px] border border-[rgba(255,92,168,0.22)] bg-white/82 px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
+                  <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#B4236A]">Carbs</span>
+                  <span className="block text-[13px] font-extrabold leading-none text-[#B4236A]">40%</span>
+                </span>
+                <span className="absolute bottom-2 right-2 rounded-[12px] border border-[rgba(124,92,224,0.22)] bg-white/82 px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
+                  <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#6B4FD6]">Fats</span>
+                  <span className="block text-[13px] font-extrabold leading-none text-[#6B4FD6]">30%</span>
+                </span>
+              </div>
+
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[rgba(20,210,220,0.12)] px-3 py-1 text-[11px] font-bold text-[#0B7C84]">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                Nutrition Coach
+              </span>
+              <h2 className="mt-3 font-head text-[28px] font-extrabold leading-[1.05] tracking-tight text-[#17141F] sm:text-[32px]">
+                Start your coaching plan
+              </h2>
+              <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
+                Set your goal, get your macros, and build a plan that fits your training.
+              </p>
+              <Link
+                href="/member/nutrition/coach"
+                className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(90deg,#14D2DC_0%,#9C8BE0_52%,#FF5CA8_100%)] px-5 py-3.5 text-[15px] font-extrabold text-white shadow-[0_16px_30px_rgba(255,92,168,0.22)] transition hover:brightness-105 sm:mt-5"
+              >
+                Set My Goal
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
           ) : (
             <div
               className={`premium-glass-card flex h-full flex-col overflow-hidden p-3 text-[#17141F] sm:p-5 ${
