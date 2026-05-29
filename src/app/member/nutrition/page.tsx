@@ -18,6 +18,7 @@ import {
 
 import SidebarShell from "@/components/SidebarShell";
 import { Panel } from "@/components/ui";
+import CoachCheckInForm from "./CoachCheckInForm";
 
 type NutritionEntry = {
   id: string;
@@ -1406,8 +1407,7 @@ export default function HealthNutritionPage() {
               <ChevronRight className="h-4 w-4 text-[#FF5CA8]" aria-hidden="true" />
             </Link>
           ) : (
-            <Link
-              href="/member/nutrition/coach"
+            <div
               className={`premium-glass-card flex h-full flex-col overflow-hidden p-3 text-[#17141F] sm:p-5 ${
                 checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#FF5CA8]/50" : ""
               }`}
@@ -1425,9 +1425,12 @@ export default function HealthNutritionPage() {
                 <p className="min-w-0 truncate text-[16px] font-semibold leading-tight text-[#17141F] sm:text-[19px]">
                   Goal: <span className="font-extrabold">{coachGoalLabel}</span>
                 </p>
-                <span className="shrink-0 rounded-full bg-[#101828] px-3 py-1.5 text-[11px] font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] sm:px-4 sm:py-2 sm:text-xs">
-                  {checkInTimeline.daysUntilNext === 0 ? "Check-In" : "Plan"}
-                </span>
+                <Link
+                  href="/member/nutrition/coach"
+                  className="shrink-0 rounded-full bg-[#101828] px-3 py-1.5 text-[11px] font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] transition hover:brightness-110 sm:px-4 sm:py-2 sm:text-xs"
+                >
+                  View plan
+                </Link>
               </div>
               <div className="mt-3 rounded-[16px] border border-[#DDE2EA]/80 bg-white/60 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] sm:mt-4 sm:rounded-[20px] sm:p-3.5">
                 <div className="flex items-center justify-between gap-3">
@@ -1465,7 +1468,8 @@ export default function HealthNutritionPage() {
                   ))}
                 </div>
               </div>
-            </Link>
+              <CoachCheckInForm />
+            </div>
           )}
         </section>
 
