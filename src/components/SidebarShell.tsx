@@ -472,7 +472,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     pathname?.startsWith("/management") ||
     pathname?.startsWith("/gym-dashboard");
   const showMobileGymNav = Boolean(isGymRoute) && canAccessGymView;
-  const visibleGymQuickLinks = gymQuickLinks.filter((link) => canViewRole(link.minRole)).slice(0, 4);
+  const gymBottomLinks: { label: string; href: string; icon: ReactNode }[] = [
+    ...gymQuickLinks.filter((link) => canViewRole(link.minRole)).slice(0, 4),
+    // Payroll replaces the "More" button — owner-only.
+    ...(canViewRole("owner")
+      ? [{ label: "Payroll", href: "/owner/payroll", icon: <Wallet className="h-5 w-5" aria-hidden="true" /> }]
+      : []),
+  ];
+  const gymBottomGridCols = gymBottomLinks.length >= 5 ? "grid-cols-5" : "grid-cols-4";
   const mobileTopBarTitle =
     mobileTitleRoutes.find(([href]) => pathname === href || pathname?.startsWith(href + "/"))?.[1] ?? "";
 
@@ -710,8 +717,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       ) : null}
 
       {showMobileGymNav ? (
-        <nav className="fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 rounded-[24px] border border-white/80 bg-white/82 p-1.5 shadow-[0_18px_48px_rgba(16,24,40,0.18)] backdrop-blur-xl lg:hidden" aria-label="Gym mobile navigation">
-          {visibleGymQuickLinks.map((link) => {
+        <nav className={`fixed inset-x-3 bottom-3 z-30 grid ${gymBottomGridCols} rounded-[24px] border border-white/80 bg-white/82 p-1.5 shadow-[0_18px_48px_rgba(16,24,40,0.18)] backdrop-blur-xl lg:hidden`} aria-label="Gym mobile navigation">
+          {gymBottomLinks.map((link) => {
             const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
               <Link
@@ -730,15 +737,6 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </Link>
             );
           })}
-          <button
-            type="button"
-            onClick={() => setMobileSidebarOpen(true)}
-            className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 text-[#667085] transition hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
-            aria-label="More menu"
-          >
-            <Menu className="h-5 w-5" aria-hidden="true" />
-            <span className="truncate text-[10px] font-bold">More</span>
-          </button>
         </nav>
       ) : null}
 
