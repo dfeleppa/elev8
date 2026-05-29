@@ -12,6 +12,7 @@ import OwnerDataTable from "@/components/owner/OwnerDataTable";
 import OwnerSectionCard from "@/components/owner/OwnerSectionCard";
 
 type StaffMember = {
+  userId: string;
   name: string;
   coachingPayrate: number;
   officePayrate: number;
@@ -20,6 +21,7 @@ type StaffMember = {
 type PayrollEntry = {
   id: string;
   weekEndingDate: string;
+  staffUserId: string;
   staffName: string;
   coachingHours: number;
   officeHours: number;
@@ -30,7 +32,7 @@ type PayrollEntry = {
 
 type EntryDraft = {
   weekEndingDate: string;
-  staffName: string;
+  staffUserId: string;
   coachingHours: string;
   officeHours: string;
   totalPay: string;
@@ -42,7 +44,7 @@ type DraftCol = keyof EntryDraft;
 
 const EMPTY_DRAFT: EntryDraft = {
   weekEndingDate: "",
-  staffName: "",
+  staffUserId: "",
   coachingHours: "",
   officeHours: "",
   totalPay: "",
@@ -53,7 +55,7 @@ const EMPTY_DRAFT: EntryDraft = {
 function toDraft(entry: PayrollEntry): EntryDraft {
   return {
     weekEndingDate: entry.weekEndingDate ?? "",
-    staffName: entry.staffName ?? "",
+    staffUserId: entry.staffUserId ?? "",
     coachingHours: String(entry.coachingHours ?? ""),
     officeHours: String(entry.officeHours ?? ""),
     totalPay: String(entry.totalPay ?? ""),
@@ -62,18 +64,13 @@ function toDraft(entry: PayrollEntry): EntryDraft {
   };
 }
 
-function normalizeStaffKey(value: string): string {
-  return value.trim().toLowerCase();
-}
-
 function calcPay(
-  staffName: string,
+  staffUserId: string,
   coachingHours: string,
   officeHours: string,
   staffList: StaffMember[]
 ): string {
-  const staffKey = normalizeStaffKey(staffName);
-  const member = staffList.find((s) => normalizeStaffKey(s.name) === staffKey);
+  const member = staffList.find((s) => s.userId === staffUserId);
   if (!member) return "";
   const coaching = parseFloat(coachingHours) || 0;
   const office = parseFloat(officeHours) || 0;
@@ -167,12 +164,15 @@ export default function OwnerPayrollClient() {
         const members: StaffMember[] = (data.staff ?? [])
           .map(
             (s: {
-              user?: { fullName?: string | null; email?: string | null } | null;
+              userId?: string;
+              id?: string;
+              user?: { id?: string; fullName?: string | null; email?: string | null } | null;
               coachingPayrate: number | null;
               officePayrate: number | null;
             }) => {
               const name = s.user?.fullName?.trim() || s.user?.email?.trim() || "Unknown staff";
               return {
+                userId: s.userId ?? s.id ?? s.user?.id ?? "",
                 name,
                 coachingPayrate: Number(s.coachingPayrate ?? 0),
                 officePayrate: Number(s.officePayrate ?? 0),
@@ -205,15 +205,19 @@ export default function OwnerPayrollClient() {
     loadEntries();
   }, [loadEntries]);
 
+  function staffNameById(userId: string): string {
+    return staffList.find((s) => s.userId === userId)?.name ?? "";
+  }
+
   function updateDraft(id: string, patch: Partial<EntryDraft>) {
     setDrafts((prev) => {
       const current = prev[id] ?? EMPTY_DRAFT;
       const next = { ...current, ...patch };
       if (
-        ("staffName" in patch || "coachingHours" in patch || "officeHours" in patch) &&
+        ("staffUserId" in patch || "coachingHours" in patch || "officeHours" in patch) &&
         !("totalPay" in patch)
       ) {
-        next.totalPay = calcPay(next.staffName, next.coachingHours, next.officeHours, staffList);
+        next.totalPay = calcPay(next.staffUserId, next.coachingHours, next.officeHours, staffList);
       }
       return { ...prev, [id]: next };
     });
@@ -235,7 +239,7 @@ export default function OwnerPayrollClient() {
       body: JSON.stringify({
         id,
         weekEndingDate: draft.weekEndingDate,
-        staffName: draft.staffName,
+        staffUserId: draft.staffUserId,
         coachingHours: parseFloat(draft.coachingHours) || 0,
         officeHours: parseFloat(draft.officeHours) || 0,
         totalPay: parseFloat(draft.totalPay) || 0,
@@ -291,18 +295,18 @@ export default function OwnerPayrollClient() {
     setNewDraft((prev) => {
       const next = { ...prev, ...patch };
       if (
-        ("staffName" in patch || "coachingHours" in patch || "officeHours" in patch) &&
+        ("staffUserId" in patch || "coachingHours" in patch || "officeHours" in patch) &&
         !("totalPay" in patch)
       ) {
-        next.totalPay = calcPay(next.staffName, next.coachingHours, next.officeHours, staffList);
+        next.totalPay = calcPay(next.staffUserId, next.coachingHours, next.officeHours, staffList);
       }
       return next;
     });
   }
 
   const saveNew = async () => {
-    if (!newDraft.weekEndingDate || !newDraft.staffName) {
-      setPageError("Week ending date and staff name are required.");
+    if (!newDraft.weekEndingDate || !newDraft.staffUserId) {
+      setPageError("Week ending date and staff member are required.");
       return;
     }
     setSavingNew(true);
@@ -311,7 +315,7 @@ export default function OwnerPayrollClient() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         weekEndingDate: newDraft.weekEndingDate,
-        staffName: newDraft.staffName,
+        staffUserId: newDraft.staffUserId,
         coachingHours: parseFloat(newDraft.coachingHours) || 0,
         officeHours: parseFloat(newDraft.officeHours) || 0,
         totalPay: parseFloat(newDraft.totalPay) || 0,
@@ -467,22 +471,24 @@ export default function OwnerPayrollClient() {
                     </td>
 
                     {/* Staff Name */}
-                    <td {...cell("staffName")}>
-                      {activeCol === "staffName" ? (
+                    <td {...cell("staffUserId")}>
+                      {activeCol === "staffUserId" ? (
                         <select
                           autoFocus
-                          value={draft.staffName}
-                          onChange={(e) => updateDraft(entry.id, { staffName: e.target.value })}
+                          value={draft.staffUserId}
+                          onChange={(e) => updateDraft(entry.id, { staffUserId: e.target.value })}
                           onBlur={() => handleCellBlur(entry.id)}
                           className={cellSelectClass}
                         >
                           <option value="">Select staff...</option>
                           {staffList.map((s) => (
-                            <option key={s.name} value={s.name}>{s.name}</option>
+                            <option key={s.userId} value={s.userId}>{s.name}</option>
                           ))}
                         </select>
                       ) : (
-                        <span className="text-sm font-medium text-[var(--text)]">{draft.staffName || "—"}</span>
+                        <span className="text-sm font-medium text-[var(--text)]">
+                          {staffNameById(draft.staffUserId) || entry.staffName || "—"}
+                        </span>
                       )}
                     </td>
 
@@ -619,13 +625,13 @@ export default function OwnerPayrollClient() {
               </td>
               <td className="px-3 pb-3 pt-2">
                 <select
-                  value={newDraft.staffName}
-                  onChange={(e) => updateNewDraft({ staffName: e.target.value })}
+                  value={newDraft.staffUserId}
+                  onChange={(e) => updateNewDraft({ staffUserId: e.target.value })}
                   className={cellSelectClass}
                 >
                   <option value="">Select staff...</option>
                   {staffList.map((s) => (
-                    <option key={s.name} value={s.name}>{s.name}</option>
+                    <option key={s.userId} value={s.userId}>{s.name}</option>
                   ))}
                 </select>
               </td>
@@ -683,7 +689,7 @@ export default function OwnerPayrollClient() {
                 <button
                   type="button"
                   onClick={saveNew}
-                  disabled={savingNew || !newDraft.weekEndingDate || !newDraft.staffName}
+                  disabled={savingNew || !newDraft.weekEndingDate || !newDraft.staffUserId}
                   className={ownerIconButtonSuccessClass}
                   title="Save new entry"
                 >
