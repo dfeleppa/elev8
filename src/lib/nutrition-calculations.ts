@@ -67,21 +67,55 @@ export function deriveActivityMultiplier(sessionsPerWeek: number) {
   return 1.9;
 }
 
+/**
+ * Goal-aware safe bounds for the weekly rate of change, expressed as % of
+ * bodyweight per week. These are hard guardrails — the member's chosen rate is
+ * always clamped into this range on both the client and the server.
+ *
+ *   lose_weight                         : 0.25 – 1.0 %/wk
+ *   gain_weight                         : 0.1  – 0.5 %/wk
+ *   maintain_weight / performance       : 0    – 0.25 %/wk (allowed weekly gain)
+ */
+export const WEEKLY_RATE_PERCENT_BOUNDS: Record<GoalType, { min: number; max: number }> = {
+  lose_weight: { min: 0.25, max: 1.0 },
+  gain_weight: { min: 0.1, max: 0.5 },
+  maintain_weight: { min: 0, max: 0.25 },
+  performance_reverse_diet: { min: 0, max: 0.25 },
+};
+
+export function clampWeeklyRatePercent(goalType: GoalType, value: number) {
+  const bounds = WEEKLY_RATE_PERCENT_BOUNDS[goalType] ?? WEEKLY_RATE_PERCENT_BOUNDS.lose_weight;
+  if (!Number.isFinite(value)) {
+    return bounds.min;
+  }
+  return clamp(value, bounds.min, bounds.max);
+}
+
 function getWeeklyRatePercent(goalType: GoalType, preset: IntensityPreset, override?: number | null) {
-  if (goalType === "maintain_weight" || goalType === "performance_reverse_diet") {
+  // Reverse diets are driven by a kcal increment, not a bodyweight rate.
+  if (goalType === "performance_reverse_diet") {
     return 0;
   }
 
-  if (typeof override === "number" && Number.isFinite(override) && override > 0) {
-    return clamp(override, 0.1, 2);
+  // Maintain: only a member-opted "allowed weekly gain" (0 by default).
+  if (goalType === "maintain_weight") {
+    return typeof override === "number" && Number.isFinite(override) && override > 0
+      ? clampWeeklyRatePercent("maintain_weight", override)
+      : 0;
   }
 
-  if (preset === "conservative") {
-    return 0.25;
+  if (typeof override === "number" && Number.isFinite(override) && override > 0) {
+    return clampWeeklyRatePercent(goalType, override);
   }
-  if (preset === "aggressive") {
-    return 0.75;
+
+  // Preset defaults, kept within the goal-aware bounds.
+  if (goalType === "gain_weight") {
+    if (preset === "conservative") return 0.2;
+    if (preset === "aggressive") return 0.5;
+    return 0.35;
   }
+  if (preset === "conservative") return 0.25;
+  if (preset === "aggressive") return 0.75;
   return 0.5;
 }
 

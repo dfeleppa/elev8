@@ -9,6 +9,7 @@ import {
   todayIsoDate,
   type LatestPlanRow,
 } from "@/lib/nutrition-check-in";
+import type { AdjustmentRecommendation } from "@/lib/nutrition-adjustment";
 import type { GoalType } from "@/lib/nutrition-calculations";
 
 export const runtime = "nodejs";
@@ -111,22 +112,87 @@ async function saveConfirmedBodyComp(memberId: string, bodyWeightLbs: number, bo
   if (error) throw new Error(error.message);
 }
 
-async function markPendingCheckIn(
-  memberId: string,
-  userId: string,
-  appliedPlanId: string | null,
-  status: "applied" | "dismissed"
-) {
-  await supabaseAdmin
-    .from("nutrition_check_ins")
-    .update({
-      status,
-      reviewed_by: userId,
-      reviewed_at: new Date().toISOString(),
-      applied_plan_id: appliedPlanId,
-    })
+/** Reuse today's weigh-in when the member skipped the metrics step. */
+async function loadTodaysBodyComp(
+  memberId: string
+): Promise<{ weightLbs: number | null; bodyFatPercent: number | null }> {
+  const today = todayIsoDate();
+  const { data } = await supabaseAdmin
+    .from("health_stat_entries")
+    .select("stat_key, value, unit")
     .eq("member_id", memberId)
-    .eq("status", "pending");
+    .in("stat_key", ["body_weight", "body_fat"])
+    .eq("entry_date", today);
+
+  let weightLbs: number | null = null;
+  let bodyFatPercent: number | null = null;
+  for (const row of data ?? []) {
+    const value = Number(row.value) || 0;
+    if (row.stat_key === "body_weight" && value > 0) {
+      const unit = String(row.unit ?? "lb").toLowerCase();
+      weightLbs = unit.startsWith("kg") ? value * 2.20462 : value;
+    } else if (row.stat_key === "body_fat" && value > 0) {
+      bodyFatPercent = value;
+    }
+  }
+  return { weightLbs, bodyFatPercent };
+}
+
+type MemberCheckInOutcome =
+  | "adjusted"
+  | "held_on_pace"
+  | "no_change_not_accountable"
+  | "counter_reset"
+  | "guardrail_blocked";
+
+/**
+ * Persist one complete record per member check-in. If the daily cron already
+ * queued a pending row, complete it in place; otherwise insert a fresh one.
+ */
+async function recordMemberCheckIn(params: {
+  memberId: string;
+  userId: string;
+  planId: string;
+  appliedPlanId: string | null;
+  status: "applied" | "dismissed";
+  outcome: MemberCheckInOutcome;
+  bodyWeightLbs: number;
+  bodyFatPercent: number | null;
+  accountable: boolean;
+  calorieDelta: number;
+  recommendation: AdjustmentRecommendation;
+}) {
+  const now = new Date().toISOString();
+  const payload = {
+    status: params.status,
+    outcome: params.outcome,
+    recommendation: params.recommendation as unknown as Record<string, unknown>,
+    body_weight_lbs: params.bodyWeightLbs,
+    body_fat_percent: params.bodyFatPercent,
+    self_reported_accountable: params.accountable,
+    calorie_delta: Math.round(params.calorieDelta),
+    source: "member",
+    reviewed_by: params.userId,
+    reviewed_at: now,
+    applied_plan_id: params.appliedPlanId,
+  };
+
+  const { data: pending } = await supabaseAdmin
+    .from("nutrition_check_ins")
+    .select("id")
+    .eq("member_id", params.memberId)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  if (pending?.id) {
+    await supabaseAdmin.from("nutrition_check_ins").update(payload).eq("id", pending.id);
+  } else {
+    await supabaseAdmin.from("nutrition_check_ins").insert({
+      member_id: params.memberId,
+      plan_id: params.planId,
+      ...payload,
+    });
+  }
 }
 
 export async function GET(request: Request) {
@@ -175,21 +241,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const bodyWeightLbs = toPositiveNumber(body?.bodyWeightLbs);
-    const bodyFatPercent = toOptionalBodyFat(body?.bodyFatPercent);
-    const goalType = typeof body?.goalType === "string" && goalTypeSet.has(body.goalType as GoalType)
-      ? (body.goalType as GoalType)
-      : null;
+    const accountable = typeof body?.accountable === "boolean" ? body.accountable : null;
+    if (accountable === null) {
+      return NextResponse.json({ error: "Accountability response is required." }, { status: 400 });
+    }
 
+    // Body fat is optional; bodyweight may be omitted when today's weigh-in is reused.
+    const providedWeight = toPositiveNumber(body?.bodyWeightLbs);
+    const providedBodyFat = toOptionalBodyFat(body?.bodyFatPercent);
+    let bodyWeightLbs = providedWeight;
+    let bodyFatPercent = providedBodyFat;
+    if (bodyWeightLbs === null || bodyFatPercent === null) {
+      const todays = await loadTodaysBodyComp(memberId);
+      if (bodyWeightLbs === null) bodyWeightLbs = todays.weightLbs;
+      if (bodyFatPercent === null) bodyFatPercent = todays.bodyFatPercent;
+    }
     if (!bodyWeightLbs) {
-      return NextResponse.json({ error: "Bodyweight is required." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Bodyweight is required (none on file for today)." },
+        { status: 400 }
+      );
     }
-    if (!goalType) {
-      return NextResponse.json({ error: "Goal is required." }, { status: 400 });
-    }
-    if (bodyFatPercent === null) {
-      return NextResponse.json({ error: "Body fat must be between 1 and 99 percent." }, { status: 400 });
-    }
+    const isFreshWeighIn = providedWeight !== null;
 
     try {
       const initial = await buildCheckInRecommendation(memberId);
@@ -197,7 +270,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: initial.error }, { status: initial.status });
       }
 
-      await saveConfirmedBodyComp(memberId, bodyWeightLbs, bodyFatPercent);
+      const goalType =
+        typeof body?.goalType === "string" && goalTypeSet.has(body.goalType as GoalType)
+          ? (body.goalType as GoalType)
+          : initial.latestPlan.goal_type;
+
+      // Only write a new weigh-in when the member actually entered one this session.
+      if (isFreshWeighIn) {
+        await saveConfirmedBodyComp(memberId, bodyWeightLbs, bodyFatPercent);
+      }
 
       const latestPlan = buildConfirmedPlan(initial.latestPlan, goalType, bodyWeightLbs, bodyFatPercent);
       const refreshed = await buildCheckInRecommendation(memberId, {
@@ -210,6 +291,35 @@ export async function POST(request: Request) {
       const recommendation = refreshed.recommendation;
       const currentPlan = refreshed.currentPlan;
 
+      // Self-reported not accountable → never adjust; just log and reset the window.
+      if (!accountable) {
+        const reset = await resetCheckInWindow(latestPlan, recommendation);
+        await recordMemberCheckIn({
+          memberId,
+          userId,
+          planId: latestPlan.id,
+          appliedPlanId: null,
+          status: "dismissed",
+          outcome: "no_change_not_accountable",
+          bodyWeightLbs,
+          bodyFatPercent,
+          accountable: false,
+          calorieDelta: 0,
+          recommendation,
+        });
+        return NextResponse.json({
+          memberId,
+          action: "held_not_accountable",
+          effectiveDate: reset.effectiveDate,
+          nextCheckInDate: reset.nextCheckInDate,
+          confirmed: { bodyWeightLbs, bodyFatPercent, goalType, accountable: false },
+          currentPlan,
+          recommendation,
+        });
+      }
+
+      // Accountable → run the data-driven recommendation. The adherence /
+      // undertracking gates still backstop a dishonest "yes".
       const shouldApplyAdjustment =
         recommendation.proposed !== null &&
         recommendation.calorieDelta !== 0 &&
@@ -218,7 +328,19 @@ export async function POST(request: Request) {
 
       if (shouldApplyAdjustment) {
         const applied = await applyAdjustmentAsNewPlan(memberId, latestPlan, recommendation);
-        await markPendingCheckIn(memberId, userId, applied.newPlanId, "applied");
+        await recordMemberCheckIn({
+          memberId,
+          userId,
+          planId: latestPlan.id,
+          appliedPlanId: applied.newPlanId,
+          status: "applied",
+          outcome: "adjusted",
+          bodyWeightLbs,
+          bodyFatPercent,
+          accountable: true,
+          calorieDelta: recommendation.calorieDelta,
+          recommendation,
+        });
         return NextResponse.json({
           memberId,
           action: "adjusted",
@@ -226,23 +348,39 @@ export async function POST(request: Request) {
           previousPlanId: latestPlan.id,
           effectiveDate: applied.effectiveDate,
           nextCheckInDate: applied.nextCheckInDate,
-          confirmed: { bodyWeightLbs, bodyFatPercent, goalType },
+          confirmed: { bodyWeightLbs, bodyFatPercent, goalType, accountable: true },
           currentPlan,
           recommendation,
         });
       }
 
       const reset = await resetCheckInWindow(latestPlan, recommendation);
-      await markPendingCheckIn(memberId, userId, null, "dismissed");
+      const isCounterReset =
+        recommendation.status === "low_adherence" || recommendation.status === "likely_undertracking";
+      const outcome: MemberCheckInOutcome = isCounterReset
+        ? "counter_reset"
+        : recommendation.status === "guardrail_blocked"
+          ? "guardrail_blocked"
+          : "held_on_pace";
+      await recordMemberCheckIn({
+        memberId,
+        userId,
+        planId: latestPlan.id,
+        appliedPlanId: null,
+        status: "dismissed",
+        outcome,
+        bodyWeightLbs,
+        bodyFatPercent,
+        accountable: true,
+        calorieDelta: 0,
+        recommendation,
+      });
       return NextResponse.json({
         memberId,
-        action:
-          recommendation.status === "low_adherence" || recommendation.status === "likely_undertracking"
-            ? "counter_reset"
-            : "held",
+        action: isCounterReset ? "counter_reset" : "held",
         effectiveDate: reset.effectiveDate,
         nextCheckInDate: reset.nextCheckInDate,
-        confirmed: { bodyWeightLbs, bodyFatPercent, goalType },
+        confirmed: { bodyWeightLbs, bodyFatPercent, goalType, accountable: true },
         currentPlan,
         recommendation,
       });

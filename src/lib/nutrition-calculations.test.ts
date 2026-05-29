@@ -1,6 +1,33 @@
 import { describe, expect, it } from "vitest";
 
-import { buildMacroTargetsFromWeightLbs, calculateNutritionPlan } from "./nutrition-calculations";
+import {
+  buildMacroTargetsFromWeightLbs,
+  calculateNutritionPlan,
+  clampWeeklyRatePercent,
+} from "./nutrition-calculations";
+
+describe("clampWeeklyRatePercent", () => {
+  it("hard-caps lose_weight to 0.25–1.0 %/wk", () => {
+    expect(clampWeeklyRatePercent("lose_weight", 2)).toBe(1.0);
+    expect(clampWeeklyRatePercent("lose_weight", 0.1)).toBe(0.25);
+    expect(clampWeeklyRatePercent("lose_weight", 0.6)).toBe(0.6);
+  });
+
+  it("hard-caps gain_weight to 0.1–0.5 %/wk", () => {
+    expect(clampWeeklyRatePercent("gain_weight", 1)).toBe(0.5);
+    expect(clampWeeklyRatePercent("gain_weight", 0.05)).toBe(0.1);
+  });
+
+  it("treats maintain/performance as allowed weekly gain 0–0.25 %/wk", () => {
+    expect(clampWeeklyRatePercent("maintain_weight", 0.5)).toBe(0.25);
+    expect(clampWeeklyRatePercent("maintain_weight", -1)).toBe(0);
+    expect(clampWeeklyRatePercent("performance_reverse_diet", 0.4)).toBe(0.25);
+  });
+
+  it("falls back to the goal minimum for non-finite input", () => {
+    expect(clampWeeklyRatePercent("lose_weight", Number.NaN)).toBe(0.25);
+  });
+});
 
 describe("buildMacroTargetsFromWeightLbs", () => {
   it("uses 1g/lb protein for the supplied lean body mass", () => {

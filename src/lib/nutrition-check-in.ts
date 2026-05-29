@@ -15,7 +15,7 @@ import type { GoalType } from "@/lib/nutrition-calculations";
 export const ADHERENCE_WINDOW_DAYS = 14;
 export const WEIGHT_WINDOW_DAYS = 21;
 export const METABOLISM_WINDOW_DAYS = 7;
-export const NEXT_CHECK_IN_DAYS = 10;
+export const NEXT_CHECK_IN_DAYS = 7;
 /**
  * Auto-update threshold: only overwrite stored maintenance_calories when the
  * empirical estimate differs by more than this many kcal/day, to avoid noise.

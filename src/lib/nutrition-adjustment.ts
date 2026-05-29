@@ -77,6 +77,16 @@ export type AdherenceSummary = {
   daysLogged: number;
   daysExpected: number;
   adherencePercent: number;
+  /**
+   * Compliance (the gating signal): a day is compliant when it meets BOTH the
+   * calorie target (within a band) AND the minimum protein target. Carb/fat
+   * ratio is intentionally NOT gated — with protein and calories matched, the
+   * split has little impact on outcome.
+   */
+  compliantDays: number;
+  compliancePercent: number;
+  /** Minimum daily protein target a day must hit to count as compliant. */
+  proteinTargetGrams: number;
   avgLoggedCalories: number;
   avgLoggedProtein: number;
   avgLoggedFiber: number | null;
@@ -128,13 +138,18 @@ const ABSOLUTE_CALORIE_FLOOR = 1300; // unisex; coach-overridable in future
 const ABSOLUTE_CALORIE_CEILING = 4000;
 const MAINT_FLOOR_FRACTION = 0.75;
 const MAINT_CEILING_FRACTION = 1.3;
-const MAX_DELTA_PER_CHECK_IN = 200;
 const STEP_SMALL = 100;
-const STEP_LARGE = 200;
-/** Adherence below this and we will not adjust calories down. */
-const ADHERENCE_GATE = 0.7;
-const ADHERENCE_MIN_TARGET_RATIO = 0.85;
-const ADHERENCE_MAX_TARGET_RATIO = 1.15;
+const STEP_MEDIUM = 200;
+const STEP_LARGE = 350;
+/** Corrective moves toward the goal may be larger; easing-off moves stay gentle. */
+const MAX_CORRECTIVE_DELTA = 400;
+const MAX_EASE_DELTA = 200;
+/** Compliance below this and we will not change the plan. */
+const COMPLIANCE_GATE = 0.7;
+/** A day's calories must land within ±this fraction of target to be compliant. */
+const CALORIE_COMPLIANCE_BAND = 0.1;
+/** A day's protein must reach at least this fraction of the protein target. */
+const PROTEIN_COMPLIANCE_FRACTION = 0.9;
 /** Logged-vs-target ratio below this when weight is not moving → undertracking flag. */
 const UNDERTRACK_RATIO = 0.85;
 /** Tolerance band around expected weekly change before we adjust. */
@@ -186,11 +201,33 @@ function summarizeAdherence(plan: CurrentPlan, logs: DailyLog[], windowDays: num
   const loggedVsTargetRatio =
     plan.targetCalories > 0 && avgLoggedCalories > 0 ? avgLoggedCalories / plan.targetCalories : 0;
 
+  // Compliance: meet the calorie target (±band) AND the minimum protein target.
+  const proteinTarget =
+    plan.proteinGrams > 0
+      ? plan.proteinGrams
+      : plan.leanBodyMassLbs && plan.leanBodyMassLbs > 0
+        ? plan.leanBodyMassLbs * PROTEIN_GRAMS_PER_LB_LEAN_BODY_MASS
+        : 0;
+  const calorieTarget = plan.targetCalories;
+  const calorieLow = calorieTarget * (1 - CALORIE_COMPLIANCE_BAND);
+  const calorieHigh = calorieTarget * (1 + CALORIE_COMPLIANCE_BAND);
+  const proteinFloor = proteinTarget * PROTEIN_COMPLIANCE_FRACTION;
+  const compliantDays =
+    calorieTarget > 0
+      ? loggedDays.filter(
+          (d) => d.calories >= calorieLow && d.calories <= calorieHigh && d.proteinGrams >= proteinFloor
+        ).length
+      : 0;
+  const compliancePercent = windowDays > 0 ? compliantDays / windowDays : 0;
+
   return {
     windowDays,
     daysLogged,
     daysExpected: windowDays,
     adherencePercent: round1(adherencePercent * 100) / 100,
+    compliantDays,
+    compliancePercent: round1(compliancePercent * 100) / 100,
+    proteinTargetGrams: round1(proteinTarget),
     avgLoggedCalories: round0(avgLoggedCalories),
     avgLoggedProtein: round1(avgLoggedProtein),
     avgLoggedFiber: avgLoggedFiber === null ? null : round1(avgLoggedFiber),
@@ -256,7 +293,7 @@ function computeGuardrails(plan: CurrentPlan): Guardrails {
   return {
     calorieFloor: Math.max(ABSOLUTE_CALORIE_FLOOR, Math.round(plan.maintenanceCalories * MAINT_FLOOR_FRACTION)),
     calorieCeiling: Math.min(ABSOLUTE_CALORIE_CEILING, Math.round(plan.maintenanceCalories * MAINT_CEILING_FRACTION)),
-    perCheckInDeltaCap: MAX_DELTA_PER_CHECK_IN,
+    perCheckInDeltaCap: MAX_CORRECTIVE_DELTA,
     proteinFloorGrams: round1(proteinTarget),
     proteinCeilingGrams: round1(proteinTarget),
     fatFloorGrams: round1(0.3 * referenceWeight),
@@ -328,29 +365,13 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
     warnings.push(`Fiber target set to ${guardrails.fiberFloorGrams}g (floor: 14 g/1000 kcal, min 25 g).`);
   }
 
-  // Gate 1: adherence
-  if (adherence.adherencePercent < ADHERENCE_GATE) {
+  // Gate 1: compliance. A day counts only when it meets the calorie target
+  // (±10%) AND the minimum protein target; carb/fat split is not gated. We need
+  // mostly-compliant data before trusting the trend enough to change the plan.
+  if (adherence.compliancePercent < COMPLIANCE_GATE) {
     return {
       status: "low_adherence",
-      reason: `Only ${adherence.daysLogged}/${adherence.daysExpected} days logged in the last ${adherenceWindow} days. Focus on consistent tracking before changing the plan.`,
-      warnings,
-      adherence,
-      weightTrend,
-      guardrails,
-      proposed: baselineShouldBeReturned ? baselineProposal : null,
-      calorieDelta: 0,
-    };
-  }
-  if (
-    adherence.loggedVsTargetRatio > 0 &&
-    (adherence.loggedVsTargetRatio < ADHERENCE_MIN_TARGET_RATIO ||
-      adherence.loggedVsTargetRatio > ADHERENCE_MAX_TARGET_RATIO)
-  ) {
-    return {
-      status: "low_adherence",
-      reason: `Average logged calories were ~${Math.round(
-        adherence.loggedVsTargetRatio * 100
-      )}% of target. Restart the check-in window and hit the prescribed calories before changing the plan.`,
+      reason: `Only ${adherence.compliantDays}/${adherence.daysExpected} compliant days in the last ${adherenceWindow} days — a compliant day hits your calorie target and at least ${adherence.proteinTargetGrams}g protein. Lock in compliance before changing the plan.`,
       warnings,
       adherence,
       weightTrend,
@@ -402,10 +423,17 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
 
   // Maintain / reverse diet handled separately.
   if (plan.goalType === "maintain_weight") {
-    if (Math.abs(weightTrend.observedWeeklyChangeLbs) < 0.5) {
+    // Members may opt into a small "allowed weekly gain" (e.g. performance focus);
+    // otherwise hold within ±0.5 lb/week.
+    const allowedGainLbs = Math.max(0.5, (plan.weeklyRatePercent / 100) * plan.currentWeightLbs);
+    const observed = weightTrend.observedWeeklyChangeLbs;
+    if (observed <= allowedGainLbs && observed >= -0.5) {
       return {
         status: "on_track",
-        reason: "Weight stable within ±0.5 lb/week. Holding calories.",
+        reason:
+          allowedGainLbs > 0.5
+            ? `Weight within the allowed band (-0.5 to +${round1(allowedGainLbs)} lb/week). Holding calories.`
+            : "Weight stable within ±0.5 lb/week. Holding calories.",
         warnings,
         adherence,
         weightTrend,
@@ -414,9 +442,9 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
         calorieDelta: 0,
       };
     }
-    // drifting — small nudge opposite to drift
-    const delta = weightTrend.observedWeeklyChangeLbs > 0 ? -STEP_SMALL : STEP_SMALL;
-    return buildAdjustment(plan, guardrails, delta, warnings, adherence, weightTrend);
+    // drifting outside the band — small nudge opposite to drift
+    const delta = observed > allowedGainLbs ? -STEP_SMALL : STEP_SMALL;
+    return buildAdjustment(plan, guardrails, delta, warnings, adherence, weightTrend, undefined, MAX_EASE_DELTA);
   }
 
   if (plan.goalType === "performance_reverse_diet") {
@@ -435,7 +463,7 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
   if (inBand) {
     return {
       status: "on_track",
-      reason: `Observed ${observed} lb/week is within ±${Math.round(TOLERANCE_FRAC * 100)}% of expected ${expected} lb/week.`,
+      reason: `Observed ${observed} lb/week is within ±${Math.round(TOLERANCE_FRAC * 100)}% of expected ${expected} lb/week. Holding.`,
       warnings,
       adherence,
       weightTrend,
@@ -445,21 +473,38 @@ export function analyzeNutritionAdjustment(inputs: AdjustmentInputs): Adjustment
     };
   }
 
-  // Lose: observed > expected (less loss than wanted) → cut calories.
-  // Lose: observed < expected (faster loss than wanted) → raise calories.
-  // Gain: mirror.
-  const undershoot = goalDirection === -1 ? observed > expected : observed < expected;
-  const farOff = Math.abs(observed - expected) > Math.abs(expected);
-  const step = farOff ? STEP_LARGE : STEP_SMALL;
-  const signedDelta = undershoot
+  // Tiered adjustment by how far off pace they are.
+  // f = same-direction fraction of the expected rate (1.0 == exactly on pace,
+  // <0 == moving the wrong way, >1 == faster than targeted).
+  const f = expected !== 0 ? observed / expected : 0;
+  let magnitude: number;
+  let correcting: boolean;
+  let cap: number;
+  if (f > 1 + TOLERANCE_FRAC) {
+    // Exceeding the target rate — ease off (shrink the deficit/surplus).
+    correcting = false;
+    magnitude = f > 2 ? STEP_MEDIUM : STEP_SMALL;
+    cap = MAX_EASE_DELTA;
+  } else {
+    // Undershooting — push harder toward the goal.
+    //   wrong direction (f < 0)        → large cut
+    //   stalled (0 ≤ f < 0.25)         → medium
+    //   under pace (0.25 ≤ f < band)   → small
+    correcting = true;
+    magnitude = f < 0 ? STEP_LARGE : f < 0.25 ? STEP_MEDIUM : STEP_SMALL;
+    cap = MAX_CORRECTIVE_DELTA;
+  }
+  // Correcting a lose goal lowers calories; correcting a gain goal raises them.
+  // Easing off mirrors that.
+  const signedDelta = correcting
     ? goalDirection === -1
-      ? -step
-      : step
+      ? -magnitude
+      : magnitude
     : goalDirection === -1
-      ? step
-      : -step;
+      ? magnitude
+      : -magnitude;
 
-  return buildAdjustment(plan, guardrails, signedDelta, warnings, adherence, weightTrend);
+  return buildAdjustment(plan, guardrails, signedDelta, warnings, adherence, weightTrend, undefined, cap);
 }
 
 function buildAdjustment(
@@ -469,9 +514,11 @@ function buildAdjustment(
   warnings: string[],
   adherence: AdherenceSummary,
   weightTrend: WeightTrendSummary,
-  reasonOverride?: string
+  reasonOverride?: string,
+  maxDelta?: number
 ): AdjustmentRecommendation {
-  const cappedDelta = clamp(rawDelta, -guardrails.perCheckInDeltaCap, guardrails.perCheckInDeltaCap);
+  const deltaCap = maxDelta ?? guardrails.perCheckInDeltaCap;
+  const cappedDelta = clamp(rawDelta, -deltaCap, deltaCap);
   const desiredCalories = plan.targetCalories + cappedDelta;
   const boundedCalories = clamp(desiredCalories, guardrails.calorieFloor, guardrails.calorieCeiling);
   const finalDelta = boundedCalories - plan.targetCalories;

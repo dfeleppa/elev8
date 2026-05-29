@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 
 import {
   calculateNutritionPlan,
+  WEEKLY_RATE_PERCENT_BOUNDS,
   type AthleteSex,
   type GoalType,
   type IntensityPreset,
 } from "@/lib/nutrition-calculations";
+import { NEXT_CHECK_IN_DAYS } from "@/lib/nutrition-check-in";
 import { getCoachNutritionPlan, hasCoachNutritionPlan } from "@/lib/coach-plan";
 import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -228,6 +230,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Valid age is required (13-100)." }, { status: 400 });
   }
 
+  // Severely guardrail the chosen rate: reject anything outside the goal-aware
+  // safe bounds rather than silently clamping a wild value.
+  if (weeklyRatePercentOverride !== null && goalType !== "performance_reverse_diet") {
+    const bounds = WEEKLY_RATE_PERCENT_BOUNDS[goalType];
+    if (weeklyRatePercentOverride < bounds.min || weeklyRatePercentOverride > bounds.max) {
+      return NextResponse.json(
+        {
+          error: `Weekly rate must be between ${bounds.min}% and ${bounds.max}% of bodyweight for this goal.`,
+        },
+        { status: 400 }
+      );
+    }
+  }
+
   const sessionsPerWeek =
     sessionsPerWeekInput === null ? await getSessionsPerWeek(memberId, effectiveDate) : normalizeSessionsPerWeek(sessionsPerWeekInput);
 
@@ -264,7 +280,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const nextCheckInDate = datePlusDays(effectiveDate, 10);
+  const nextCheckInDate = datePlusDays(effectiveDate, NEXT_CHECK_IN_DAYS);
 
   const { error: profileError } = await supabaseAdmin
     .from("app_users")

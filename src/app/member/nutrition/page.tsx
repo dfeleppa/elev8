@@ -18,7 +18,6 @@ import {
 
 import SidebarShell from "@/components/SidebarShell";
 import { Panel } from "@/components/ui";
-import CoachCheckInForm from "./CoachCheckInForm";
 
 type NutritionEntry = {
   id: string;
@@ -1468,7 +1467,16 @@ export default function HealthNutritionPage() {
                   ))}
                 </div>
               </div>
-              <CoachCheckInForm />
+              <Link
+                href="/member/nutrition/coach"
+                className={`mt-3 flex items-center justify-center rounded-[16px] px-4 py-2.5 text-[12px] font-extrabold transition sm:mt-4 sm:rounded-[20px] sm:text-[13px] ${
+                  checkInTimeline.daysUntilNext === 0
+                    ? "bg-[#FF5CA8] text-white shadow-[0_10px_22px_rgba(255,92,168,0.28)] hover:brightness-110"
+                    : "bg-[#101828] text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] hover:brightness-110"
+                }`}
+              >
+                {checkInTimeline.daysUntilNext === 0 ? "Start weekly check-in" : "Open check-in"}
+              </Link>
             </div>
           )}
         </section>

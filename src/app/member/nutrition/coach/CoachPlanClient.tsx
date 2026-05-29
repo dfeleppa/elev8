@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { Loader2, RotateCcw } from "lucide-react";
 
 import NutritionCheckInBanner from "@/components/health/NutritionCheckInBanner";
+import CheckInWizard from "./CheckInWizard";
 
 type CoachPlanSummary = {
   goalType?: string | null;
@@ -23,6 +26,20 @@ type CoachPlanSummary = {
   nextCheckInDate?: string | null;
 };
 
+type CheckInHistoryItem = {
+  id: string;
+  date: string;
+  status: string;
+  outcome: string | null;
+  source: string | null;
+  bodyWeightLbs: number | null;
+  bodyFatPercent: number | null;
+  accountable: boolean | null;
+  calorieDelta: number | null;
+  reason: string | null;
+  proposedCalories: number | null;
+};
+
 const GOAL_LABEL: Record<string, string> = {
   lose_weight: "Lose Weight",
   gain_weight: "Gain Weight",
@@ -30,12 +47,21 @@ const GOAL_LABEL: Record<string, string> = {
   performance_reverse_diet: "Performance / Reverse Diet",
 };
 
+const SETUP_HREF = "/member/nutrition/coach/setup";
+
 type MetricAccent = "teal" | "pink" | "neutral";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "-";
   const d = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(d.getTime())) return value;
+  if (Number.isNaN(d.getTime())) {
+    // history dates are full timestamps
+    const t = new Date(value);
+    if (!Number.isNaN(t.getTime())) {
+      return t.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    }
+    return value;
+  }
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
@@ -67,6 +93,24 @@ function formatGrams(value: number | null | undefined) {
   return `${Math.round(num)} g`;
 }
 
+function outcomeLabel(item: CheckInHistoryItem): string {
+  const delta = Math.round(item.calorieDelta ?? 0);
+  switch (item.outcome) {
+    case "adjusted":
+      return `${delta > 0 ? "+" : ""}${delta} kcal/day`;
+    case "held_on_pace":
+      return "On pace — held";
+    case "no_change_not_accountable":
+      return "No change (not accountable)";
+    case "counter_reset":
+      return "Held — inconsistent tracking";
+    case "guardrail_blocked":
+      return "Guardrail reached";
+    default:
+      return item.status === "applied" ? "Adjusted" : "Reviewed";
+  }
+}
+
 function metricCard(label: string, value: string, accent: MetricAccent = "neutral") {
   const accentClass =
     accent === "teal"
@@ -83,48 +127,80 @@ function metricCard(label: string, value: string, accent: MetricAccent = "neutra
   );
 }
 
-
 export default function CoachPlanClient() {
+  const router = useRouter();
   const [summary, setSummary] = useState<CoachPlanSummary | null>(null);
   const [hasPlan, setHasPlan] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
-  const [checkInWeight, setCheckInWeight] = useState("");
-  const [checkInBodyFat, setCheckInBodyFat] = useState("");
-  const [checkInGoal, setCheckInGoal] = useState("lose_weight");
-  const [checkInBusy, setCheckInBusy] = useState(false);
-  const [checkInResult, setCheckInResult] = useState<string | null>(null);
-  const [checkInError, setCheckInError] = useState<string | null>(null);
+  const [history, setHistory] = useState<CheckInHistoryItem[]>([]);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+
+  const loadSummary = useCallback(async () => {
+    try {
+      const res = await fetch("/api/coach/nutrition-plan-status", { cache: "no-store" });
+      const payload = await res.json().catch(() => null);
+      if (!payload?.hasPlan) {
+        setHasPlan(false);
+        setSummary(null);
+        return;
+      }
+      setSummary((payload?.summary ?? null) as CoachPlanSummary | null);
+      setHasPlan(true);
+    } catch {
+      setHasPlan(false);
+    }
+  }, []);
+
+  const loadHistory = useCallback(async () => {
+    try {
+      const res = await fetch("/api/coach/nutrition-plan/check-in/history", { cache: "no-store" });
+      const payload = await res.json().catch(() => null);
+      if (res.ok && Array.isArray(payload?.history)) {
+        setHistory(payload.history as CheckInHistoryItem[]);
+      }
+    } catch {
+      /* non-fatal */
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/coach/nutrition-plan-status", { cache: "no-store" })
-      .then((res) => res.json().catch(() => null))
-      .then((payload) => {
-        if (cancelled) return;
-        if (!payload?.hasPlan) {
-          setHasPlan(false);
-          setSummary(null);
-          return;
-        }
-        const nextSummary = (payload?.summary ?? null) as CoachPlanSummary | null;
-        setSummary(nextSummary);
-        setHasPlan(true);
-        setCheckInWeight(nextSummary?.currentWeight ? String(nextSummary.currentWeight) : "");
-        setCheckInBodyFat(nextSummary?.bodyFatPercent ? String(nextSummary.bodyFatPercent) : "");
-        setCheckInGoal(nextSummary?.goalType ?? "lose_weight");
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setHasPlan(false);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
+    (async () => {
+      await Promise.all([loadSummary(), loadHistory()]);
+      if (!cancelled) setLoading(false);
+    })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadSummary, loadHistory]);
+
+  const refreshAfterCheckIn = useCallback(() => {
+    void loadSummary();
+    void loadHistory();
+  }, [loadSummary, loadHistory]);
+
+  async function handleReset() {
+    setResetting(true);
+    setResetError(null);
+    try {
+      const res = await fetch("/api/coach/nutrition-plan/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const payload = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(payload?.error ?? "Reset failed.");
+      }
+      router.push(SETUP_HREF);
+      router.refresh();
+    } catch (err) {
+      setResetError(err instanceof Error ? err.message : "Reset failed.");
+      setResetting(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -145,7 +221,7 @@ export default function CoachPlanClient() {
           </p>
         </div>
         <Link
-          href="/member/nutrition/coach"
+          href={SETUP_HREF}
           className="rounded-2xl bg-[#14D2DC] px-5 py-3 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105"
         >
           Start a plan
@@ -176,52 +252,6 @@ export default function CoachPlanClient() {
     ["Last check-in", formatDate(summary?.lastCheckInDate)],
   ];
 
-  async function submitCheckIn() {
-    setCheckInBusy(true);
-    setCheckInError(null);
-    setCheckInResult(null);
-    try {
-      const response = await fetch("/api/coach/nutrition-plan/check-in", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "member_check_in",
-          bodyWeightLbs: checkInWeight,
-          bodyFatPercent: checkInBodyFat.trim() ? checkInBodyFat : null,
-          goalType: checkInGoal,
-        }),
-      });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Check-in failed.");
-      }
-
-      const rec = payload?.recommendation;
-      const nextDate = payload?.nextCheckInDate ? formatDate(payload.nextCheckInDate) : "the next check-in";
-      if (payload?.action === "adjusted") {
-        setCheckInResult(
-          `Check-in complete. Calories ${rec?.calorieDelta > 0 ? "increased" : "decreased"} by ${Math.abs(
-            rec?.calorieDelta ?? 0
-          )} kcal/day. Next check-in: ${nextDate}.`
-        );
-      } else if (payload?.action === "counter_reset") {
-        setCheckInResult(`Check-in complete. Tracking was not adherent, so the 10-day counter restarted. Next check-in: ${nextDate}.`);
-      } else {
-        setCheckInResult(`Check-in complete. Plan held. Next check-in: ${nextDate}.`);
-      }
-
-      const refreshed = await fetch("/api/coach/nutrition-plan-status", { cache: "no-store" });
-      const refreshedPayload = await refreshed.json().catch(() => null);
-      if (refreshed.ok && refreshedPayload?.summary) {
-        setSummary(refreshedPayload.summary);
-      }
-    } catch (err) {
-      setCheckInError(err instanceof Error ? err.message : "Check-in failed.");
-    } finally {
-      setCheckInBusy(false);
-    }
-  }
-
   return (
     <div className="grid w-full gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.65fr)]">
       <div className="flex flex-col gap-4 sm:gap-5">
@@ -229,92 +259,81 @@ export default function CoachPlanClient() {
           <NutritionCheckInBanner />
         </div>
 
-      {checkInDue ? (
+        <CheckInWizard onComplete={refreshAfterCheckIn} />
+
         <div className="premium-glass-card p-4 sm:p-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#B42368] sm:text-[11px]">Check-In Due</p>
-              <h2 className="mt-1 text-[20px] font-bold text-[#17141F] sm:text-[22px]">Weekly coach review</h2>
-              <p className="mt-1 text-sm font-semibold leading-5 text-[#667085] sm:mt-2 sm:leading-6">
-                Confirm bodyweight, body fat, and goal. If tracking was adherent, the app will adjust calories based on progress.
-              </p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Plan Overview</p>
+              <h2 className="mt-1 text-[24px] font-bold leading-tight text-[#17141F] sm:text-[28px]">
+                {GOAL_LABEL[summary?.goalType ?? ""] ?? "Not set"}
+              </h2>
             </div>
-            <div className="w-fit rounded-full border border-[rgba(255,92,168,0.18)] bg-[rgba(255,92,168,0.08)] px-3 py-1 text-xs font-bold text-[#B42368]">
-              10-day review
-            </div>
+            <Link
+              href={SETUP_HREF}
+              className="shrink-0 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 px-3 py-2 text-xs font-bold text-[#17141F] transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)] sm:px-4 sm:py-2.5 sm:text-sm"
+            >
+              Change Plan
+            </Link>
           </div>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <label className="block space-y-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085] sm:text-xs">
-              Bodyweight
-              <input
-                value={checkInWeight}
-                onChange={(event) => setCheckInWeight(event.target.value)}
-                inputMode="decimal"
-                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-2.5 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none sm:py-3"
-                placeholder="lb"
-              />
-            </label>
-            <label className="block space-y-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085] sm:text-xs">
-              Body fat
-              <input
-                value={checkInBodyFat}
-                onChange={(event) => setCheckInBodyFat(event.target.value)}
-                inputMode="decimal"
-                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-2.5 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none sm:py-3"
-                placeholder="%"
-              />
-            </label>
-            <label className="block space-y-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085] sm:text-xs">
-              Goal
-              <select
-                value={checkInGoal}
-                onChange={(event) => setCheckInGoal(event.target.value)}
-                className="w-full rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-2.5 text-sm font-bold normal-case tracking-normal text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none sm:py-3"
-              >
-                {Object.entries(GOAL_LABEL).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {checkInError ? <p className="mt-3 text-sm font-bold text-rose-700">{checkInError}</p> : null}
-          {checkInResult ? <p className="mt-3 text-sm font-bold text-emerald-700">{checkInResult}</p> : null}
-
-          <button
-            type="button"
-            onClick={() => void submitCheckIn()}
-            disabled={checkInBusy}
-            className="mt-4 rounded-2xl bg-[#14D2DC] px-5 py-2.5 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105 disabled:opacity-60 sm:py-3"
-          >
-            {checkInBusy ? "Checking in..." : "Complete check-in"}
-          </button>
-        </div>
-      ) : null}
-
-      <div className="premium-glass-card p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3 sm:gap-4">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Plan Overview</p>
-            <h2 className="mt-1 text-[24px] font-bold leading-tight text-[#17141F] sm:text-[28px]">
-              {GOAL_LABEL[summary?.goalType ?? ""] ?? "Not set"}
-            </h2>
-          </div>
-          <Link
-            href="/member/nutrition/coach"
-            className="shrink-0 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 px-3 py-2 text-xs font-bold text-[#17141F] transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)] sm:px-4 sm:py-2.5 sm:text-sm"
-          >
-            Change Plan
-          </Link>
+          <dl className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 2xl:grid-cols-3">
+            {progressMetrics.map(([label, value]) => metricCard(label, value))}
+          </dl>
         </div>
 
-        <dl className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 2xl:grid-cols-3">
-          {progressMetrics.map(([label, value]) => metricCard(label, value))}
-        </dl>
-      </div>
+        {/* Check-in history */}
+        <div className="premium-glass-card p-4 sm:p-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Check-In History</p>
+          {history.length === 0 ? (
+            <p className="mt-3 text-sm font-semibold text-[#667085]">
+              No check-ins yet. Complete your first weekly check-in above to start tracking progress.
+            </p>
+          ) : (
+            <ul className="mt-3 flex flex-col gap-2">
+              {history.map((item) => {
+                const accountable = item.accountable;
+                return (
+                  <li
+                    key={item.id}
+                    className="flex flex-col gap-1.5 rounded-[16px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-[#17141F]">{formatDate(item.date)}</p>
+                      <p className="text-xs font-semibold text-[#667085]">
+                        {formatWeight(item.bodyWeightLbs)}
+                        {item.bodyFatPercent != null ? ` · ${formatBodyFat(item.bodyFatPercent)} bf` : ""}
+                        {item.reason ? ` · ${item.reason}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {accountable === null ? null : (
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] ${
+                            accountable
+                              ? "bg-[rgba(18,183,106,0.12)] text-[#0B7B47]"
+                              : "bg-[rgba(240,68,56,0.1)] text-[#B42318]"
+                          }`}
+                        >
+                          {accountable ? "Accountable" : "Not accountable"}
+                        </span>
+                      )}
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                          item.outcome === "adjusted"
+                            ? "bg-[rgba(20,210,220,0.12)] text-[#0B7C84]"
+                            : "bg-[rgba(16,24,40,0.06)] text-[#475467]"
+                        }`}
+                      >
+                        {outcomeLabel(item)}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </div>
 
       <aside className="flex flex-col gap-4 sm:gap-5">
@@ -347,13 +366,56 @@ export default function CoachPlanClient() {
         </div>
 
         <div className="premium-glass-card p-4 sm:p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Coach Note</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Start Over</p>
           <p className="mt-2 text-sm font-semibold leading-5 text-[#475467] sm:mt-3 sm:leading-6">
-            Keep your logging consistent and use the check-in cadence to let the plan adjust from real progress, not guesswork.
+            Wipe your plan and all check-in history, then rebuild from scratch. Your weigh-ins and food
+            logs are kept.
           </p>
+          <button
+            type="button"
+            onClick={() => {
+              setResetError(null);
+              setShowResetConfirm(true);
+            }}
+            className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-[rgba(240,68,56,0.28)] bg-[rgba(240,68,56,0.06)] px-4 py-2 text-sm font-bold text-[#B42318] transition hover:bg-[rgba(240,68,56,0.12)]"
+          >
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />
+            Wipe &amp; start over
+          </button>
         </div>
       </aside>
 
+      {showResetConfirm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-[#17141F]">Wipe plan and check-in history?</h3>
+            <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
+              This permanently deletes your nutrition plan and every check-in record. You&apos;ll start
+              fresh by building a new plan. Weigh-ins and food logs are not affected.
+            </p>
+            {resetError ? <p className="mt-3 text-sm font-bold text-rose-700">{resetError}</p> : null}
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                disabled={resetting}
+                className="rounded-2xl border border-[rgba(16,24,40,0.12)] bg-white px-4 py-2 text-sm font-bold text-[#17141F] transition hover:bg-[rgba(16,24,40,0.04)] disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleReset()}
+                disabled={resetting}
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#F04438] px-4 py-2 text-sm font-bold text-white transition hover:brightness-105 disabled:opacity-60"
+              >
+                {resetting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+                Wipe everything
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -62,6 +62,32 @@ describe("analyzeNutritionAdjustment", () => {
     expect(rec.calorieDelta).toBe(0);
   });
 
+  it("returns low_adherence when calories are hit but protein falls short", () => {
+    // Calories on target every day, but protein 100g vs a 180g target → non-compliant.
+    const inputs: AdjustmentInputs = {
+      plan: basePlan(),
+      dailyLogs: makeLogs(14, 2500, { protein: 100 }),
+      weights: makeWeights(200, -1),
+    };
+    const rec = analyzeNutritionAdjustment(inputs);
+    expect(rec.status).toBe("low_adherence");
+    expect(rec.adherence.compliantDays).toBe(0);
+    expect(rec.adherence.proteinTargetGrams).toBe(180);
+    expect(rec.calorieDelta).toBe(0);
+  });
+
+  it("counts a day compliant when calories and protein are met regardless of carb/fat", () => {
+    const inputs: AdjustmentInputs = {
+      plan: basePlan(),
+      dailyLogs: makeLogs(14, 2500, { protein: 185 }),
+      weights: makeWeights(200, -1),
+    };
+    const rec = analyzeNutritionAdjustment(inputs);
+    expect(rec.adherence.compliantDays).toBe(14);
+    expect(rec.adherence.compliancePercent).toBe(1);
+    expect(rec.status).toBe("on_track");
+  });
+
   it("returns insufficient_weight_data when fewer than 4 weight entries", () => {
     const inputs: AdjustmentInputs = {
       plan: basePlan(),
@@ -243,6 +269,32 @@ describe("analyzeNutritionAdjustment", () => {
     };
     const rec = analyzeNutritionAdjustment(inputs);
     expect(rec.status).toBe("on_track");
+  });
+
+  it("applies a large cut (>200) when gaining while trying to lose", () => {
+    // expected -1 lb/wk, observed +1 lb/wk → wrong direction → STEP_LARGE (350).
+    const inputs: AdjustmentInputs = {
+      plan: basePlan({ maintenanceCalories: 2600 }), // floor = max(1300, 1950) = 1950
+      dailyLogs: makeLogs(14, 2500),
+      weights: makeWeights(200, 1),
+    };
+    const rec = analyzeNutritionAdjustment(inputs);
+    expect(rec.status).toBe("adjust");
+    expect(rec.calorieDelta).toBe(-350);
+    expect(Math.abs(rec.calorieDelta)).toBeGreaterThan(200);
+    expect(rec.proposed?.targetCalories).toBe(2150);
+  });
+
+  it("holds maintain_weight within an opted-in allowed weekly gain band", () => {
+    // weeklyRatePercent 0.25 on 200 lb → ~0.5 lb/wk allowed gain.
+    const inputs: AdjustmentInputs = {
+      plan: basePlan({ goalType: "maintain_weight", weeklyRatePercent: 0.25, currentWeightLbs: 200 }),
+      dailyLogs: makeLogs(14, 2500),
+      weights: makeWeights(200, 0.4), // gaining within the allowed band
+    };
+    const rec = analyzeNutritionAdjustment(inputs);
+    expect(rec.status).toBe("on_track");
+    expect(rec.calorieDelta).toBe(0);
   });
 });
 

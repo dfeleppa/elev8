@@ -3,7 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import type { GoalType, IntensityPreset } from "@/lib/nutrition-calculations";
+import {
+  WEEKLY_RATE_PERCENT_BOUNDS,
+  clampWeeklyRatePercent,
+  type GoalType,
+  type IntensityPreset,
+} from "@/lib/nutrition-calculations";
 
 type PlanPreview = {
   formulaUsed: "katch_mcardle" | "mifflin_st_jeor";
@@ -95,6 +100,18 @@ const INTENSITY_OPTIONS: Array<{ value: IntensityPreset; label: string }> = [
   { value: "aggressive", label: "Aggressive" },
 ];
 
+// Quick-pick %/week defaults per goal + intensity, kept inside the goal-aware caps.
+const RATE_PRESET_DEFAULTS: Record<GoalType, Record<IntensityPreset, number>> = {
+  lose_weight: { conservative: 0.25, moderate: 0.5, aggressive: 0.75 },
+  gain_weight: { conservative: 0.2, moderate: 0.35, aggressive: 0.5 },
+  maintain_weight: { conservative: 0, moderate: 0.1, aggressive: 0.25 },
+  performance_reverse_diet: { conservative: 0, moderate: 0, aggressive: 0 },
+};
+
+function defaultRateFor(goal: GoalType, preset: IntensityPreset) {
+  return clampWeeklyRatePercent(goal, RATE_PRESET_DEFAULTS[goal][preset]);
+}
+
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -183,8 +200,10 @@ export default function CoachSetupClient({
   const [bodyFatPercentage, setBodyFatPercentage] = useState("");
   const [sessionsPerWeek, setSessionsPerWeek] = useState("4");
   const [intensityPreset, setIntensityPreset] = useState<IntensityPreset>("moderate");
-  const [useAdvancedOverride, setUseAdvancedOverride] = useState(false);
-  const [weeklyRatePercentOverride, setWeeklyRatePercentOverride] = useState("");
+  // Explicit, goal-capped rate of change in % bodyweight / week.
+  const [weeklyRatePercent, setWeeklyRatePercent] = useState<number>(() =>
+    defaultRateFor("lose_weight", "moderate")
+  );
   const [reverseDietWeeklyKcalOverride, setReverseDietWeeklyKcalOverride] = useState("");
   const [effectiveDate, setEffectiveDate] = useState(() => todayIsoDate());
   const [planPreview, setPlanPreview] = useState<PlanPreview | null>(null);
@@ -218,17 +237,19 @@ export default function CoachSetupClient({
           setBodyFatPercentage(String(prof.body_fat_percent));
         }
 
-        if (latestPlan?.goal_type) setGoalType(latestPlan.goal_type as GoalType);
-        if (latestPlan?.intensity_preset) setIntensityPreset(latestPlan.intensity_preset as IntensityPreset);
+        const loadedGoal = (latestPlan?.goal_type ?? "lose_weight") as GoalType;
+        const loadedPreset = (latestPlan?.intensity_preset ?? "moderate") as IntensityPreset;
+        if (latestPlan?.goal_type) setGoalType(loadedGoal);
+        if (latestPlan?.intensity_preset) setIntensityPreset(loadedPreset);
         if (typeof latestPlan?.target_weight_lbs === "number") setTargetWeightLbs(String(latestPlan.target_weight_lbs));
         if (typeof latestPlan?.sessions_per_week === "number") setSessionsPerWeek(String(latestPlan.sessions_per_week));
         if (typeof latestPlan?.effective_date === "string") setEffectiveDate(latestPlan.effective_date);
-        if (typeof latestPlan?.plan_payload?.weeklyRatePercentOverride === "number") {
-          setUseAdvancedOverride(true);
-          setWeeklyRatePercentOverride(String(latestPlan.plan_payload.weeklyRatePercentOverride));
+        if (typeof latestPlan?.weekly_rate_percent === "number" && latestPlan.weekly_rate_percent > 0) {
+          setWeeklyRatePercent(clampWeeklyRatePercent(loadedGoal, latestPlan.weekly_rate_percent));
+        } else {
+          setWeeklyRatePercent(defaultRateFor(loadedGoal, loadedPreset));
         }
         if (typeof latestPlan?.plan_payload?.reverseDietWeeklyKcalOverride === "number") {
-          setUseAdvancedOverride(true);
           setReverseDietWeeklyKcalOverride(String(latestPlan.plan_payload.reverseDietWeeklyKcalOverride));
         }
 
@@ -275,9 +296,13 @@ export default function CoachSetupClient({
         sessionsPerWeek: toPositiveNumberOrNull(sessionsPerWeek),
         intensityPreset,
         weeklyRatePercentOverride:
-          useAdvancedOverride ? toPositiveNumberOrNull(weeklyRatePercentOverride) : null,
+          goalType === "performance_reverse_diet"
+            ? null
+            : clampWeeklyRatePercent(goalType, weeklyRatePercent),
         reverseDietWeeklyKcalOverride:
-          useAdvancedOverride ? toNonNegativeNumberOrNull(reverseDietWeeklyKcalOverride) : null,
+          goalType === "performance_reverse_diet"
+            ? toNonNegativeNumberOrNull(reverseDietWeeklyKcalOverride)
+            : null,
         effectiveDate,
       }),
     });
@@ -310,8 +335,14 @@ export default function CoachSetupClient({
         sessions_per_week: sessionsPerWeek ? Number(sessionsPerWeek) : null,
         effective_date: effectiveDate,
         plan_payload: {
-          weeklyRatePercentOverride: useAdvancedOverride ? toPositiveNumberOrNull(weeklyRatePercentOverride) : null,
-          reverseDietWeeklyKcalOverride: useAdvancedOverride ? toNonNegativeNumberOrNull(reverseDietWeeklyKcalOverride) : null,
+          weeklyRatePercentOverride:
+            goalType === "performance_reverse_diet"
+              ? null
+              : clampWeeklyRatePercent(goalType, weeklyRatePercent),
+          reverseDietWeeklyKcalOverride:
+            goalType === "performance_reverse_diet"
+              ? toNonNegativeNumberOrNull(reverseDietWeeklyKcalOverride)
+              : null,
           weightLbs: currentWeightNumber,
           sex,
           bodyFatPercentage: measuredBodyFatPercentage,
@@ -496,6 +527,12 @@ export default function CoachSetupClient({
   }
 
   // ── Setup Wizard ─────────────────────────────────────────────────────────
+  const rateBounds = WEEKLY_RATE_PERCENT_BOUNDS[goalType];
+  const rateWeightLbs = toPositiveNumberOrNull(currentWeightLbs) ?? 0;
+  const rateLbsPerWeek = (weeklyRatePercent / 100) * rateWeightLbs;
+  const rateLabel = goalType === "maintain_weight" ? "Allowed weekly gain" : "Target rate of change";
+  const isReverseDiet = goalType === "performance_reverse_diet";
+
   return (
     <section className="space-y-6">
       <header className="flex items-start justify-between gap-4">
@@ -537,7 +574,10 @@ export default function CoachSetupClient({
               <button
                 key={option.value}
                 type="button"
-                onClick={() => setGoalType(option.value)}
+                onClick={() => {
+                  setGoalType(option.value);
+                  setWeeklyRatePercent(defaultRateFor(option.value, intensityPreset));
+                }}
                 className={`rounded-2xl border p-4 text-left transition ${
                   goalType === option.value
                     ? "border-sky-400/40 bg-sky-500/10"
@@ -679,12 +719,69 @@ export default function CoachSetupClient({
         ) : null}
 
         {step === 4 ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
+            {isReverseDiet ? (
+              <label className="space-y-1">
+                <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Reverse Diet — Weekly kcal Increase</span>
+                <input
+                  value={reverseDietWeeklyKcalOverride}
+                  onChange={(event) => setReverseDietWeeklyKcalOverride(event.target.value)}
+                  inputMode="decimal"
+                  placeholder="e.g. 105"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
+                />
+                <span className="block text-xs text-slate-500">
+                  Calories step up gradually each week (0–700 kcal/week). Leave blank to use the intensity default.
+                </span>
+              </label>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                    {rateLabel} — % bodyweight / week
+                  </span>
+                  <span className="text-sm font-semibold text-sky-300">
+                    {weeklyRatePercent.toFixed(2)} %/wk
+                    {rateWeightLbs > 0 ? (
+                      <span className="ml-2 text-slate-400">
+                        ≈ {rateLbsPerWeek.toFixed(1)} lb/week
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={rateBounds.min}
+                  max={rateBounds.max}
+                  step={0.05}
+                  value={weeklyRatePercent}
+                  onChange={(event) =>
+                    setWeeklyRatePercent(clampWeeklyRatePercent(goalType, Number(event.target.value)))
+                  }
+                  className="w-full accent-sky-400"
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>{rateBounds.min}% (min)</span>
+                  <span>{rateBounds.max}% (max — hard cap)</span>
+                </div>
+                <p className="rounded-xl border border-sky-300/20 bg-sky-300/5 px-3 py-2 text-xs text-slate-300">
+                  Capped to a safe range for this goal. Faster is not better — sustainable rates protect
+                  muscle and adherence.
+                </p>
+              </div>
+            )}
+
             <label className="space-y-1">
               <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Intensity Preset</span>
               <select
                 value={intensityPreset}
-                onChange={(event) => setIntensityPreset(event.target.value as IntensityPreset)}
+                onChange={(event) => {
+                  const preset = event.target.value as IntensityPreset;
+                  setIntensityPreset(preset);
+                  if (!isReverseDiet) {
+                    setWeeklyRatePercent(defaultRateFor(goalType, preset));
+                  }
+                }}
                 className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
               >
                 {INTENSITY_OPTIONS.map((option) => (
@@ -693,39 +790,10 @@ export default function CoachSetupClient({
                   </option>
                 ))}
               </select>
+              {!isReverseDiet ? (
+                <span className="block text-xs text-slate-500">Picks a starting rate; fine-tune with the slider above.</span>
+              ) : null}
             </label>
-
-            <label className="inline-flex items-center gap-2 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                checked={useAdvancedOverride}
-                onChange={(event) => setUseAdvancedOverride(event.target.checked)}
-              />
-              Use advanced override
-            </label>
-
-            {useAdvancedOverride ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="space-y-1">
-                  <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Weekly Rate % Override</span>
-                  <input
-                    value={weeklyRatePercentOverride}
-                    onChange={(event) => setWeeklyRatePercentOverride(event.target.value)}
-                    inputMode="decimal"
-                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
-                  />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Reverse Diet Weekly kcal Override</span>
-                  <input
-                    value={reverseDietWeeklyKcalOverride}
-                    onChange={(event) => setReverseDietWeeklyKcalOverride(event.target.value)}
-                    inputMode="decimal"
-                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100"
-                  />
-                </label>
-              </div>
-            ) : null}
 
             <button
               type="button"
@@ -733,7 +801,7 @@ export default function CoachSetupClient({
               disabled={saving}
               className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 disabled:opacity-60"
             >
-              Recalculate with intensity
+              Recalculate with rate
             </button>
           </div>
         ) : null}
@@ -745,6 +813,12 @@ export default function CoachSetupClient({
             <p className="text-sm text-slate-300">Current Weight: {currentWeightLbs} lbs</p>
             <p className="text-sm text-slate-300">Target Weight: {targetWeightLbs || "—"} lbs</p>
             <p className="text-sm text-slate-300">Intensity: {intensityPreset}</p>
+            {!isReverseDiet ? (
+              <p className="text-sm text-slate-300">
+                {rateLabel}: {weeklyRatePercent.toFixed(2)} %/wk
+                {rateWeightLbs > 0 ? ` (≈ ${rateLbsPerWeek.toFixed(1)} lb/week)` : ""}
+              </p>
+            ) : null}
             {planPreview ? (
               <p className="text-sm text-slate-300">
                 Targets: {planPreview.targetCalories} kcal, {toDisplayNumber(planPreview.proteinGrams)}p,{" "}
