@@ -1359,10 +1359,10 @@ export default function HealthNutritionPage() {
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
                   return (
                     <div key={bar.label} className="min-w-0 rounded-[14px] border border-[#D4DAE4]/85 bg-white/84 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)] sm:rounded-[18px] sm:p-4 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_14px_30px_rgba(16,24,40,0.075)]">
-                      <div className="min-w-0 sm:flex sm:items-baseline sm:justify-between sm:gap-2">
-                        <p className="truncate text-[10.5px] font-extrabold text-[#17141F] sm:text-[13px]">{bar.label}</p>
+                      <div className="min-w-0">
+                        <p className="text-[10.5px] font-extrabold text-[#17141F] sm:text-[13px]">{bar.label}</p>
                         <p
-                          className="mt-0.5 truncate text-[12px] font-extrabold tabular-nums text-[#101828] sm:mt-0 sm:text-[15px]"
+                          className="mt-0.5 text-[12px] font-extrabold tabular-nums text-[#101828] sm:text-[15px]"
                           style={statusColor ? { color: statusColor } : undefined}
                         >
                           {roundToWhole(bar.value)}
