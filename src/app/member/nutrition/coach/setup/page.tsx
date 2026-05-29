@@ -24,9 +24,7 @@ export default async function MemberNutritionPlanSetupPage() {
             <NutritionTopBar active="coach" />
           </header>
 
-          <div className="premium-glass-card p-4 sm:p-6">
-            <CoachSetupClient initialMode="setup" redirectAfterSaveTo="/member/nutrition/coach" />
-          </div>
+          <CoachSetupClient initialMode="setup" redirectAfterSaveTo="/member/nutrition/coach" />
         </div>
       </section>
     </SidebarShell>
