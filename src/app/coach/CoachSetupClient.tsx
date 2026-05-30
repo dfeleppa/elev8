@@ -297,6 +297,9 @@ export default function CoachSetupClient({
     const currentWeightNumber = toPositiveNumberOrNull(currentWeightLbs);
     const heightNumber = toPositiveNumberOrNull(heightCm);
     const measuredBodyFatPercentage = toMeasuredBodyFatOrNull(bodyFatPercentage);
+    // Maintaining weight means the target equals the current weight — there's no
+    // separate target to enter, so derive it from the current weight.
+    const targetWeightForGoal = goalType === "maintain_weight" ? currentWeightLbs : targetWeightLbs;
 
     const response = await fetch("/api/coach/nutrition-plan", {
       method: "POST",
@@ -307,7 +310,7 @@ export default function CoachSetupClient({
         sex,
         birthDate,
         currentWeightLbs,
-        targetWeightLbs: toPositiveNumberOrNull(targetWeightLbs),
+        targetWeightLbs: toPositiveNumberOrNull(targetWeightForGoal),
         heightCm,
         bodyFatPercentage: measuredBodyFatPercentage,
         sessionsPerWeek: toPositiveNumberOrNull(sessionsPerWeek),
@@ -341,7 +344,7 @@ export default function CoachSetupClient({
         intensity_preset: intensityPreset,
         weekly_rate_percent: newPlan.weeklyRatePercent,
         reverse_diet_weekly_kcal: newPlan.reverseDietWeeklyKcal,
-        target_weight_lbs: targetWeightLbs ? Number(targetWeightLbs) : null,
+        target_weight_lbs: targetWeightForGoal ? Number(targetWeightForGoal) : null,
         maintenance_calories: newPlan.maintenanceCalories,
         target_calories: newPlan.targetCalories,
         protein_grams: newPlan.proteinGrams,
@@ -678,15 +681,17 @@ export default function CoachSetupClient({
                 </div>
               </div>
             </div>
-            <label className="space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Target Weight (lbs)</span>
-              <input
-                value={targetWeightLbs}
-                onChange={(event) => setTargetWeightLbs(event.target.value)}
-                inputMode="decimal"
-                className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
-              />
-            </label>
+            {goalType === "maintain_weight" ? null : (
+              <label className="space-y-1">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Target Weight (lbs)</span>
+                <input
+                  value={targetWeightLbs}
+                  onChange={(event) => setTargetWeightLbs(event.target.value)}
+                  inputMode="decimal"
+                  className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                />
+              </label>
+            )}
           </div>
         ) : null}
 
@@ -846,7 +851,9 @@ export default function CoachSetupClient({
             <p className="text-sm font-semibold text-[#17141F]">Review</p>
             <p className="text-sm text-[#475467]">Goal: {goalType ? GOAL_LABELS[goalType] : "—"}</p>
             <p className="text-sm text-[#475467]">Current Weight: {currentWeightLbs} lbs</p>
-            <p className="text-sm text-[#475467]">Target Weight: {targetWeightLbs || "—"} lbs</p>
+            {goalType === "maintain_weight" ? null : (
+              <p className="text-sm text-[#475467]">Target Weight: {targetWeightLbs || "—"} lbs</p>
+            )}
             <p className="text-sm text-[#475467]">Intensity: {intensityPreset}</p>
             {!isReverseDiet ? (
               <p className="text-sm text-[#475467]">
