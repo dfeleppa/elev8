@@ -349,8 +349,12 @@ export default function HealthNutritionPage() {
     protein: "",
     carbs: "",
     fat: "",
+    fiber: "",
   });
   const [macroViewMode, setMacroViewMode] = useState<"consumed" | "remaining">("consumed");
+  const [manualEntryOpen, setManualEntryOpen] = useState(false);
+  const [savingManualEntry, setSavingManualEntry] = useState(false);
+  const [manualMacros, setManualMacros] = useState({ protein: "", carbs: "", fat: "", fiber: "" });
 
   async function loadFoodLibraries(options?: {
     includeRecent?: boolean;
@@ -426,6 +430,7 @@ export default function HealthNutritionPage() {
           protein: payload.day?.protein_target?.toString() ?? "",
           carbs: payload.day?.carbs_target?.toString() ?? "",
           fat: payload.day?.fat_target?.toString() ?? "",
+          fiber: payload.day?.fiber_target?.toString() ?? "",
         });
       })
       .catch((err) => {
@@ -516,8 +521,14 @@ export default function HealthNutritionPage() {
     ? clampPercent((totals.calories / targetNumbers.calories) * 100)
     : 0;
 
-  const FIBER_DEFAULT_TARGET = 30;
-  const fiberProgress = clampPercent((totals.fiber / FIBER_DEFAULT_TARGET) * 100);
+  // Fiber goal: prefer the coach plan's fiber target, otherwise 1 g per 72 kcal
+  // of the calorie target (matching the plan formula), with a 25 g floor.
+  const fiberTarget = targets.fiber
+    ? Number(targets.fiber)
+    : targetNumbers.calories
+      ? Math.max(25, Math.round(targetNumbers.calories / 72))
+      : 30;
+  const fiberProgress = fiberTarget ? clampPercent((totals.fiber / fiberTarget) * 100) : 0;
 
   const consumedMacroBars = [
     {
@@ -544,9 +555,9 @@ export default function HealthNutritionPage() {
     {
       label: "Fiber",
       value: totals.fiber,
-      target: FIBER_DEFAULT_TARGET,
+      target: fiberTarget,
       progress: fiberProgress,
-      status: statusFromDiff(totals.fiber, FIBER_DEFAULT_TARGET, MACRO_TOLERANCE_GRAMS),
+      status: statusFromDiff(totals.fiber, fiberTarget, MACRO_TOLERANCE_GRAMS),
     },
   ];
 
@@ -953,6 +964,54 @@ export default function HealthNutritionPage() {
     setEntries((prev) => [...prev, payload.entry]);
   }
 
+  const manualEntryCalories = Math.round(
+    (Number(manualMacros.protein) || 0) * 4 +
+      (Number(manualMacros.carbs) || 0) * 4 +
+      (Number(manualMacros.fat) || 0) * 9,
+  );
+
+  async function submitManualEntry() {
+    const protein = Math.max(0, Number(manualMacros.protein) || 0);
+    const carbs = Math.max(0, Number(manualMacros.carbs) || 0);
+    const fat = Math.max(0, Number(manualMacros.fat) || 0);
+    const fiber = Math.max(0, Number(manualMacros.fiber) || 0);
+
+    if (protein <= 0 && carbs <= 0 && fat <= 0 && fiber <= 0) {
+      setError("Enter at least one macro to log.");
+      return;
+    }
+
+    setSavingManualEntry(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/nutrition-entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dayDate: selectedDate,
+          mealType: "snack",
+          name: "Quick add",
+          protein,
+          carbs,
+          fat,
+          fiber,
+          calories: protein * 4 + carbs * 4 + fat * 9,
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        setError(payload?.error ?? "Failed to log macros.");
+        return;
+      }
+
+      setEntries((prev) => [...prev, payload.entry]);
+      setManualMacros({ protein: "", carbs: "", fat: "", fiber: "" });
+      setManualEntryOpen(false);
+    } finally {
+      setSavingManualEntry(false);
+    }
+  }
+
   async function openMealDialog(mealKey: MealKey) {
     setFoodDialogOpen(true);
     setActiveMealDialog(mealKey);
@@ -1165,7 +1224,7 @@ export default function HealthNutritionPage() {
     <SidebarShell mainClassName="w-full">
       <section className="premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
         <div className="flex w-full flex-col gap-5">
-        <header className="-mt-[60px] mb-[-4px] flex flex-col items-center sm:mt-0">
+        <header className="relative z-[45] -mt-[60px] mb-[-4px] flex flex-col items-center sm:mt-0">
           <h1 className="mb-2 hidden text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:block">
             Nutrition
           </h1>
@@ -1273,17 +1332,15 @@ export default function HealthNutritionPage() {
                     />
                   </g>
                 </svg>
-                <div className="text-center">
-                  <p
-                    className="text-[18px] font-extrabold leading-none text-[#17141F]"
-                    style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
-                  >
-                    {roundToWhole(displayCalories).toLocaleString()}
-                  </p>
-                  <p className="mt-0.5 text-[9.5px] font-extrabold uppercase tracking-[0.08em] text-[#667085]">
-                    kcal
-                  </p>
-                </div>
+                <p
+                  className="text-[18px] font-extrabold leading-none text-[#17141F]"
+                  style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
+                >
+                  {roundToWhole(displayCalories).toLocaleString()}
+                </p>
+                <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 translate-y-[11px] text-[9.5px] font-extrabold uppercase tracking-[0.08em] text-[#667085]">
+                  kcal
+                </span>
               </div>
 
               <div className="grid gap-1.5">
@@ -1394,6 +1451,15 @@ export default function HealthNutritionPage() {
                 })}
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setManualEntryOpen(true)}
+              className="mt-3 inline-flex items-center justify-center gap-1.5 self-start rounded-full border border-[#D4DAE4]/85 bg-white/84 px-3.5 py-2 text-[12px] font-extrabold text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_8px_18px_rgba(16,24,40,0.06)] transition hover:bg-white sm:text-[13px]"
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+              Quick add macros
+            </button>
           </div>
 
           {coachPlanStatus === "loading" ? (
@@ -2251,6 +2317,78 @@ export default function HealthNutritionPage() {
           </div>
         )}
 
+
+        {manualEntryOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+            <div className="panel w-full max-w-md rounded-3xl p-5 shadow-2xl">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-[var(--text-muted)]">Manual tracking</p>
+                  <h3 className="mt-1 text-2xl font-semibold leading-tight text-[var(--text)]">Quick add macros</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setManualEntryOpen(false)}
+                  className="grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)]"
+                  aria-label="Close manual tracking"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+
+              <p className="mt-3 text-sm text-[var(--text-muted)]">
+                Log the macros you consumed today. Calories are calculated automatically.
+              </p>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {([
+                  { key: "protein", label: "Protein (g)" },
+                  { key: "carbs", label: "Carbs (g)" },
+                  { key: "fat", label: "Fat (g)" },
+                  { key: "fiber", label: "Fiber (g)" },
+                ] as const).map((field) => (
+                  <label key={field.key} className="space-y-1">
+                    <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">{field.label}</span>
+                    <input
+                      value={manualMacros[field.key]}
+                      onChange={(event) =>
+                        setManualMacros((prev) => ({ ...prev, [field.key]: event.target.value }))
+                      }
+                      placeholder="0"
+                      inputMode="decimal"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                    />
+                  </label>
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center justify-between rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-3">
+                <span className="text-sm font-semibold text-[var(--text-muted)]">Calories</span>
+                <span className="text-lg font-bold tabular-nums text-[var(--text)]">
+                  {manualEntryCalories.toLocaleString()} kcal
+                </span>
+              </div>
+
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setManualEntryOpen(false)}
+                  className="rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text-muted)] transition hover:text-[var(--text)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void submitManualEntry()}
+                  disabled={savingManualEntry}
+                  className="accent-pink rounded-2xl px-4 py-2 text-sm font-semibold transition hover:brightness-110 disabled:opacity-60"
+                >
+                  {savingManualEntry ? "Logging" : "Log macros"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {copyDialogMeal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">

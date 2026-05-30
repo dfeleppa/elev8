@@ -314,7 +314,7 @@ export async function POST(request: Request) {
         protein_grams: plan.proteinGrams,
         carbs_grams: plan.carbsGrams,
         fat_grams: plan.fatGrams,
-        fiber_grams: Math.max(25, Math.round((14 * plan.targetCalories) / 1000)),
+        fiber_grams: Math.max(25, Math.round(plan.targetCalories / 72)),
         formula_used: plan.formulaUsed,
         activity_multiplier: plan.activityMultiplier,
         sessions_per_week: sessionsPerWeek,

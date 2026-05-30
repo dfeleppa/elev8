@@ -297,7 +297,7 @@ function computeGuardrails(plan: CurrentPlan): Guardrails {
     proteinFloorGrams: round1(proteinTarget),
     proteinCeilingGrams: round1(proteinTarget),
     fatFloorGrams: round1(0.3 * referenceWeight),
-    fiberFloorGrams: Math.max(25, Math.round((14 * plan.targetCalories) / 1000)),
+    fiberFloorGrams: Math.max(25, Math.round(plan.targetCalories / 72)),
   };
 }
 

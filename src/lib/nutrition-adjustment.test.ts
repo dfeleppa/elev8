@@ -235,9 +235,9 @@ describe("analyzeNutritionAdjustment", () => {
     expect(rec.proposed?.proteinGrams).toBe(160);
   });
 
-  it("sets a fiber floor of at least 25g and 14g/1000kcal", () => {
+  it("sets a fiber floor of at least 25g and 1g per 72 kcal", () => {
     const plan = basePlan({ targetCalories: 2500, fiberGrams: null });
-    // floor = max(25, 14 * 2500 / 1000) = max(25, 35) = 35
+    // floor = max(25, round(2500 / 72)) = max(25, 35) = 35
     const inputs: AdjustmentInputs = {
       plan,
       dailyLogs: makeLogs(14, 2500),

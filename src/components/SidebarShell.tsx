@@ -605,7 +605,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   return (
     <div className="relative z-10 min-h-screen">
       <div className="lg:hidden">
-        <div className="app-shell-topbar relative z-40 px-5 py-3">
+        <div className={`app-shell-topbar relative px-5 py-3 ${menuOpen ? "z-[60]" : "z-40"}`}>
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
