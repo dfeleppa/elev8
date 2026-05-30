@@ -270,6 +270,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: initial.error }, { status: initial.status });
       }
 
+      // Members can't check in before their scheduled window. Coaches/admins
+      // acting on behalf of a member are exempt.
+      const isSelfCheckIn = memberId === userId;
+      const nextCheckInDate = initial.latestPlan.next_check_in_date;
+      if (isSelfCheckIn && nextCheckInDate && todayIsoDate() < nextCheckInDate) {
+        return NextResponse.json(
+          { error: `Your next check-in opens ${nextCheckInDate}.`, nextCheckInDate },
+          { status: 409 }
+        );
+      }
+
       const goalType =
         typeof body?.goalType === "string" && goalTypeSet.has(body.goalType as GoalType)
           ? (body.goalType as GoalType)

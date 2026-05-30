@@ -107,7 +107,7 @@ export default function NutritionCoachCard() {
     const current = new Date();
     current.setHours(0, 0, 0, 0);
     if (Number.isNaN(current.getTime())) {
-      return { lastDateLabel: "TBD", nextDateLabel: "TBD", filledBars: 0, daysUntilNext: 10 };
+      return { lastDateLabel: "TBD", nextDateLabel: "TBD", filledBars: 0, daysUntilNext: 7 };
     }
     const baseLast = summary?.lastCheckInDate ?? summary?.effectiveDate ?? null;
     const baseNext = summary?.nextCheckInDate ?? null;
@@ -116,7 +116,7 @@ export default function NutritionCoachCard() {
     const parsedNext = baseNext
       ? new Date(`${baseNext}T00:00:00`)
       : parsedLast
-        ? new Date(parsedLast.getTime() + 10 * dayInMs)
+        ? new Date(parsedLast.getTime() + 7 * dayInMs)
         : null;
 
     if (
@@ -158,12 +158,12 @@ export default function NutritionCoachCard() {
     }
 
     const epochDays = Math.floor(current.getTime() / dayInMs);
-    const elapsedSinceLast = ((epochDays % 10) + 10) % 10;
-    const filledBars = elapsedSinceLast + 1;
+    const elapsedSinceLast = ((epochDays % 7) + 7) % 7;
     const lastCheckIn = new Date(current);
     lastCheckIn.setDate(current.getDate() - elapsedSinceLast);
     const nextCheckIn = new Date(lastCheckIn);
-    nextCheckIn.setDate(lastCheckIn.getDate() + 10);
+    nextCheckIn.setDate(lastCheckIn.getDate() + 7);
+    const filledBars = Math.max(0, Math.min(10, Math.floor((elapsedSinceLast / 7) * 10)));
 
     return {
       lastDateLabel: lastCheckIn.toLocaleDateString(undefined, {
@@ -177,7 +177,7 @@ export default function NutritionCoachCard() {
         year: "numeric",
       }),
       filledBars,
-      daysUntilNext: Math.max(0, 10 - filledBars),
+      daysUntilNext: Math.max(0, 7 - elapsedSinceLast),
     };
   }, [summary?.effectiveDate, summary?.lastCheckInDate, summary?.nextCheckInDate]);
 

@@ -259,7 +259,12 @@ export default function CoachPlanClient() {
           <NutritionCheckInBanner />
         </div>
 
-        <CheckInWizard onComplete={refreshAfterCheckIn} />
+        <CheckInWizard
+          onComplete={refreshAfterCheckIn}
+          checkInDue={checkInDue}
+          daysUntilCheckIn={daysUntilCheckIn}
+          nextCheckInDate={summary?.nextCheckInDate ?? null}
+        />
 
         <div className="premium-glass-card p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3 sm:gap-4">

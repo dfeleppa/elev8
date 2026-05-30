@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowRight, CheckCircle2, Loader2, Scale, ThumbsDown, ThumbsUp } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Lock, Scale, ThumbsDown, ThumbsUp } from "lucide-react";
 
 type Props = {
   /** Called after a check-in completes successfully (e.g. to refresh plan + history). */
   onComplete?: () => void;
+  /** Whether the scheduled check-in window has opened. When false, the wizard is locked. */
+  checkInDue?: boolean;
+  /** Days remaining until the next check-in opens (for the locked-state message). */
+  daysUntilCheckIn?: number | null;
+  /** ISO date the next check-in opens. */
+  nextCheckInDate?: string | null;
 };
 
 type Step = "start" | "metrics" | "accountability" | "result";
@@ -40,7 +46,12 @@ const inputClass =
 const primaryBtn =
   "inline-flex items-center justify-center gap-2 rounded-2xl bg-[#14D2DC] px-5 py-2.5 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3";
 
-export default function CheckInWizard({ onComplete }: Props) {
+export default function CheckInWizard({
+  onComplete,
+  checkInDue = true,
+  daysUntilCheckIn = null,
+  nextCheckInDate = null,
+}: Props) {
   const [step, setStep] = useState<Step>("start");
   const [todaysWeight, setTodaysWeight] = useState<number | null>(null);
   const [weight, setWeight] = useState("");
@@ -139,21 +150,36 @@ export default function CheckInWizard({ onComplete }: Props) {
 
       {/* Step: Start */}
       {step === "start" ? (
-        <div className="mt-3">
-          <p className="text-sm font-semibold leading-6 text-[#667085]">
-            A quick three-step review: share today&apos;s weigh-in, tell us if you were accountable, and
-            we&apos;ll adjust your targets from your real progress — or hold steady.
-          </p>
-          <ol className="mt-3 space-y-1.5 text-sm font-semibold text-[#475467]">
-            <li>1. {hasTodayWeight ? "Confirm today's weigh-in" : "Enter bodyweight & body fat"}</li>
-            <li>2. Were you accountable this week?</li>
-            <li>3. Your recommendation</li>
-          </ol>
-          <button type="button" onClick={beginCheckIn} className={`mt-4 ${primaryBtn}`}>
-            Start check-in
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
+        !checkInDue ? (
+          <div className="mt-3">
+            <p className="flex items-center gap-2 rounded-2xl border border-[rgba(16,24,40,0.1)] bg-white/60 px-3 py-2.5 text-sm font-bold text-[#475467]">
+              <Lock className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {daysUntilCheckIn && daysUntilCheckIn > 0
+                ? `Your next check-in opens in ${daysUntilCheckIn} day${daysUntilCheckIn === 1 ? "" : "s"} (${formatDate(nextCheckInDate)}).`
+                : `Your next check-in opens on ${formatDate(nextCheckInDate)}.`}
+            </p>
+            <p className="mt-3 text-sm font-semibold leading-6 text-[#667085]">
+              Check-ins are spaced a week apart so adjustments are driven by a full week of real data.
+              Keep logging your meals and weigh-ins until then.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-3">
+            <p className="text-sm font-semibold leading-6 text-[#667085]">
+              A quick three-step review: share today&apos;s weigh-in, tell us if you were accountable, and
+              we&apos;ll adjust your targets from your real progress — or hold steady.
+            </p>
+            <ol className="mt-3 space-y-1.5 text-sm font-semibold text-[#475467]">
+              <li>1. {hasTodayWeight ? "Confirm today's weigh-in" : "Enter bodyweight & body fat"}</li>
+              <li>2. Were you accountable this week?</li>
+              <li>3. Your recommendation</li>
+            </ol>
+            <button type="button" onClick={beginCheckIn} className={`mt-4 ${primaryBtn}`}>
+              Start check-in
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )
       ) : null}
 
       {/* Step: Metrics */}
