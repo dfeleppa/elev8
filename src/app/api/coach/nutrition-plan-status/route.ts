@@ -182,14 +182,23 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }
 
-    const { data: currentWeightEntry } = await supabaseAdmin
+    // Trend weight: average the last 3 weigh-ins so the card tracks the trend, not
+    // a single noisy reading.
+    const { data: recentWeightEntries } = await supabaseAdmin
       .from("health_stat_entries")
-      .select("value, entry_date")
+      .select("value")
       .eq("member_id", userId)
       .eq("stat_key", "body_weight")
       .order("entry_date", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(3);
+
+    const recentWeightValues = (recentWeightEntries ?? [])
+      .map((row) => Number(row.value))
+      .filter((v) => Number.isFinite(v) && v > 0);
+    const trendWeight =
+      recentWeightValues.length > 0
+        ? Math.round((recentWeightValues.reduce((sum, v) => sum + v, 0) / recentWeightValues.length) * 10) / 10
+        : null;
 
     const planPayload = (latestPlan?.plan_payload ?? {}) as { weightLbs?: number | null; weightKg?: number | null };
 
@@ -204,8 +213,8 @@ export async function GET(request: Request) {
             : null;
 
     const currentWeight =
-      typeof currentWeightEntry?.value === "number" && Number.isFinite(currentWeightEntry.value)
-        ? currentWeightEntry.value
+      trendWeight !== null
+        ? trendWeight
         : typeof profile?.current_weight_kg === "number" && Number.isFinite(profile.current_weight_kg)
           ? Math.round(profile.current_weight_kg * 2.20462 * 10) / 10
           : startWeight;

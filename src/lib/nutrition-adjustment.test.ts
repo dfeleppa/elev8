@@ -347,7 +347,9 @@ describe("estimateMetabolism", () => {
     expect(est.confidence).toBe("high");
     expect(est.estimatedTdee).toBeGreaterThan(2700);
     expect(est.estimatedTdee).toBeLessThan(2900);
-    expect(est.weightChangeLbs).toBeCloseTo(-1, 1);
+    // Trend-smoothed endpoints (avg of the first/last weigh-in groups) report a
+    // gentler change than the raw start→end delta, but the per-day rate is preserved.
+    expect(est.weightChangeLbs).toBeCloseTo(-0.6, 1);
   });
 
   it("estimates ≈ avg intake when weight is stable", () => {

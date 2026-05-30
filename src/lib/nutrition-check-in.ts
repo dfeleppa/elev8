@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import {
   analyzeNutritionAdjustment,
   estimateMetabolism,
+  trendWeightLbs,
   type AdjustmentRecommendation,
   type CurrentPlan,
   type DailyLog,
@@ -133,11 +134,11 @@ async function loadWeights(memberId: string, sinceIso: string): Promise<WeightEn
   });
 }
 
-export function buildCurrentPlan(plan: LatestPlanRow, latestWeightLbs: number | null): CurrentPlan {
+export function buildCurrentPlan(plan: LatestPlanRow, trendWeight: number | null): CurrentPlan {
   const payload = plan.plan_payload ?? {};
   const payloadWeightLbs = typeof payload.weightLbs === "number" ? (payload.weightLbs as number) : null;
   const leanBodyMassLbs = typeof payload.leanBodyMassLbs === "number" ? (payload.leanBodyMassLbs as number) : null;
-  const currentWeightLbs = latestWeightLbs ?? payloadWeightLbs ?? Number(plan.target_weight_lbs ?? 0) ?? 0;
+  const currentWeightLbs = trendWeight ?? payloadWeightLbs ?? Number(plan.target_weight_lbs ?? 0) ?? 0;
   return {
     goalType: plan.goal_type,
     targetCalories: Number(plan.target_calories),
@@ -182,8 +183,9 @@ export async function buildCheckInRecommendation(
     loadWeights(memberId, weightSince),
   ]);
 
-  const latestWeight = weights.length > 0 ? weights[weights.length - 1].weightLbs : null;
-  const currentPlan = buildCurrentPlan(latestPlan, latestWeight);
+  // Steer off the trend weight (avg of the last 3 weigh-ins), not a single reading.
+  const trendWeight = trendWeightLbs(weights, 3);
+  const currentPlan = buildCurrentPlan(latestPlan, trendWeight);
 
   const recommendation = analyzeNutritionAdjustment({
     plan: currentPlan,

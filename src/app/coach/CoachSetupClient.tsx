@@ -196,7 +196,8 @@ export default function CoachSetupClient({
   const [birthDate, setBirthDate] = useState("");
   const [currentWeightLbs, setCurrentWeightLbs] = useState("180");
   const [targetWeightLbs, setTargetWeightLbs] = useState("172");
-  const [heightCm, setHeightCm] = useState("178");
+  const [heightFeet, setHeightFeet] = useState("5");
+  const [heightInches, setHeightInches] = useState("10");
   const [bodyFatPercentage, setBodyFatPercentage] = useState("");
   const [sessionsPerWeek, setSessionsPerWeek] = useState("4");
   const [intensityPreset, setIntensityPreset] = useState<IntensityPreset>("moderate");
@@ -207,6 +208,12 @@ export default function CoachSetupClient({
   const [reverseDietWeeklyKcalOverride, setReverseDietWeeklyKcalOverride] = useState("");
   const [effectiveDate, setEffectiveDate] = useState(() => todayIsoDate());
   const [planPreview, setPlanPreview] = useState<PlanPreview | null>(null);
+
+  // Height is captured in US units (ft + in) and converted to cm for the calculator.
+  const heightCm = useMemo(() => {
+    const totalInches = (Number(heightFeet) || 0) * 12 + (Number(heightInches) || 0);
+    return totalInches > 0 ? String(Math.round(totalInches * 2.54 * 10) / 10) : "";
+  }, [heightFeet, heightInches]);
 
   useEffect(() => {
     let active = true;
@@ -229,7 +236,17 @@ export default function CoachSetupClient({
 
         if (prof?.sex === "male" || prof?.sex === "female") setSex(prof.sex);
         if (typeof prof?.birth_date === "string") setBirthDate(prof.birth_date);
-        if (typeof prof?.height_cm === "number") setHeightCm(String(prof.height_cm));
+        if (typeof prof?.height_cm === "number" && prof.height_cm > 0) {
+          const totalInches = prof.height_cm / 2.54;
+          let feet = Math.floor(totalInches / 12);
+          let inches = Math.round(totalInches - feet * 12);
+          if (inches === 12) {
+            feet += 1;
+            inches = 0;
+          }
+          setHeightFeet(String(feet));
+          setHeightInches(String(inches));
+        }
         if (typeof prof?.current_weight_kg === "number") {
           setCurrentWeightLbs(String(Math.round(prof.current_weight_kg * 2.20462 * 10) / 10));
         }
@@ -636,15 +653,31 @@ export default function CoachSetupClient({
                 If unknown, test body fat when you can. Until then, protein uses a BMI-based body fat estimate.
               </span>
             </label>
-            <label className="space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Height (cm)</span>
-              <input
-                value={heightCm}
-                onChange={(event) => setHeightCm(event.target.value)}
-                inputMode="decimal"
-                className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
-              />
-            </label>
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Height</span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="relative">
+                  <input
+                    value={heightFeet}
+                    onChange={(event) => setHeightFeet(event.target.value)}
+                    inputMode="numeric"
+                    aria-label="Height (feet)"
+                    className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 pr-8 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                  />
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-[#98A2B3]">ft</span>
+                </div>
+                <div className="relative">
+                  <input
+                    value={heightInches}
+                    onChange={(event) => setHeightInches(event.target.value)}
+                    inputMode="numeric"
+                    aria-label="Height (inches)"
+                    className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 pr-8 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                  />
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-[#98A2B3]">in</span>
+                </div>
+              </div>
+            </div>
             <label className="space-y-1">
               <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Target Weight (lbs)</span>
               <input
