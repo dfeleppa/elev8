@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
 
 import { authOptions } from "./auth";
 import { supabaseAdmin } from "./supabase-admin";
@@ -37,6 +38,36 @@ function normalizeRole(value: string | null | undefined): UserRole {
 
 export function hasRole(required: UserRole, actual: UserRole) {
   return roleOrder[actual] >= roleOrder[required];
+}
+
+/**
+ * Shared authorization gate for API routes. Given a resolved UserContext and a
+ * minimum role, returns a discriminated result: either `{ ok: false, response }`
+ * carrying a ready-to-return 401/403, or `{ ok: true, userId, role }` with the
+ * caller's id narrowed to a non-null string.
+ *
+ * Collapses the three auth idioms that previously lived inline across routes
+ * into one greppable line:
+ *
+ *   const auth = authorizeRole(await requireRequestUserContext(request), "admin");
+ *   if (!auth.ok) return auth.response;
+ *   // auth.userId / auth.role are safe to use here
+ *
+ * Using the role already resolved on the context also avoids a second DB
+ * round-trip.
+ */
+export type RoleAuthResult =
+  | { ok: true; userId: string; role: UserRole }
+  | { ok: false; response: NextResponse };
+
+export function authorizeRole(ctx: UserContext, required: UserRole): RoleAuthResult {
+  if (ctx.error || !ctx.userId) {
+    return { ok: false, response: NextResponse.json({ error: ctx.error ?? "Unauthorized" }, { status: 401 }) };
+  }
+  if (!hasRole(required, ctx.role)) {
+    return { ok: false, response: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  }
+  return { ok: true, userId: ctx.userId, role: ctx.role };
 }
 
 export async function requireUserContextFromBearer(request: Request): Promise<UserContext> {

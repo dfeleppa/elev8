@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { isOrgMember } from "@/lib/programming-access";
+import { hasOrgRole, isOrgMember } from "@/lib/programming-access";
 import { calculatePrescriptionWeight } from "@/lib/programming";
 import { requireUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -27,6 +27,15 @@ export async function GET(request: Request) {
   const member = await isOrgMember(userId);
   if (!member) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // A member may only read their own prescription. Reading another member's
+  // baseline (PRs / estimated 1RM) requires coach access or higher.
+  if (targetMemberId !== userId) {
+    const canViewOthers = await hasOrgRole(userId, "", "coach");
+    if (!canViewOthers) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   const { data: prRow, error: prError } = await supabaseAdmin

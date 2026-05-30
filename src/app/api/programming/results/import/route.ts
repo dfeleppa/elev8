@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext } from "@/lib/member";
+import { authorizeRole, requireUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -287,10 +287,11 @@ async function maybeUpsertPr(params: {
 }
 
 export async function POST(request: Request) {
-  const { error, userId } = await requireUserContext();
-  if (error || !userId) {
-    return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
-  }
+  // This import writes to gym-wide programming tables (tracks, days, blocks,
+  // movement library), so it is restricted to admins.
+  const auth = authorizeRole(await requireUserContext(), "admin");
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
 
   const body = await request.json().catch(() => null);
   const csvText = typeof body?.csvText === "string" ? body.csvText : "";

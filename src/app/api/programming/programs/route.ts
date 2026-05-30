@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 
-import { hasOrgRole, isOrgMember } from "@/lib/programming-access";
-import { requireUserContext } from "@/lib/member";
+import { authorizeRole, requireUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
-  const { error, userId,  } = await requireUserContext();
-  if (error || !userId) {
-    return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
-  }
+export async function GET() {
+  // Listing programs is a gym-side management view; restrict to admins to match
+  // the POST handler below and the [programId] PATCH/DELETE routes.
+  const auth = authorizeRole(await requireUserContext(), "admin");
+  if (!auth.ok) return auth.response;
 
   const { data, error: fetchError } = await supabaseAdmin
     .from("programs")
@@ -25,10 +24,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { error, userId } = await requireUserContext();
-  if (error || !userId) {
-    return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
-  }
+  const auth = authorizeRole(await requireUserContext(), "admin");
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
 
   const body = await request.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
@@ -46,11 +44,6 @@ export async function POST(request: Request) {
 
   if (daysPerWeek < 1 || daysPerWeek > 7) {
     return NextResponse.json({ error: "daysPerWeek must be between 1 and 7." }, { status: 400 });
-  }
-
-  const canWrite = await hasOrgRole(userId, "", "admin");
-  if (!canWrite) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { data, error: insertError } = await supabaseAdmin
