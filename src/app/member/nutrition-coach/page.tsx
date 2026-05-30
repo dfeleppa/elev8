@@ -2,11 +2,15 @@ import { redirect } from "next/navigation";
 
 import SidebarShell from "@/components/SidebarShell";
 import { hasRole, requireUserContext } from "@/lib/member";
+import { isMemberRouteLocked } from "@/lib/feature-flags";
 
 export default async function MemberNutritionCoachPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("member", role)) {
     redirect("/login");
+  }
+  if (isMemberRouteLocked(role, "/member/nutrition-coach")) {
+    redirect("/member/nutrition");
   }
 
   return (
