@@ -140,6 +140,7 @@ export default function OwnerStaffClient() {
   const [addCardOpen, setAddCardOpen] = useState(false);
 
   const [editing, setEditing] = useState<Record<string, EditState>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const promotableOptions = useMemo(() => {
     return promotableMembers.map((row) => ({
@@ -276,6 +277,36 @@ export default function OwnerStaffClient() {
     }
   };
 
+  const originalEditState = (row: StaffRow): EditState => ({
+    role: (row.role === "admin" ? "admin" : "coach") as StaffRole,
+    coachingPayrate: row.coachingPayrate?.toString() ?? "",
+    officePayrate: row.officePayrate?.toString() ?? "",
+  });
+
+  const isRowDirty = (row: StaffRow): boolean => {
+    const draft = editing[row.id];
+    if (!draft) {
+      return false;
+    }
+    const original = originalEditState(row);
+    return (
+      draft.role !== original.role ||
+      draft.coachingPayrate !== original.coachingPayrate ||
+      draft.officePayrate !== original.officePayrate
+    );
+  };
+
+  const startEdit = (row: StaffRow) => {
+    // Reset the draft to the persisted values when entering edit mode.
+    setEditing((prev) => ({ ...prev, [row.id]: originalEditState(row) }));
+    setEditingId(row.id);
+  };
+
+  const cancelEdit = (row: StaffRow) => {
+    setEditing((prev) => ({ ...prev, [row.id]: originalEditState(row) }));
+    setEditingId(null);
+  };
+
   const saveStaffRow = async (userId: string) => {
     const draft = editing[userId];
     if (!draft) {
@@ -305,6 +336,7 @@ export default function OwnerStaffClient() {
       }
 
       setMessage("Staff member updated.");
+      setEditingId(null);
       await loadStaff();
     } catch {
       setError("Failed to update staff member.");
@@ -567,13 +599,9 @@ export default function OwnerStaffClient() {
               ) : (
                 staff.map((row) => {
                   const isOwner = row.role === "owner";
-                  const draft =
-                    editing[row.id] ??
-                    ({
-                      role: (row.role === "admin" ? "admin" : "coach") as StaffRole,
-                      coachingPayrate: row.coachingPayrate?.toString() ?? "",
-                      officePayrate: row.officePayrate?.toString() ?? "",
-                    } satisfies EditState);
+                  const isEditing = editingId === row.id;
+                  const dirty = isEditing && isRowDirty(row);
+                  const draft = editing[row.id] ?? originalEditState(row);
 
                   return (
                     <tr key={row.id}>
@@ -613,8 +641,8 @@ export default function OwnerStaffClient() {
                         </div>
                       </td>
                       <td className="border-b border-[var(--line)] px-3 py-3 align-top text-xs text-[var(--text-muted)] min-w-[180px]">
-                        {isOwner ? (
-                          <span>{formatRole(row.role)}</span>
+                        {isOwner || !isEditing ? (
+                          <span>{formatRole(isOwner ? row.role : draft.role)}</span>
                         ) : (
                           <select
                             value={draft.role}
@@ -639,54 +667,86 @@ export default function OwnerStaffClient() {
                         )}
                       </td>
                       <td className="border-b border-[var(--line)] px-3 py-3 align-top text-xs text-[var(--text-muted)]">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={draft.coachingPayrate}
-                          onChange={(event) =>
-                            setEditing((prev) => ({
-                              ...prev,
-                              [row.id]: {
-                                ...draft,
-                                coachingPayrate: event.target.value,
-                              },
-                            }))
-                          }
-                          className={tableInputClass}
-                          disabled={saving || isOwner}
-                        />
+                        {isOwner || !isEditing ? (
+                          <span>{draft.coachingPayrate ? `$${draft.coachingPayrate}` : "—"}</span>
+                        ) : (
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={draft.coachingPayrate}
+                            onChange={(event) =>
+                              setEditing((prev) => ({
+                                ...prev,
+                                [row.id]: {
+                                  ...draft,
+                                  coachingPayrate: event.target.value,
+                                },
+                              }))
+                            }
+                            className={tableInputClass}
+                            disabled={saving}
+                          />
+                        )}
                       </td>
                       <td className="border-b border-[var(--line)] px-3 py-3 align-top text-xs text-[var(--text-muted)]">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={draft.officePayrate}
-                          onChange={(event) =>
-                            setEditing((prev) => ({
-                              ...prev,
-                              [row.id]: {
-                                ...draft,
-                                officePayrate: event.target.value,
-                              },
-                            }))
-                          }
-                          className={tableInputClass}
-                          disabled={saving || isOwner}
-                        />
+                        {isOwner || !isEditing ? (
+                          <span>{draft.officePayrate ? `$${draft.officePayrate}` : "—"}</span>
+                        ) : (
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={draft.officePayrate}
+                            onChange={(event) =>
+                              setEditing((prev) => ({
+                                ...prev,
+                                [row.id]: {
+                                  ...draft,
+                                  officePayrate: event.target.value,
+                                },
+                              }))
+                            }
+                            className={tableInputClass}
+                            disabled={saving}
+                          />
+                        )}
                       </td>
                       <td className="border-b border-[var(--line)] px-3 py-3 text-right">
                         {isOwner ? (
                           <span className="text-xs text-[var(--text-soft)]">Locked</span>
+                        ) : isEditing ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => saveStaffRow(row.id)}
+                              disabled={saving || !dirty}
+                              className={
+                                dirty
+                                  ? ownerButtonPrimaryClass
+                                  : `${ownerButtonSecondaryClass} cursor-not-allowed opacity-50`
+                              }
+                              title={dirty ? "Save changes" : "No changes to save"}
+                            >
+                              {saving ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => cancelEdit(row)}
+                              disabled={saving}
+                              className={ownerButtonSecondaryClass}
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         ) : (
                           <button
                             type="button"
-                            onClick={() => saveStaffRow(row.id)}
+                            onClick={() => startEdit(row)}
                             disabled={saving}
                             className={ownerButtonSecondaryClass}
                           >
-                            Save
+                            Edit
                           </button>
                         )}
                       </td>
