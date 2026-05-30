@@ -2,12 +2,16 @@ import { redirect } from "next/navigation";
 
 import SidebarShell from "@/components/SidebarShell";
 import { hasRole, requireUserContext } from "@/lib/member";
+import { isMemberRouteLocked } from "@/lib/feature-flags";
 import AccountDashboardClient from "./AccountDashboardClient";
 
 export default async function MemberAccountDashboardPage() {
   const { error, role, userId } = await requireUserContext();
   if (error || !userId || !hasRole("member", role)) {
     redirect("/login");
+  }
+  if (isMemberRouteLocked(role, "/member/account-dashboard")) {
+    redirect("/member/nutrition");
   }
 
   return (

@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Micro } from "@/components/ui";
+import { isMemberPathLive } from "@/lib/feature-flags";
 import {
   Activity,
   Apple,
@@ -19,6 +20,7 @@ import {
   Dumbbell,
   FileText,
   HandPlatter,
+  Lock,
   LogOut,
   Menu,
   MessageCircle,
@@ -262,6 +264,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const [tracks, setTracks] = useState<{ id: string; name: string }[]>([]);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [comingSoon, setComingSoon] = useState<string | null>(null);
   const [isImportingResults, setIsImportingResults] = useState(false);
   const [topBarNotice, setTopBarNotice] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
@@ -282,6 +285,19 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   );
   const canAccessGymView = roleRank[userRole] >= roleRank.coach;
   const showViewToggle = canAccessGymView;
+
+  useEffect(() => {
+    if (!comingSoon) {
+      return;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setComingSoon(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [comingSoon]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -483,6 +499,9 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const mobileTopBarTitle =
     mobileTitleRoutes.find(([href]) => pathname === href || pathname?.startsWith(href + "/"))?.[1] ?? "";
 
+  /** Members see locked (not-yet-live) routes greyed out with a Coming Soon modal. */
+  const isLocked = (href: string) => userRole === "member" && !isMemberPathLive(href);
+
   const visibleNavItems = navItems
     .filter((item) => canViewRole(item.minRole))
     .map((item) => {
@@ -680,14 +699,15 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       {showMobileMemberNav ? (
         <nav className="fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 rounded-[24px] border border-white/80 bg-white/82 p-1.5 shadow-[0_18px_48px_rgba(16,24,40,0.18)] backdrop-blur-xl lg:hidden" aria-label="Member mobile navigation">
           {mobileQuickLinks.map((link) => {
-            const isActive = link.href ? pathname === link.href || pathname.startsWith(link.href + "/") : false;
-            if (!link.href) {
+            const locked = !link.href || isLocked(link.href);
+            const isActive = link.href && !locked ? pathname === link.href || pathname.startsWith(link.href + "/") : false;
+            if (locked) {
               return (
                 <button
                   key={link.label}
                   type="button"
-                  disabled
-                  className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 text-[#98A2B3] opacity-70"
+                  onClick={() => setComingSoon(link.label)}
+                  className="relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 text-[#98A2B3] opacity-70"
                   aria-label={`${link.label} coming soon`}
                 >
                   {link.icon}
@@ -696,10 +716,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               );
             }
 
+            const href = link.href as string;
             return (
               <Link
-                key={link.href}
-                href={link.href}
+                key={href}
+                href={href}
                 className={`relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 transition ${
                   isActive
                     ? "bg-white/55 text-[#17141F] after:absolute after:bottom-1 after:left-1/2 after:h-0.5 after:w-7 after:-translate-x-1/2 after:rounded-full after:bg-[#14D2DC] after:shadow-[0_0_12px_rgba(20,210,220,0.42)]"
@@ -769,6 +790,24 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                   </div>
                   <div className="space-y-1">
                     {section.entries.map((entry) => {
+                      if (isLocked(entry.href)) {
+                        return (
+                          <button
+                            key={entry.href}
+                            type="button"
+                            onClick={() => {
+                              setMobileSidebarOpen(false);
+                              setComingSoon(entry.label);
+                            }}
+                            className="app-nav-link flex w-full items-center gap-2.5 rounded-xl px-3 py-1.5 text-xs font-bold opacity-60"
+                            aria-label={`${entry.label} coming soon`}
+                          >
+                            <span className="grid h-5 w-5 shrink-0 place-items-center text-[#667085]">{getNavIcon(entry.href)}</span>
+                            <span className="flex-1 text-left">{entry.label}</span>
+                            <span className="rounded-full bg-[var(--panel-2)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#98A2B3]">Soon</span>
+                          </button>
+                        );
+                      }
                       const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
                       return (
                         <Link
@@ -881,6 +920,20 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         {sidebarCollapsed ? (
           <nav className="mt-5 flex flex-1 flex-col items-center gap-1.5 overflow-y-auto">
             {visibleEntries.map((entry) => {
+              if (isLocked(entry.href)) {
+                return (
+                  <button
+                    key={entry.href}
+                    type="button"
+                    onClick={() => setComingSoon(entry.label)}
+                    className="group flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-[var(--text-muted)] opacity-60 transition hover:border-[var(--line)] hover:bg-[var(--panel-2)]"
+                    aria-label={`${entry.label} coming soon`}
+                    title={`${entry.label} — coming soon`}
+                  >
+                    {getNavIcon(entry.href)}
+                  </button>
+                );
+              }
               const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
               return (
                 <Link
@@ -909,6 +962,21 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 </div>
                 <div className="space-y-1">
                   {section.entries.map((entry) => {
+                    if (isLocked(entry.href)) {
+                      return (
+                        <button
+                          key={entry.href}
+                          type="button"
+                          onClick={() => setComingSoon(entry.label)}
+                          className="app-nav-link flex w-full items-center gap-2.5 rounded-xl px-3 py-1.5 text-sm font-bold opacity-60"
+                          aria-label={`${entry.label} coming soon`}
+                        >
+                          <span className="grid h-5 w-5 shrink-0 place-items-center text-[#667085]">{getNavIcon(entry.href)}</span>
+                          <span className="flex-1 text-left">{entry.label}</span>
+                          <span className="rounded-full bg-[var(--panel-2)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#98A2B3]">Soon</span>
+                        </button>
+                      );
+                    }
                     const isActive = pathname === entry.href || pathname.startsWith(entry.href + "/");
                     return (
                       <Link
@@ -1062,6 +1130,38 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
         <main className={`${mainClasses} ${showMobileMemberNav || showMobileGymNav ? "pb-28 lg:pb-0" : ""}`}>{children}</main>
       </div>
+
+      {comingSoon ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${comingSoon} coming soon`}
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setComingSoon(null)}
+            aria-label="Close"
+          />
+          <div className="app-card card-fade-in relative z-10 w-full max-w-sm rounded-[24px] p-7 text-center">
+            <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[var(--panel-2)] text-[var(--pink-soft)]">
+              <Lock className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <h2 className="mt-4 text-xl font-bold tracking-[-0.02em] text-[var(--text)]">Coming Soon</h2>
+            <p className="mt-2 text-sm font-medium text-[var(--text-muted)]">
+              {comingSoon} isn&apos;t ready yet — it&apos;s on the way. For now you&apos;ve got Nutrition and Chat.
+            </p>
+            <button
+              type="button"
+              onClick={() => setComingSoon(null)}
+              className="mt-6 w-full rounded-full bg-[var(--pink)] px-4 py-2.5 text-sm font-bold text-[#17141F] transition hover:opacity-90"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
