@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, ChevronUp, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 
@@ -96,6 +97,16 @@ function formatDate(value: string) {
     day: "numeric",
     year: "numeric",
   }).format(date);
+}
+
+// Open the native date picker on click so the whole field is clickable,
+// not just the small calendar icon.
+function openPicker(e: React.MouseEvent<HTMLInputElement>) {
+  try {
+    e.currentTarget.showPicker?.();
+  } catch {
+    // showPicker can throw if unsupported or not user-activated — ignore.
+  }
 }
 
 const cellInputClass =
@@ -462,6 +473,7 @@ export default function OwnerPayrollClient() {
                           type="date"
                           value={draft.weekEndingDate}
                           onChange={(e) => updateDraft(entry.id, { weekEndingDate: e.target.value })}
+                          onClick={openPicker}
                           {...blurProps}
                           className={cellInputClass}
                         />
@@ -556,6 +568,7 @@ export default function OwnerPayrollClient() {
                           type="date"
                           value={draft.payDate}
                           onChange={(e) => updateDraft(entry.id, { payDate: e.target.value })}
+                          onClick={openPicker}
                           {...blurProps}
                           className={cellInputClass}
                         />
@@ -620,6 +633,7 @@ export default function OwnerPayrollClient() {
                   type="date"
                   value={newDraft.weekEndingDate}
                   onChange={(e) => updateNewDraft({ weekEndingDate: e.target.value })}
+                  onClick={openPicker}
                   className={cellInputClass}
                 />
               </td>
@@ -673,6 +687,7 @@ export default function OwnerPayrollClient() {
                   type="date"
                   value={newDraft.payDate}
                   onChange={(e) => updateNewDraft({ payDate: e.target.value })}
+                  onClick={openPicker}
                   className={cellInputClass}
                 />
               </td>
