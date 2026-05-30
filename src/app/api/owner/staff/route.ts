@@ -127,24 +127,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "A valid email is required when creating new staff." }, { status: 400 });
     }
 
-    const { data: user, error: upsertError } = await supabaseAdmin
+    const fullName = normalizeName(payload.existingMemberName ?? payload.fullName);
+
+    // app_users.id has no DB default (it mirrors the Supabase Auth uid for
+    // password users), so a plain insert without an id fails. Reuse the row if
+    // one already exists for this email, otherwise insert with a generated id.
+    const { data: existingByEmail } = await supabaseAdmin
       .from("app_users")
-      .upsert(
-        {
-          email,
-          full_name: normalizeName(payload.existingMemberName ?? payload.fullName),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "email" }
-      )
       .select("id")
-      .single();
+      .eq("email", email)
+      .maybeSingle();
 
-    if (upsertError || !user?.id) {
-      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    if (existingByEmail?.id) {
+      await supabaseAdmin
+        .from("app_users")
+        .update({ full_name: fullName, updated_at: new Date().toISOString() })
+        .eq("id", existingByEmail.id);
+      userId = existingByEmail.id;
+    } else {
+      const { data: inserted, error: insertError } = await supabaseAdmin
+        .from("app_users")
+        .insert({
+          id: crypto.randomUUID(),
+          email,
+          full_name: fullName,
+          updated_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+
+      if (insertError || !inserted?.id) {
+        return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+      }
+
+      userId = inserted.id;
     }
-
-    userId = user.id;
   }
 
   const { data: updatedUser, error: updateError } = await supabaseAdmin
