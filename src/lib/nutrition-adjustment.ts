@@ -185,6 +185,30 @@ function daysBetween(aIso: string, bIso: string): number {
   return Math.round((b - a) / (24 * 60 * 60 * 1000));
 }
 
+function epochDay(iso: string): number {
+  return new Date(`${iso}T00:00:00Z`).getTime() / (24 * 60 * 60 * 1000);
+}
+
+/**
+ * Trend weight (lbs): the average of the most recent up-to-`count` weigh-ins.
+ * We steer plans by this smoothed value rather than a single scale reading so a
+ * noisy day (water, sodium, timing) can't swing a decision on its own.
+ */
+export function trendWeightLbs(weights: WeightEntry[], count = 3): number | null {
+  if (weights.length === 0) return null;
+  const sorted = [...weights].sort((a, b) => (a.date < b.date ? -1 : 1));
+  const recent = sorted.slice(-count);
+  return round1(average(recent.map((w) => w.weightLbs)));
+}
+
+/** Smoothed anchor for one end of a window: average weight + the mean date of the group. */
+function trendAnchor(entries: WeightEntry[]): { weightLbs: number; epochDay: number } {
+  return {
+    weightLbs: average(entries.map((w) => w.weightLbs)),
+    epochDay: average(entries.map((w) => epochDay(w.date))),
+  };
+}
+
 function summarizeAdherence(plan: CurrentPlan, logs: DailyLog[], windowDays: number): AdherenceSummary {
   const recent = logs.slice(-windowDays);
   const loggedDays = recent.filter((d) => d.calories > 0);
@@ -671,12 +695,22 @@ export function estimateMetabolism(inputs: MetabolismEstimateInputs): Metabolism
     .filter((w) => w.date >= windowStart && w.date <= asOf)
     .sort((a, b) => (a.date < b.date ? -1 : 1));
   const weightEntries = weightsInWindow.length;
-  const startWeight = weightEntries > 0 ? round1(weightsInWindow[0].weightLbs) : null;
-  const endWeight = weightEntries > 0 ? round1(weightsInWindow[weightEntries - 1].weightLbs) : null;
-  const weightSpanDays =
+  // Full span between the first and last actual weigh-ins — gates the estimate.
+  const actualSpanDays =
     weightEntries >= 2
       ? daysBetween(weightsInWindow[0].date, weightsInWindow[weightEntries - 1].date)
       : null;
+
+  // Trend weight: smooth each end of the window to the average of up to 3 weigh-ins
+  // (non-overlapping groups), and measure the change between the groups' mean dates.
+  // This keeps the day-to-day rate honest while shrugging off a single noisy reading.
+  const groupSize = Math.min(3, Math.floor(weightEntries / 2)) || 1;
+  const startAnchor = weightEntries > 0 ? trendAnchor(weightsInWindow.slice(0, groupSize)) : null;
+  const endAnchor = weightEntries > 0 ? trendAnchor(weightsInWindow.slice(weightEntries - groupSize)) : null;
+  const startWeight = startAnchor ? round1(startAnchor.weightLbs) : null;
+  const endWeight = endAnchor ? round1(endAnchor.weightLbs) : null;
+  const weightSpanDays =
+    startAnchor && endAnchor ? Math.max(1, Math.round(endAnchor.epochDay - startAnchor.epochDay)) : null;
   const weightChangeLbs =
     startWeight !== null && endWeight !== null ? round1(endWeight - startWeight) : null;
 
@@ -704,11 +738,11 @@ export function estimateMetabolism(inputs: MetabolismEstimateInputs): Metabolism
 
   // Gate 2: weight data — need ≥2 entries spanning ≥6 days (within a 7-day window).
   const minSpan = Math.max(1, windowDays - 1);
-  if (weightEntries < 2 || weightSpanDays === null || weightSpanDays < minSpan) {
+  if (weightEntries < 2 || actualSpanDays === null || actualSpanDays < minSpan) {
     return {
       ...base,
       status: "insufficient_weight_data",
-      reason: `Need ≥2 weight entries spanning ≥${minSpan} days; have ${weightEntries} spanning ${weightSpanDays ?? 0} days.`,
+      reason: `Need ≥2 weight entries spanning ≥${minSpan} days; have ${weightEntries} spanning ${actualSpanDays ?? 0} days.`,
       confidence: "low",
     };
   }
