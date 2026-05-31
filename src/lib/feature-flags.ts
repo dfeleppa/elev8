@@ -8,11 +8,11 @@ export function isAICoachVisible(role: string | null | undefined): boolean {
   return role === "owner";
 }
 
-// Soft-launch gate: members only get Nutrition + Chat until this is flipped to false.
+// Soft-launch gate: members only get Nutrition until this is flipped to false.
 export const MEMBER_LAUNCH_RESTRICTED = true;
 
 // Member-facing routes that are live at launch.
-const LIVE_MEMBER_PATHS = ["/member/nutrition", "/member/chat"];
+const LIVE_MEMBER_PATHS = ["/member/nutrition"];
 
 /** True if `path` is a live member route (exact match or nested under one). */
 export function isMemberPathLive(path: string): boolean {

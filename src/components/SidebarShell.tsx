@@ -1150,7 +1150,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             </div>
             <h2 className="mt-4 text-xl font-bold tracking-[-0.02em] text-[var(--text)]">Coming Soon</h2>
             <p className="mt-2 text-sm font-medium text-[var(--text-muted)]">
-              {comingSoon} isn&apos;t ready yet — it&apos;s on the way. For now you&apos;ve got Nutrition and Chat.
+              {comingSoon} isn&apos;t ready yet — it&apos;s on the way. For now you&apos;ve got Nutrition.
             </p>
             <button
               type="button"
