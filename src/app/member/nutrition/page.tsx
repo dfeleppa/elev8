@@ -1339,15 +1339,17 @@ export default function HealthNutritionPage() {
                     />
                   </g>
                 </svg>
-                <p
-                  className="text-[18px] font-extrabold leading-none text-[#17141F]"
-                  style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
-                >
-                  {roundToWhole(displayCalories).toLocaleString()}
-                </p>
-                <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 translate-y-[11px] text-[9.5px] font-extrabold uppercase tracking-[0.08em] text-[#667085]">
-                  kcal
-                </span>
+                <div className="relative z-10 flex max-w-[68px] flex-col items-center justify-center text-center">
+                  <p
+                    className="w-full truncate text-[17px] font-extrabold leading-none text-[#17141F]"
+                    style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
+                  >
+                    {roundToWhole(displayCalories).toLocaleString()}
+                  </p>
+                  <span className="mt-1 text-[9.5px] font-extrabold uppercase leading-none tracking-[0.08em] text-[#667085]">
+                    kcal
+                  </span>
+                </div>
               </div>
 
               <div className="grid gap-1.5">
