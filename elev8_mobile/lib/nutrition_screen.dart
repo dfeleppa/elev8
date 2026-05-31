@@ -844,8 +844,10 @@ class _RealCoachCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
               child: Column(
                 children: [
-                  _WeightProgress(plan: plan),
-                  const SizedBox(height: 12),
+                  if (plan.hasTargetWeightGoal && plan.targetWeight != null) ...[
+                    _WeightProgress(plan: plan),
+                    const SizedBox(height: 12),
+                  ],
                   _CheckInTimeline(plan: plan),
                   if (plan.checkInDueToday) ...[
                     const SizedBox(height: 16),
@@ -883,9 +885,11 @@ class _RealCoachCard extends StatelessWidget {
                       label: 'Current',
                       value: '${plan.currentWeight!.toStringAsFixed(1)} lb',
                     ),
-                  if (plan.currentWeight != null && plan.targetWeight != null)
+                  if (plan.currentWeight != null &&
+                      plan.hasTargetWeightGoal &&
+                      plan.targetWeight != null)
                     const SizedBox(width: 12),
-                  if (plan.targetWeight != null)
+                  if (plan.hasTargetWeightGoal && plan.targetWeight != null)
                     _CompactStat(
                       label: 'Goal',
                       value: '${plan.targetWeight!.toStringAsFixed(1)} lb',
@@ -982,6 +986,10 @@ class _WeightProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!plan.hasTargetWeightGoal || plan.targetWeight == null) {
+      return const SizedBox.shrink();
+    }
+
     final pct = plan.weightProgressPercent ?? 0;
     // First bar (start → current): fill proportionally up to 50% of total
     final bar1Fill = (pct / 100 * 2).clamp(0.0, 1.0);

@@ -282,6 +282,10 @@ function formatGoalLabel(goalType: string | null | undefined) {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
+function hasTargetWeightGoal(goalType: string | null | undefined) {
+  return goalType === "lose_weight" || goalType === "gain_weight";
+}
+
 export default function HealthNutritionPage() {
   const [selectedDate, setSelectedDate] = useState(() => toLocalDateInputValue(new Date()));
   const [entries, setEntries] = useState<NutritionEntry[]>([]);
@@ -617,6 +621,9 @@ export default function HealthNutritionPage() {
   };
 
   const coachGoalLabel = formatGoalLabel(coachPlanSummary?.goalType);
+  const showCoachGoalProgress =
+    hasTargetWeightGoal(coachPlanSummary?.goalType) &&
+    typeof coachPlanSummary?.targetWeight === "number";
 
   const weightProgressPercent = useMemo(() => {
     if (!coachWeights.start || !coachWeights.goal || !coachWeights.trend) {
@@ -1524,9 +1531,11 @@ export default function HealthNutritionPage() {
                   <Atom className="h-4 w-4 text-[#FF5CA8] sm:h-5 sm:w-5" aria-hidden="true" />
                   Coach
                 </div>
-                <span className="rounded-full border border-[#DDE2EA] bg-white/78 px-2 py-0.5 text-[10.5px] font-extrabold text-[#475467] sm:px-2.5 sm:py-1 sm:text-xs">
-                  {Math.round(weightProgressPercent)}% to goal
-                </span>
+                {showCoachGoalProgress ? (
+                  <span className="rounded-full border border-[#DDE2EA] bg-white/78 px-2 py-0.5 text-[10.5px] font-extrabold text-[#475467] sm:px-2.5 sm:py-1 sm:text-xs">
+                    {Math.round(weightProgressPercent)}% to goal
+                  </span>
+                ) : null}
               </div>
               <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4">
                 <p className="min-w-0 truncate text-[16px] font-semibold leading-tight text-[#17141F] sm:text-[19px]">

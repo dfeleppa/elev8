@@ -14,6 +14,7 @@ void main() {
     test('weightProgressPercent reports 0 at start, 100 at goal', () {
       final start = CoachPlanStatus(
         hasPlan: true,
+        goalType: 'lose_weight',
         startWeight: 200,
         currentWeight: 200,
         targetWeight: 180,
@@ -22,6 +23,7 @@ void main() {
 
       final done = CoachPlanStatus(
         hasPlan: true,
+        goalType: 'lose_weight',
         startWeight: 200,
         currentWeight: 180,
         targetWeight: 180,
@@ -32,12 +34,14 @@ void main() {
     test('weightProgressPercent is symmetric for cuts and bulks', () {
       final cut = CoachPlanStatus(
         hasPlan: true,
+        goalType: 'lose_weight',
         startWeight: 200,
         currentWeight: 190,
         targetWeight: 180,
       );
       final bulk = CoachPlanStatus(
         hasPlan: true,
+        goalType: 'gain_weight',
         startWeight: 180,
         currentWeight: 190,
         targetWeight: 200,
@@ -49,6 +53,7 @@ void main() {
     test('weightProgressPercent clamps at 100 when overshooting', () {
       final overshoot = CoachPlanStatus(
         hasPlan: true,
+        goalType: 'lose_weight',
         startWeight: 200,
         currentWeight: 170,
         targetWeight: 180,
@@ -59,6 +64,7 @@ void main() {
     test('weightProgressPercent returns 100 if start equals target', () {
       final flat = CoachPlanStatus(
         hasPlan: true,
+        goalType: 'lose_weight',
         startWeight: 180,
         currentWeight: 180,
         targetWeight: 180,
@@ -70,12 +76,35 @@ void main() {
       expect(
         CoachPlanStatus(
           hasPlan: true,
+          goalType: 'lose_weight',
           startWeight: 200,
           currentWeight: null,
           targetWeight: 180,
         ).weightProgressPercent,
         isNull,
       );
+    });
+
+    test('weightProgressPercent is null for non-target-weight goals', () {
+      final maintain = CoachPlanStatus(
+        hasPlan: true,
+        goalType: 'maintain_weight',
+        startWeight: 180,
+        currentWeight: 180,
+        targetWeight: 180,
+      );
+      final reverseDiet = CoachPlanStatus(
+        hasPlan: true,
+        goalType: 'performance_reverse_diet',
+        startWeight: 180,
+        currentWeight: 182,
+        targetWeight: 180,
+      );
+
+      expect(maintain.hasTargetWeightGoal, isFalse);
+      expect(maintain.weightProgressPercent, isNull);
+      expect(reverseDiet.hasTargetWeightGoal, isFalse);
+      expect(reverseDiet.weightProgressPercent, isNull);
     });
 
     test('daysUntilCheckIn is 0 on the check-in day', () {

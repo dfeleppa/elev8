@@ -99,6 +99,10 @@ class CoachPlanStatus {
 
   bool get checkInDueToday => daysUntilCheckIn <= 0;
 
+  bool get hasTargetWeightGoal =>
+      goalType == NutritionGoal.loseWeight.id ||
+      goalType == NutritionGoal.gainWeight.id;
+
   String get goalLabel {
     return NutritionGoal.fromString(goalType)?.label ??
         goalType ??
@@ -106,6 +110,7 @@ class CoachPlanStatus {
   }
 
   double? get weightProgressPercent {
+    if (!hasTargetWeightGoal) return null;
     if (startWeight == null || targetWeight == null || currentWeight == null) {
       return null;
     }
