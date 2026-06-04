@@ -1364,8 +1364,8 @@ export default function HealthNutritionPage() {
             </div>
 
             <div className="mt-2.5 grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2.5 sm:hidden">
-              <div className="relative grid aspect-square place-items-center rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)]">
-                <svg className="absolute inset-2" viewBox="0 0 150 150" aria-hidden="true">
+              <div className="relative grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)]">
+                <svg className="absolute inset-2.5" viewBox="0 0 150 150" aria-hidden="true">
                   <defs>
                     <linearGradient id="mobile-calorie-ring-compact" x1="18" y1="18" x2="132" y2="132">
                       <stop stopColor="#14D2DC" />
@@ -1373,16 +1373,16 @@ export default function HealthNutritionPage() {
                     </linearGradient>
                   </defs>
                   <g transform="rotate(-90 75 75)">
-                    <circle cx="75" cy="75" r="57" fill="none" stroke="#E7EAEE" strokeWidth="13" />
+                    <circle cx="75" cy="75" r="53" fill="none" stroke="#E7EAEE" strokeWidth="12" />
                     <circle
                       cx="75"
                       cy="75"
-                      r="57"
+                      r="53"
                       fill="none"
                       stroke="url(#mobile-calorie-ring-compact)"
-                      strokeWidth="13"
+                      strokeWidth="12"
                       strokeLinecap="round"
-                      strokeDasharray={ringDashArray(displayCaloriesProgress, 57)}
+                      strokeDasharray={ringDashArray(displayCaloriesProgress, 53)}
                     />
                   </g>
                 </svg>
