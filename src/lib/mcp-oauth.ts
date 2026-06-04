@@ -5,6 +5,8 @@ const AUTHORIZATION_CODE_TTL_SECONDS = 5 * 60;
 const CLIENT_TTL_SECONDS = 365 * 24 * 60 * 60;
 const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
 const OAUTH_SCOPES = ["nutrition:read", "nutrition:write"];
+const consumedAuthorizationCodes = new Map<string, number>();
+const consumedRefreshTokens = new Map<string, number>();
 
 type SignedEnvelope<T extends Record<string, unknown>> = T & {
   exp: number;
@@ -114,6 +116,66 @@ function isHttpsUrl(value: string) {
   }
 }
 
+function cleanupConsumedTokens(store: Map<string, number>) {
+  const now = nowSeconds();
+  for (const [token, expiresAt] of store) {
+    if (expiresAt < now) {
+      store.delete(token);
+    }
+  }
+}
+
+function getConfiguredRedirectAllowlist() {
+  const uris = (process.env.MCP_OAUTH_ALLOWED_REDIRECT_URIS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const origins = (process.env.MCP_OAUTH_ALLOWED_REDIRECT_ORIGINS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return { uris, origins };
+}
+
+function isAllowedRedirectUri(value: string) {
+  const { uris, origins } = getConfiguredRedirectAllowlist();
+  if (uris.length === 0 && origins.length === 0) {
+    throw new Error("MCP OAuth redirect allowlist is not configured.");
+  }
+
+  const url = new URL(value);
+  return uris.includes(value) || origins.includes(url.origin);
+}
+
+export function normalizeMcpScope(scope: string | null | undefined) {
+  const requested = (scope ?? "nutrition:read")
+    .split(/\s+/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const unique = Array.from(new Set(requested));
+
+  if (unique.length === 0) {
+    return "nutrition:read";
+  }
+
+  if (unique.some((value) => !OAUTH_SCOPES.includes(value))) {
+    throw new Error("Unsupported MCP OAuth scope.");
+  }
+
+  return unique.join(" ");
+}
+
+export function hasMcpScope(scope: string | null | undefined, required: string) {
+  return (scope ?? "")
+    .split(/\s+/)
+    .map((value) => value.trim())
+    .includes(required);
+}
+
+export function hashMcpToken(token: string) {
+  return createHash("sha256").update(token).digest("hex");
+}
+
 export function getOriginFromRequest(request: Request) {
   const url = new URL(request.url);
   return `${url.protocol}//${url.host}`;
@@ -153,6 +215,9 @@ export function createRegisteredMcpClient(metadata: {
   if (!Array.isArray(redirectUris) || redirectUris.length === 0 || redirectUris.some((uri) => !isHttpsUrl(uri))) {
     throw new Error("redirect_uris must contain at least one HTTPS URL.");
   }
+  if (redirectUris.some((uri) => !isAllowedRedirectUri(uri))) {
+    throw new Error("redirect_uris must match the configured MCP OAuth allowlist.");
+  }
 
   const authMethod = metadata.token_endpoint_auth_method ?? "client_secret_post";
   if (!["none", "client_secret_basic", "client_secret_post"].includes(authMethod)) {
@@ -164,7 +229,7 @@ export function createRegisteredMcpClient(metadata: {
     {
       clientName: metadata.client_name,
       redirectUris,
-      scope: metadata.scope,
+      scope: normalizeMcpScope(metadata.scope),
       tokenEndpointAuthMethod: authMethod,
     },
     CLIENT_TTL_SECONDS
@@ -185,7 +250,7 @@ export function createRegisteredMcpClient(metadata: {
     token_endpoint_auth_method: authMethod,
     grant_types: ["authorization_code", "refresh_token"],
     response_types: ["code"],
-    scope: metadata.scope,
+    scope: normalizeMcpScope(metadata.scope),
   } satisfies RegisteredMcpClient;
 }
 
@@ -213,11 +278,26 @@ export function verifyMcpClientSecret(clientId: string, clientSecret: string) {
 }
 
 export function createMcpAuthorizationCode(payload: AuthorizationCodePayload) {
-  return signEnvelope("mcp_code", payload, AUTHORIZATION_CODE_TTL_SECONDS);
+  return signEnvelope("mcp_code", { ...payload, scope: normalizeMcpScope(payload.scope) }, AUTHORIZATION_CODE_TTL_SECONDS);
 }
 
 export function verifyMcpAuthorizationCode(code: string) {
   return verifyEnvelope<AuthorizationCodePayload>(code, "mcp_code");
+}
+
+export function consumeMcpAuthorizationCode(code: string) {
+  cleanupConsumedTokens(consumedAuthorizationCodes);
+  if (consumedAuthorizationCodes.has(code)) {
+    return null;
+  }
+
+  const payload = verifyMcpAuthorizationCode(code);
+  if (!payload) {
+    return null;
+  }
+
+  consumedAuthorizationCodes.set(code, payload.exp);
+  return payload;
 }
 
 export function createMcpAccessToken(payload: AccessTokenPayload) {
@@ -230,6 +310,21 @@ export function createMcpRefreshToken(payload: RefreshTokenPayload) {
 
 export function verifyMcpRefreshToken(refreshToken: string) {
   return verifyEnvelope<RefreshTokenPayload>(refreshToken, "mcp_rt");
+}
+
+export function consumeMcpRefreshToken(refreshToken: string) {
+  cleanupConsumedTokens(consumedRefreshTokens);
+  if (consumedRefreshTokens.has(refreshToken)) {
+    return null;
+  }
+
+  const payload = verifyMcpRefreshToken(refreshToken);
+  if (!payload) {
+    return null;
+  }
+
+  consumedRefreshTokens.set(refreshToken, payload.exp);
+  return payload;
 }
 
 export function verifyMcpAccessToken(accessToken: string) {

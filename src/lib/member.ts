@@ -40,6 +40,43 @@ export function hasRole(required: UserRole, actual: UserRole) {
   return roleOrder[actual] >= roleOrder[required];
 }
 
+export async function canAccessMemberNutrition(userId: string, role: UserRole, memberId: string) {
+  if (memberId === userId || hasRole("admin", role)) {
+    return true;
+  }
+
+  if (role !== "coach") {
+    return false;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("coach_nutrition_plans")
+    .select("id")
+    .eq("coach_id", userId)
+    .eq("member_id", memberId)
+    .limit(1)
+    .maybeSingle();
+
+  return !error && Boolean(data?.id);
+}
+
+export async function listAccessibleNutritionMemberIds(userId: string, role: UserRole) {
+  if (hasRole("admin", role)) {
+    return null;
+  }
+
+  if (role !== "coach") {
+    return [userId];
+  }
+
+  const { data } = await supabaseAdmin
+    .from("coach_nutrition_plans")
+    .select("member_id")
+    .eq("coach_id", userId);
+
+  return Array.from(new Set((data ?? []).map((row) => row.member_id).filter(Boolean)));
+}
+
 /**
  * Shared authorization gate for API routes. Given a resolved UserContext and a
  * minimum role, returns a discriminated result: either `{ ok: false, response }`

@@ -23,16 +23,16 @@ describe("agent auth helpers", () => {
     expect(isAuthorizedAgentBearerRequest(request, "test-token")).toBe(true);
   });
 
-  it("accepts URL token authentication for ChatGPT no-auth connector setup", () => {
+  it("rejects URL token authentication", () => {
     const request = new Request("https://app.daneff.com/api/mcp/nutrition?agentToken=test-token");
 
-    expect(isAuthorizedAgentUrlTokenRequest(request, "test-token")).toBe(true);
+    expect(isAuthorizedAgentUrlTokenRequest(request, "test-token")).toBe(false);
   });
 
-  it("accepts common URL token aliases", () => {
+  it("rejects common URL token aliases", () => {
     const request = new Request("https://app.daneff.com/api/mcp/nutrition?access_token=test-token");
 
-    expect(isAuthorizedAgentUrlTokenRequest(request, "test-token")).toBe(true);
+    expect(isAuthorizedAgentUrlTokenRequest(request, "test-token")).toBe(false);
   });
 
   it("rejects URL token authentication when the token is wrong", () => {

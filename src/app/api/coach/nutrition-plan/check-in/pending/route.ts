@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireRequestUserContext } from "@/lib/member";
+import { canAccessMemberNutrition, hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
-
-function canManageMember(role: string, currentUserId: string, memberId: string) {
-  if (memberId === currentUserId) return true;
-  return role === "admin" || role === "owner" || role === "coach";
-}
 
 export async function GET(request: Request) {
   const { error, userId, role } = await requireRequestUserContext(request);
@@ -18,7 +13,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const memberId = searchParams.get("memberId")?.trim() || userId;
-  if (!canManageMember(role, userId, memberId)) {
+  if (!(await canAccessMemberNutrition(userId, role, memberId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -52,7 +47,7 @@ export async function DELETE(request: Request) {
   if (!checkInId || !memberId) {
     return NextResponse.json({ error: "checkInId and memberId required." }, { status: 400 });
   }
-  if (!canManageMember(role, userId, memberId)) {
+  if (!(await canAccessMemberNutrition(userId, role, memberId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

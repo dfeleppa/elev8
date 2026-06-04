@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireUserContext } from "@/lib/member";
-import { hasOrgRole, isOrgMember } from "@/lib/programming-access";
+import { hasOrgRole } from "@/lib/programming-access";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -24,6 +24,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "blockId is required." }, { status: 400 });
   }
 
+  const canRead = await hasOrgRole(userId, "", "coach");
+  if (!canRead) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   // Fetch the progression (UNIQUE on source_block_id so at most one row).
   const { data: progression, error: progError } = await supabaseAdmin
     .from("track_progressions")
@@ -37,11 +42,6 @@ export async function GET(request: Request) {
 
   if (!progression) {
     return NextResponse.json({ progression: null });
-  }
-
-  const member = await isOrgMember(userId);
-  if (!member) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   // Fetch weeks ordered by week_number.

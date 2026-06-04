@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireRequestUserContext } from "@/lib/member";
+import { hasRole, listAccessibleNutritionMemberIds, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -11,12 +11,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
 
-  const { data, error: queryError } = await supabaseAdmin
+  const accessibleMemberIds = await listAccessibleNutritionMemberIds(userId, role);
+  if (accessibleMemberIds?.length === 0) {
+    return NextResponse.json({ items: [] });
+  }
+
+  let query = supabaseAdmin
     .from("nutrition_check_ins")
     .select("id, member_id, plan_id, recommendation, created_at")
     .eq("status", "pending")
     .order("created_at", { ascending: false })
     .limit(200);
+  if (accessibleMemberIds) {
+    query = query.in("member_id", accessibleMemberIds);
+  }
+  const { data, error: queryError } = await query;
 
   if (queryError) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

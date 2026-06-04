@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { isOrgMember } from "@/lib/programming-access";
-import { requireRequestUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { isValidDate } from "@/lib/programming";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -14,7 +13,7 @@ function addDays(startDate: string, days: number) {
 }
 
 export async function GET(request: Request) {
-  const { error, userId } = await requireRequestUserContext(request);
+  const { error, userId, role } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
@@ -27,20 +26,35 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "trackId and startDate are required." }, { status: 400 });
   }
 
-  const member = await isOrgMember(userId);
-  if (!member) {
+  const { data: track, error: trackError } = await supabaseAdmin
+    .from("programming_tracks")
+    .select("id, is_active, is_private")
+    .eq("id", trackId)
+    .maybeSingle();
+
+  if (trackError) {
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+  }
+  if (!track) {
+    return NextResponse.json({ error: "Track not found." }, { status: 404 });
+  }
+  if (!hasRole("coach", role) && (!track.is_active || track.is_private)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const endDate = addDays(startDate, 6);
 
-  const { data: days, error: daysError } = await supabaseAdmin
+  let daysQuery = supabaseAdmin
     .from("programming_days")
     .select("id, day_date, title, notes, is_published")
     .eq("track_id", trackId)
     .gte("day_date", startDate)
     .lte("day_date", endDate)
     .order("day_date", { ascending: true });
+  if (!hasRole("coach", role)) {
+    daysQuery = daysQuery.eq("is_published", true);
+  }
+  const { data: days, error: daysError } = await daysQuery;
 
   if (daysError) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

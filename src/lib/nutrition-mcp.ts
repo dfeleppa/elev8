@@ -180,7 +180,7 @@ export async function loadNutritionDaySnapshot(memberId: string, date: string, m
   };
 }
 
-export function createNutritionMcpServer(memberId: string) {
+export function createNutritionMcpServer(memberId: string, options: { canWrite?: boolean } = {}) {
   const server = new McpServer({
     name: "elev8-nutrition",
     version: "1.0.0",
@@ -399,6 +399,10 @@ export function createNutritionMcpServer(memberId: string) {
       },
     },
     async ({ command, selectedDate, mode, candidateName }) => {
+      if (!options.canWrite) {
+        throw new Error("nutrition:write scope is required.");
+      }
+
       if (!isValidDate(selectedDate)) {
         throw new Error("selectedDate must use YYYY-MM-DD format.");
       }

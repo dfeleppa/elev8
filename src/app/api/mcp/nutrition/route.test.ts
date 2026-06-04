@@ -14,16 +14,16 @@ describe("nutrition MCP route", () => {
     process.env.AGENT_MEMBER_ID = "member-1";
   });
 
-  it("accepts ChatGPT connector URL-token auth on MCP methods", async () => {
+  it("rejects URL-token auth on MCP methods", async () => {
     const { GET } = await import("./route");
     const request = new Request("http://localhost/api/mcp/nutrition?agentToken=test-token");
 
     const response = await GET(request);
     const payload = await response.json();
 
-    expect(response.status).toBe(405);
+    expect(response.status).toBe(401);
     expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
-    expect(payload.error.message).toBe("Method not allowed.");
+    expect(payload.error).toBe("Unauthorized.");
   });
 
   it("returns CORS headers on unauthorized MCP requests", async () => {

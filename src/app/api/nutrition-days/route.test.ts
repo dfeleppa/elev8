@@ -7,6 +7,7 @@ const fromMock = vi.fn();
 vi.mock("../../../lib/member", () => ({
   requireRequestUserContext: requireRequestUserContextMock,
   requireUserContext: requireUserContextMock,
+  canAccessMemberNutrition: vi.fn(async () => true),
   hasRole: (required: string, actual: string) => {
     const order: Record<string, number> = { member: 1, coach: 2, admin: 3, owner: 4 };
     return order[actual] >= order[required];

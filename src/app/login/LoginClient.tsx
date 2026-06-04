@@ -5,11 +5,34 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 
+export function sanitizeCallbackUrl(value: string | null) {
+  if (!value) {
+    return "/";
+  }
+
+  if (value.startsWith("/") && !value.startsWith("//")) {
+    return value;
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const url = new URL(value);
+      if (url.origin === window.location.origin) {
+        return `${url.pathname}${url.search}${url.hash}`;
+      }
+    } catch {
+      return "/";
+    }
+  }
+
+  return "/";
+}
+
 export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered") === "true";
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+  const callbackUrl = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
   const authError = searchParams.get("error");
 
   const [email, setEmail] = useState("");

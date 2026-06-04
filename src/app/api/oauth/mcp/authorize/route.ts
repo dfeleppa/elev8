@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireUserContext } from "@/lib/member";
-import { createMcpAuthorizationCode, verifyRegisteredMcpClient } from "@/lib/mcp-oauth";
+import { createMcpAuthorizationCode, normalizeMcpScope, verifyRegisteredMcpClient } from "@/lib/mcp-oauth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,12 +25,18 @@ export async function GET(request: Request) {
   const redirectUri = url.searchParams.get("redirect_uri") ?? "";
   const codeChallenge = url.searchParams.get("code_challenge") ?? "";
   const codeChallengeMethod = url.searchParams.get("code_challenge_method") ?? "";
-  const scope = url.searchParams.get("scope") ?? "nutrition:read nutrition:write";
+  let scope = "nutrition:read";
   const state = url.searchParams.get("state");
 
   const client = verifyRegisteredMcpClient(clientId);
   if (!client || !redirectUri || !client.redirect_uris.includes(redirectUri)) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+  }
+
+  try {
+    scope = normalizeMcpScope(url.searchParams.get("scope") ?? client.scope);
+  } catch {
+    return redirectWithError(redirectUri, "invalid_scope", state);
   }
 
   if (responseType !== "code") {

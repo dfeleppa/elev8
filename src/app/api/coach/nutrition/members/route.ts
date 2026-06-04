@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireRequestUserContext } from "@/lib/member";
+import { hasRole, listAccessibleNutritionMemberIds, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -15,11 +15,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { data, error: membersError } = await supabaseAdmin
+  const accessibleMemberIds = await listAccessibleNutritionMemberIds(userId, role);
+  if (accessibleMemberIds?.length === 0) {
+    return NextResponse.json({ members: [] });
+  }
+
+  let query = supabaseAdmin
     .from("app_users")
     .select("id, full_name, email")
     .eq("role", "member")
     .order("full_name", { ascending: true, nullsFirst: false });
+  if (accessibleMemberIds) {
+    query = query.in("id", accessibleMemberIds);
+  }
+  const { data, error: membersError } = await query;
 
   if (membersError) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

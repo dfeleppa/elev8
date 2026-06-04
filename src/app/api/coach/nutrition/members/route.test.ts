@@ -7,6 +7,7 @@ vi.mock("../../../../../lib/member", async () => {
   const roleOrder = { member: 1, coach: 2, admin: 3, owner: 4 };
   return {
     requireRequestUserContext: requireRequestUserContextMock,
+    listAccessibleNutritionMemberIds: vi.fn(async () => null),
     hasRole: (required: keyof typeof roleOrder, actual: keyof typeof roleOrder) =>
       roleOrder[actual] >= roleOrder[required],
   };

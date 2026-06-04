@@ -52,6 +52,20 @@ function parseSignedState(state: string) {
   }
 }
 
+function readStateCookie(request: NextRequest) {
+  const rawCookie = request.cookies.get(INSTAGRAM_OAUTH_STATE_COOKIE)?.value;
+  if (!rawCookie) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(rawCookie) as { state?: unknown };
+    return typeof parsed.state === "string" ? parsed.state : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { error: userError, role, userId } = await requireUserContext();
@@ -65,6 +79,11 @@ export async function GET(request: NextRequest) {
 
     if (!code) {
       return NextResponse.json({ error: "Missing code." }, { status: 400 });
+    }
+
+    const cookieState = readStateCookie(request);
+    if (!cookieState || !constantTimeEqual(cookieState, state)) {
+      return NextResponse.json({ error: "Invalid OAuth state." }, { status: 400 });
     }
 
     parseSignedState(state);

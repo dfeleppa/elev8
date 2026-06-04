@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireRequestUserContext, requireUserContext } from "@/lib/member";
+import { canAccessMemberNutrition, hasRole, requireRequestUserContext, requireUserContext } from "@/lib/member";
 import {
   omitNutritionKeys,
   readNutritionNumberField,
@@ -235,6 +235,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const requestedMemberId = searchParams.get("memberId");
   if (requestedMemberId && !hasRole("coach", role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  if (requestedMemberId && !(await canAccessMemberNutrition(userId, role, requestedMemberId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const targetUserId = requestedMemberId && hasRole("coach", role) ? requestedMemberId : userId;

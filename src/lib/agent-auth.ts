@@ -53,20 +53,7 @@ export function isAuthorizedAgentBearerRequest(request: Request, expectedToken: 
 }
 
 export function isAuthorizedAgentUrlTokenRequest(request: Request, expectedToken: string) {
-  if (!expectedToken) {
-    return false;
-  }
-
-  const url = new URL(request.url);
-  const token =
-    url.searchParams.get("agentToken")?.trim() ??
-    url.searchParams.get("access_token")?.trim() ??
-    url.searchParams.get("token")?.trim() ??
-    "";
-
-  if (!token) {
-    return false;
-  }
-
-  return constantTimeEqual(token, expectedToken);
+  void request;
+  void expectedToken;
+  return false;
 }

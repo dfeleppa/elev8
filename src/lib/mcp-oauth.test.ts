@@ -13,6 +13,7 @@ import {
 describe("MCP OAuth helpers", () => {
   it("registers a signed public client and verifies it statelessly", () => {
     process.env.NEXTAUTH_SECRET = "test-secret";
+    process.env.MCP_OAUTH_ALLOWED_REDIRECT_ORIGINS = "https://chatgpt.com";
 
     const client = createRegisteredMcpClient({
       client_name: "ChatGPT",
@@ -29,6 +30,7 @@ describe("MCP OAuth helpers", () => {
 
   it("signs authorization codes and access tokens with member context", () => {
     process.env.NEXTAUTH_SECRET = "test-secret";
+    process.env.MCP_OAUTH_ALLOWED_REDIRECT_ORIGINS = "https://chatgpt.com";
     const challenge = createS256CodeChallenge("verifier");
     const code = createMcpAuthorizationCode({
       clientId: "client-1",

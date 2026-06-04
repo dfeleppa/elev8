@@ -10,6 +10,7 @@
  */
 
 import type { User } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
 
 import { supabaseAdmin } from "./supabase-admin";
 
@@ -235,6 +236,11 @@ export async function loginWithEmailPassword(
     .maybeSingle();
 
   if (appUser?.password_hash) {
+    const passwordMatches = await bcrypt.compare(password, appUser.password_hash).catch(() => false);
+    if (!passwordMatches) {
+      return { ok: false, code: "invalid_credentials" };
+    }
+
     const { data: migratedUser, error: migrateError } =
       await supabaseAdmin.auth.admin.createUser({
         email: normalizedEmail,

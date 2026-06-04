@@ -1,21 +1,24 @@
 import { NextResponse } from "next/server";
 
-import { hasOrgRole, isOrgMember } from "@/lib/programming-access";
 import { hasRole, requireRequestUserContext, requireUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const { error, userId } = await requireRequestUserContext(request);
+  const { error, userId, role } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
 
-  const { data, error: fetchError } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("programming_tracks")
     .select("id, name, code, description, is_active, is_private, number_of_levels, hide_workouts_days_prior, hide_workouts_hour, hide_workouts_minute, created_at, updated_at")
     .order("name", { ascending: true });
+  if (!hasRole("coach", role)) {
+    query = query.eq("is_active", true).eq("is_private", false);
+  }
+  const { data, error: fetchError } = await query;
 
   if (fetchError) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

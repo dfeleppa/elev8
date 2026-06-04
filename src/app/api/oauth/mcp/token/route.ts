@@ -4,12 +4,14 @@ import {
   createMcpAccessToken,
   createMcpRefreshToken,
   createS256CodeChallenge,
+  consumeMcpAuthorizationCode,
+  consumeMcpRefreshToken,
+  hashMcpToken,
   parseBasicClientCredentials,
-  verifyMcpAuthorizationCode,
   verifyMcpClientSecret,
-  verifyMcpRefreshToken,
   verifyRegisteredMcpClient,
 } from "@/lib/mcp-oauth";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +26,16 @@ function withCors(response: Response) {
 
 function oauthError(error: string, description: string, status = 400) {
   return withCors(NextResponse.json({ error, error_description: description }, { status }));
+}
+
+async function markTokenUsed(token: string, tokenType: "authorization_code" | "refresh_token", expiresAt: number) {
+  const { error } = await supabaseAdmin.from("mcp_oauth_used_tokens").insert({
+    token_hash: hashMcpToken(token),
+    token_type: tokenType,
+    expires_at: new Date(expiresAt * 1000).toISOString(),
+  });
+
+  return !error;
 }
 
 async function readTokenParams(request: Request) {
@@ -70,9 +82,12 @@ export async function POST(request: Request) {
     const code = params.get("code") ?? "";
     const redirectUri = params.get("redirect_uri") ?? "";
     const codeVerifier = params.get("code_verifier") ?? "";
-    const authorization = verifyMcpAuthorizationCode(code);
+    const authorization = consumeMcpAuthorizationCode(code);
 
     if (!authorization || authorization.clientId !== client.client_id || authorization.redirectUri !== redirectUri) {
+      return oauthError("invalid_grant", "Invalid authorization code.");
+    }
+    if (!(await markTokenUsed(code, "authorization_code", authorization.exp))) {
       return oauthError("invalid_grant", "Invalid authorization code.");
     }
 
@@ -104,12 +119,21 @@ export async function POST(request: Request) {
   }
 
   if (grantType === "refresh_token") {
-    const refresh = verifyMcpRefreshToken(params.get("refresh_token") ?? "");
+    const refresh = consumeMcpRefreshToken(params.get("refresh_token") ?? "");
     if (!refresh || refresh.clientId !== client.client_id) {
+      return oauthError("invalid_grant", "Invalid refresh token.");
+    }
+    const refreshTokenParam = params.get("refresh_token") ?? "";
+    if (!(await markTokenUsed(refreshTokenParam, "refresh_token", refresh.exp))) {
       return oauthError("invalid_grant", "Invalid refresh token.");
     }
 
     const accessToken = createMcpAccessToken({
+      clientId: client.client_id,
+      memberId: refresh.memberId,
+      scope: refresh.scope,
+    });
+    const refreshToken = createMcpRefreshToken({
       clientId: client.client_id,
       memberId: refresh.memberId,
       scope: refresh.scope,
@@ -120,7 +144,7 @@ export async function POST(request: Request) {
         access_token: accessToken,
         token_type: "Bearer",
         expires_in: 3600,
-        refresh_token: params.get("refresh_token"),
+        refresh_token: refreshToken,
         scope: refresh.scope,
       })
     );

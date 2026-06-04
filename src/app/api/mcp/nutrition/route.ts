@@ -3,10 +3,10 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import {
   isAuthorizedAgentBearerRequest,
   isAuthorizedAgentRequest,
-  isAuthorizedAgentUrlTokenRequest,
 } from "@/lib/agent-auth";
 import {
   getOriginFromRequest,
+  hasMcpScope,
   verifyMcpAccessToken,
 } from "@/lib/mcp-oauth";
 import { createNutritionMcpServer } from "@/lib/nutrition-mcp";
@@ -27,11 +27,7 @@ function withCorsHeaders(response: Response) {
 }
 
 function isAuthorized(request: Request, expectedToken: string) {
-  return (
-    isAuthorizedAgentBearerRequest(request, expectedToken) ||
-    isAuthorizedAgentRequest(request, expectedToken) ||
-    isAuthorizedAgentUrlTokenRequest(request, expectedToken)
-  );
+  return isAuthorizedAgentBearerRequest(request, expectedToken) || isAuthorizedAgentRequest(request, expectedToken);
 }
 
 function getLegacyAgentConfig() {
@@ -40,14 +36,17 @@ function getLegacyAgentConfig() {
   return { token, memberId };
 }
 
-function getOAuthMemberId(request: Request) {
+function getOAuthAccess(request: Request) {
   const authorization = request.headers.get("authorization")?.trim() ?? "";
   const [scheme, token] = authorization.split(/\s+/, 2);
   if (scheme?.toLowerCase() === "bearer" && token) {
     try {
       const oauthAccess = verifyMcpAccessToken(token);
       if (oauthAccess?.memberId) {
-        return oauthAccess.memberId;
+        return {
+          memberId: oauthAccess.memberId,
+          canWrite: hasMcpScope(oauthAccess.scope, "nutrition:write"),
+        };
       }
     } catch {
       return null;
@@ -57,10 +56,10 @@ function getOAuthMemberId(request: Request) {
   return null;
 }
 
-function getAuthorizedMemberId(request: Request) {
-  const oauthMemberId = getOAuthMemberId(request);
-  if (oauthMemberId) {
-    return oauthMemberId;
+function getAuthorizedAccess(request: Request) {
+  const oauthAccess = getOAuthAccess(request);
+  if (oauthAccess) {
+    return oauthAccess;
   }
 
   const { token, memberId } = getLegacyAgentConfig();
@@ -68,7 +67,7 @@ function getAuthorizedMemberId(request: Request) {
     return null;
   }
 
-  return isAuthorized(request, token) ? memberId : null;
+  return isAuthorized(request, token) ? { memberId, canWrite: true } : null;
 }
 
 function unauthorizedResponse(request: Request) {
@@ -85,8 +84,8 @@ function unauthorizedResponse(request: Request) {
 }
 
 async function handleMcpRequest(request: Request) {
-  const authorizedMemberId = getAuthorizedMemberId(request);
-  if (!authorizedMemberId) {
+  const authorized = getAuthorizedAccess(request);
+  if (!authorized) {
     return unauthorizedResponse(request);
   }
 
@@ -94,7 +93,7 @@ async function handleMcpRequest(request: Request) {
     enableJsonResponse: true,
     sessionIdGenerator: undefined,
   });
-  const server = createNutritionMcpServer(authorizedMemberId);
+  const server = createNutritionMcpServer(authorized.memberId, { canWrite: authorized.canWrite });
   await server.connect(transport);
 
   try {
@@ -114,7 +113,7 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: Request) {
-  if (!getAuthorizedMemberId(request)) {
+  if (!getAuthorizedAccess(request)) {
     return unauthorizedResponse(request);
   }
 
@@ -144,7 +143,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!getAuthorizedMemberId(request)) {
+  if (!getAuthorizedAccess(request)) {
     return unauthorizedResponse(request);
   }
 

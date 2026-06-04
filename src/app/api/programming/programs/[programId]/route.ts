@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { hasOrgRole, isOrgMember } from "@/lib/programming-access";
-import { requireUserContext } from "@/lib/member";
+import { hasOrgRole } from "@/lib/programming-access";
+import { hasRole, requireUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -9,9 +9,12 @@ export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ programId: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId, role } = await requireUserContext();
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
+  }
+  if (!hasRole("coach", role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { programId } = await context.params;

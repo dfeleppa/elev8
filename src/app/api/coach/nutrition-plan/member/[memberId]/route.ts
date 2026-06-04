@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireRequestUserContext } from "@/lib/member";
+import { canAccessMemberNutrition, hasRole, requireRequestUserContext } from "@/lib/member";
 import {
   buildMacroTargetsFromLeanMassLbs,
   estimateBodyFatPercentageFromBmi,
@@ -272,6 +272,9 @@ export async function GET(
   const { memberId } = await context.params;
   if (!memberId) {
     return NextResponse.json({ error: "memberId required." }, { status: 400 });
+  }
+  if (!(await canAccessMemberNutrition(userId, role, memberId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const [memberRes, plansRes, checkInsRes, weightsRes, recentNutritionDays] = await Promise.all([

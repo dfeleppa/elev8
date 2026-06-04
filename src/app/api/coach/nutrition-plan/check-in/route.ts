@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireRequestUserContext } from "@/lib/member";
+import { canAccessMemberNutrition, hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import {
   applyAdjustmentAsNewPlan,
@@ -13,11 +13,6 @@ import type { AdjustmentRecommendation } from "@/lib/nutrition-adjustment";
 import type { GoalType } from "@/lib/nutrition-calculations";
 
 export const runtime = "nodejs";
-
-function canManageMember(role: string, currentUserId: string, memberId: string) {
-  if (memberId === currentUserId) return true;
-  return role === "admin" || role === "owner" || role === "coach";
-}
 
 const goalTypeSet = new Set<GoalType>([
   "lose_weight",
@@ -204,7 +199,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const memberId = searchParams.get("memberId")?.trim() || userId;
 
-  if (!canManageMember(role, userId, memberId)) {
+  if (!(await canAccessMemberNutrition(userId, role, memberId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -237,7 +232,7 @@ export async function POST(request: Request) {
   if (action === "member_check_in") {
     const memberId =
       typeof body?.memberId === "string" && body.memberId.trim() ? body.memberId.trim() : userId;
-    if (!canManageMember(role, userId, memberId)) {
+    if (!(await canAccessMemberNutrition(userId, role, memberId))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -412,7 +407,7 @@ export async function POST(request: Request) {
   if (!memberId) {
     return NextResponse.json({ error: "memberId required." }, { status: 400 });
   }
-  if (!canManageMember(role, userId, memberId)) {
+  if (!(await canAccessMemberNutrition(userId, role, memberId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
