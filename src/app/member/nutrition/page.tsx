@@ -1862,7 +1862,7 @@ export default function HealthNutritionPage() {
 
         {foodDialogOpen && (
           <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-4 sm:items-center sm:py-6">
-            <div className="panel my-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
+            <div className="panel my-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)] [--line:rgba(148,188,221,0.16)] [--line-strong:rgba(148,188,221,0.26)] [--panel:rgba(20,58,91,0.98)] [--panel-2:rgba(31,72,106,0.92)] [--panel-3:rgba(39,86,124,0.92)] [--text:#E8F2FF] [--text-muted:#A9BED5] [--text-soft:#7F9BB8]">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium text-[var(--text-muted)]">
