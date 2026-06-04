@@ -1365,7 +1365,7 @@ export default function HealthNutritionPage() {
 
             <div className="mt-2.5 grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2.5 sm:hidden">
               <div className="relative grid h-24 w-24 shrink-0 place-items-center rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)]">
-                <svg className="h-20 w-20" viewBox="0 0 120 120" aria-hidden="true">
+                <svg className="h-[86px] w-[86px]" viewBox="0 0 120 120" aria-hidden="true">
                   <defs>
                     <linearGradient id="mobile-calorie-ring-compact" x1="14" y1="14" x2="106" y2="106">
                       <stop stopColor="#14D2DC" />
@@ -1373,16 +1373,16 @@ export default function HealthNutritionPage() {
                     </linearGradient>
                   </defs>
                   <g transform="rotate(-90 60 60)">
-                    <circle cx="60" cy="60" r="42" fill="none" stroke="#E7EAEE" strokeWidth="10" />
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="#E7EAEE" strokeWidth="10" />
                     <circle
                       cx="60"
                       cy="60"
-                      r="42"
+                      r="45"
                       fill="none"
                       stroke="url(#mobile-calorie-ring-compact)"
                       strokeWidth="10"
                       strokeLinecap="round"
-                      strokeDasharray={ringDashArray(displayCaloriesProgress, 42)}
+                      strokeDasharray={ringDashArray(displayCaloriesProgress, 45)}
                     />
                   </g>
                 </svg>
