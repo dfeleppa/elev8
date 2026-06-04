@@ -1316,7 +1316,7 @@ export default function HealthNutritionPage() {
               </div>
             </div>
 
-            <div className="mt-2.5 grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2.5 sm:hidden">
+            <div className="mt-2.5 grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2.5 sm:hidden">
               <div className="relative grid aspect-square place-items-center rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)]">
                 <svg className="absolute inset-2" viewBox="0 0 150 150" aria-hidden="true">
                   <defs>
@@ -1347,7 +1347,7 @@ export default function HealthNutritionPage() {
                     {roundToWhole(displayCalories).toLocaleString()}
                   </p>
                   <span className="mt-1 text-[9.5px] font-extrabold uppercase leading-none tracking-[0.08em] text-[#667085]">
-                    kcal
+                    Cal
                   </span>
                 </div>
               </div>
@@ -1411,7 +1411,7 @@ export default function HealthNutritionPage() {
                     {roundToWhole(displayCalories).toLocaleString()}
                   </p>
                   <p className="mt-1 text-[13px] font-bold text-[#475467]">
-                    / {roundToWhole(targetNumbers.calories || 0).toLocaleString()} kcal
+                    / {roundToWhole(targetNumbers.calories || 0).toLocaleString()} Cal
                   </p>
                   <p
                     className="mt-1 text-sm font-bold text-[#0BA7B0]"
