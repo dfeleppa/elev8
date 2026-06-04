@@ -1278,11 +1278,11 @@ export default function HealthNutritionPage() {
     <SidebarShell mainClassName="w-full">
       <section className="premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
         <div className="flex w-full flex-col gap-5">
-        <header className="relative z-[45] -mt-[60px] mb-[-4px] flex flex-col items-center sm:mt-0">
+        <header className="pointer-events-none relative z-[45] -mt-[60px] mb-[-4px] flex flex-col items-center sm:mt-0">
           <h1 className="mb-2 hidden text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:block">
             Nutrition
           </h1>
-          <div className="premium-glass-pill mx-auto flex w-full max-w-[calc(100vw-176px)] items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
+          <div className="premium-glass-pill pointer-events-auto mx-auto flex w-full max-w-[calc(100vw-176px)] items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
