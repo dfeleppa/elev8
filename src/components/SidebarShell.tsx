@@ -626,7 +626,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   return (
     <div className="relative z-10 min-h-screen">
       <div className="lg:hidden">
-        <div className="app-shell-topbar relative z-40 px-5 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
+        <div className="app-shell-topbar relative px-5 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
           <div className="flex min-h-12 items-center justify-between gap-3">
             <button
               type="button"
