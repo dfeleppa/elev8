@@ -631,14 +631,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
-              className="inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:bg-[rgba(20,210,220,0.08)]"
+              className="inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-[18px] border border-white/10 bg-[#121826]/90 text-[#F8FAFC] shadow-[0_14px_34px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl transition hover:bg-[#171F30]"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
             <div className="min-w-0 flex-1 text-center">
               {mobileTopBarTitle ? (
-                <h1 className="truncate font-head text-[18px] font-bold leading-tight text-[#17141F]">
+                <h1 className="truncate font-head text-[18px] font-bold leading-tight text-[#F8FAFC]">
                   {mobileTopBarTitle}
                 </h1>
               ) : null}
@@ -647,14 +647,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <button
                 type="button"
                 onClick={() => setMenuOpen((open) => !open)}
-                className="inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+                className="inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-[18px] border border-white/10 bg-[#121826]/90 text-[#A8B3C7] shadow-[0_14px_34px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl transition hover:bg-[#171F30] hover:text-[#F8FAFC]"
                 aria-label="More options"
                 aria-expanded={menuOpen}
               >
                 <MoreVertical className="h-5 w-5" aria-hidden="true" />
               </button>
               {menuOpen ? (
-                <div className="absolute right-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-[90] w-52 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/92 p-2 shadow-[0_20px_50px_rgba(16,24,40,0.16)] backdrop-blur-xl">
+                <div className="absolute right-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-[90] w-52 rounded-2xl border border-white/10 bg-[#121826]/94 p-2 shadow-[0_24px_60px_rgba(0,0,0,0.36)] backdrop-blur-xl">
                   {canAccessGymView ? (
                     <button
                       type="button"
@@ -662,7 +662,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                         setMenuOpen(false);
                         handleSwitchView(showMobileMemberNav ? "gym" : "athlete");
                       }}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#17141F] transition hover:bg-[rgba(20,210,220,0.08)]"
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#F8FAFC] transition hover:bg-[#16D4D8]/10"
                     >
                       {showMobileMemberNav ? (
                         <Briefcase className="h-4 w-4" aria-hidden="true" />
@@ -678,7 +678,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                       setMenuOpen(false);
                       toggleTheme();
                     }}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#17141F] transition hover:bg-[rgba(20,210,220,0.08)]"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#F8FAFC] transition hover:bg-[#16D4D8]/10"
                   >
                     {themeIcon}
                     {themeToggleLabel}
@@ -686,7 +686,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                   <button
                     type="button"
                     onClick={handleSignOut}
-                    className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#17141F] transition hover:bg-[rgba(255,92,168,0.08)]"
+                    className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#F8FAFC] transition hover:bg-[#FF4F93]/10"
                   >
                     <LogOut className="h-4 w-4" aria-hidden="true" />
                     Sign out
@@ -699,7 +699,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       </div>
 
       {showMobileMemberNav ? (
-        <nav className="fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 rounded-[24px] border border-white/80 bg-white/82 p-1.5 shadow-[0_18px_48px_rgba(16,24,40,0.18)] backdrop-blur-xl lg:hidden" aria-label="Member mobile navigation">
+        <nav className="fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 rounded-[24px] border border-white/10 bg-[rgba(15,21,34,0.92)] p-1.5 shadow-[0_-12px_30px_rgba(0,0,0,0.35)] backdrop-blur-[18px] lg:hidden" aria-label="Member mobile navigation">
           {mobileQuickLinks.map((link) => {
             const locked = !link.href || isLocked(link.href);
             const isActive = link.href && !locked ? pathname === link.href || pathname.startsWith(link.href + "/") : false;
@@ -709,7 +709,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                   key={link.label}
                   type="button"
                   onClick={() => setComingSoon(link.label)}
-                  className="relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 text-[#98A2B3] opacity-70"
+                  className="relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 text-[#687386] opacity-70"
                   aria-label={`${link.label} coming soon`}
                 >
                   {link.icon}
@@ -725,8 +725,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 href={href}
                 className={`relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[18px] px-1.5 py-2 transition ${
                   isActive
-                    ? "bg-white/55 text-[#17141F] after:absolute after:bottom-1 after:left-1/2 after:h-0.5 after:w-7 after:-translate-x-1/2 after:rounded-full after:bg-[#14D2DC] after:shadow-[0_0_12px_rgba(20,210,220,0.42)]"
-                    : "text-[#667085] hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+                    ? "bg-[#16D4D8]/10 text-[#16D4D8] after:absolute after:bottom-1 after:left-1/2 after:h-0.5 after:w-7 after:-translate-x-1/2 after:rounded-full after:bg-[#16D4D8] after:shadow-[0_0_12px_rgba(22,212,216,0.42)]"
+                    : "text-[#A8B3C7] hover:bg-[#16D4D8]/10 hover:text-[#F8FAFC]"
                 }`}
                 aria-current={isActive ? "page" : undefined}
                 aria-label={link.label}
