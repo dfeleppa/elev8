@@ -497,7 +497,9 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   ];
   const gymBottomGridCols = gymBottomLinks.length >= 5 ? "grid-cols-5" : "grid-cols-4";
   const mobileTopBarTitle =
-    mobileTitleRoutes.find(([href]) => pathname === href || pathname?.startsWith(href + "/"))?.[1] ?? "";
+    pathname === "/member/nutrition"
+      ? ""
+      : mobileTitleRoutes.find(([href]) => pathname === href || pathname?.startsWith(href + "/"))?.[1] ?? "";
 
   /** Members see locked (not-yet-live) routes greyed out with a Coming Soon modal. */
   const isLocked = (href: string) => userRole === "member" && !isMemberPathLive(href);

@@ -1235,7 +1235,7 @@ export default function HealthNutritionPage() {
           <h1 className="mb-2 hidden text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:block">
             Nutrition
           </h1>
-          <div className="premium-glass-pill mx-auto flex w-full max-w-[calc(100vw-136px)] items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
+          <div className="premium-glass-pill mx-auto flex w-full max-w-[calc(100vw-176px)] items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
@@ -1594,7 +1594,7 @@ export default function HealthNutritionPage() {
                     : "bg-[#101828] text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] hover:brightness-110"
                 }`}
               >
-                {checkInTimeline.daysUntilNext === 0 ? "Start weekly check-in" : "Open check-in"}
+                {checkInTimeline.daysUntilNext === 0 ? "Start weekly check-in" : "Check-in"}
               </Link>
             </div>
           )}
@@ -1773,32 +1773,47 @@ export default function HealthNutritionPage() {
         {foodDialogOpen && (
           <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-4 sm:items-center sm:py-6">
             <div className="panel my-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium text-[var(--text-muted)]">
                     {activeMealDialog ? `Add To ${meals.find((meal) => meal.key === activeMealDialog)?.label}` : "Manage Foods"}
                   </p>
                   <h3 className="mt-1 text-3xl font-semibold leading-tight text-[var(--text)]">Search foods</h3>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFoodDialogOpen(false);
-                    setActiveMealDialog(null);
-                    setEditingFoodId(null);
-                  }}
-                  className="grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-lg text-[var(--text-muted)] transition hover:text-[var(--text)]"
-                  aria-label="Close food dialog"
-                >
-                  ×
-                </button>
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDialogTab("scan")}
+                    className={`inline-flex h-10 items-center gap-2 rounded-full border px-3 text-sm font-extrabold shadow-[0_12px_24px_rgba(20,210,220,0.18)] transition hover:-translate-y-0.5 hover:brightness-105 ${
+                      dialogTab === "scan"
+                        ? "border-[#14D2DC]/60 bg-[#14D2DC] text-[#071A21]"
+                        : "border-[#14D2DC]/40 bg-[linear-gradient(135deg,rgba(20,210,220,0.24),rgba(255,92,168,0.22))] text-[#0C7D85]"
+                    }`}
+                    aria-pressed={dialogTab === "scan"}
+                  >
+                    <Camera className="h-4 w-4" aria-hidden="true" />
+                    <span className="hidden min-[380px]:inline">Scan label</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFoodDialogOpen(false);
+                      setActiveMealDialog(null);
+                      setEditingFoodId(null);
+                    }}
+                    className="grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-lg text-[var(--text-muted)] transition hover:text-[var(--text)]"
+                    aria-label="Close food dialog"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
 
               <div className="mt-4 flex items-center gap-2">
                 {(
                   activeMealDialog
-                    ? (["recent", "mine", "scan", "usda", "create"] as const)
-                    : (["recent", "mine", "scan", "create"] as const)
+                    ? (["recent", "mine", "usda", "create"] as const)
+                    : (["recent", "mine", "create"] as const)
                 ).map((tab) => (
                   <button
                     key={tab}
@@ -1810,15 +1825,7 @@ export default function HealthNutritionPage() {
                         : "border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:text-[var(--text)]"
                     }`}
                   >
-                    {tab === "recent"
-                      ? "Recents"
-                      : tab === "mine"
-                        ? "My foods"
-                        : tab === "scan"
-                          ? "Scan label"
-                          : tab === "usda"
-                            ? "USDA"
-                            : "Create food"}
+                    {tab === "recent" ? "Recents" : tab === "mine" ? "My foods" : tab === "usda" ? "USDA" : "Create food"}
                   </button>
                 ))}
               </div>
@@ -2078,10 +2085,10 @@ export default function HealthNutritionPage() {
                         return (
                         <div
                           key={rowKey}
-                          className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3"
+                          className="rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-4 py-3"
                         >
-                          <span>
-                            <span className="block text-sm font-semibold text-[var(--text)]">{food.name}</span>
+                          <div className="min-w-0">
+                            <span className="block text-sm font-semibold leading-snug text-[var(--text)]">{food.name}</span>
                             {food.serving_size != null || (food.serving_unit ?? "").trim() ? (
                               <span className="mt-0.5 block text-[11px] uppercase tracking-[0.18em] text-[var(--text-soft)]">
                                 {formatServing(food.serving_size, food.serving_unit)}
@@ -2094,11 +2101,11 @@ export default function HealthNutritionPage() {
                               {caloriesTotal} cal · {proteinTotal}p · {carbsTotal}c · {fatTotal}f
                               {totalAmount ? <span className="ml-1.5">· {totalAmount}</span> : null}
                             </span>
-                          </span>
-                          <span className="flex items-center gap-2">
+                          </div>
+                          <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--line)]/70 pt-3">
                             {activeMealDialog ? (
                               <>
-                                <div className="flex items-center gap-1">
+                                <div className="mr-auto flex items-center gap-1">
                                   <button
                                     type="button"
                                     aria-label="Decrease servings"
@@ -2187,7 +2194,7 @@ export default function HealthNutritionPage() {
                                 Edit
                               </button>
                             ) : null}
-                          </span>
+                          </div>
                         </div>
                         );
                       })
