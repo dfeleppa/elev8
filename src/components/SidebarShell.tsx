@@ -626,7 +626,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   return (
     <div className="relative z-10 min-h-screen">
       <div className="lg:hidden">
-        <div className={`app-shell-topbar relative px-5 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] ${menuOpen ? "z-[70]" : "z-40"}`}>
+        <div className="app-shell-topbar relative z-40 px-5 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
           <div className="flex min-h-12 items-center justify-between gap-3">
             <button
               type="button"
@@ -654,7 +654,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 <MoreVertical className="h-5 w-5" aria-hidden="true" />
               </button>
               {menuOpen ? (
-                <div className="absolute right-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-[80] w-52 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/92 p-2 shadow-[0_20px_50px_rgba(16,24,40,0.16)] backdrop-blur-xl">
+                <div className="absolute right-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-[90] w-52 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/92 p-2 shadow-[0_20px_50px_rgba(16,24,40,0.16)] backdrop-blur-xl">
                   {canAccessGymView ? (
                     <button
                       type="button"
