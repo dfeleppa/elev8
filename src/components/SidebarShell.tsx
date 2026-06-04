@@ -1074,7 +1074,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             </button>
 
             {canAccessGymView ? (
-              <div className="relative">
+              <div className="app-shell-desktop-menu relative">
                 <button
                   type="button"
                   onClick={() => setMenuOpen((open) => !open)}
@@ -1089,7 +1089,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                   </svg>
                 </button>
                 {menuOpen ? (
-                  <div className="absolute right-0 z-40 mt-2 w-56 rounded-xl border border-[var(--line-strong)] bg-[var(--panel-2)] p-2 shadow-2xl">
+                  <div className="app-shell-desktop-menu-panel absolute right-0 mt-2 w-56 rounded-xl border border-[var(--line-strong)] p-2 shadow-2xl">
                     <button
                       type="button"
                       onClick={() => {

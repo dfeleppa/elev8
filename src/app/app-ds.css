@@ -226,9 +226,23 @@
 }
 
 .app-shell-topbar {
+  position: relative;
+  z-index: 90;
   background: rgba(247, 245, 239, 0.78);
   border-bottom: 1px solid rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(18px);
+}
+
+.app-shell-desktop-menu {
+  z-index: 100;
+}
+
+.app-shell-desktop-menu-panel {
+  z-index: 1000;
+  background: #fffdf8;
+  box-shadow:
+    0 28px 70px rgba(16, 24, 40, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
 }
 
 .premium-glass-card {
@@ -407,6 +421,12 @@
 
 :root[data-theme="dark"] .app-shell-topbar .absolute.right-0.top-\[calc\(3\.5rem\+env\(safe-area-inset-top\)\)\] button {
   color: #f8fafc !important;
+}
+
+:root[data-theme="dark"] .app-shell-desktop-menu-panel {
+  background: #121826 !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  box-shadow: 0 28px 70px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.06) !important;
 }
 
 :root[data-theme="dark"] nav[aria-label="Member mobile navigation"] {
