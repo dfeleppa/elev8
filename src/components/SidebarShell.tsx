@@ -624,12 +624,12 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   return (
     <div className="relative z-10 min-h-screen">
       <div className="lg:hidden">
-        <div className={`app-shell-topbar relative px-5 py-3 ${menuOpen ? "z-[60]" : "z-40"}`}>
-          <div className="flex items-center justify-between gap-3">
+        <div className={`app-shell-topbar relative px-5 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] ${menuOpen ? "z-[70]" : "z-40"}`}>
+          <div className="flex min-h-12 items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:bg-[rgba(20,210,220,0.08)]"
+              className="inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:bg-[rgba(20,210,220,0.08)]"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
@@ -645,14 +645,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <button
                 type="button"
                 onClick={() => setMenuOpen((open) => !open)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+                className="inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
                 aria-label="More options"
                 aria-expanded={menuOpen}
               >
                 <MoreVertical className="h-5 w-5" aria-hidden="true" />
               </button>
               {menuOpen ? (
-                <div className="absolute right-0 top-12 z-50 w-52 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/92 p-2 shadow-[0_20px_50px_rgba(16,24,40,0.16)] backdrop-blur-xl">
+                <div className="absolute right-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-[80] w-52 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/92 p-2 shadow-[0_20px_50px_rgba(16,24,40,0.16)] backdrop-blur-xl">
                   {canAccessGymView ? (
                     <button
                       type="button"
@@ -1076,7 +1076,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 <button
                   type="button"
                   onClick={() => setMenuOpen((open) => !open)}
-                  className="inline-flex items-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
+                  className="inline-flex h-10 w-10 touch-manipulation items-center justify-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
                   aria-label="More options"
                   aria-expanded={menuOpen}
                 >
