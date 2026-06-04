@@ -259,6 +259,173 @@
     var(--premium-canvas);
 }
 
+:root[data-theme="dark"] .nutrition-dashboard {
+  --nutrition-bg-main: #080b12;
+  --nutrition-bg-soft: #0e1320;
+  --nutrition-card: #121826;
+  --nutrition-card-elevated: #171f30;
+  --nutrition-card-border: rgba(255,255,255,0.08);
+  --nutrition-text-primary: #f8fafc;
+  --nutrition-text-secondary: #a8b3c7;
+  --nutrition-text-muted: #687386;
+  --nutrition-accent-teal: #16d4d8;
+  --nutrition-accent-pink: #ff4f93;
+  --nutrition-accent-purple: #a78bfa;
+  --nutrition-input-bg: #0b1020;
+  --nutrition-input-border: rgba(255,255,255,0.12);
+
+  background:
+    radial-gradient(circle at top left, rgba(22,212,216,0.08), transparent 30%),
+    radial-gradient(circle at top right, rgba(255,79,147,0.08), transparent 28%),
+    var(--nutrition-bg-main) !important;
+  color: var(--nutrition-text-primary) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .premium-glass-card {
+  background: linear-gradient(145deg, rgba(23,31,48,0.96), rgba(18,24,38,0.94)) !important;
+  border-color: var(--nutrition-card-border) !important;
+  box-shadow: 0 22px 60px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .premium-glass-pill {
+  background: rgba(18,24,38,0.92) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard h1,
+:root[data-theme="dark"] .nutrition-dashboard h2,
+:root[data-theme="dark"] .nutrition-dashboard h3,
+:root[data-theme="dark"] .nutrition-dashboard p,
+:root[data-theme="dark"] .nutrition-dashboard span {
+  color: inherit;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#17141F\],
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#101828\],
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#344054\] {
+  color: var(--nutrition-text-primary) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#475467\],
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#5F6B7A\],
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#667085\],
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#98A2B3\] {
+  color: var(--nutrition-text-secondary) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#0C7D85\],
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#0B7C84\],
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#0BA7B0\] {
+  color: var(--nutrition-accent-teal) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#B4236A\] {
+  color: var(--nutrition-accent-pink) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#6B4FD6\] {
+  color: var(--nutrition-accent-purple) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .text-\[\#FF5CA8\] {
+  color: var(--nutrition-accent-pink) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .bg-white,
+:root[data-theme="dark"] .nutrition-dashboard .bg-white\/60,
+:root[data-theme="dark"] .nutrition-dashboard .bg-white\/70,
+:root[data-theme="dark"] .nutrition-dashboard .bg-white\/72,
+:root[data-theme="dark"] .nutrition-dashboard .bg-white\/76,
+:root[data-theme="dark"] .nutrition-dashboard .bg-white\/78,
+:root[data-theme="dark"] .nutrition-dashboard .bg-white\/82,
+:root[data-theme="dark"] .nutrition-dashboard .bg-white\/84,
+:root[data-theme="dark"] .nutrition-dashboard .bg-white\/86,
+:root[data-theme="dark"] .nutrition-dashboard .bg-white\/88 {
+  background-color: var(--nutrition-bg-soft) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .border-\[\#D0D5DD\],
+:root[data-theme="dark"] .nutrition-dashboard .border-\[\#D4DAE4\]\/85,
+:root[data-theme="dark"] .nutrition-dashboard .border-\[\#DDE2EA\],
+:root[data-theme="dark"] .nutrition-dashboard .border-\[\#DDE2EA\]\/80,
+:root[data-theme="dark"] .nutrition-dashboard .border-\[\#DDE2EA\]\/85 {
+  border-color: var(--nutrition-card-border) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard input,
+:root[data-theme="dark"] .nutrition-dashboard select {
+  background-color: var(--nutrition-input-bg) !important;
+  border-color: var(--nutrition-input-border) !important;
+  color: var(--nutrition-text-primary) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard input::placeholder {
+  color: var(--nutrition-text-muted) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard svg circle[stroke="#E7EAEE"] {
+  stroke: #243044 !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .bg-\[\#E1E6EE\] {
+  background-color: #243044 !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .bg-\[\#101828\] {
+  background-color: var(--nutrition-text-primary) !important;
+  color: var(--nutrition-bg-main) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .bg-\[\#14D2DC\] {
+  background-color: var(--nutrition-accent-teal) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .bg-\[\#FF5CA8\] {
+  background-color: var(--nutrition-accent-pink) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .shadow-\[inset_0_1px_0_rgba\(255\,255\,255\,0\.94\)\],
+:root[data-theme="dark"] .nutrition-dashboard .shadow-\[inset_0_1px_0_rgba\(255\,255\,255\,0\.9\)\],
+:root[data-theme="dark"] .nutrition-dashboard .shadow-\[inset_0_1px_0_rgba\(255\,255\,255\,0\.82\)\] {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 28px rgba(0,0,0,0.20) !important;
+}
+
+:root[data-theme="dark"] .app-shell-topbar .inline-flex.h-12.w-12 {
+  background: rgba(18,24,38,0.90) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(18px);
+}
+
+:root[data-theme="dark"] .app-shell-topbar .absolute.right-0.top-\[calc\(3\.5rem\+env\(safe-area-inset-top\)\)\] {
+  background: rgba(18,24,38,0.94) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.36) !important;
+}
+
+:root[data-theme="dark"] .app-shell-topbar .absolute.right-0.top-\[calc\(3\.5rem\+env\(safe-area-inset-top\)\)\] button {
+  color: #f8fafc !important;
+}
+
+:root[data-theme="dark"] nav[aria-label="Member mobile navigation"] {
+  background: rgba(15,21,34,0.92) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  box-shadow: 0 -12px 30px rgba(0,0,0,0.35) !important;
+  backdrop-filter: blur(18px);
+}
+
+:root[data-theme="dark"] nav[aria-label="Member mobile navigation"] a,
+:root[data-theme="dark"] nav[aria-label="Member mobile navigation"] button {
+  color: #a8b3c7 !important;
+}
+
+:root[data-theme="dark"] nav[aria-label="Member mobile navigation"] a[aria-current="page"] {
+  background: rgba(22,212,216,0.10) !important;
+  color: #16d4d8 !important;
+}
+
 .app-shell-main {
   width: 100%;
   padding: 1.75rem 1.25rem 2.5rem;

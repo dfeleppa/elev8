@@ -1276,23 +1276,17 @@ export default function HealthNutritionPage() {
 
   return (
     <SidebarShell mainClassName="w-full">
-      <section
-        className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#F8FAFC] sm:px-8 lg:px-10 lg:py-6 2xl:px-12"
-        style={{
-          background:
-            "radial-gradient(circle at top left, rgba(22,212,216,0.08), transparent 30%), radial-gradient(circle at top right, rgba(255,79,147,0.08), transparent 28%), #080B12",
-        }}
-      >
+      <section className="nutrition-dashboard premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
         <div className="flex w-full flex-col gap-5">
         <header className="pointer-events-none relative z-[45] -mt-[60px] mb-[-4px] flex flex-col items-center sm:mt-0">
-          <h1 className="mb-2 hidden text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#F8FAFC] sm:block">
+          <h1 className="mb-2 hidden text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:block">
             Nutrition
           </h1>
-          <div className="pointer-events-auto mx-auto flex w-full max-w-[calc(100vw-176px)] items-center justify-center rounded-full border border-white/10 bg-[#121826]/92 p-1.5 shadow-[0_18px_42px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl sm:max-w-[330px]">
+          <div className="premium-glass-pill pointer-events-auto mx-auto flex w-full max-w-[calc(100vw-176px)] items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
-              className="grid h-9 w-9 place-items-center rounded-full bg-[#0B1020] text-[#A8B3C7] transition hover:bg-[#171F30] hover:text-[#F8FAFC]"
+              className="grid h-9 w-9 place-items-center rounded-full text-[#475467] transition hover:bg-white hover:text-[#17141F]"
               aria-label="Previous day"
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -1307,7 +1301,7 @@ export default function HealthNutritionPage() {
                   }
                   dateInputRef.current?.click();
                 }}
-                className="min-w-0 rounded-full px-2 py-2 text-center text-[13px] font-extrabold leading-none text-[#F8FAFC] transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#16D4D8]/35 min-[380px]:px-3 min-[380px]:text-[14px] sm:text-[15px]"
+                className="min-w-0 rounded-full px-2 py-2 text-center text-[13px] font-extrabold leading-none text-[#17141F] transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#14D2DC]/35 min-[380px]:px-3 min-[380px]:text-[14px] sm:text-[15px]"
                 aria-label="Open date picker"
               >
                 <span className="block truncate">{compactDateLabel}</span>
@@ -1325,7 +1319,7 @@ export default function HealthNutritionPage() {
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, 1))}
-              className="grid h-9 w-9 place-items-center rounded-full bg-[#0B1020] text-[#A8B3C7] transition hover:bg-[#171F30] hover:text-[#F8FAFC]"
+              className="grid h-9 w-9 place-items-center rounded-full text-[#475467] transition hover:bg-white hover:text-[#17141F]"
               aria-label="Next day"
             >
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
@@ -1341,18 +1335,18 @@ export default function HealthNutritionPage() {
         ) : null}
 
         <section className="space-y-3 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.55fr)] lg:items-stretch lg:gap-5 lg:space-y-0 2xl:grid-cols-[minmax(0,1fr)_minmax(440px,0.5fr)]">
-          <div className="flex h-full flex-col rounded-[28px] border border-white/10 bg-[linear-gradient(145deg,rgba(23,31,48,0.96),rgba(18,24,38,0.94))] p-3 shadow-[0_22px_60px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-5">
+          <div className="premium-glass-card flex h-full flex-col p-3 sm:p-5">
             <div className="flex items-center justify-between gap-3">
-              <div className="inline-flex items-center gap-1.5 text-[16px] font-extrabold text-[#F8FAFC] sm:gap-2 sm:text-[19px]">
-                <Flame className="h-4 w-4 text-[#FF4F93] sm:h-5 sm:w-5" aria-hidden="true" />
+              <div className="inline-flex items-center gap-1.5 text-[16px] font-extrabold text-[#17141F] sm:gap-2 sm:text-[19px]">
+                <Flame className="h-4 w-4 text-[#FF5CA8] sm:h-5 sm:w-5" aria-hidden="true" />
                 Macros
               </div>
-              <div className="inline-flex rounded-full border border-white/10 bg-[#0B1020] p-0.5 text-[10px] font-bold shadow-inner sm:text-[11px]">
+              <div className="inline-flex rounded-full border border-[#D0D5DD]/70 bg-white/70 p-0.5 text-[10px] font-bold shadow-inner sm:text-[11px]">
                 <button
                   type="button"
                   onClick={() => setMacroViewMode("consumed")}
                   className={`rounded-full px-2 py-1 transition sm:px-2.5 ${
-                    !showingRemaining ? "bg-[#F8FAFC] text-[#080B12]" : "text-[#A8B3C7]"
+                    !showingRemaining ? "bg-[#101828] text-white" : "text-[#667085]"
                   }`}
                 >
                   Consumed
@@ -1361,7 +1355,7 @@ export default function HealthNutritionPage() {
                   type="button"
                   onClick={() => setMacroViewMode("remaining")}
                   className={`rounded-full px-2 py-1 transition sm:px-2.5 ${
-                    showingRemaining ? "bg-[#F8FAFC] text-[#080B12]" : "text-[#A8B3C7]"
+                    showingRemaining ? "bg-[#101828] text-white" : "text-[#667085]"
                   }`}
                 >
                   Left
@@ -1370,7 +1364,7 @@ export default function HealthNutritionPage() {
             </div>
 
             <div className="mt-2.5 grid grid-cols-[96px_minmax(0,1fr)] items-center gap-2.5 sm:hidden">
-              <div className="relative grid aspect-square place-items-center rounded-[18px] border border-white/10 bg-[#0E1320] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_12px_28px_rgba(0,0,0,0.24)]">
+              <div className="relative grid aspect-square place-items-center rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)]">
                 <svg className="absolute inset-2" viewBox="0 0 150 150" aria-hidden="true">
                   <defs>
                     <linearGradient id="mobile-calorie-ring-compact" x1="18" y1="18" x2="132" y2="132">
@@ -1379,7 +1373,7 @@ export default function HealthNutritionPage() {
                     </linearGradient>
                   </defs>
                   <g transform="rotate(-90 75 75)">
-                    <circle cx="75" cy="75" r="57" fill="none" stroke="#243044" strokeWidth="13" />
+                    <circle cx="75" cy="75" r="57" fill="none" stroke="#E7EAEE" strokeWidth="13" />
                     <circle
                       cx="75"
                       cy="75"
@@ -1394,12 +1388,12 @@ export default function HealthNutritionPage() {
                 </svg>
                 <div className="relative z-10 flex max-w-[68px] flex-col items-center justify-center text-center">
                   <p
-                    className="w-full truncate text-[17px] font-extrabold leading-none text-[#F8FAFC]"
+                    className="w-full truncate text-[17px] font-extrabold leading-none text-[#17141F]"
                     style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
                   >
                     {roundToWhole(displayCalories).toLocaleString()}
                   </p>
-                  <span className="mt-1 text-[9.5px] font-extrabold uppercase leading-none tracking-[0.08em] text-[#A8B3C7]">
+                  <span className="mt-1 text-[9.5px] font-extrabold uppercase leading-none tracking-[0.08em] text-[#667085]">
                     Cal
                   </span>
                 </div>
@@ -1411,20 +1405,20 @@ export default function HealthNutritionPage() {
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
                   const shortLabel = index === 0 ? "P" : index === 1 ? "C" : "F";
                   return (
-                    <div key={`mobile-macro-${bar.label}`} className="grid min-w-0 grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2 rounded-[12px] border border-white/10 bg-[#0E1320] px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                      <p className="text-[12px] font-extrabold text-[#F8FAFC]">{shortLabel}</p>
-                      <div className="h-1.5 min-w-0 overflow-hidden rounded-full bg-[#243044]">
+                    <div key={`mobile-macro-${bar.label}`} className="grid min-w-0 grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2 rounded-[12px] border border-[#D4DAE4]/85 bg-white/84 px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
+                      <p className="text-[12px] font-extrabold text-[#17141F]">{shortLabel}</p>
+                      <div className="h-1.5 min-w-0 overflow-hidden rounded-full bg-[#E1E6EE]">
                         <div
                           className="h-full rounded-full transition-[width] duration-500"
                           style={{ width: `${bar.progress}%`, backgroundColor: baseColor }}
                         />
                       </div>
                       <p
-                        className="text-[11px] font-extrabold tabular-nums text-[#F8FAFC]"
+                        className="text-[11px] font-extrabold tabular-nums text-[#101828]"
                         style={statusColor ? { color: statusColor } : undefined}
                       >
                         {roundToWhole(bar.value)}
-                        <span className="font-bold text-[#A8B3C7]">/{roundToWhole(bar.target)}g</span>
+                        <span className="font-bold text-[#667085]">/{roundToWhole(bar.target)}g</span>
                       </p>
                     </div>
                   );
@@ -1442,7 +1436,7 @@ export default function HealthNutritionPage() {
                     </linearGradient>
                   </defs>
                   <g transform="rotate(-90 75 75)">
-                    <circle cx="75" cy="75" r="61" fill="none" stroke="#243044" strokeWidth="12" />
+                    <circle cx="75" cy="75" r="61" fill="none" stroke="#E7EAEE" strokeWidth="12" />
                     <circle
                       cx="75"
                       cy="75"
@@ -1458,12 +1452,12 @@ export default function HealthNutritionPage() {
                 </svg>
                 <div className="text-center">
                   <p
-                    className="text-[34px] font-bold leading-none tracking-[-0.02em] text-[#F8FAFC]"
+                    className="text-[34px] font-bold leading-none tracking-[-0.02em] text-[#17141F]"
                     style={STATUS_TEXT_COLOR[caloriesStatus] ? { color: STATUS_TEXT_COLOR[caloriesStatus]! } : undefined}
                   >
                     {roundToWhole(displayCalories).toLocaleString()}
                   </p>
-                  <p className="mt-1 text-[13px] font-bold text-[#A8B3C7]">
+                  <p className="mt-1 text-[13px] font-bold text-[#475467]">
                     / {roundToWhole(targetNumbers.calories || 0).toLocaleString()} Cal
                   </p>
                   <p
@@ -1480,23 +1474,23 @@ export default function HealthNutritionPage() {
                   const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : index === 2 ? "#FF5CA8" : "#7A8699";
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
                   return (
-                    <div key={bar.label} className="min-w-0 rounded-[14px] border border-white/10 bg-[#0E1320] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_12px_26px_rgba(0,0,0,0.22)] sm:rounded-[18px] sm:p-4">
+                    <div key={bar.label} className="min-w-0 rounded-[14px] border border-[#D4DAE4]/85 bg-white/84 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)] sm:rounded-[18px] sm:p-4 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_14px_30px_rgba(16,24,40,0.075)]">
                       <div className="min-w-0">
-                        <p className="text-[10.5px] font-extrabold text-[#F8FAFC] sm:text-[13px]">{bar.label}</p>
+                        <p className="text-[10.5px] font-extrabold text-[#17141F] sm:text-[13px]">{bar.label}</p>
                         <p
-                          className="mt-0.5 text-[12px] font-extrabold tabular-nums text-[#F8FAFC] sm:text-[15px]"
+                          className="mt-0.5 text-[12px] font-extrabold tabular-nums text-[#101828] sm:text-[15px]"
                           style={statusColor ? { color: statusColor } : undefined}
                         >
                           {roundToWhole(bar.value)}
                           <span
-                            className="font-bold text-[#A8B3C7]"
+                            className="font-bold text-[#5F6B7A]"
                             style={statusColor ? { color: statusColor } : undefined}
                           >
                             /{roundToWhole(bar.target)}g
                           </span>
                         </p>
                       </div>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#243044] sm:mt-3 sm:h-3.5">
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#E1E6EE] sm:mt-3 sm:h-3.5">
                         <div
                           className="h-full rounded-full transition-[width] duration-500"
                           style={{ width: `${bar.progress}%`, backgroundColor: baseColor }}
@@ -1514,41 +1508,41 @@ export default function HealthNutritionPage() {
               </div>
             </div>
 
-            <div className="mt-3 rounded-[18px] border border-white/10 bg-[#0E1320] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+            <div className="mt-3 rounded-[18px] border border-[#D4DAE4]/85 bg-white/72 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#A8B3C7]">Today&apos;s metrics</p>
+                <p className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#667085]">Today&apos;s metrics</p>
                 {bodyCompMessage ? (
-                  <span className="rounded-full bg-[#16D4D8]/12 px-2 py-1 text-[11px] font-extrabold text-[#16D4D8]">
+                  <span className="rounded-full bg-[#14D2DC]/12 px-2 py-1 text-[11px] font-extrabold text-[#0C7D85]">
                     {bodyCompMessage}
                   </span>
                 ) : null}
               </div>
               <div className="mt-2 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-2">
                 <label className="min-w-0 space-y-1">
-                  <span className="text-[11px] font-bold text-[#A8B3C7]">Weight</span>
+                  <span className="text-[11px] font-bold text-[#5F6B7A]">Weight</span>
                   <input
                     value={bodyCompDraft.weight}
                     onChange={(event) => setBodyCompDraft((prev) => ({ ...prev, weight: event.target.value }))}
                     placeholder="lb"
                     inputMode="decimal"
-                    className="w-full rounded-[14px] border border-white/12 bg-[#0B1020] px-3 py-2 text-sm font-bold text-[#F8FAFC] placeholder:text-[#687386] focus:border-[#16D4D8]/55 focus:outline-none"
+                    className="w-full rounded-[14px] border border-[#D4DAE4]/85 bg-white/86 px-3 py-2 text-sm font-bold text-[#17141F] placeholder:text-[#98A2B3] focus:border-[#14D2DC]/45 focus:outline-none"
                   />
                 </label>
                 <label className="min-w-0 space-y-1">
-                  <span className="text-[11px] font-bold text-[#A8B3C7]">Body Fat %</span>
+                  <span className="text-[11px] font-bold text-[#5F6B7A]">Body Fat %</span>
                   <input
                     value={bodyCompDraft.bodyFat}
                     onChange={(event) => setBodyCompDraft((prev) => ({ ...prev, bodyFat: event.target.value }))}
                     placeholder="%"
                     inputMode="decimal"
-                    className="w-full rounded-[14px] border border-white/12 bg-[#0B1020] px-3 py-2 text-sm font-bold text-[#F8FAFC] placeholder:text-[#687386] focus:border-[#16D4D8]/55 focus:outline-none"
+                    className="w-full rounded-[14px] border border-[#D4DAE4]/85 bg-white/86 px-3 py-2 text-sm font-bold text-[#17141F] placeholder:text-[#98A2B3] focus:border-[#14D2DC]/45 focus:outline-none"
                   />
                 </label>
                 <button
                   type="button"
                   onClick={() => void submitBodyComp()}
                   disabled={savingBodyComp}
-                  className="h-10 rounded-[14px] bg-[#F8FAFC] px-3 text-[12px] font-extrabold text-[#080B12] shadow-[0_10px_24px_rgba(0,0,0,0.28)] transition hover:brightness-95 disabled:opacity-60"
+                  className="h-10 rounded-[14px] bg-[#101828] px-3 text-[12px] font-extrabold text-white shadow-[0_8px_18px_rgba(16,24,40,0.16)] transition hover:brightness-110 disabled:opacity-60"
                 >
                   {savingBodyComp ? "Saving" : "Submit"}
                 </button>
@@ -1558,16 +1552,16 @@ export default function HealthNutritionPage() {
           </div>
 
           {coachPlanStatus === "loading" ? (
-            <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(145deg,rgba(23,31,48,0.96),rgba(18,24,38,0.94))] p-4 text-sm font-bold text-[#A8B3C7] shadow-[0_22px_60px_rgba(0,0,0,0.32)]">
+            <div className="premium-glass-card p-4 text-sm font-bold text-[#475467]">
               Loading coach plan...
             </div>
           ) : coachPlanStatus === "none" ? (
-            <div className="flex h-full flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(145deg,rgba(23,31,48,0.96),rgba(18,24,38,0.94))] p-5 text-[#F8FAFC] shadow-[0_22px_60px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-6">
+            <div className="premium-glass-card flex h-full flex-col overflow-hidden p-5 text-[#17141F] sm:p-6">
               {/* Macro ring visual */}
               <div className="relative mx-auto mb-4 flex h-40 w-full max-w-[280px] items-center justify-center sm:mb-5 sm:h-48">
                 <div className="relative flex h-32 w-32 items-center justify-center sm:h-36 sm:w-36">
                   <span className="absolute inset-0 rounded-full border border-[rgba(20,210,220,0.28)]" aria-hidden="true" />
-                  <span className="absolute inset-[10px] rounded-full border border-[rgba(255,79,147,0.24)]" aria-hidden="true" />
+                  <span className="absolute inset-[10px] rounded-full border border-[rgba(255,92,168,0.2)]" aria-hidden="true" />
                   <span
                     className="relative flex h-[88px] w-[88px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_28%,rgba(20,210,220,0.42),rgba(255,92,168,0.34))] shadow-[inset_0_2px_10px_rgba(255,255,255,0.7),0_12px_26px_rgba(20,210,220,0.18)] sm:h-24 sm:w-24"
                     aria-hidden="true"
@@ -1576,33 +1570,33 @@ export default function HealthNutritionPage() {
                   </span>
                 </div>
                 {/* Floating macro chips */}
-                <span className="absolute left-0 top-[42%] rounded-[12px] border border-[rgba(22,212,216,0.24)] bg-[#0B1020]/90 px-2.5 py-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.22)]">
-                  <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#16D4D8]">Protein</span>
-                  <span className="block text-[13px] font-extrabold leading-none text-[#16D4D8]">30%</span>
+                <span className="absolute left-0 top-[42%] rounded-[12px] border border-[rgba(20,210,220,0.22)] bg-white/82 px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
+                  <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#0B7C84]">Protein</span>
+                  <span className="block text-[13px] font-extrabold leading-none text-[#0B7C84]">30%</span>
                 </span>
-                <span className="absolute right-1 top-2 rounded-[12px] border border-[rgba(255,79,147,0.24)] bg-[#0B1020]/90 px-2.5 py-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.22)]">
-                  <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#FF4F93]">Carbs</span>
-                  <span className="block text-[13px] font-extrabold leading-none text-[#FF4F93]">40%</span>
+                <span className="absolute right-1 top-2 rounded-[12px] border border-[rgba(255,92,168,0.22)] bg-white/82 px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
+                  <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#B4236A]">Carbs</span>
+                  <span className="block text-[13px] font-extrabold leading-none text-[#B4236A]">40%</span>
                 </span>
-                <span className="absolute bottom-2 right-2 rounded-[12px] border border-[rgba(167,139,250,0.24)] bg-[#0B1020]/90 px-2.5 py-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.22)]">
-                  <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#A78BFA]">Fats</span>
-                  <span className="block text-[13px] font-extrabold leading-none text-[#A78BFA]">30%</span>
+                <span className="absolute bottom-2 right-2 rounded-[12px] border border-[rgba(124,92,224,0.22)] bg-white/82 px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
+                  <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#6B4FD6]">Fats</span>
+                  <span className="block text-[13px] font-extrabold leading-none text-[#6B4FD6]">30%</span>
                 </span>
               </div>
 
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[rgba(22,212,216,0.12)] px-3 py-1 text-[11px] font-bold text-[#16D4D8]">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[rgba(20,210,220,0.12)] px-3 py-1 text-[11px] font-bold text-[#0B7C84]">
                 <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                 Nutrition Coach
               </span>
-              <h2 className="mt-3 font-head text-[28px] font-extrabold leading-[1.05] tracking-tight text-[#F8FAFC] sm:text-[32px]">
+              <h2 className="mt-3 font-head text-[28px] font-extrabold leading-[1.05] tracking-tight text-[#17141F] sm:text-[32px]">
                 Start your coaching plan
               </h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-[#A8B3C7]">
+              <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
                 Set your goal, get your macros, and build a plan that fits your training.
               </p>
               <Link
                 href="/member/nutrition/coach"
-                className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(90deg,#16D4D8_0%,#A78BFA_52%,#FF4F93_100%)] px-5 py-3.5 text-[15px] font-extrabold text-white shadow-[0_16px_30px_rgba(255,79,147,0.22)] transition hover:brightness-105 sm:mt-5"
+                className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(90deg,#14D2DC_0%,#9C8BE0_52%,#FF5CA8_100%)] px-5 py-3.5 text-[15px] font-extrabold text-white shadow-[0_16px_30px_rgba(255,92,168,0.22)] transition hover:brightness-105 sm:mt-5"
               >
                 Set My Goal
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -1610,35 +1604,35 @@ export default function HealthNutritionPage() {
             </div>
           ) : (
             <div
-              className={`flex h-full flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(145deg,rgba(23,31,48,0.96),rgba(18,24,38,0.94))] p-3 text-[#F8FAFC] shadow-[0_22px_60px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-5 ${
-                checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#FF4F93]/50" : ""
+              className={`premium-glass-card flex h-full flex-col overflow-hidden p-3 text-[#17141F] sm:p-5 ${
+                checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#FF5CA8]/50" : ""
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="inline-flex items-center gap-1.5 text-[16px] font-extrabold text-[#F8FAFC] sm:gap-2 sm:text-[19px]">
-                  <Atom className="h-4 w-4 text-[#FF4F93] sm:h-5 sm:w-5" aria-hidden="true" />
+                <div className="inline-flex items-center gap-1.5 text-[16px] font-extrabold text-[#17141F] sm:gap-2 sm:text-[19px]">
+                  <Atom className="h-4 w-4 text-[#FF5CA8] sm:h-5 sm:w-5" aria-hidden="true" />
                   Coach
                 </div>
                 {showCoachGoalProgress ? (
-                  <span className="rounded-full border border-white/10 bg-[#0B1020] px-2 py-0.5 text-[10.5px] font-extrabold text-[#A8B3C7] sm:px-2.5 sm:py-1 sm:text-xs">
+                  <span className="rounded-full border border-[#DDE2EA] bg-white/78 px-2 py-0.5 text-[10.5px] font-extrabold text-[#475467] sm:px-2.5 sm:py-1 sm:text-xs">
                     {Math.round(weightProgressPercent)}% to goal
                   </span>
                 ) : null}
               </div>
               <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4">
-                <p className="min-w-0 truncate text-[16px] font-semibold leading-tight text-[#F8FAFC] sm:text-[19px]">
+                <p className="min-w-0 truncate text-[16px] font-semibold leading-tight text-[#17141F] sm:text-[19px]">
                   Goal: <span className="font-extrabold">{coachGoalLabel}</span>
                 </p>
                 <Link
                   href="/member/nutrition/coach"
-                  className="shrink-0 rounded-full bg-[#F8FAFC] px-3 py-1.5 text-[11px] font-bold text-[#080B12] shadow-[0_10px_22px_rgba(0,0,0,0.26)] transition hover:brightness-95 sm:px-4 sm:py-2 sm:text-xs"
+                  className="shrink-0 rounded-full bg-[#101828] px-3 py-1.5 text-[11px] font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] transition hover:brightness-110 sm:px-4 sm:py-2 sm:text-xs"
                 >
                   View plan
                 </Link>
               </div>
-              <div className="mt-3 rounded-[16px] border border-white/10 bg-[#0E1320] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:mt-4 sm:rounded-[20px] sm:p-3.5">
+              <div className="mt-3 rounded-[16px] border border-[#DDE2EA]/80 bg-white/60 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] sm:mt-4 sm:rounded-[20px] sm:p-3.5">
                 <div className="flex items-center justify-between gap-3">
-                  <span className={`text-[12.5px] font-extrabold text-[#F8FAFC] sm:text-[15px] ${checkInTimeline.daysUntilNext === 0 ? "uppercase text-[#FF4F93]" : ""}`}>
+                  <span className={`text-[12.5px] font-extrabold text-[#344054] sm:text-[15px] ${checkInTimeline.daysUntilNext === 0 ? "uppercase text-[#B4236A]" : ""}`}>
                   {checkInTimeline.daysUntilNext === 0
                     ? "Check-in due today"
                     : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until check-in`}
@@ -1650,19 +1644,19 @@ export default function HealthNutritionPage() {
                       <span
                         className={`mx-auto block h-5 rounded-[7px] border sm:h-8 sm:rounded-[10px] ${
                           day.state === "complete"
-                            ? "border-[#16D4D8]/45 bg-[#16D4D8]/24 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
+                            ? "border-[#14D2DC]/45 bg-[#14D2DC]/22 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]"
                             : day.state === "partial"
-                              ? "border-[#FF4F93]/45 bg-[linear-gradient(135deg,rgba(255,79,147,0.28)_0%,rgba(255,79,147,0.28)_50%,rgba(23,31,48,0.9)_50%,rgba(23,31,48,0.9)_100%)]"
-                              : "border-white/10 bg-[#121826]"
+                              ? "border-[#FF5CA8]/38 bg-[linear-gradient(135deg,rgba(255,92,168,0.2)_0%,rgba(255,92,168,0.2)_50%,rgba(255,255,255,0.74)_50%,rgba(255,255,255,0.74)_100%)]"
+                              : "border-[#DDE2EA] bg-white/72"
                         }`}
                       />
                       <span
                         className={`mt-1 block text-[8.5px] font-extrabold uppercase tracking-[0.02em] sm:mt-1.5 sm:text-[10.5px] sm:tracking-[0.06em] ${
                           day.state === "complete"
-                            ? "text-[#16D4D8]"
+                            ? "text-[#0C7D85]"
                             : day.state === "partial"
-                              ? "text-[#FF4F93]"
-                              : "text-[#A8B3C7]"
+                              ? "text-[#B4236A]"
+                              : "text-[#667085]"
                         }`}
                       >
                         <span className="sm:hidden">{day.label.slice(0, 1)}</span>
@@ -1676,8 +1670,8 @@ export default function HealthNutritionPage() {
                 href="/member/nutrition/coach"
                 className={`mt-3 flex items-center justify-center rounded-[16px] px-4 py-2.5 text-[12px] font-extrabold transition sm:mt-4 sm:rounded-[20px] sm:text-[13px] ${
                   checkInTimeline.daysUntilNext === 0
-                    ? "bg-[#FF4F93] text-white shadow-[0_10px_22px_rgba(255,79,147,0.28)] hover:brightness-110"
-                    : "bg-[#F8FAFC] text-[#080B12] shadow-[0_10px_22px_rgba(0,0,0,0.26)] hover:brightness-95"
+                    ? "bg-[#FF5CA8] text-white shadow-[0_10px_22px_rgba(255,92,168,0.28)] hover:brightness-110"
+                    : "bg-[#101828] text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] hover:brightness-110"
                 }`}
               >
                 {checkInTimeline.daysUntilNext === 0 ? "Start weekly check-in" : "Check-in"}
@@ -1689,11 +1683,11 @@ export default function HealthNutritionPage() {
 
         <section className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 xl:grid-cols-3 2xl:grid-cols-4">
           <div className="flex items-center justify-between gap-3 px-1 md:col-span-full">
-            <h2 className="text-[19px] font-extrabold text-[#F8FAFC]">Meals</h2>
+            <h2 className="text-[19px] font-extrabold text-[#17141F]">Meals</h2>
             <button
               type="button"
               onClick={() => setManualEntryOpen(true)}
-              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/10 bg-[#121826]/90 px-3.5 py-2 text-[12px] font-extrabold text-[#F8FAFC] shadow-[0_10px_26px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:bg-[#171F30] sm:text-[13px]"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#D4DAE4]/85 bg-white/84 px-3.5 py-2 text-[12px] font-extrabold text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_8px_18px_rgba(16,24,40,0.06)] transition hover:bg-white sm:text-[13px]"
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               Quick add macros
@@ -1704,12 +1698,12 @@ export default function HealthNutritionPage() {
             return (
               <div
                 key={`mobile-meal-${meal.key}`}
-                className="relative rounded-[28px] border border-white/10 bg-[linear-gradient(145deg,rgba(23,31,48,0.96),rgba(18,24,38,0.94))] p-4 shadow-[0_22px_60px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.06)]"
+                className="premium-glass-card relative p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[17px] font-bold leading-tight text-[#F8FAFC]">{meal.label}</p>
-                    <p className="mt-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-[#A8B3C7]">
+                    <p className="text-[17px] font-bold leading-tight text-[#17141F]">{meal.label}</p>
+                    <p className="mt-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-[#5F6B7A]">
                       {Math.round(meal.totals.calories).toLocaleString()} kcal | P{formatGrams(meal.totals.protein)} | C{formatGrams(meal.totals.carbs)} | F{formatGrams(meal.totals.fat)}
                     </p>
                   </div>
@@ -1717,7 +1711,7 @@ export default function HealthNutritionPage() {
                     <button
                       type="button"
                       onClick={() => setMealMenuOpen((current) => (current === meal.key ? null : meal.key))}
-                      className="grid h-9 w-9 place-items-center rounded-full text-[#A8B3C7] transition hover:bg-white/10 hover:text-[#F8FAFC]"
+                      className="grid h-9 w-9 place-items-center rounded-full text-[#667085] transition hover:bg-white/80 hover:text-[#17141F]"
                       aria-label={`Meal actions for ${meal.label}`}
                     >
                       <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -1732,7 +1726,7 @@ export default function HealthNutritionPage() {
                         setMealMenuOpen(null);
                         openMealDialog(meal.key);
                       }}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-[#16D4D8] text-[#071A1C] shadow-[0_10px_24px_rgba(22,212,216,0.26)] transition hover:brightness-105"
+                      className="grid h-9 w-9 place-items-center rounded-full bg-[#14D2DC] text-[#071A1C] shadow-[0_10px_24px_rgba(20,210,220,0.26)] transition hover:brightness-105"
                       aria-label={`Add to ${meal.label}`}
                     >
                       <Plus className="h-4 w-4" aria-hidden="true" />
@@ -1741,11 +1735,11 @@ export default function HealthNutritionPage() {
                 </div>
 
                 {mealMenuOpen === meal.key ? (
-                  <div className="absolute right-4 top-14 z-20 w-44 overflow-hidden rounded-2xl border border-white/10 bg-[#171F30] shadow-[0_18px_38px_rgba(0,0,0,0.32)]">
+                  <div className="absolute right-4 top-14 z-20 w-44 overflow-hidden rounded-2xl border border-white/80 bg-white shadow-[0_18px_38px_rgba(16,24,40,0.14)]">
                     <button
                       type="button"
                       onClick={() => void deleteMealEntries(meal.key)}
-                      className="block w-full px-4 py-3 text-left text-sm font-semibold text-rose-300 transition hover:bg-white/10"
+                      className="block w-full px-4 py-3 text-left text-sm font-semibold text-rose-500 transition hover:bg-[#F7F5EF]"
                     >
                       Delete meal
                     </button>
@@ -1758,7 +1752,7 @@ export default function HealthNutritionPage() {
                         setCopyTargetMeal(meal.key);
                       }}
                       disabled={copyingMeal === meal.key}
-                      className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#A8B3C7] transition hover:bg-white/10 disabled:opacity-60"
+                      className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#475467] transition hover:bg-[#F7F5EF] disabled:opacity-60"
                     >
                       {copyingMeal === meal.key ? "Copying..." : "Copy meal"}
                     </button>
@@ -1776,11 +1770,11 @@ export default function HealthNutritionPage() {
                       const entryF = formatGrams((entry.fat ?? 0) * quantity);
                       const isEditingServing = editingEntryId === entry.id;
                       return (
-                        <div key={`mobile-entry-${entry.id}`} className="rounded-2xl border border-white/10 bg-[#0E1320] p-3">
+                        <div key={`mobile-entry-${entry.id}`} className="rounded-2xl border border-[#DDE2EA]/85 bg-white/70 p-3">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="text-[14px] font-bold leading-tight text-[#F8FAFC]">{entry.entry_name}</p>
-                              <p className="mt-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#A8B3C7]">
+                              <p className="text-[14px] font-bold leading-tight text-[#17141F]">{entry.entry_name}</p>
+                              <p className="mt-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#5F6B7A]">
                                 {servingLabel}, {entryCal} CAL | C{entryC} | P{entryP} | F{entryF}
                               </p>
                             </div>
@@ -1788,7 +1782,7 @@ export default function HealthNutritionPage() {
                               <button
                                 type="button"
                                 onClick={() => openServingSizeEditor(entry.id, entry.quantity)}
-                                className="grid h-8 w-8 place-items-center rounded-full text-[#A8B3C7] transition hover:bg-white/10 hover:text-[#F8FAFC]"
+                                className="grid h-8 w-8 place-items-center rounded-full text-[#667085] transition hover:bg-white hover:text-[#17141F]"
                                 aria-label={`Edit servings for ${entry.entry_name}`}
                               >
                                 <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -1796,7 +1790,7 @@ export default function HealthNutritionPage() {
                               <button
                                 type="button"
                                 onClick={() => deleteEntry(entry.id)}
-                                className="grid h-8 w-8 place-items-center rounded-full text-[#A8B3C7] transition hover:bg-rose-500/10 hover:text-rose-300"
+                                className="grid h-8 w-8 place-items-center rounded-full text-[#667085] transition hover:bg-rose-50 hover:text-rose-500"
                                 aria-label={`Remove ${entry.entry_name}`}
                               >
                                 <X className="h-4 w-4" aria-hidden="true" />
@@ -1805,7 +1799,7 @@ export default function HealthNutritionPage() {
                           </div>
                           {isEditingServing ? (
                             <div className="mt-3 flex items-center justify-between gap-3">
-                              <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#A8B3C7]">
+                              <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#667085]">
                                 Servings
                               </span>
                               <div className="flex items-center gap-2">
@@ -1819,14 +1813,14 @@ export default function HealthNutritionPage() {
                                       setEditServingDraft("");
                                     }
                                   }}
-                                  className="h-9 w-20 rounded-xl border border-white/12 bg-[#0B1020] px-2 text-sm font-bold text-[#F8FAFC] focus:border-[#16D4D8] focus:outline-none"
+                                  className="h-9 w-20 rounded-xl border border-[#D0D5DD] bg-white px-2 text-sm font-bold text-[#101828] focus:border-[#14D2DC] focus:outline-none"
                                   inputMode="decimal"
                                   aria-label="Edit servings"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => void saveServingSize(entry.id)}
-                                  className="grid h-9 w-9 place-items-center rounded-full bg-[#F8FAFC] text-[#080B12]"
+                                  className="grid h-9 w-9 place-items-center rounded-full bg-[#101828] text-white"
                                   aria-label="Save servings"
                                 >
                                   <Check className="h-4 w-4" aria-hidden="true" />
@@ -1845,13 +1839,13 @@ export default function HealthNutritionPage() {
                       setMealMenuOpen(null);
                       openMealDialog(meal.key);
                     }}
-                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0E1320] px-4 py-4 text-sm font-bold text-[#A8B3C7] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_12px_28px_rgba(0,0,0,0.2)] transition hover:border-[#16D4D8]/45 hover:bg-[#121826] hover:text-[#16D4D8]"
+                    className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DDE2EA]/80 bg-white/76 px-4 py-4 text-sm font-bold text-[#667085] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_24px_rgba(16,24,40,0.045)] transition hover:border-[#14D2DC]/45 hover:bg-white/88 hover:text-[#0C7D85] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_12px_28px_rgba(20,210,220,0.1)]"
                   >
                     <span className="text-left">
-                      <span className="block text-[#F8FAFC]">No food logged yet</span>
-                      <span className="block text-[12px] font-extrabold text-[#16D4D8]">Tap to start logging</span>
+                      <span className="block text-[#344054]">No food logged yet</span>
+                      <span className="block text-[12px] font-extrabold text-[#0C7D85]">Tap to start logging</span>
                     </span>
-                    <span className="grid h-8 w-8 place-items-center rounded-full border border-[#16D4D8]/35 bg-[#16D4D8]/12 text-[#16D4D8]">
+                    <span className="grid h-8 w-8 place-items-center rounded-full border border-[#14D2DC]/35 bg-[#14D2DC]/12 text-[#0C7D85]">
                       <Plus className="h-4 w-4" aria-hidden="true" />
                     </span>
                   </button>
