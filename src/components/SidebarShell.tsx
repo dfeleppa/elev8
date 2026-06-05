@@ -1002,31 +1002,13 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       </aside>
 
       <div className={`${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
-        <header className="app-shell-topbar hidden h-14 w-full items-center justify-end px-5 text-[var(--text)] lg:flex">
-          <div className="flex items-center gap-4 text-sm">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
-              aria-label={themeToggleLabel}
-            >
-              {themeIcon}
-            </button>
-
-            <button
-              type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
-              aria-label="TV display mode"
-              title="TV Display Mode"
-            >
-              <Tv className="h-4 w-4" aria-hidden="true" />
-            </button>
-
+        <header className="app-shell-topbar hidden h-14 w-full items-center justify-between gap-4 px-5 text-[var(--text)] lg:flex">
+          <div className="flex min-w-0 items-center text-sm">
             {tracks.length > 1 ? (
               <select
                 value={selectedTrackId ?? ""}
                 onChange={(e) => handleTrackChange(e.target.value)}
-                className="max-w-[200px] cursor-pointer bg-transparent text-xs text-[var(--text-muted)] outline-none transition hover:text-[var(--text)]"
+                className="max-w-[220px] cursor-pointer truncate bg-transparent text-xs text-[var(--text-muted)] outline-none transition hover:text-[var(--text)]"
                 aria-label="Select track"
               >
                 {tracks.map((t) => (
@@ -1036,8 +1018,19 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 ))}
               </select>
             ) : (
-              <span className="truncate text-xs text-[var(--text-muted)]">{currentTrack}</span>
+              <span className="max-w-[220px] truncate text-xs text-[var(--text-muted)]">{currentTrack}</span>
             )}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-4 text-sm">
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
+              aria-label="TV display mode"
+              title="TV Display Mode"
+            >
+              <Tv className="h-4 w-4" aria-hidden="true" />
+            </button>
 
             <button
               type="button"
@@ -1050,17 +1043,13 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </span>
             </button>
 
-            {canAccessGymView ? (
-              <Link
-                href="/admin/content"
-                className="inline-flex items-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
-                aria-label="Messenger"
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                  <path d="M4 6h16v10H8l-4 3z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.7" />
-                </svg>
-              </Link>
-            ) : null}
+            <Link
+              href="/member/chat"
+              className="inline-flex items-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
+              aria-label="Messenger"
+            >
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            </Link>
 
             <button
               type="button"
@@ -1073,23 +1062,34 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </svg>
             </button>
 
-            {canAccessGymView ? (
-              <div className="app-shell-desktop-menu relative">
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen((open) => !open)}
-                  className="inline-flex h-10 w-10 touch-manipulation items-center justify-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
-                  aria-label="More options"
-                  aria-expanded={menuOpen}
-                >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                    <circle cx="12" cy="5" r="1.8" fill="currentColor" />
-                    <circle cx="12" cy="12" r="1.8" fill="currentColor" />
-                    <circle cx="12" cy="19" r="1.8" fill="currentColor" />
-                  </svg>
-                </button>
-                {menuOpen ? (
-                  <div className="app-shell-desktop-menu-panel absolute right-0 mt-2 w-56 rounded-xl border border-[var(--line-strong)] p-2 shadow-2xl">
+            <div className="app-shell-desktop-menu relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                className="inline-flex h-10 w-10 touch-manipulation items-center justify-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
+                aria-label="More options"
+                aria-expanded={menuOpen}
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                  <circle cx="12" cy="5" r="1.8" fill="currentColor" />
+                  <circle cx="12" cy="12" r="1.8" fill="currentColor" />
+                  <circle cx="12" cy="19" r="1.8" fill="currentColor" />
+                </svg>
+              </button>
+              {menuOpen ? (
+                <div className="app-shell-desktop-menu-panel absolute right-0 mt-2 w-56 rounded-xl border border-[var(--line-strong)] p-2 shadow-2xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      toggleTheme();
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--text)] transition hover:bg-[var(--panel)]"
+                  >
+                    {themeIcon}
+                    {themeToggleLabel}
+                  </button>
+                  {canAccessGymView ? (
                     <button
                       type="button"
                       onClick={() => {
@@ -1101,18 +1101,18 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                     >
                       {isImportingResults ? "Importing workout results..." : "Import Workout Results (CSV)"}
                     </button>
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--text)] transition hover:bg-[var(--panel)]"
-                    >
-                      <LogOut className="h-4 w-4" aria-hidden="true" />
-                      Sign out
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--text)] transition hover:bg-[var(--panel)]"
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    Sign out
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </header>
 
