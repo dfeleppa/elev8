@@ -273,6 +273,36 @@
     var(--premium-canvas);
 }
 
+.gym-dashboard-canvas {
+  --bg: #fbfaf6;
+  --bg-2: #f7f4ed;
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel-2: rgba(247, 244, 237, 0.9);
+  --panel-3: #eee9df;
+  --line: rgba(21, 19, 16, 0.075);
+  --line-strong: rgba(21, 19, 16, 0.13);
+  --text: #17141f;
+  --text-muted: #4d5968;
+  --text-soft: #717b89;
+  --input-bg: rgba(255, 255, 255, 0.64);
+  --input-bg-strong: rgba(255, 255, 255, 0.92);
+  --shadow-sm: 0 16px 38px rgba(16, 24, 40, 0.07);
+
+  background:
+    linear-gradient(180deg, #fffdf9 0%, #fbfaf6 34%, #f7f4ed 100%);
+  color: var(--text);
+}
+
+.gym-dashboard-canvas .panel,
+.gym-dashboard-canvas .panel-muted {
+  box-shadow: var(--shadow-sm);
+}
+
+.gym-dashboard-canvas .accent-ink {
+  background: #15324d;
+  color: #f8fbff;
+}
+
 :root[data-theme="dark"] .nutrition-dashboard {
   --nutrition-bg-main: #080b12;
   --nutrition-bg-soft: #0e1320;

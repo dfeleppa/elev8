@@ -275,7 +275,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
   const trendMinTotal = Math.min(0, ...trend.map((p) => p.totalMembers));
 
   return (
-    <>
+    <section className="gym-dashboard-canvas min-h-[calc(100vh-3.5rem)] w-full pb-12">
       {/* Topbar */}
       <header className="px-6 pt-4">
         <div className="flex items-start justify-between gap-4">
@@ -340,7 +340,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
         </nav>
       </header>
 
-      <div className="space-y-6 px-6 pb-12 pt-6">
+      <div className="space-y-6 px-6 pt-6">
         {/* Hero KPI row */}
         <section className="grid grid-cols-12 gap-4">
           {/* MRR — accent ink */}
@@ -983,7 +983,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
           </div>
         </div>
       </div>
-    </>
+    </section>
   );
 }
 
