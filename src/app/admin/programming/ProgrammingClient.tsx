@@ -1,6 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Dumbbell,
+  Layers3,
+  Plus,
+  Sparkles,
+} from "lucide-react";
 import ProgrammingSubheader from "@/components/admin/ProgrammingSubheader";
 import TipTapEditor from "@/components/owner/TipTapEditor";
 import TrackProgressionPanel from "@/components/admin/TrackProgressionPanel";
@@ -245,6 +257,12 @@ export default function ProgrammingClient() {
     viewMode === "week"
       ? weekDays
       : [{ label: toHeaderDayLabel(parseDateKey(selectedDay)), date: selectedDay, dateObj: parseDateKey(selectedDay) }];
+
+  const selectedTrackName = tracks.find((track) => track.id === selectedTrackId)?.name ?? "Programming Track";
+  const scheduledDays = weekDays.filter((day) => (sessions[day.date] ?? []).length > 0).length;
+  const emptyDays = 7 - scheduledDays;
+  const totalBlocks = weekDays.reduce((total, day) => total + (sessions[day.date] ?? []).length, 0);
+  const weekStatusLabel = loading ? "Syncing" : totalBlocks > 0 ? "Ready" : "Draft";
 
   useEffect(() => {
     let isMounted = true;
@@ -548,8 +566,399 @@ export default function ProgrammingClient() {
   return (
     <>
       <ProgrammingSubheader />
-    <section className="space-y-4">
-      <header className="rounded-2xl border border-white/10 bg-white/5/5 p-3">
+    <section className="programming-dashboard premium-main-glow min-h-[calc(100vh-3.5rem)] space-y-5 px-5 py-5 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
+      <header className="relative z-10 flex flex-col items-center gap-3 text-center">
+        <h1 className="text-[28px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:text-[34px]">
+          Programming
+        </h1>
+        <div className="premium-glass-pill flex w-full max-w-[430px] items-center justify-center p-1.5">
+          <button
+            type="button"
+            onClick={() => stepDate(-1)}
+            className="grid h-10 w-10 place-items-center rounded-full text-[#475467] transition hover:bg-white hover:text-[#17141F]"
+            aria-label="Previous"
+          >
+            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <div className="flex min-w-0 flex-1 items-center justify-center px-1">
+            <button
+              type="button"
+              onClick={() => datePickerRef.current?.showPicker?.() ?? datePickerRef.current?.click()}
+              className="min-w-0 rounded-full px-3 py-2 text-center text-[14px] font-extrabold leading-none text-[#17141F] transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#14D2DC]/35 sm:text-[15px]"
+              aria-label="Pick date"
+            >
+              <span className="block truncate">{headerLabel}</span>
+            </button>
+            <input
+              ref={datePickerRef}
+              type="date"
+              value={formatDateKey(currentDate)}
+              onChange={(event) => {
+                if (!event.target.value) {
+                  return;
+                }
+                const next = parseDateKey(event.target.value);
+                setCurrentDate(next);
+                setSelectedDay(event.target.value);
+              }}
+              className="sr-only"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => stepDate(1)}
+            className="grid h-10 w-10 place-items-center rounded-full text-[#475467] transition hover:bg-white hover:text-[#17141F]"
+            aria-label="Next"
+          >
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="premium-glass-card flex w-full flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#667085]">View</span>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[#D4DAE4]/85 bg-white/76 px-3 py-2 text-[12px] font-extrabold text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
+              <input
+                type="checkbox"
+                checked={showDetails}
+                onChange={(event) => setShowDetails(event.target.checked)}
+                className="h-4 w-4 rounded border-[#D0D5DD] accent-[#14D2DC]"
+              />
+              Show Details
+            </label>
+          </div>
+
+          <div className="inline-flex justify-center rounded-full border border-[#D0D5DD]/70 bg-white/70 p-0.5 text-[12px] font-bold shadow-inner">
+            {(["month", "week", "day"] as ViewMode[]).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setViewMode(mode)}
+                className={`rounded-full px-3 py-1.5 transition sm:px-4 ${
+                  viewMode === mode ? "bg-[#101828] text-white" : "text-[#667085] hover:bg-white hover:text-[#17141F]"
+                }`}
+              >
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      <section className="space-y-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(330px,0.42fr)] lg:items-start lg:gap-5 lg:space-y-0">
+        <div className="premium-glass-card flex min-w-0 flex-col p-4 sm:p-5">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 text-[18px] font-extrabold text-[#17141F] sm:text-[21px]">
+                <CalendarDays className="h-5 w-5 text-[#FF5CA8]" aria-hidden="true" />
+                Week Overview
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#667085]" htmlFor="track-selector-redesign">
+                  Track
+                </label>
+                <select
+                  id="track-selector-redesign"
+                  name="track"
+                  className="min-h-10 rounded-full border border-[#D4DAE4]/85 bg-white/86 px-4 py-2 text-[13px] font-extrabold text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.94)] focus:border-[#14D2DC]/50 focus:outline-none"
+                  value={selectedTrackId}
+                  onChange={(event) => setSelectedTrackId(event.target.value)}
+                >
+                  {tracks.length === 0 ? <option value="">No tracks yet</option> : null}
+                  {tracks.map((track) => (
+                    <option key={track.id} value={track.id}>
+                      {track.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#14D2DC]/12 px-3 py-1 text-[11px] font-extrabold text-[#0B7C84]">
+                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  {weekStatusLabel}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDay(formatDateKey(currentDate));
+                  setSelectedSessionId(null);
+                  setEditorOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#FF5CA8] px-4 py-2 text-[12px] font-extrabold text-white shadow-[0_12px_24px_rgba(255,92,168,0.24)] transition hover:brightness-105"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Add block
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedBlockIds(new Set(Object.values(sessions).flat().map((session) => session.id)))}
+                disabled={totalBlocks === 0}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#D4DAE4]/85 bg-white/84 px-4 py-2 text-[12px] font-extrabold text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_8px_18px_rgba(16,24,40,0.06)] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Copy className="h-4 w-4 text-[#0B7C84]" aria-hidden="true" />
+                Copy week
+              </button>
+              <Link
+                href="/admin/programming/builder"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#D4DAE4]/85 bg-white/84 px-4 py-2 text-[12px] font-extrabold text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_8px_18px_rgba(16,24,40,0.06)] transition hover:bg-white"
+              >
+                <Layers3 className="h-4 w-4 text-[#FF5CA8]" aria-hidden="true" />
+                Templates
+              </Link>
+            </div>
+          </div>
+
+          {viewMode === "month" ? (
+            <div className="mt-5 rounded-[22px] border border-[#D4DAE4]/85 bg-white/60 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
+              <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#667085]">
+                {weekDayNames.map((name) => (
+                  <span key={name}>{name}</span>
+                ))}
+              </div>
+              <div className="mt-2 grid grid-cols-7 gap-1.5">
+                {monthDays.map((day) => {
+                  const daySessions = sessions[day.key] ?? [];
+                  const isSelectedDay = selectedDay === day.key;
+                  return (
+                    <button
+                      key={day.key}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDay(day.key);
+                        setCurrentDate(day.dateObj);
+                        setSelectedSessionId(daySessions[0]?.id ?? null);
+                        setEditorOpen(true);
+                      }}
+                      className={`min-h-[86px] rounded-[16px] border p-2 text-left transition ${
+                        isSelectedDay
+                          ? "border-[#14D2DC]/45 bg-[#14D2DC]/16 shadow-[0_10px_22px_rgba(20,210,220,0.14)]"
+                          : day.inMonth
+                            ? "border-[#DDE2EA] bg-white/76 hover:bg-white"
+                            : "border-[#E7EAEE] bg-white/38 text-[#98A2B3]"
+                      }`}
+                    >
+                      <span className="text-[12px] font-extrabold text-[#475467]">{day.dateObj.getDate()}</span>
+                      <span className="mt-3 block text-[11px] font-bold text-[#667085]">
+                        {daySessions.length ? `${daySessions.length} block${daySessions.length === 1 ? "" : "s"}` : "Open"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className={`mt-5 grid gap-3 ${viewMode === "day" ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7"}`}>
+              {visibleColumns.map((day) => {
+                const daySessions = sessions[day.date] ?? [];
+                const isSelectedDay = selectedDay === day.date;
+                return (
+                  <div
+                    key={day.date}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      setSelectedDay(day.date);
+                      setSelectedSessionId(daySessions[0]?.id ?? null);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter" && event.key !== " ") return;
+                      event.preventDefault();
+                      setSelectedDay(day.date);
+                      setSelectedSessionId(daySessions[0]?.id ?? null);
+                    }}
+                    className={`group flex min-h-[280px] flex-col rounded-[22px] border p-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_24px_rgba(16,24,40,0.055)] transition hover:-translate-y-0.5 hover:bg-white ${
+                      isSelectedDay
+                        ? "border-[#14D2DC]/45 bg-white ring-2 ring-[#14D2DC]/22"
+                        : "border-[#D4DAE4]/85 bg-white/76"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-[16px] font-extrabold text-[#17141F]">{day.label.split(" ")[0]}</p>
+                        <p className="mt-0.5 text-[12px] font-bold text-[#667085]">
+                          {day.dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </p>
+                      </div>
+                      <span className={`rounded-full px-2.5 py-1 text-[10.5px] font-extrabold ${
+                        daySessions.length ? "bg-[#14D2DC]/12 text-[#0B7C84]" : "bg-[#FF5CA8]/10 text-[#B4236A]"
+                      }`}>
+                        {daySessions.length ? `${daySessions.length} set` : "Empty"}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex-1 space-y-2">
+                      {daySessions.length === 0 ? (
+                        <div className="rounded-[18px] border border-[#DDE2EA]/85 bg-white/70 px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
+                          <p className="text-[14px] font-extrabold text-[#17141F]">No blocks yet</p>
+                          <p className="mt-1 text-[12px] font-semibold leading-5 text-[#667085]">Add a workout block</p>
+                        </div>
+                      ) : null}
+
+                      {daySessions.map((session) => {
+                        const scoreLabel = getScoreLabel(session.block);
+                        const visibleLines = showDetails ? session.lines : session.lines.slice(0, 2);
+                        const isSelected = selectedSessionId === session.id;
+                        const isChecked = selectedBlockIds.has(session.id);
+                        return (
+                          <div
+                            key={session.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (selectionActive) {
+                                toggleBlockSelection(session.id);
+                                return;
+                              }
+                              setSelectedDay(day.date);
+                              setSelectedSessionId(session.id);
+                              setEditorOpen(true);
+                            }}
+                            onKeyDown={(event) => {
+                              if (event.key !== "Enter" && event.key !== " ") return;
+                              event.preventDefault();
+                              if (selectionActive) {
+                                toggleBlockSelection(session.id);
+                                return;
+                              }
+                              setSelectedDay(day.date);
+                              setSelectedSessionId(session.id);
+                              setEditorOpen(true);
+                            }}
+                            className={`relative rounded-[16px] border px-3 py-3 transition ${
+                              isChecked
+                                ? "border-[#14D2DC]/55 bg-[#14D2DC]/12 ring-2 ring-[#14D2DC]/20"
+                                : isSelected && !selectionActive
+                                  ? "border-[#101828]/20 bg-white"
+                                  : "border-[#DDE2EA]/85 bg-white/74 hover:border-[#14D2DC]/35"
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                toggleBlockSelection(session.id);
+                              }}
+                              aria-label={isChecked ? "Deselect workout" : "Select workout"}
+                              aria-pressed={isChecked}
+                              className={`absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full border text-[11px] font-extrabold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#14D2DC]/40 ${
+                                isChecked
+                                  ? "border-[#14D2DC] bg-[#14D2DC] text-[#071A1C]"
+                                  : "border-[#D4DAE4] bg-white/82 text-[#98A2B3] opacity-0 group-hover:opacity-100 hover:text-[#17141F]"
+                              }`}
+                            >
+                              ✓
+                            </button>
+                            <p className="pr-7 text-[14px] font-extrabold leading-tight text-[#17141F]">{session.title}</p>
+                            {scoreLabel ? (
+                              <span className="mt-2 inline-flex rounded-full bg-[#101828]/8 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#475467]">
+                                {scoreLabel}
+                              </span>
+                            ) : null}
+                            {showDetails && visibleLines.length > 0 ? (
+                              <div className="mt-2 space-y-1 text-[12px] font-semibold leading-5 text-[#667085]">
+                                {visibleLines.slice(0, 4).map((line, idx) => (
+                                  <p key={`${session.id}-${idx}`} className="line-clamp-2">{line}</p>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectedDay(day.date);
+                        setSelectedSessionId(null);
+                        setEditorOpen(true);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setSelectedDay(day.date);
+                        setSelectedSessionId(null);
+                        setEditorOpen(true);
+                      }}
+                      className="mt-3 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full border border-[#D4DAE4]/85 bg-white/84 text-[12px] font-extrabold text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.94)] transition hover:border-[#FF5CA8]/35 hover:text-[#B4236A]"
+                    >
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                      Add block
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <aside className="premium-glass-card flex h-full flex-col p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="inline-flex items-center gap-2 text-[18px] font-extrabold text-[#17141F] sm:text-[20px]">
+              <Sparkles className="h-5 w-5 text-[#FF5CA8]" aria-hidden="true" />
+              Week Summary
+            </div>
+            <span className="rounded-full border border-[#DDE2EA] bg-white/78 px-3 py-1 text-[11px] font-extrabold text-[#475467]">
+              {weekStatusLabel}
+            </span>
+          </div>
+
+          <div className="mt-4 rounded-[20px] border border-[#DDE2EA]/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#667085]">Track</p>
+            <p className="mt-1 truncate text-[22px] font-extrabold leading-tight text-[#17141F]">{selectedTrackName}</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
+              {loading ? "Loading this week..." : "Ready to publish"}
+            </p>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {[
+              { label: "Days", value: scheduledDays, color: "#14D2DC" },
+              { label: "Empty", value: emptyDays, color: "#FF5CA8" },
+              { label: "Blocks", value: totalBlocks, color: "#101828" },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-[16px] border border-[#D4DAE4]/85 bg-white/78 p-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
+                <p className="text-[24px] font-extrabold leading-none" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="mt-1 text-[10.5px] font-extrabold uppercase tracking-[0.08em] text-[#667085]">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 space-y-2">
+            <button
+              type="button"
+              className="flex w-full items-center justify-center gap-2 rounded-[18px] bg-[#101828] px-5 py-3 text-[14px] font-extrabold text-white shadow-[0_14px_28px_rgba(16,24,40,0.18)] transition hover:brightness-110"
+            >
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              Publish Week
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedBlockIds(new Set(Object.values(sessions).flat().map((session) => session.id)))}
+              disabled={totalBlocks === 0}
+              className="flex w-full items-center justify-center gap-2 rounded-[18px] bg-[#14D2DC] px-5 py-3 text-[14px] font-extrabold text-[#071A1C] shadow-[0_14px_28px_rgba(20,210,220,0.18)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Copy className="h-4 w-4" aria-hidden="true" />
+              Duplicate Week
+            </button>
+            <Link
+              href="/admin/programming/builder"
+              className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#D4DAE4]/85 bg-white/84 px-5 py-3 text-[14px] font-extrabold text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_8px_18px_rgba(16,24,40,0.06)] transition hover:bg-white"
+            >
+              <Dumbbell className="h-4 w-4 text-[#FF5CA8]" aria-hidden="true" />
+              Open Builder
+            </Link>
+          </div>
+        </aside>
+      </section>
+
+      <header className="hidden rounded-2xl border border-white/10 bg-white/5/5 p-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
@@ -651,8 +1060,8 @@ export default function ProgrammingClient() {
       </header>
 
       {selectionActive ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-slate-100">
-          <p className="font-medium">
+        <div className="premium-glass-card flex flex-wrap items-center justify-between gap-3 border-[#14D2DC]/25 bg-[#14D2DC]/10 px-4 py-3 text-sm text-[#17141F]">
+          <p className="font-extrabold">
             {selectedBlockIds.size} workout{selectedBlockIds.size === 1 ? "" : "s"} selected
           </p>
           <div className="flex items-center gap-2">
@@ -660,7 +1069,7 @@ export default function ProgrammingClient() {
               type="button"
               onClick={() => openTransferDialog("copy")}
               disabled={tracks.length < 2}
-              className="rounded-lg border border-cyan-400 bg-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full bg-[#14D2DC] px-3 py-1.5 text-xs font-extrabold text-[#071A1C] shadow-[0_10px_20px_rgba(20,210,220,0.18)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Copy to track
             </button>
@@ -668,14 +1077,14 @@ export default function ProgrammingClient() {
               type="button"
               onClick={() => openTransferDialog("move")}
               disabled={tracks.length < 2}
-              className="rounded-lg border border-pink-400 bg-pink-500/20 px-3 py-1.5 text-xs font-semibold text-pink-100 transition hover:bg-pink-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full bg-[#FF5CA8] px-3 py-1.5 text-xs font-extrabold text-white shadow-[0_10px_20px_rgba(255,92,168,0.2)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Move to track
             </button>
             <button
               type="button"
               onClick={() => setSelectedBlockIds(new Set())}
-              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-white/25"
+              className="rounded-full border border-[#D4DAE4]/85 bg-white/76 px-3 py-1.5 text-xs font-extrabold text-[#475467] transition hover:bg-white"
             >
               Clear
             </button>
@@ -684,7 +1093,7 @@ export default function ProgrammingClient() {
       ) : null}
 
       <div className={`relative grid gap-4 transition-[padding] duration-300 ${editorOpen && !selectionActive ? "lg:pr-[26rem]" : ""}`}>
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5/5">
+        <div className="hidden overflow-hidden rounded-2xl border border-white/10 bg-white/5/5">
           {viewMode === "month" ? (
             <>
               <div className="grid grid-cols-7 border-b border-white/10 text-xs uppercase tracking-[0.14em] text-slate-500">
@@ -869,7 +1278,7 @@ export default function ProgrammingClient() {
         <button
           type="button"
           onClick={() => setEditorOpen((prev) => !prev)}
-          className="fixed bottom-6 right-6 z-40 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 shadow-lg transition hover:border-slate-500 lg:hidden"
+          className="fixed bottom-6 right-6 z-40 rounded-full bg-[#101828] px-4 py-2 text-xs font-extrabold text-white shadow-[0_16px_34px_rgba(16,24,40,0.22)] transition hover:brightness-110 lg:hidden"
         >
           {editorOpen ? "Close Editor" : "Open Editor"}
         </button>
