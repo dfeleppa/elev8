@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import OwnerSectionCard from "@/components/owner/OwnerSectionCard";
 import MemberImportButton from "@/components/owner/MemberImportButton";
 import OwnerMembersTable from "./OwnerMembersTable";
+import { uiCopyClass, uiTitleClass } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -65,8 +66,8 @@ export default async function OwnerMembersPage() {
     <SidebarShell mainClassName="w-full max-w-none px-5 py-10 lg:px-8 lg:py-16">
       <section className="space-y-8">
         <header>
-          <h1 className="text-3xl font-semibold text-slate-100">Members</h1>
-          <p className="mt-3 text-sm text-slate-300">
+          <h1 className={uiTitleClass}>Members</h1>
+          <p className={`mt-3 ${uiCopyClass}`}>
             Member directory with status, membership, and activity details.
           </p>
         </header>

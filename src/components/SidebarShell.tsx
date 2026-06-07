@@ -503,6 +503,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     pathname === "/member/nutrition"
       ? ""
       : mobileTitleRoutes.find(([href]) => pathname === href || pathname?.startsWith(href + "/"))?.[1] ?? "";
+  const reserveMobileTopbarSpace =
+    Boolean(showMobileMemberNav || showMobileGymNav) && !pathname?.startsWith("/member/nutrition");
 
   /** Members see locked (not-yet-live) routes greyed out with a Coming Soon modal. */
   const isLocked = (href: string) => userRole === "member" && !isMemberPathLive(href);
@@ -627,7 +629,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   };
 
   return (
-    <div className="relative z-10 min-h-screen">
+    <div className="app-shell-frame relative z-10 min-h-screen">
       <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-start justify-between px-5 pt-[calc(0.75rem+env(safe-area-inset-top))] lg:hidden">
             <button
               type="button"
@@ -1137,7 +1139,13 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           </div>
         ) : null}
 
-        <main className={`${mainClasses} ${showMobileMemberNav || showMobileGymNav ? "pb-28 lg:pb-0" : ""}`}>{children}</main>
+        <main
+          className={`${mainClasses} ${showMobileMemberNav || showMobileGymNav ? "pb-28 lg:pb-0" : ""} ${
+            reserveMobileTopbarSpace ? "pt-[calc(4.25rem+env(safe-area-inset-top))] lg:pt-0" : ""
+          }`}
+        >
+          {children}
+        </main>
       </div>
 
       {comingSoon ? (
