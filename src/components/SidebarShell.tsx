@@ -244,7 +244,7 @@ function getNavIcon(href: string) {
     case "/member/athlete-dashboard":
       return <Activity {...iconProps} />;
     case "/member/nutrition":
-      return <HandPlatter {...iconProps} />;
+      return <Apple {...iconProps} />;
     case "/member/account-dashboard":
       return <UserCircle2 {...iconProps} />;
     default:
@@ -488,6 +488,9 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     pathname?.startsWith("/management") ||
     pathname?.startsWith("/gym-dashboard");
   const showMobileGymNav = Boolean(isGymRoute) && canAccessGymView;
+  const showTrackSelector =
+    pathname === "/member/workout" ||
+    pathname?.startsWith("/admin/programming");
   const gymBottomLinks: { label: string; href: string; icon: ReactNode }[] = [
     ...gymQuickLinks.filter((link) => canViewRole(link.minRole)).slice(0, 4),
     // Payroll replaces the "More" button — owner-only.
@@ -625,36 +628,27 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
   return (
     <div className="relative z-10 min-h-screen">
-      <div className="lg:hidden">
-        <div className="app-shell-topbar relative px-5 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
-          <div className="flex min-h-12 items-center justify-between gap-3">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-start justify-between px-5 pt-[calc(0.75rem+env(safe-area-inset-top))] lg:hidden">
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
-              className="inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:bg-[rgba(20,210,220,0.08)]"
+              className="pointer-events-auto inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center text-[#17141F] transition hover:text-[#0f0f10]"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
-            <div className="min-w-0 flex-1 text-center">
-              {mobileTopBarTitle ? (
-                <h1 className="truncate font-head text-[18px] font-bold leading-tight text-[#17141F]">
-                  {mobileTopBarTitle}
-                </h1>
-              ) : null}
-            </div>
             <div className="relative flex min-w-0 items-center justify-end">
               <button
                 type="button"
                 onClick={() => setMenuOpen((open) => !open)}
-                className="inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/70 text-[#475467] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition hover:bg-[rgba(20,210,220,0.08)] hover:text-[#17141F]"
+                className="pointer-events-auto inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center text-[#475467] transition hover:text-[#17141F]"
                 aria-label="More options"
                 aria-expanded={menuOpen}
               >
                 <MoreVertical className="h-5 w-5" aria-hidden="true" />
               </button>
               {menuOpen ? (
-                <div className="absolute right-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-[90] w-52 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/92 p-2 shadow-[0_20px_50px_rgba(16,24,40,0.16)] backdrop-blur-xl">
+                <div className="pointer-events-auto absolute right-0 top-14 z-[90] w-52 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/92 p-2 shadow-[0_20px_50px_rgba(16,24,40,0.16)] backdrop-blur-xl">
                   {canAccessGymView ? (
                     <button
                       type="button"
@@ -672,6 +666,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                       {showMobileMemberNav ? "Switch to Gym" : "Switch to Member"}
                     </button>
                   ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#17141F] opacity-70 transition hover:bg-[rgba(20,210,220,0.08)]"
+                  >
+                    <Tv className="h-4 w-4" aria-hidden="true" />
+                    TV Mode
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -694,8 +696,6 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 </div>
               ) : null}
             </div>
-          </div>
-        </div>
       </div>
 
       {showMobileMemberNav ? (
@@ -772,12 +772,12 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             aria-label="Close menu"
           />
           <aside className="app-shell-sidebar absolute inset-y-0 left-0 flex w-72 flex-col overflow-hidden px-3 py-3">
-            <div className="flex items-center justify-between gap-2 rounded-[20px] border border-white/75 bg-white/58 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
+            <div className="flex items-center justify-between gap-2 px-3 py-2.5">
               <Image src={wideLogoSrc} alt={brandLogoAlt} width={132} height={34} className="h-8 w-auto object-contain" />
               <button
                 type="button"
                 onClick={() => setMobileSidebarOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 text-[#17141F] transition hover:bg-[rgba(20,210,220,0.08)]"
+                className="inline-flex h-10 w-10 items-center justify-center text-white transition hover:text-[#b8b8b8]"
                 aria-label="Close menu"
               >
                 <Menu className="h-5 w-5" aria-hidden="true" />
@@ -879,7 +879,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             <button
               type="button"
               onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
-              className="rounded-full border border-white/20 bg-white/5 p-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.10)] transition hover:border-white/40 hover:bg-white/10 hover:text-white"
+              className="[&>svg]:h-6 [&>svg]:w-6 p-1.5 text-white transition hover:text-[#b8b8b8]"
               aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {hamburgerIcon}
@@ -956,7 +956,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             })}
           </nav>
         ) : (
-          <nav className="mt-4 space-y-2.5 overflow-y-auto text-sm">
+          <nav className="mt-4 flex-1 space-y-2.5 overflow-y-auto text-sm">
             {navSections.map((section) => (
               <div key={section.label}>
                 <div className="mb-1 px-3">
@@ -999,53 +999,52 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             ))}
           </nav>
         )}
+        <div className={`mt-4 border-t border-white/10 pt-4 ${sidebarCollapsed ? "flex justify-center" : "px-2"}`}>
+          <button
+            type="button"
+            className={`flex min-w-0 items-center gap-2 rounded-xl border border-white/10 bg-white/5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-white/20 hover:bg-white/10 ${
+              sidebarCollapsed ? "h-10 w-10 justify-center" : "w-full px-3 py-2"
+            }`}
+            aria-label="User account"
+            title={firstName}
+          >
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-[#0f0f10]">
+              {userInitial}
+            </span>
+            {!sidebarCollapsed ? (
+              <span className="min-w-0 truncate text-left text-xs font-semibold tracking-[0.01em]">{firstName}</span>
+            ) : null}
+          </button>
+        </div>
       </aside>
 
       <div className={`${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
-        <header className="app-shell-topbar hidden h-14 w-full items-center justify-between gap-4 px-5 text-[var(--text)] lg:flex">
-          <div className="flex min-w-0 items-center text-sm">
-            {tracks.length > 1 ? (
-              <select
-                value={selectedTrackId ?? ""}
-                onChange={(e) => handleTrackChange(e.target.value)}
-                className="max-w-[220px] cursor-pointer truncate bg-transparent text-xs text-[var(--text-muted)] outline-none transition hover:text-[var(--text)]"
-                aria-label="Select track"
-              >
-                {tracks.map((t) => (
-                  <option key={t.id} value={t.id} className="bg-[var(--panel-2)] text-[var(--text)]">
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <span className="max-w-[220px] truncate text-xs text-[var(--text-muted)]">{currentTrack}</span>
-            )}
+        <>
+          <div className="pointer-events-auto fixed left-5 top-3 z-[90] hidden min-w-0 items-center text-sm lg:flex">
+            {showTrackSelector ? (
+              tracks.length > 1 ? (
+                <select
+                  value={selectedTrackId ?? ""}
+                  onChange={(e) => handleTrackChange(e.target.value)}
+                  className="max-w-[220px] cursor-pointer truncate bg-transparent text-xs text-[var(--text-muted)] outline-none transition hover:text-[var(--text)]"
+                  aria-label="Select track"
+                >
+                  {tracks.map((t) => (
+                    <option key={t.id} value={t.id} className="bg-[var(--panel-2)] text-[var(--text)]">
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="max-w-[220px] truncate text-xs text-[var(--text-muted)]">{currentTrack}</span>
+              )
+            ) : null}
           </div>
 
-          <div className="flex shrink-0 items-center gap-4 text-sm">
-            <button
-              type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
-              aria-label="TV display mode"
-              title="TV Display Mode"
-            >
-              <Tv className="h-4 w-4" aria-hidden="true" />
-            </button>
-
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 text-[var(--text-muted)] transition hover:text-[var(--text)]"
-              aria-label="User account"
-            >
-              <span className="truncate max-w-[160px]">{firstName}</span>
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--panel-2)] text-xs font-semibold text-[var(--text)]">
-                {userInitial}
-              </span>
-            </button>
-
+          <div className="pointer-events-auto fixed right-5 top-3 z-[90] hidden shrink-0 items-center gap-1.5 text-sm lg:flex">
             <Link
               href="/member/chat"
-              className="inline-flex items-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
+              className="inline-flex h-9 w-8 items-center justify-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="Messenger"
             >
               <MessageCircle className="h-4 w-4" aria-hidden="true" />
@@ -1053,7 +1052,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             <button
               type="button"
-              className="inline-flex items-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
+              className="inline-flex h-9 w-8 items-center justify-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="Notifications"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -1066,7 +1065,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <button
                 type="button"
                 onClick={() => setMenuOpen((open) => !open)}
-                className="inline-flex h-10 w-10 touch-manipulation items-center justify-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
+                className="inline-flex h-9 w-8 touch-manipulation items-center justify-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
                 aria-label="More options"
                 aria-expanded={menuOpen}
               >
@@ -1078,6 +1077,14 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </button>
               {menuOpen ? (
                 <div className="app-shell-desktop-menu-panel absolute right-0 mt-2 w-56 rounded-xl border border-[var(--line-strong)] p-2 shadow-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--text)] opacity-70 transition hover:bg-[var(--panel)]"
+                  >
+                    <Tv className="h-4 w-4" aria-hidden="true" />
+                    TV Mode
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -1114,7 +1121,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               ) : null}
             </div>
           </div>
-        </header>
+        </>
 
         <input
           ref={importInputRef}

@@ -1277,14 +1277,11 @@ export default function HealthNutritionPage() {
   return (
     <SidebarShell mainClassName="w-full">
       <section
-        className="nutrition-dashboard premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#0f0f10] sm:px-8 lg:px-10 lg:py-6 2xl:px-12"
+        className="nutrition-dashboard premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 pb-4 pt-[calc(4.75rem+env(safe-area-inset-top))] text-[#0f0f10] sm:px-8 sm:pt-4 lg:px-10 lg:pb-6 lg:pt-20 2xl:px-12"
       >
         <div className="flex w-full flex-col gap-5">
-        <header className="pointer-events-none relative z-[45] -mt-[60px] mb-[-4px] flex flex-col items-center sm:mt-0">
-          <h1 className="mb-2 hidden text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:block">
-            Nutrition
-          </h1>
-          <div className="premium-glass-pill pointer-events-auto mx-auto flex w-full max-w-[calc(100vw-176px)] items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
+        <header className="pointer-events-none relative z-[35] mb-[-4px] flex flex-col items-center">
+          <div className="nutrition-date-pill premium-glass-pill pointer-events-auto mx-auto flex w-full max-w-[calc(100vw-176px)] items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
             <button
               type="button"
               onClick={() => setSelectedDate((prev) => shiftDate(prev, -1))}
@@ -1591,7 +1588,7 @@ export default function HealthNutritionPage() {
                 Nutrition Coach
               </span>
               <h2 className="mt-3 font-head text-[28px] font-extrabold leading-[1.05] tracking-tight text-[#17141F] sm:text-[32px]">
-                Start your coaching plan
+                Start your plan
               </h2>
               <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
                 Set your goal, get your macros, and build a plan that fits your training.

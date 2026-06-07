@@ -194,8 +194,9 @@
   border-left-width: 3px;
   min-height: 35px;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-family: "General Sans", var(--font-brand-sans);
+  font-weight: 500;
+  letter-spacing: 0.055em;
   text-transform: uppercase;
   transition: background 160ms, color 160ms, border-color 160ms;
 }
@@ -208,7 +209,7 @@
 .app-nav-link-active {
   color: #ffffff;
   background: #2a2a2a;
-  border-left-color: #ffffff;
+  border-left-color: #ff4f93;
   border-top-color: rgba(236, 236, 236, 0.14);
   border-right-color: rgba(236, 236, 236, 0.14);
   border-bottom-color: rgba(236, 236, 236, 0.14);
@@ -249,9 +250,9 @@
 .app-shell-topbar {
   position: relative;
   z-index: 90;
-  background: rgba(255, 255, 255, 0.82);
-  border-bottom: 1px solid rgba(236, 236, 236, 0.84);
-  backdrop-filter: blur(18px);
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  backdrop-filter: none;
 }
 
 .app-shell-desktop-menu {
@@ -983,6 +984,52 @@
   backdrop-filter: blur(24px);
 }
 
+.nutrition-dashboard .nutrition-date-pill {
+  border-color: rgba(255, 255, 255, 0.78) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  color: #0f0f10 !important;
+  box-shadow:
+    0 22px 48px rgba(15, 15, 16, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86) !important;
+}
+
+.nutrition-dashboard .nutrition-date-pill button {
+  color: #0f0f10 !important;
+}
+
+.nutrition-dashboard .nutrition-date-pill > button {
+  background: rgba(15, 15, 16, 0.04);
+}
+
+.nutrition-dashboard .nutrition-date-pill > button:hover,
+.nutrition-dashboard .nutrition-date-pill button:hover {
+  background: rgba(15, 15, 16, 0.08) !important;
+  color: #0f0f10 !important;
+}
+
+@media (max-width: 1023px) {
+  .nutrition-dashboard .nutrition-date-pill {
+    position: fixed;
+    top: calc(0.75rem + env(safe-area-inset-top));
+    left: 5rem;
+    right: 5rem;
+    z-index: 41;
+    width: auto !important;
+    max-width: none !important;
+    min-height: 48px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .nutrition-dashboard .nutrition-date-pill {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    z-index: 95;
+    transform: translateX(-50%);
+  }
+}
+
 .nutrition-macro-card {
   background:
     linear-gradient(145deg, rgba(255,255,255,0.92), rgba(236,236,236,0.64)) !important;
@@ -1036,13 +1083,27 @@
 
 .nutrition-body-metrics {
   border-radius: 10px !important;
-  background: rgba(15, 15, 16, 0.035) !important;
-  border-color: rgba(15, 15, 16, 0.12) !important;
+  background: #2a2a2a !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 20px 42px rgba(15, 15, 16, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.nutrition-body-metrics p,
+.nutrition-body-metrics span {
+  color: #ececec !important;
 }
 
 .nutrition-body-metrics input {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border-color: rgba(15, 15, 16, 0.14) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+.nutrition-body-metrics input::placeholder {
+  color: #b8b8b8 !important;
 }
 
 .nutrition-body-metrics button,
@@ -1090,12 +1151,13 @@
 }
 
 .nutrition-coach-hero h2 {
-  max-width: 12ch;
+  max-width: none;
   color: #ffffff !important;
-  font-size: clamp(34px, 4.2vw, 56px) !important;
+  font-size: clamp(28px, 2.6vw, 40px) !important;
   font-weight: 700 !important;
-  line-height: 0.9 !important;
-  letter-spacing: -0.065em !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.055em !important;
+  white-space: nowrap;
 }
 
 .nutrition-coach-hero p {
@@ -1114,12 +1176,18 @@
 
 .nutrition-coach-hero a {
   margin-top: auto !important;
-  border: 1px solid rgba(20, 210, 220, 0.58);
-  background: linear-gradient(135deg, #14d2dc, #72fbff) !important;
-  color: #071a1c !important;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  background: #ffffff !important;
+  color: #0f0f10 !important;
   box-shadow:
-    0 22px 46px rgba(20, 210, 220, 0.32),
+    0 22px 46px rgba(0, 0, 0, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.48) !important;
+}
+
+.nutrition-dashboard .nutrition-coach-hero a[href="/member/nutrition/coach"] {
+  background: #ffffff !important;
+  color: #0f0f10 !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .nutrition-coach-hero .rounded-\[12px\] {
@@ -1153,14 +1221,15 @@
 }
 
 .app-nav-link {
-  text-shadow: 0 1px 12px rgba(255,255,255,0.08);
+  text-rendering: geometricPrecision;
+  text-shadow: none;
 }
 
 .app-nav-link-active {
   background:
     linear-gradient(90deg, rgba(255,255,255,0.18), rgba(42,42,42,0.92)) !important;
   border-color: rgba(255,255,255,0.18);
-  border-left-color: #ffffff;
+  border-left-color: #ff4f93;
   box-shadow:
     0 16px 30px rgba(0, 0, 0, 0.34),
     inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
