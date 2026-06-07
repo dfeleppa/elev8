@@ -1276,7 +1276,9 @@ export default function HealthNutritionPage() {
 
   return (
     <SidebarShell mainClassName="w-full">
-      <section className="nutrition-dashboard premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
+      <section
+        className="nutrition-dashboard premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 py-4 text-[#0f0f10] sm:px-8 lg:px-10 lg:py-6 2xl:px-12"
+      >
         <div className="flex w-full flex-col gap-5">
         <header className="pointer-events-none relative z-[45] -mt-[60px] mb-[-4px] flex flex-col items-center sm:mt-0">
           <h1 className="mb-2 hidden text-center text-[24px] font-extrabold leading-none tracking-[-0.02em] text-[#17141F] sm:block">
@@ -1335,7 +1337,7 @@ export default function HealthNutritionPage() {
         ) : null}
 
         <section className="space-y-3 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.55fr)] lg:items-stretch lg:gap-5 lg:space-y-0 2xl:grid-cols-[minmax(0,1fr)_minmax(440px,0.5fr)]">
-          <div className="premium-glass-card flex h-full flex-col p-3 sm:p-5">
+          <div className="nutrition-macro-card premium-glass-card flex h-full flex-col p-3 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="inline-flex items-center gap-1.5 text-[16px] font-extrabold text-[#17141F] sm:gap-2 sm:text-[19px]">
                 <Flame className="h-4 w-4 text-[#FF5CA8] sm:h-5 sm:w-5" aria-hidden="true" />
@@ -1405,7 +1407,7 @@ export default function HealthNutritionPage() {
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
                   const shortLabel = index === 0 ? "P" : index === 1 ? "C" : "F";
                   return (
-                    <div key={`mobile-macro-${bar.label}`} className="grid min-w-0 grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2 rounded-[12px] border border-[#D4DAE4]/85 bg-white/84 px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
+                    <div key={`mobile-macro-${bar.label}`} className="nutrition-metric-card grid min-w-0 grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2 rounded-[12px] border border-[#D4DAE4]/85 bg-white/84 px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
                       <p className="text-[12px] font-extrabold text-[#17141F]">{shortLabel}</p>
                       <div className="h-1.5 min-w-0 overflow-hidden rounded-full bg-[#E1E6EE]">
                         <div
@@ -1474,7 +1476,7 @@ export default function HealthNutritionPage() {
                   const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : index === 2 ? "#FF5CA8" : "#7A8699";
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
                   return (
-                    <div key={bar.label} className="min-w-0 rounded-[14px] border border-[#D4DAE4]/85 bg-white/84 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)] sm:rounded-[18px] sm:p-4 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_14px_30px_rgba(16,24,40,0.075)]">
+                    <div key={bar.label} className="nutrition-metric-card min-w-0 rounded-[14px] border border-[#D4DAE4]/85 bg-white/84 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_10px_20px_rgba(16,24,40,0.055)] sm:rounded-[18px] sm:p-4 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_14px_30px_rgba(16,24,40,0.075)]">
                       <div className="min-w-0">
                         <p className="text-[10.5px] font-extrabold text-[#17141F] sm:text-[13px]">{bar.label}</p>
                         <p
@@ -1508,7 +1510,7 @@ export default function HealthNutritionPage() {
               </div>
             </div>
 
-            <div className="mt-3 rounded-[18px] border border-[#D4DAE4]/85 bg-white/72 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
+            <div className="nutrition-body-metrics mt-3 rounded-[18px] border border-[#D4DAE4]/85 bg-white/72 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#667085]">Today&apos;s metrics</p>
                 {bodyCompMessage ? (
@@ -1556,7 +1558,7 @@ export default function HealthNutritionPage() {
               Loading coach plan...
             </div>
           ) : coachPlanStatus === "none" ? (
-            <div className="premium-glass-card flex h-full flex-col overflow-hidden p-5 text-[#17141F] sm:p-6">
+            <div className="nutrition-coach-hero premium-glass-card flex h-full flex-col overflow-hidden p-5 text-[#17141F] sm:p-6">
               {/* Macro ring visual */}
               <div className="relative mx-auto mb-4 flex h-40 w-full max-w-[280px] items-center justify-center sm:mb-5 sm:h-48">
                 <div className="relative flex h-32 w-32 items-center justify-center sm:h-36 sm:w-36">
@@ -1596,7 +1598,7 @@ export default function HealthNutritionPage() {
               </p>
               <Link
                 href="/member/nutrition/coach"
-                className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(90deg,#14D2DC_0%,#9C8BE0_52%,#FF5CA8_100%)] px-5 py-3.5 text-[15px] font-extrabold text-white shadow-[0_16px_30px_rgba(255,92,168,0.22)] transition hover:brightness-105 sm:mt-5"
+                className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-[#6D3DD4] px-5 py-3.5 text-[15px] font-extrabold text-white shadow-none transition hover:bg-[#5B32B6] sm:mt-5"
               >
                 Set My Goal
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -1604,7 +1606,7 @@ export default function HealthNutritionPage() {
             </div>
           ) : (
             <div
-              className={`premium-glass-card flex h-full flex-col overflow-hidden p-3 text-[#17141F] sm:p-5 ${
+              className={`nutrition-coach-panel premium-glass-card flex h-full flex-col overflow-hidden p-3 text-[#17141F] sm:p-5 ${
                 checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#FF5CA8]/50" : ""
               }`}
             >
@@ -1687,7 +1689,7 @@ export default function HealthNutritionPage() {
             <button
               type="button"
               onClick={() => setManualEntryOpen(true)}
-              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#D4DAE4]/85 bg-white/84 px-3.5 py-2 text-[12px] font-extrabold text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_8px_18px_rgba(16,24,40,0.06)] transition hover:bg-white sm:text-[13px]"
+              className="nutrition-secondary-action inline-flex items-center justify-center gap-1.5 rounded-full border border-[#D4DAE4]/85 bg-white/84 px-3.5 py-2 text-[12px] font-extrabold text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.94),0_8px_18px_rgba(16,24,40,0.06)] transition hover:bg-white sm:text-[13px]"
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               Quick add macros
@@ -1698,7 +1700,7 @@ export default function HealthNutritionPage() {
             return (
               <div
                 key={`mobile-meal-${meal.key}`}
-                className="premium-glass-card relative p-4"
+                className="nutrition-meal-card premium-glass-card relative p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>

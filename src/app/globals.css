@@ -4,54 +4,55 @@
    Keeps Space Grotesk (heading) + Manrope (body) + JetBrains Mono
    ============================================================ */
 
+@import url("https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap");
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
 /* ---------- DARK (default) ---------- */
 :root {
   /* Canvas */
-  --bg: #0e1013;
-  --bg-2: #14171c;
-  --panel: #181c22;
-  --panel-2: #1f242b;
-  --panel-3: #252b34;
+  --bg: #0f0f10;
+  --bg-2: #2a2a2a;
+  --panel: #2a2a2a;
+  --panel-2: #0f0f10;
+  --panel-3: #b8b8b8;
 
   /* Lines */
-  --line: rgba(255, 255, 255, 0.07);
-  --line-strong: rgba(255, 255, 255, 0.12);
-  --line-focus: rgba(255, 74, 141, 0.45);
+  --line: rgba(236, 236, 236, 0.1);
+  --line-strong: rgba(236, 236, 236, 0.18);
+  --line-focus: rgba(255, 255, 255, 0.42);
 
   /* Text */
-  --text: #ecedf1;
-  --text-muted: #9aa2b1;
-  --text-soft: #6b7280;
-  --text-inverse: #11141a;
+  --text: #ffffff;
+  --text-muted: #ececec;
+  --text-soft: #b8b8b8;
+  --text-inverse: #0f0f10;
 
   /* Brand accents */
-  --pink: #ff4a8d;
-  --pink-soft: #ffb1c4;
-  --violet: #8b5cf6;
-  --violet-soft: #c4b5fd;
-  --lime: #b6ff4a;
-  --amber: #ffb347;
-  --cyan: #63f7ff;
+  --pink: #ff4f93;
+  --pink-soft: #ff9fc3;
+  --violet: #b8b8b8;
+  --violet-soft: #ececec;
+  --lime: #14d2dc;
+  --amber: #b8b8b8;
+  --cyan: #14d2dc;
 
   /* Interactive / feedback */
-  --overlay: rgba(4, 7, 11, 0.7);
-  --input-bg: rgba(255, 255, 255, 0.03);
-  --input-bg-strong: rgba(255, 255, 255, 0.05);
-  --success-bg: rgba(52, 211, 153, 0.14);
-  --success-line: rgba(52, 211, 153, 0.28);
-  --success-text: #7ef0bd;
-  --warning-bg: rgba(251, 191, 36, 0.14);
-  --warning-line: rgba(251, 191, 36, 0.26);
-  --warning-text: #ffd670;
-  --danger-bg: rgba(251, 113, 133, 0.14);
-  --danger-line: rgba(251, 113, 133, 0.28);
-  --danger-text: #ff9db0;
-  --info-bg: rgba(99, 247, 255, 0.13);
-  --info-line: rgba(99, 247, 255, 0.25);
-  --info-text: #8cfaff;
+  --overlay: rgba(15, 15, 16, 0.7);
+  --input-bg: rgba(255, 255, 255, 0.04);
+  --input-bg-strong: rgba(255, 255, 255, 0.08);
+  --success-bg: rgba(236, 236, 236, 0.12);
+  --success-line: rgba(236, 236, 236, 0.26);
+  --success-text: #14d2dc;
+  --warning-bg: rgba(184, 184, 184, 0.14);
+  --warning-line: rgba(184, 184, 184, 0.26);
+  --warning-text: #ececec;
+  --danger-bg: rgba(184, 184, 184, 0.14);
+  --danger-line: rgba(184, 184, 184, 0.26);
+  --danger-text: #ffffff;
+  --info-bg: rgba(236, 236, 236, 0.12);
+  --info-line: rgba(236, 236, 236, 0.26);
+  --info-text: #14d2dc;
 
   /* Shadows */
   --shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.45);
@@ -71,17 +72,17 @@
   --app-text-muted: var(--text-muted);
   --app-text-soft: var(--text-soft);
   --app-primary: var(--pink);
-  --app-primary-strong: #ff2e7a;
+  --app-primary-strong: #14d2dc;
   --app-secondary: var(--violet);
   --app-success: var(--lime);
   --app-warning: var(--amber);
-  --app-danger: #ff6b7e;
+  --app-danger: #ffffff;
   --app-shadow-lg: var(--shadow-lg);
   --app-shadow-md: var(--shadow-md);
   --app-shadow-sm: var(--shadow-sm);
 
-  --font-brand-sans: var(--font-body), "Manrope", "Segoe UI", sans-serif;
-  --font-brand-heading: var(--font-heading), "Space Grotesk", "Segoe UI", sans-serif;
+  --font-brand-sans: "General Sans", var(--font-body), "Manrope", "Segoe UI", sans-serif;
+  --font-brand-heading: "General Sans", var(--font-heading), "Space Grotesk", "Segoe UI", sans-serif;
   --font-brand-mono: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   color-scheme: dark;
@@ -89,45 +90,48 @@
 
 /* ---------- LIGHT ---------- */
 :root[data-theme="light"] {
-  --bg: #f7f5ef;
-  --bg-2: #f1eee6;
-  --panel: rgba(255, 255, 255, 0.78);
-  --panel-2: rgba(255, 255, 255, 0.62);
-  --panel-3: #ebe7dc;
+  --bg: #ffffff;
+  --bg-2: #ececec;
+  --panel: rgba(255, 255, 255, 0.9);
+  --panel-2: rgba(236, 236, 236, 0.72);
+  --panel-3: #ececec;
 
-  --line: rgba(20, 17, 15, 0.08);
-  --line-strong: rgba(20, 17, 15, 0.14);
-  --line-focus: rgba(225, 48, 108, 0.35);
+  --line: rgba(42, 42, 42, 0.1);
+  --line-strong: rgba(42, 42, 42, 0.18);
+  --line-focus: rgba(15, 15, 16, 0.34);
 
-  --text: #17141f;
-  --text-muted: #475467;
-  --text-soft: #667085;
-  --text-inverse: #fffaf2;
+  --text: #0f0f10;
+  --text-muted: #2a2a2a;
+  --text-soft: #b8b8b8;
+  --text-inverse: #ffffff;
 
-  --pink: #ff5ca8;
-  --pink-soft: #ff8fc2;
+  --pink: #ff4f93;
+  --pink-soft: #ff9fc3;
   --cyan: #14d2dc;
-  --violet: #6d3dd4;
+  --violet: #2a2a2a;
+  --violet-soft: #b8b8b8;
+  --lime: #14d2dc;
+  --amber: #b8b8b8;
 
-  --shadow-lg: 0 24px 60px rgba(118, 95, 61, 0.16);
-  --shadow-md: 0 14px 34px rgba(118, 95, 61, 0.12);
-  --shadow-sm: 0 8px 18px rgba(118, 95, 61, 0.09);
+  --shadow-lg: 0 24px 60px rgba(15, 15, 16, 0.14);
+  --shadow-md: 0 14px 34px rgba(15, 15, 16, 0.1);
+  --shadow-sm: 0 8px 18px rgba(15, 15, 16, 0.08);
 
-  --overlay: rgba(69, 56, 44, 0.24);
-  --input-bg: rgba(23, 24, 28, 0.025);
-  --input-bg-strong: rgba(23, 24, 28, 0.045);
-  --success-bg: rgba(14, 159, 110, 0.12);
-  --success-line: rgba(14, 159, 110, 0.24);
-  --success-text: #0d7d56;
-  --warning-bg: rgba(217, 119, 6, 0.11);
-  --warning-line: rgba(217, 119, 6, 0.2);
-  --warning-text: #9b5b08;
-  --danger-bg: rgba(225, 48, 108, 0.11);
-  --danger-line: rgba(225, 48, 108, 0.22);
-  --danger-text: #b91c51;
-  --info-bg: rgba(34, 197, 246, 0.12);
-  --info-line: rgba(34, 197, 246, 0.2);
-  --info-text: #0f6b9f;
+  --overlay: rgba(15, 15, 16, 0.24);
+  --input-bg: rgba(15, 15, 16, 0.025);
+  --input-bg-strong: rgba(15, 15, 16, 0.045);
+  --success-bg: rgba(42, 42, 42, 0.08);
+  --success-line: rgba(42, 42, 42, 0.18);
+  --success-text: #0b858c;
+  --warning-bg: rgba(184, 184, 184, 0.16);
+  --warning-line: rgba(184, 184, 184, 0.3);
+  --warning-text: #2a2a2a;
+  --danger-bg: rgba(42, 42, 42, 0.08);
+  --danger-line: rgba(42, 42, 42, 0.18);
+  --danger-text: #2a2a2a;
+  --info-bg: rgba(42, 42, 42, 0.08);
+  --info-line: rgba(42, 42, 42, 0.18);
+  --info-text: #0b858c;
 
   color-scheme: light;
 }
@@ -155,7 +159,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 { font-family: var(--font-brand-heading); letter-spacing: -0.015em; }
 
-::selection { background: color-mix(in srgb, var(--pink) 35%, transparent); color: var(--text); }
+::selection { background: color-mix(in srgb, var(--cyan) 35%, transparent); color: var(--text); }
 
 .app-root { color: var(--text); }
 

@@ -600,7 +600,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
   const themeToggleLabel = theme === "dark" ? "Light mode" : "Dark mode";
   const stackedLogoSrc = theme === "dark" ? "/light_stacked.png" : "/dark_stacked.png";
-  const wideLogoSrc = theme === "dark" ? "/light_wide.png" : "/dark_wide.png";
+  const wideLogoSrc = "/light_wide.png";
   const brandLogoAlt = gymName + " logo";
   const themeIcon = theme === "dark" ? (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -613,11 +613,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
     </svg>
   );
   const viewToggleBaseCls =
-    "inline-flex items-center justify-center rounded-full px-3 h-8 font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] transition-colors";
+    "inline-flex h-7 items-center justify-center rounded-[10px] px-3 font-mono text-[9.5px] font-bold uppercase tracking-[0.18em] transition";
   const viewToggleActiveSidebarCls =
-    `${viewToggleBaseCls} bg-white text-[#17141F] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(16,24,40,0.08)]`;
+    `${viewToggleBaseCls} bg-white text-[#0f0f10] shadow-[0_10px_22px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.96)]`;
   const viewToggleInactiveSidebarCls =
-    `${viewToggleBaseCls} text-[#667085] hover:bg-white/60 hover:text-[#17141F]`;
+    `${viewToggleBaseCls} border border-transparent bg-transparent text-[#b8b8b8] hover:border-white/10 hover:bg-white/8 hover:text-white`;
   const handleSignOut = () => {
     setMenuOpen(false);
     void signOut({ callbackUrl: "/login" });
@@ -788,7 +788,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               {navSections.map((section) => (
                 <div key={section.label}>
                   <div className="mb-1 px-3">
-                    <Micro className="!text-[10px] !font-bold !tracking-[0.15em] !text-[#4F5B6B]">{section.label}</Micro>
+                    <Micro className="!text-[10px] !font-bold !tracking-[0.15em] !text-white">{section.label}</Micro>
                   </div>
                   <div className="space-y-1">
                     {section.entries.map((entry) => {
@@ -879,7 +879,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             <button
               type="button"
               onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
-              className="rounded-full border border-[var(--line-strong)] p-2 text-[var(--text-muted)] transition hover:border-[var(--line-focus)] hover:text-[var(--text)]"
+              className="rounded-full border border-white/20 bg-white/5 p-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.10)] transition hover:border-white/40 hover:bg-white/10 hover:text-white"
               aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {hamburgerIcon}
@@ -887,7 +887,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           </div>
           {showViewToggle ? (
             <div
-              className={`mt-4 gap-1 rounded-[18px] border border-white/75 bg-white/48 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] ${
+              className={`mt-4 gap-1 rounded-[13px] border border-white/14 bg-white/7 p-1 shadow-[0_12px_26px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-xl ${
                 sidebarCollapsed ? "flex flex-col items-stretch" : "grid grid-cols-2"
               }`}
             >
@@ -960,7 +960,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             {navSections.map((section) => (
               <div key={section.label}>
                 <div className="mb-1 px-3">
-                  <Micro className="!text-[10px] !font-bold !tracking-[0.15em] !text-[#4F5B6B]">{section.label}</Micro>
+                  <Micro className="!text-[10px] !font-bold !tracking-[0.15em] !text-white">{section.label}</Micro>
                 </div>
                 <div className="space-y-1">
                   {section.entries.map((entry) => {
