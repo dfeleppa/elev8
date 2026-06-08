@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { hasRole, requireRequestUserContext } from "@/lib/member";
+import { preserveMetabolismLearning } from "@/lib/metabolism-learning";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -26,8 +27,11 @@ export async function POST(request: Request) {
   }
 
   try {
+    const preserved = await preserveMetabolismLearning(memberId);
+
     // Full reset: clear all check-in history and the entire plan chain. Weigh-ins,
-    // body composition, and food logs are intentionally left untouched.
+    // body composition, food logs, and learned metabolism data are intentionally
+    // left untouched.
     const { error: checkInError } = await supabaseAdmin
       .from("nutrition_check_ins")
       .delete()
@@ -40,7 +44,7 @@ export async function POST(request: Request) {
       .eq("member_id", memberId);
     if (planError) throw new Error(planError.message);
 
-    return NextResponse.json({ memberId, reset: true });
+    return NextResponse.json({ memberId, reset: true, metabolismLearningPreserved: Boolean(preserved) });
   } catch (err) {
     console.error("[nutrition-plan reset POST] failed", err);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

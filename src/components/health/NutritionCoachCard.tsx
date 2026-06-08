@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, ChevronDown, Target, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Loader2, RotateCcw, Target, X } from "lucide-react";
 
 import NutritionCheckInBanner from "./NutritionCheckInBanner";
 
@@ -55,6 +55,9 @@ export default function NutritionCoachCard() {
   const [settingsGoal, setSettingsGoal] = useState<GoalType>("lose_weight");
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -201,6 +204,27 @@ export default function NutritionCoachCard() {
     }
   }
 
+  async function resetPlan() {
+    setResetting(true);
+    setResetError(null);
+    try {
+      const res = await fetch("/api/coach/nutrition-plan/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const payload = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(payload?.error ?? "Reset failed.");
+      setSummary(null);
+      setStatus("none");
+      setResetOpen(false);
+    } catch (err) {
+      setResetError(err instanceof Error ? err.message : "Reset failed.");
+    } finally {
+      setResetting(false);
+    }
+  }
+
   if (status === "loading") {
     return (
       <div className="flex flex-col items-center justify-center panel rounded-3xl p-6 min-h-[120px]">
@@ -286,6 +310,18 @@ export default function NutritionCoachCard() {
                   className="block w-full rounded-lg px-3 py-2 text-left text-sm text-[var(--text)] transition hover:bg-[var(--panel-2)]"
                 >
                   Coach settings
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setResetError(null);
+                    setResetOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-400 transition hover:bg-rose-500/10"
+                >
+                  <RotateCcw className="h-4 w-4" aria-hidden />
+                  Reset plan
                 </button>
               </div>
             )}
@@ -433,6 +469,48 @@ export default function NutritionCoachCard() {
                 type="button"
                 onClick={() => setSettingsOpen(false)}
                 disabled={settingsSaving}
+                className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {resetOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="panel w-full max-w-sm rounded-2xl p-6 shadow-[var(--shadow-lg)]">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-base font-semibold text-[var(--text)]">Reset coach plan?</h3>
+              <button
+                type="button"
+                onClick={() => setResetOpen(false)}
+                disabled={resetting}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-60"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+            <p className="text-sm leading-6 text-[var(--text-muted)]">
+              This deletes your active plan and check-in history so you can rebuild from scratch.
+              Food logs, weigh-ins, and learned metabolism data are kept.
+            </p>
+            {resetError ? <p className="mt-3 text-sm text-rose-400">{resetError}</p> : null}
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => void resetPlan()}
+                disabled={resetting}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-rose-500 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {resetting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+                Reset plan
+              </button>
+              <button
+                type="button"
+                onClick={() => setResetOpen(false)}
+                disabled={resetting}
                 className="rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm font-medium text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-60"
               >
                 Cancel

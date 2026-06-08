@@ -30,6 +30,9 @@ export type LatestPlanRow = {
   reverse_diet_weekly_kcal: number | null;
   target_weight_lbs: number | null;
   maintenance_calories: number;
+  maintenance_calories_source: "formula" | "empirical" | null;
+  maintenance_calories_estimated_at: string | null;
+  last_metabolism_estimate: Record<string, unknown> | null;
   target_calories: number;
   protein_grams: number;
   carbs_grams: number;
@@ -59,7 +62,7 @@ export async function loadLatestPlan(memberId: string): Promise<LatestPlanRow | 
   const { data, error } = await supabaseAdmin
     .from("coach_nutrition_plans")
     .select(
-      "id, goal_type, weekly_rate_percent, reverse_diet_weekly_kcal, target_weight_lbs, maintenance_calories, target_calories, protein_grams, carbs_grams, fat_grams, fiber_grams, effective_date, next_check_in_date, intensity_preset, formula_used, activity_multiplier, sessions_per_week, plan_payload, coach_id"
+      "id, goal_type, weekly_rate_percent, reverse_diet_weekly_kcal, target_weight_lbs, maintenance_calories, maintenance_calories_source, maintenance_calories_estimated_at, last_metabolism_estimate, target_calories, protein_grams, carbs_grams, fat_grams, fiber_grams, effective_date, next_check_in_date, intensity_preset, formula_used, activity_multiplier, sessions_per_week, plan_payload, coach_id"
     )
     .eq("member_id", memberId)
     .order("effective_date", { ascending: false })
@@ -230,6 +233,9 @@ export async function applyAdjustmentAsNewPlan(
       reverse_diet_weekly_kcal: latestPlan.reverse_diet_weekly_kcal,
       target_weight_lbs: latestPlan.target_weight_lbs,
       maintenance_calories: latestPlan.maintenance_calories,
+      maintenance_calories_source: latestPlan.maintenance_calories_source ?? "formula",
+      maintenance_calories_estimated_at: latestPlan.maintenance_calories_estimated_at,
+      last_metabolism_estimate: latestPlan.last_metabolism_estimate,
       target_calories: proposed.targetCalories,
       protein_grams: proposed.proteinGrams,
       carbs_grams: proposed.carbsGrams,

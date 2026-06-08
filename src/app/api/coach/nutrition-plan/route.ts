@@ -10,6 +10,11 @@ import {
 import { NEXT_CHECK_IN_DAYS } from "@/lib/nutrition-check-in";
 import { getCoachNutritionPlan, hasCoachNutritionPlan } from "@/lib/coach-plan";
 import { hasRole, requireRequestUserContext } from "@/lib/member";
+import {
+  applyMetabolismLearningToPlan,
+  loadMetabolismLearning,
+  preserveMetabolismLearning,
+} from "@/lib/metabolism-learning";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -247,7 +252,7 @@ export async function POST(request: Request) {
   const sessionsPerWeek =
     sessionsPerWeekInput === null ? await getSessionsPerWeek(memberId, effectiveDate) : normalizeSessionsPerWeek(sessionsPerWeekInput);
 
-  const plan = calculateNutritionPlan({
+  const calculatedPlan = calculateNutritionPlan({
     goalType,
     weightKg,
     heightCm,
@@ -259,6 +264,8 @@ export async function POST(request: Request) {
     weeklyRatePercentOverride,
     reverseDietWeeklyKcalOverride,
   });
+  const metabolismLearning = await loadMetabolismLearning(memberId);
+  const plan = applyMetabolismLearningToPlan(calculatedPlan, metabolismLearning);
 
   if (action === "preview") {
     return NextResponse.json({
@@ -281,6 +288,7 @@ export async function POST(request: Request) {
   }
 
   const nextCheckInDate = datePlusDays(effectiveDate, NEXT_CHECK_IN_DAYS);
+  const metabolismSource = metabolismLearning?.maintenanceCaloriesSource ?? "formula";
 
   const { error: profileError } = await supabaseAdmin
     .from("app_users")
@@ -310,6 +318,9 @@ export async function POST(request: Request) {
         reverse_diet_weekly_kcal: plan.reverseDietWeeklyKcal,
         target_weight_lbs: targetWeightLbs,
         maintenance_calories: plan.maintenanceCalories,
+        maintenance_calories_source: metabolismSource,
+        maintenance_calories_estimated_at: metabolismLearning?.maintenanceCaloriesEstimatedAt ?? null,
+        last_metabolism_estimate: metabolismLearning?.lastMetabolismEstimate ?? null,
         target_calories: plan.targetCalories,
         protein_grams: plan.proteinGrams,
         carbs_grams: plan.carbsGrams,
@@ -340,6 +351,10 @@ export async function POST(request: Request) {
 
   if (planError) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+  }
+
+  if (metabolismLearning) {
+    await preserveMetabolismLearning(memberId);
   }
 
   const { error: targetError } = await supabaseAdmin
