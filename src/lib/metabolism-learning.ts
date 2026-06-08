@@ -37,6 +37,14 @@ function normalizeSnapshot(row: MetabolismLearningRow | null): MetabolismLearnin
   };
 }
 
+function isMissingLearningTableError(error: { code?: string; message?: string } | null) {
+  return (
+    error?.code === "42P01" ||
+    error?.message?.includes("member_metabolism_learning") ||
+    error?.message?.toLowerCase().includes("relation") && error.message.toLowerCase().includes("does not exist")
+  );
+}
+
 export async function loadMetabolismLearning(memberId: string): Promise<MetabolismLearningSnapshot | null> {
   const learned = await supabaseAdmin
     .from("member_metabolism_learning")
@@ -46,9 +54,13 @@ export async function loadMetabolismLearning(memberId: string): Promise<Metaboli
     .eq("member_id", memberId)
     .maybeSingle<MetabolismLearningRow>();
 
-  if (learned.error) throw new Error(learned.error.message);
-  const learnedSnapshot = normalizeSnapshot(learned.data);
-  if (learnedSnapshot) return learnedSnapshot;
+  if (learned.error && !isMissingLearningTableError(learned.error)) {
+    throw new Error(learned.error.message);
+  }
+  if (!learned.error) {
+    const learnedSnapshot = normalizeSnapshot(learned.data);
+    if (learnedSnapshot) return learnedSnapshot;
+  }
 
   const latestPlan = await supabaseAdmin
     .from("coach_nutrition_plans")
@@ -82,6 +94,7 @@ export async function preserveMetabolismLearning(memberId: string) {
       { onConflict: "member_id" }
     );
 
+  if (isMissingLearningTableError(error)) return snapshot;
   if (error) throw new Error(error.message);
   return snapshot;
 }
