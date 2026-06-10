@@ -25,6 +25,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Flutter app — separate toolchain, not linted by ESLint.
+    "elev8_mobile/**",
   ]),
 ]);
 
