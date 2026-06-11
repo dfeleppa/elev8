@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { Panel } from "@/components/ui";
+import NutritionTopBar from "./NutritionTopBar";
 import { useDismissable } from "@/hooks/useDismissable";
 import { useModalBehavior } from "@/hooks/useModalBehavior";
 
@@ -1359,6 +1360,9 @@ export default function HealthNutritionPage() {
             </button>
           </div>
 
+          <div className="pointer-events-auto mt-2">
+            <NutritionTopBar active="daily" showDate={false} />
+          </div>
         </header>
 
         {error ? (
