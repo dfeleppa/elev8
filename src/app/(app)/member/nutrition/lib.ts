@@ -227,8 +227,8 @@ export function statusFromDiff(consumed: number, target: number, tolerance: numb
 }
 
 export const STATUS_TEXT_COLOR: Record<TargetStatus, string | null> = {
-  good: "#16a34a",
-  over: "#dc2626",
+  good: "var(--nutrition-status-good)",
+  over: "var(--nutrition-status-over)",
   neutral: null,
 };
 

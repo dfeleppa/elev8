@@ -373,13 +373,31 @@
   --nutrition-bg-soft: #0e1320;
   --nutrition-card: #121826;
   --nutrition-card-elevated: #171f30;
-  --nutrition-card-border: rgba(255,255,255,0.08);
+  --nutrition-card-border: rgba(255,255,255,0.1);
   --nutrition-text-primary: #f8fafc;
-  --nutrition-text-secondary: #a8b3c7;
-  --nutrition-text-muted: #687386;
+  --nutrition-text-secondary: #f8fafc;
+  --nutrition-text-muted: #a8b3c7;
+  --nutrition-text-soft: #a8b3c7;
+  --nutrition-text-faint: #8b97ab;
   --nutrition-accent-teal: #16d4d8;
+  --nutrition-accent-teal-ink: #071a1c;
+  --nutrition-teal-text: #16d4d8;
   --nutrition-accent-pink: #ff4f93;
   --nutrition-accent-purple: #a78bfa;
+  --nutrition-button-bg: #f8fafc;
+  --nutrition-button-text: #0b1020;
+  --nutrition-surface: var(--nutrition-bg-soft);
+  --nutrition-surface-soft: var(--nutrition-bg-soft);
+  --nutrition-surface-faint: var(--nutrition-bg-soft);
+  --nutrition-surface-solid: #121826;
+  --nutrition-menu-hover: rgba(255, 255, 255, 0.06);
+  --nutrition-track: #243044;
+  --nutrition-status-good: #4ade80;
+  --nutrition-status-over: #f87171;
+  --nutrition-bar-protein: #16d4d8;
+  --nutrition-bar-carbs: #6fc1cd;
+  --nutrition-bar-fat: #ff4f93;
+  --nutrition-bar-fiber: #94a3b8;
   --nutrition-input-bg: #0b1020;
   --nutrition-input-border: rgba(255,255,255,0.12);
 
@@ -402,64 +420,49 @@
   box-shadow: 0 18px 42px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06) !important;
 }
 
+/* Dark counterparts for the light "luxury" structural rules below — those
+   use !important, so they need same-or-higher specificity overrides here. */
+:root[data-theme="dark"] .nutrition-dashboard .nutrition-date-pill,
+:root[data-theme="dark"] .nutrition-dashboard .nutrition-date-pill button {
+  color: var(--nutrition-text-primary) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .nutrition-date-pill > button:hover,
+:root[data-theme="dark"] .nutrition-dashboard .nutrition-date-pill button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--nutrition-text-primary) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .nutrition-metric-card {
+  background: var(--nutrition-card-elevated) !important;
+  border-color: var(--nutrition-card-border) !important;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .nutrition-metric-card p:first-child {
+  color: var(--nutrition-text-muted) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .nutrition-metric-card p:nth-child(2) {
+  color: var(--nutrition-text-primary) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .nutrition-metric-card p:nth-child(2) span {
+  color: var(--nutrition-text-faint) !important;
+}
+
+:root[data-theme="dark"] .nutrition-dashboard .nutrition-secondary-action {
+  border-color: var(--nutrition-card-border) !important;
+  background: var(--nutrition-card-elevated) !important;
+  color: var(--nutrition-text-primary) !important;
+}
+
 :root[data-theme="dark"] .nutrition-dashboard h1,
 :root[data-theme="dark"] .nutrition-dashboard h2,
 :root[data-theme="dark"] .nutrition-dashboard h3,
 :root[data-theme="dark"] .nutrition-dashboard p,
 :root[data-theme="dark"] .nutrition-dashboard span {
   color: inherit;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#17141F\],
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#101828\],
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#344054\] {
-  color: var(--nutrition-text-primary) !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#475467\],
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#5F6B7A\],
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#667085\],
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#98A2B3\] {
-  color: var(--nutrition-text-secondary) !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#0C7D85\],
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#0B7C84\],
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#0BA7B0\] {
-  color: var(--nutrition-accent-teal) !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#B4236A\] {
-  color: var(--nutrition-accent-pink) !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#6B4FD6\] {
-  color: var(--nutrition-accent-purple) !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .text-\[\#FF5CA8\] {
-  color: var(--nutrition-accent-pink) !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .bg-white,
-:root[data-theme="dark"] .nutrition-dashboard .bg-white\/60,
-:root[data-theme="dark"] .nutrition-dashboard .bg-white\/70,
-:root[data-theme="dark"] .nutrition-dashboard .bg-white\/72,
-:root[data-theme="dark"] .nutrition-dashboard .bg-white\/76,
-:root[data-theme="dark"] .nutrition-dashboard .bg-white\/78,
-:root[data-theme="dark"] .nutrition-dashboard .bg-white\/82,
-:root[data-theme="dark"] .nutrition-dashboard .bg-white\/84,
-:root[data-theme="dark"] .nutrition-dashboard .bg-white\/86,
-:root[data-theme="dark"] .nutrition-dashboard .bg-white\/88 {
-  background-color: var(--nutrition-bg-soft) !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .border-\[\#D0D5DD\],
-:root[data-theme="dark"] .nutrition-dashboard .border-\[\#D4DAE4\]\/85,
-:root[data-theme="dark"] .nutrition-dashboard .border-\[\#DDE2EA\],
-:root[data-theme="dark"] .nutrition-dashboard .border-\[\#DDE2EA\]\/80,
-:root[data-theme="dark"] .nutrition-dashboard .border-\[\#DDE2EA\]\/85 {
-  border-color: var(--nutrition-card-border) !important;
 }
 
 :root[data-theme="dark"] .nutrition-dashboard input,
@@ -475,23 +478,6 @@
 
 :root[data-theme="dark"] .nutrition-dashboard svg circle[stroke="#E7EAEE"] {
   stroke: #243044 !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .bg-\[\#E1E6EE\] {
-  background-color: #243044 !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .bg-\[\#101828\] {
-  background-color: var(--nutrition-text-primary) !important;
-  color: var(--nutrition-bg-main) !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .bg-\[\#14D2DC\] {
-  background-color: var(--nutrition-accent-teal) !important;
-}
-
-:root[data-theme="dark"] .nutrition-dashboard .bg-\[\#FF5CA8\] {
-  background-color: var(--nutrition-accent-pink) !important;
 }
 
 :root[data-theme="dark"] .nutrition-dashboard .shadow-\[inset_0_1px_0_rgba\(255\,255\,255\,0\.94\)\],
@@ -1046,6 +1032,35 @@
   --luxury-soft: #ececec;
   --luxury-teal: #14d2dc;
   --luxury-pink: #ff4f93;
+
+  /* Theme tokens — components reference these instead of hardcoded hex so
+     the dark block below only has to redefine variables, not chase classes. */
+  --nutrition-text-primary: #17141f;
+  --nutrition-text-secondary: #344054;
+  --nutrition-text-muted: #475467;
+  --nutrition-text-soft: #667085;
+  --nutrition-text-faint: #98a2b3;
+  --nutrition-accent-teal: #14d2dc;
+  --nutrition-accent-teal-ink: #071a1c;
+  --nutrition-teal-text: #0b858c;
+  --nutrition-accent-pink: #ff4f93;
+  --nutrition-accent-purple: #6b4fd6;
+  --nutrition-button-bg: #0f0f10;
+  --nutrition-button-text: #ffffff;
+  --nutrition-surface: rgba(255, 255, 255, 0.84);
+  --nutrition-surface-soft: rgba(255, 255, 255, 0.72);
+  --nutrition-surface-faint: rgba(255, 255, 255, 0.6);
+  --nutrition-surface-solid: #ffffff;
+  --nutrition-card-border: rgba(212, 218, 228, 0.85);
+  --nutrition-menu-hover: #f7f5ef;
+  --nutrition-track: #e1e6ee;
+  --nutrition-status-good: #16a34a;
+  --nutrition-status-over: #dc2626;
+  --nutrition-bar-protein: #14d2dc;
+  --nutrition-bar-carbs: #61a7b3;
+  --nutrition-bar-fat: #ff5ca8;
+  --nutrition-bar-fiber: #7a8699;
+
   background: var(--app-page-background) !important;
   color: var(--luxury-ink) !important;
   font-family: var(--font-brand-sans);
@@ -1160,20 +1175,8 @@
   letter-spacing: -0.01em;
 }
 
-.nutrition-metric-card .h-full.rounded-full,
-.nutrition-dashboard .bg-\[\#14D2DC\] {
+.nutrition-metric-card .h-full.rounded-full {
   background-color: var(--luxury-teal) !important;
-}
-
-.nutrition-dashboard .text-\[\#0C7D85\],
-.nutrition-dashboard .text-\[\#0B7C84\],
-.nutrition-dashboard .text-\[\#0BA7B0\] {
-  color: #0b858c !important;
-}
-
-.nutrition-dashboard .text-\[\#FF5CA8\],
-.nutrition-dashboard .text-\[\#B4236A\] {
-  color: var(--luxury-pink) !important;
 }
 
 .nutrition-body-metrics {
@@ -1202,10 +1205,9 @@
 }
 
 .nutrition-body-metrics button,
-.nutrition-dashboard a.bg-\[\#6D3DD4\],
-.nutrition-dashboard .bg-\[\#101828\] {
-  background: #0f0f10 !important;
-  color: #ffffff !important;
+.nutrition-dashboard a.bg-\[\#6D3DD4\] {
+  background: var(--nutrition-button-bg, #0f0f10) !important;
+  color: var(--nutrition-button-text, #ffffff) !important;
   box-shadow: 0 16px 34px rgba(15, 15, 16, 0.22) !important;
 }
 
@@ -1297,12 +1299,6 @@
   border-radius: 14px !important;
   background: rgba(255, 255, 255, 0.86) !important;
   border-color: rgba(15, 15, 16, 0.1) !important;
-}
-
-.nutrition-meal-card .grid.h-9.w-9.place-items-center.rounded-full.bg-\[\#14D2DC\] {
-  background: var(--luxury-teal) !important;
-  color: #071a1c !important;
-  box-shadow: 0 16px 32px rgba(20, 210, 220, 0.28) !important;
 }
 
 .app-shell-sidebar {

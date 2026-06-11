@@ -476,8 +476,8 @@ export default function FoodDialog({
               onClick={() => setDialogTab("scan")}
               className={`inline-flex h-10 items-center gap-2 rounded-full border px-3 text-sm font-extrabold shadow-[0_12px_24px_rgba(20,210,220,0.18)] transition hover:-translate-y-0.5 hover:brightness-105 ${
                 dialogTab === "scan"
-                  ? "border-[#14D2DC]/60 bg-[#14D2DC] text-[#071A21]"
-                  : "border-[#14D2DC]/40 bg-[linear-gradient(135deg,rgba(20,210,220,0.24),rgba(255,92,168,0.22))] text-[#0C7D85]"
+                  ? "border-[var(--nutrition-accent-teal)]/60 bg-[var(--nutrition-accent-teal)] text-[var(--nutrition-accent-teal-ink)]"
+                  : "border-[var(--nutrition-accent-teal)]/40 bg-[linear-gradient(135deg,rgba(20,210,220,0.24),rgba(255,92,168,0.22))] text-[var(--nutrition-teal-text)]"
               }`}
               aria-pressed={dialogTab === "scan"}
             >

@@ -56,41 +56,41 @@ export default function BodyMetricsForm({ onError }: BodyMetricsFormProps) {
   }
 
   return (
-    <div className="nutrition-body-metrics mt-3 rounded-[18px] border border-[#D4DAE4]/85 bg-white/72 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
+    <div className="nutrition-body-metrics mt-3 rounded-[18px] border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#667085]">Today&apos;s metrics</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Today&apos;s metrics</p>
         {message ? (
-          <span className="rounded-full bg-[#14D2DC]/12 px-2 py-1 text-[11px] font-extrabold text-[#0C7D85]">
+          <span className="rounded-full bg-[var(--nutrition-accent-teal)]/12 px-2 py-1 text-[11px] font-extrabold text-[var(--nutrition-teal-text)]">
             {message}
           </span>
         ) : null}
       </div>
       <div className="mt-2 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-2">
         <label className="min-w-0 space-y-1">
-          <span className="text-[11px] font-bold text-[#5F6B7A]">Weight</span>
+          <span className="text-[11px] font-bold text-[var(--nutrition-text-muted)]">Weight</span>
           <input
             value={draft.weight}
             onChange={(event) => setDraft((prev) => ({ ...prev, weight: event.target.value }))}
             placeholder="lb"
             inputMode="decimal"
-            className="w-full rounded-[14px] border border-[#D4DAE4]/85 bg-white/86 px-3 py-2 text-sm font-bold text-[#17141F] placeholder:text-[#98A2B3] focus:border-[#14D2DC]/45 focus:outline-none"
+            className="w-full rounded-[14px] border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface)] px-3 py-2 text-sm font-bold text-[var(--nutrition-text-primary)] placeholder:text-[var(--nutrition-text-faint)] focus:border-[var(--nutrition-accent-teal)]/45 focus:outline-none"
           />
         </label>
         <label className="min-w-0 space-y-1">
-          <span className="text-[11px] font-bold text-[#5F6B7A]">Body Fat %</span>
+          <span className="text-[11px] font-bold text-[var(--nutrition-text-muted)]">Body Fat %</span>
           <input
             value={draft.bodyFat}
             onChange={(event) => setDraft((prev) => ({ ...prev, bodyFat: event.target.value }))}
             placeholder="%"
             inputMode="decimal"
-            className="w-full rounded-[14px] border border-[#D4DAE4]/85 bg-white/86 px-3 py-2 text-sm font-bold text-[#17141F] placeholder:text-[#98A2B3] focus:border-[#14D2DC]/45 focus:outline-none"
+            className="w-full rounded-[14px] border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface)] px-3 py-2 text-sm font-bold text-[var(--nutrition-text-primary)] placeholder:text-[var(--nutrition-text-faint)] focus:border-[var(--nutrition-accent-teal)]/45 focus:outline-none"
           />
         </label>
         <button
           type="button"
           onClick={() => void submitBodyComp()}
           disabled={saving}
-          className="h-10 rounded-[14px] bg-[#101828] px-3 text-[12px] font-extrabold text-white shadow-[0_8px_18px_rgba(16,24,40,0.16)] transition hover:brightness-110 disabled:opacity-60"
+          className="h-10 rounded-[14px] bg-[var(--nutrition-button-bg)] px-3 text-[12px] font-extrabold text-[var(--nutrition-button-text)] shadow-[0_8px_18px_rgba(16,24,40,0.16)] transition hover:brightness-110 disabled:opacity-60"
         >
           {saving ? "Saving" : "Submit"}
         </button>

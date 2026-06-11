@@ -156,7 +156,7 @@ export default function CoachPanel() {
 
   if (status === "loading") {
     return (
-      <div className="premium-glass-card p-4 text-sm font-bold text-[#475467]">
+      <div className="premium-glass-card p-4 text-sm font-bold text-[var(--nutrition-text-muted)]">
         Loading coach plan...
       </div>
     );
@@ -164,7 +164,7 @@ export default function CoachPanel() {
 
   if (status === "none") {
     return (
-      <div className="nutrition-coach-hero premium-glass-card flex h-full flex-col overflow-hidden p-5 text-[#17141F] sm:p-6">
+      <div className="nutrition-coach-hero premium-glass-card flex h-full flex-col overflow-hidden p-5 text-[var(--nutrition-text-primary)] sm:p-6">
         {/* Macro ring visual */}
         <div className="relative mx-auto mb-4 flex h-40 w-full max-w-[280px] items-center justify-center sm:mb-5 sm:h-48">
           <div className="relative flex h-32 w-32 items-center justify-center sm:h-36 sm:w-36">
@@ -174,32 +174,32 @@ export default function CoachPanel() {
               className="relative flex h-[88px] w-[88px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_28%,rgba(20,210,220,0.42),rgba(255,92,168,0.34))] shadow-[inset_0_2px_10px_rgba(255,255,255,0.7),0_12px_26px_rgba(20,210,220,0.18)] sm:h-24 sm:w-24"
               aria-hidden="true"
             >
-              <Salad className="h-9 w-9 text-[#0B7C84] sm:h-10 sm:w-10" />
+              <Salad className="h-9 w-9 text-[var(--nutrition-teal-text)] sm:h-10 sm:w-10" />
             </span>
           </div>
           {/* Floating macro chips */}
-          <span className="absolute left-0 top-[42%] rounded-[12px] border border-[rgba(20,210,220,0.22)] bg-white/82 px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
-            <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#0B7C84]">Protein</span>
-            <span className="block text-[13px] font-extrabold leading-none text-[#0B7C84]">30%</span>
+          <span className="absolute left-0 top-[42%] rounded-[12px] border border-[rgba(20,210,220,0.22)] bg-[var(--nutrition-surface)] px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
+            <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[var(--nutrition-teal-text)]">Protein</span>
+            <span className="block text-[13px] font-extrabold leading-none text-[var(--nutrition-teal-text)]">30%</span>
           </span>
-          <span className="absolute right-1 top-2 rounded-[12px] border border-[rgba(255,92,168,0.22)] bg-white/82 px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
-            <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#B4236A]">Carbs</span>
-            <span className="block text-[13px] font-extrabold leading-none text-[#B4236A]">40%</span>
+          <span className="absolute right-1 top-2 rounded-[12px] border border-[rgba(255,92,168,0.22)] bg-[var(--nutrition-surface)] px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
+            <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[var(--nutrition-accent-pink)]">Carbs</span>
+            <span className="block text-[13px] font-extrabold leading-none text-[var(--nutrition-accent-pink)]">40%</span>
           </span>
-          <span className="absolute bottom-2 right-2 rounded-[12px] border border-[rgba(124,92,224,0.22)] bg-white/82 px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
-            <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[#6B4FD6]">Fats</span>
-            <span className="block text-[13px] font-extrabold leading-none text-[#6B4FD6]">30%</span>
+          <span className="absolute bottom-2 right-2 rounded-[12px] border border-[rgba(124,92,224,0.22)] bg-[var(--nutrition-surface)] px-2.5 py-1.5 shadow-[0_8px_18px_rgba(16,24,40,0.08)]">
+            <span className="block text-[8.5px] font-extrabold uppercase tracking-[0.08em] text-[var(--nutrition-accent-purple)]">Fats</span>
+            <span className="block text-[13px] font-extrabold leading-none text-[var(--nutrition-accent-purple)]">30%</span>
           </span>
         </div>
 
-        <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[rgba(20,210,220,0.12)] px-3 py-1 text-[11px] font-bold text-[#0B7C84]">
+        <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[rgba(20,210,220,0.12)] px-3 py-1 text-[11px] font-bold text-[var(--nutrition-teal-text)]">
           <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
           Nutrition Coach
         </span>
-        <h2 className="mt-3 font-head text-[28px] font-extrabold leading-[1.05] tracking-tight text-[#17141F] sm:text-[32px]">
+        <h2 className="mt-3 font-head text-[28px] font-extrabold leading-[1.05] tracking-tight text-[var(--nutrition-text-primary)] sm:text-[32px]">
           Start your plan
         </h2>
-        <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
+        <p className="mt-2 text-sm font-semibold leading-6 text-[var(--nutrition-text-soft)]">
           Set your goal, get your macros, and build a plan that fits your training.
         </p>
         <Link
@@ -215,35 +215,35 @@ export default function CoachPanel() {
 
   return (
     <div
-      className={`nutrition-coach-panel premium-glass-card flex h-full flex-col overflow-hidden p-3 text-[#17141F] sm:p-5 ${
-        checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[#FF5CA8]/50" : ""
+      className={`nutrition-coach-panel premium-glass-card flex h-full flex-col overflow-hidden p-3 text-[var(--nutrition-text-primary)] sm:p-5 ${
+        checkInTimeline.daysUntilNext === 0 ? "ring-2 ring-[var(--nutrition-accent-pink)]/50" : ""
       }`}
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="inline-flex items-center gap-1.5 text-[16px] font-extrabold text-[#17141F] sm:gap-2 sm:text-[19px]">
-          <Atom className="h-4 w-4 text-[#FF5CA8] sm:h-5 sm:w-5" aria-hidden="true" />
+        <div className="inline-flex items-center gap-1.5 text-[16px] font-extrabold text-[var(--nutrition-text-primary)] sm:gap-2 sm:text-[19px]">
+          <Atom className="h-4 w-4 text-[var(--nutrition-accent-pink)] sm:h-5 sm:w-5" aria-hidden="true" />
           Coach
         </div>
         {showCoachGoalProgress ? (
-          <span className="rounded-full border border-[#DDE2EA] bg-white/78 px-2 py-0.5 text-[10.5px] font-extrabold text-[#475467] sm:px-2.5 sm:py-1 sm:text-xs">
+          <span className="rounded-full border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-2 py-0.5 text-[10.5px] font-extrabold text-[var(--nutrition-text-muted)] sm:px-2.5 sm:py-1 sm:text-xs">
             {Math.round(weightProgressPercent)}% to goal
           </span>
         ) : null}
       </div>
       <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4">
-        <p className="min-w-0 truncate text-[16px] font-semibold leading-tight text-[#17141F] sm:text-[19px]">
+        <p className="min-w-0 truncate text-[16px] font-semibold leading-tight text-[var(--nutrition-text-primary)] sm:text-[19px]">
           Goal: <span className="font-extrabold">{coachGoalLabel}</span>
         </p>
         <Link
           href="/member/nutrition/coach"
-          className="shrink-0 rounded-full bg-[#101828] px-3 py-1.5 text-[11px] font-bold text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] transition hover:brightness-110 sm:px-4 sm:py-2 sm:text-xs"
+          className="shrink-0 rounded-full bg-[var(--nutrition-button-bg)] px-3 py-1.5 text-[11px] font-bold text-[var(--nutrition-button-text)] shadow-[0_10px_22px_rgba(16,24,40,0.16)] transition hover:brightness-110 sm:px-4 sm:py-2 sm:text-xs"
         >
           View plan
         </Link>
       </div>
-      <div className="mt-3 rounded-[16px] border border-[#DDE2EA]/80 bg-white/60 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] sm:mt-4 sm:rounded-[20px] sm:p-3.5">
+      <div className="mt-3 rounded-[16px] border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-faint)] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] sm:mt-4 sm:rounded-[20px] sm:p-3.5">
         <div className="flex items-center justify-between gap-3">
-          <span className={`text-[12.5px] font-extrabold text-[#344054] sm:text-[15px] ${checkInTimeline.daysUntilNext === 0 ? "uppercase text-[#B4236A]" : ""}`}>
+          <span className={`text-[12.5px] font-extrabold text-[var(--nutrition-text-secondary)] sm:text-[15px] ${checkInTimeline.daysUntilNext === 0 ? "uppercase text-[var(--nutrition-accent-pink)]" : ""}`}>
           {checkInTimeline.daysUntilNext === 0
             ? "Check-in due today"
             : `${checkInTimeline.daysUntilNext} day${checkInTimeline.daysUntilNext === 1 ? "" : "s"} until check-in`}
@@ -255,19 +255,19 @@ export default function CoachPanel() {
               <span
                 className={`mx-auto block h-5 rounded-[7px] border sm:h-8 sm:rounded-[10px] ${
                   day.state === "complete"
-                    ? "border-[#14D2DC]/45 bg-[#14D2DC]/22 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]"
+                    ? "border-[var(--nutrition-accent-teal)]/45 bg-[var(--nutrition-accent-teal)]/22 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]"
                     : day.state === "partial"
-                      ? "border-[#FF5CA8]/38 bg-[linear-gradient(135deg,rgba(255,92,168,0.2)_0%,rgba(255,92,168,0.2)_50%,rgba(255,255,255,0.74)_50%,rgba(255,255,255,0.74)_100%)]"
-                      : "border-[#DDE2EA] bg-white/72"
+                      ? "border-[var(--nutrition-accent-pink)]/38 bg-[linear-gradient(135deg,rgba(255,92,168,0.2)_0%,rgba(255,92,168,0.2)_50%,rgba(255,255,255,0.74)_50%,rgba(255,255,255,0.74)_100%)]"
+                      : "border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)]"
                 }`}
               />
               <span
                 className={`mt-1 block text-[8.5px] font-extrabold uppercase tracking-[0.02em] sm:mt-1.5 sm:text-[10.5px] sm:tracking-[0.06em] ${
                   day.state === "complete"
-                    ? "text-[#0C7D85]"
+                    ? "text-[var(--nutrition-teal-text)]"
                     : day.state === "partial"
-                      ? "text-[#B4236A]"
-                      : "text-[#667085]"
+                      ? "text-[var(--nutrition-accent-pink)]"
+                      : "text-[var(--nutrition-text-soft)]"
                 }`}
               >
                 <span className="sm:hidden">{day.label.slice(0, 1)}</span>
@@ -281,8 +281,8 @@ export default function CoachPanel() {
         href="/member/nutrition/coach"
         className={`mt-3 flex items-center justify-center rounded-[16px] px-4 py-2.5 text-[12px] font-extrabold transition sm:mt-4 sm:rounded-[20px] sm:text-[13px] ${
           checkInTimeline.daysUntilNext === 0
-            ? "bg-[#FF5CA8] text-white shadow-[0_10px_22px_rgba(255,92,168,0.28)] hover:brightness-110"
-            : "bg-[#101828] text-white shadow-[0_10px_22px_rgba(16,24,40,0.16)] hover:brightness-110"
+            ? "bg-[var(--nutrition-accent-pink)] text-white shadow-[0_10px_22px_rgba(255,92,168,0.28)] hover:brightness-110"
+            : "bg-[var(--nutrition-button-bg)] text-[var(--nutrition-button-text)] shadow-[0_10px_22px_rgba(16,24,40,0.16)] hover:brightness-110"
         }`}
       >
         {checkInTimeline.daysUntilNext === 0 ? "Start weekly check-in" : "Check-in"}

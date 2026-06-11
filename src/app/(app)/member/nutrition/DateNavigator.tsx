@@ -31,7 +31,7 @@ export default function DateNavigator({ selectedDate, onChange }: DateNavigatorP
       <button
         type="button"
         onClick={() => onChange(shiftDate(selectedDate, -1))}
-        className="grid h-9 w-9 place-items-center rounded-full text-[#475467] transition hover:bg-white hover:text-[#17141F]"
+        className="grid h-9 w-9 place-items-center rounded-full text-[var(--nutrition-text-muted)] transition hover:bg-[var(--nutrition-surface-solid)] hover:text-[var(--nutrition-text-primary)]"
         aria-label="Previous day"
       >
         <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -46,7 +46,7 @@ export default function DateNavigator({ selectedDate, onChange }: DateNavigatorP
             }
             dateInputRef.current?.click();
           }}
-          className="min-w-0 rounded-full px-2 py-2 text-center text-[13px] font-extrabold leading-none text-[#17141F] transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#14D2DC]/35 min-[380px]:px-3 min-[380px]:text-[14px] sm:text-[15px]"
+          className="min-w-0 rounded-full px-2 py-2 text-center text-[13px] font-extrabold leading-none text-[var(--nutrition-text-primary)] transition hover:bg-[var(--nutrition-surface-solid)] focus:outline-none focus:ring-2 focus:ring-[var(--nutrition-accent-teal)]/35 min-[380px]:px-3 min-[380px]:text-[14px] sm:text-[15px]"
           aria-label="Open date picker"
         >
           <span className="block truncate">{compactDateLabel}</span>
@@ -64,7 +64,7 @@ export default function DateNavigator({ selectedDate, onChange }: DateNavigatorP
       <button
         type="button"
         onClick={() => onChange(shiftDate(selectedDate, 1))}
-        className="grid h-9 w-9 place-items-center rounded-full text-[#475467] transition hover:bg-white hover:text-[#17141F]"
+        className="grid h-9 w-9 place-items-center rounded-full text-[var(--nutrition-text-muted)] transition hover:bg-[var(--nutrition-surface-solid)] hover:text-[var(--nutrition-text-primary)]"
         aria-label="Next day"
       >
         <ChevronRight className="h-5 w-5" aria-hidden="true" />

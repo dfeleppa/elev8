@@ -67,8 +67,8 @@ export default function MealCard({
     <div ref={cardRef} className="nutrition-meal-card premium-glass-card relative p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[17px] font-bold leading-tight text-[#17141F]">{meal.label}</p>
-          <p className="mt-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-[#5F6B7A]">
+          <p className="text-[17px] font-bold leading-tight text-[var(--nutrition-text-primary)]">{meal.label}</p>
+          <p className="mt-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-[var(--nutrition-text-muted)]">
             {Math.round(totals.calories).toLocaleString()} kcal | P{formatGrams(totals.protein)} | C{formatGrams(totals.carbs)} | F{formatGrams(totals.fat)}
           </p>
         </div>
@@ -76,7 +76,7 @@ export default function MealCard({
           <button
             type="button"
             onClick={() => setMenuOpen((current) => !current)}
-            className="grid h-9 w-9 place-items-center rounded-full text-[#667085] transition hover:bg-white/80 hover:text-[#17141F]"
+            className="grid h-9 w-9 place-items-center rounded-full text-[var(--nutrition-text-soft)] transition hover:bg-[var(--nutrition-surface)] hover:text-[var(--nutrition-text-primary)]"
             aria-label={`Meal actions for ${meal.label}`}
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
@@ -91,7 +91,7 @@ export default function MealCard({
               setMenuOpen(false);
               onAddFood();
             }}
-            className="grid h-9 w-9 place-items-center rounded-full bg-[#14D2DC] text-[#071A1C] shadow-[0_10px_24px_rgba(20,210,220,0.26)] transition hover:brightness-105"
+            className="grid h-9 w-9 place-items-center rounded-full bg-[var(--nutrition-accent-teal)] text-[var(--nutrition-accent-teal-ink)] shadow-[0_10px_24px_rgba(20,210,220,0.26)] transition hover:brightness-105"
             aria-label={`Add to ${meal.label}`}
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
@@ -100,14 +100,14 @@ export default function MealCard({
       </div>
 
       {menuOpen ? (
-        <div className="absolute right-4 top-14 z-20 w-44 overflow-hidden rounded-2xl border border-white/80 bg-white shadow-[0_18px_38px_rgba(16,24,40,0.14)]">
+        <div className="absolute right-4 top-14 z-20 w-44 overflow-hidden rounded-2xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)] shadow-[0_18px_38px_rgba(16,24,40,0.14)]">
           <button
             type="button"
             onClick={() => {
               setMenuOpen(false);
               onDeleteMeal();
             }}
-            className="block w-full px-4 py-3 text-left text-sm font-semibold text-rose-500 transition hover:bg-[#F7F5EF]"
+            className="block w-full px-4 py-3 text-left text-sm font-semibold text-rose-500 transition hover:bg-[var(--nutrition-menu-hover)]"
           >
             Delete meal
           </button>
@@ -118,7 +118,7 @@ export default function MealCard({
               onCopyMeal();
             }}
             disabled={copying}
-            className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#475467] transition hover:bg-[#F7F5EF] disabled:opacity-60"
+            className="block w-full px-4 py-3 text-left text-sm font-semibold text-[var(--nutrition-text-muted)] transition hover:bg-[var(--nutrition-menu-hover)] disabled:opacity-60"
           >
             {copying ? "Copying..." : "Copy meal"}
           </button>
@@ -136,11 +136,11 @@ export default function MealCard({
             const entryF = formatGrams((entry.fat ?? 0) * quantity);
             const isEditingServing = editingEntryId === entry.id;
             return (
-              <div key={`mobile-entry-${entry.id}`} className="rounded-2xl border border-[#DDE2EA]/85 bg-white/70 p-3">
+              <div key={`mobile-entry-${entry.id}`} className="rounded-2xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[14px] font-bold leading-tight text-[#17141F]">{entry.entry_name}</p>
-                    <p className="mt-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#5F6B7A]">
+                    <p className="text-[14px] font-bold leading-tight text-[var(--nutrition-text-primary)]">{entry.entry_name}</p>
+                    <p className="mt-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.08em] text-[var(--nutrition-text-muted)]">
                       {servingLabel}, {entryCal} CAL | C{entryC} | P{entryP} | F{entryF}
                     </p>
                   </div>
@@ -148,7 +148,7 @@ export default function MealCard({
                     <button
                       type="button"
                       onClick={() => openServingSizeEditor(entry.id, entry.quantity)}
-                      className="grid h-10 w-10 place-items-center rounded-full text-[#667085] transition hover:bg-white hover:text-[#17141F]"
+                      className="grid h-10 w-10 place-items-center rounded-full text-[var(--nutrition-text-soft)] transition hover:bg-[var(--nutrition-surface-solid)] hover:text-[var(--nutrition-text-primary)]"
                       aria-label={`Edit servings for ${entry.entry_name}`}
                     >
                       <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -156,7 +156,7 @@ export default function MealCard({
                     <button
                       type="button"
                       onClick={() => onDeleteEntry(entry.id, entry.entry_name)}
-                      className="grid h-10 w-10 place-items-center rounded-full text-[#667085] transition hover:bg-rose-50 hover:text-rose-500"
+                      className="grid h-10 w-10 place-items-center rounded-full text-[var(--nutrition-text-soft)] transition hover:bg-rose-50 hover:text-rose-500"
                       aria-label={`Remove ${entry.entry_name}`}
                     >
                       <X className="h-4 w-4" aria-hidden="true" />
@@ -165,7 +165,7 @@ export default function MealCard({
                 </div>
                 {isEditingServing ? (
                   <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#667085]">
+                    <span className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">
                       Servings
                     </span>
                     <div className="flex items-center gap-2">
@@ -179,14 +179,14 @@ export default function MealCard({
                             setEditServingDraft("");
                           }
                         }}
-                        className="h-9 w-20 rounded-xl border border-[#D0D5DD] bg-white px-2 text-sm font-bold text-[#101828] focus:border-[#14D2DC] focus:outline-none"
+                        className="h-9 w-20 rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)] px-2 text-sm font-bold text-[var(--nutrition-text-primary)] focus:border-[var(--nutrition-accent-teal)] focus:outline-none"
                         inputMode="decimal"
                         aria-label="Edit servings"
                       />
                       <button
                         type="button"
                         onClick={() => void saveServingSize(entry.id)}
-                        className="grid h-9 w-9 place-items-center rounded-full bg-[#101828] text-white"
+                        className="grid h-9 w-9 place-items-center rounded-full bg-[var(--nutrition-button-bg)] text-[var(--nutrition-button-text)]"
                         aria-label="Save servings"
                       >
                         <Check className="h-4 w-4" aria-hidden="true" />
@@ -205,13 +205,13 @@ export default function MealCard({
             setMenuOpen(false);
             onAddFood();
           }}
-          className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#DDE2EA]/80 bg-white/76 px-4 py-4 text-sm font-bold text-[#667085] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_24px_rgba(16,24,40,0.045)] transition hover:border-[#14D2DC]/45 hover:bg-white/88 hover:text-[#0C7D85] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_12px_28px_rgba(20,210,220,0.1)]"
+          className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-4 py-4 text-sm font-bold text-[var(--nutrition-text-soft)] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_24px_rgba(16,24,40,0.045)] transition hover:border-[var(--nutrition-accent-teal)]/45 hover:bg-[var(--nutrition-surface)] hover:text-[var(--nutrition-teal-text)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_12px_28px_rgba(20,210,220,0.1)]"
         >
           <span className="text-left">
-            <span className="block text-[#344054]">No food logged yet</span>
-            <span className="block text-[12px] font-extrabold text-[#0C7D85]">Tap to start logging</span>
+            <span className="block text-[var(--nutrition-text-secondary)]">No food logged yet</span>
+            <span className="block text-[12px] font-extrabold text-[var(--nutrition-teal-text)]">Tap to start logging</span>
           </span>
-          <span className="grid h-8 w-8 place-items-center rounded-full border border-[#14D2DC]/35 bg-[#14D2DC]/12 text-[#0C7D85]">
+          <span className="grid h-8 w-8 place-items-center rounded-full border border-[var(--nutrition-accent-teal)]/35 bg-[var(--nutrition-accent-teal)]/12 text-[var(--nutrition-teal-text)]">
             <Plus className="h-4 w-4" aria-hidden="true" />
           </span>
         </button>
