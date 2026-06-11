@@ -1905,7 +1905,7 @@ export default function HealthNutritionPage() {
             }}
             className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-4 sm:items-center sm:py-6"
           >
-            <div className="panel my-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)] [--line:rgba(148,188,221,0.16)] [--line-strong:rgba(148,188,221,0.26)] [--panel:rgba(20,58,91,0.98)] [--panel-2:rgba(31,72,106,0.92)] [--panel-3:rgba(39,86,124,0.92)] [--text:#E8F2FF] [--text-muted:#A9BED5] [--text-soft:#7F9BB8]">
+            <div className="panel my-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium text-[var(--text-muted)]">
@@ -1991,12 +1991,12 @@ export default function HealthNutritionPage() {
                     />
                   </label>
                   {labelScanError ? (
-                    <div className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-400">
+                    <div className="nutrition-error-banner mt-4 rounded-2xl border border-rose-300/70 bg-rose-50/90 p-4 text-sm font-semibold text-rose-700">
                       {labelScanError}
                     </div>
                   ) : null}
                   {labelScanResult ? (
-                    <div className="mt-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+                    <div className="mt-4 rounded-2xl border border-[var(--success-line)] bg-[var(--success-bg)] p-4 text-sm font-semibold text-[var(--success-text)]">
                       Label scanned with {labelScanResult.confidence} confidence. Review the filled fields in Create food.
                     </div>
                   ) : null}
@@ -2015,7 +2015,7 @@ export default function HealthNutritionPage() {
                       value={createFoodDraft.name}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, name: event.target.value }))}
                       placeholder="Food name"
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
@@ -2025,7 +2025,7 @@ export default function HealthNutritionPage() {
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, servingSize: event.target.value }))}
                       placeholder="e.g. 84"
                       inputMode="decimal"
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                     <span className="block text-[10px] text-[var(--text-soft)]">How much is in one serving (e.g. 84 grams).</span>
                   </label>
@@ -2034,7 +2034,7 @@ export default function HealthNutritionPage() {
                     <select
                       value={createFoodDraft.servingUnit}
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, servingUnit: event.target.value }))}
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-[var(--line-focus)] focus:outline-none"
                     >
                       {SERVING_UNIT_OPTIONS.map((unit) => (
                         <option key={unit} value={unit}>
@@ -2050,7 +2050,7 @@ export default function HealthNutritionPage() {
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, calories: event.target.value }))}
                       placeholder="Calories"
                       inputMode="decimal"
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
@@ -2060,7 +2060,7 @@ export default function HealthNutritionPage() {
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, protein: event.target.value }))}
                       placeholder="Protein"
                       inputMode="decimal"
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
@@ -2070,7 +2070,7 @@ export default function HealthNutritionPage() {
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, carbs: event.target.value }))}
                       placeholder="Carbs"
                       inputMode="decimal"
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
@@ -2080,7 +2080,7 @@ export default function HealthNutritionPage() {
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, fat: event.target.value }))}
                       placeholder="Fat"
                       inputMode="decimal"
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
@@ -2090,7 +2090,7 @@ export default function HealthNutritionPage() {
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, sugar: event.target.value }))}
                       placeholder="Sugar"
                       inputMode="decimal"
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1">
@@ -2100,7 +2100,7 @@ export default function HealthNutritionPage() {
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, fiber: event.target.value }))}
                       placeholder="Fiber"
                       inputMode="decimal"
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                   </label>
                   <label className="space-y-1 sm:col-span-2">
@@ -2110,7 +2110,7 @@ export default function HealthNutritionPage() {
                       onChange={(event) => setCreateFoodDraft((prev) => ({ ...prev, saturatedFat: event.target.value }))}
                       placeholder="Saturated fat"
                       inputMode="decimal"
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                   </label>
                   <button
@@ -2131,7 +2131,7 @@ export default function HealthNutritionPage() {
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
                       onKeyDown={(event) => { if (event.key === "Enter") handleFoodSearch(); }}
-                      className="min-w-[220px] flex-1 rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="min-w-[220px] flex-1 rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                       placeholder="Search foods"
                     />
                     <button
@@ -2144,7 +2144,7 @@ export default function HealthNutritionPage() {
                   </div>
 
                   {searchError ? (
-                    <div className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-400">
+                    <div className="nutrition-error-banner mt-4 rounded-2xl border border-rose-300/70 bg-rose-50/90 p-4 text-sm font-semibold text-rose-700">
                       {searchError}
                     </div>
                   ) : null}
@@ -2188,7 +2188,7 @@ export default function HealthNutritionPage() {
                       value={dialogSearch}
                       onChange={(event) => setDialogSearch(event.target.value)}
                       placeholder={dialogTab === "recent" ? "Search recent foods" : "Search my foods"}
-                      className="w-full rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2.5 text-base text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2.5 text-base text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                   </div>
                   <div className="mt-4 max-h-80 space-y-2 overflow-y-auto pr-1">
@@ -2259,7 +2259,7 @@ export default function HealthNutritionPage() {
                                     }
                                     onFocus={(event) => event.currentTarget.select()}
                                     aria-label="Servings"
-                                    className="w-14 rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-1 text-center text-xs text-[var(--text)] focus:border-white/30 focus:outline-none"
+                                    className="w-14 rounded-lg border border-[var(--line-strong)] bg-[var(--panel-2)] px-2 py-1 text-center text-xs text-[var(--text)] focus:border-[var(--line-focus)] focus:outline-none"
                                   />
                                   <button
                                     type="button"
@@ -2307,7 +2307,7 @@ export default function HealthNutritionPage() {
                                   type="button"
                                   disabled={dialogSaving}
                                   onClick={() => deleteFood(food.id)}
-                                  className="rounded-full border border-rose-500/30 bg-white/5 px-3 py-1 text-xs text-rose-400 transition hover:border-rose-500/50 disabled:opacity-60"
+                                  className="rounded-full border border-rose-300/70 bg-rose-50/70 px-3 py-1 text-xs font-semibold text-rose-600 transition hover:border-rose-400/70 disabled:opacity-60"
                                 >
                                   Delete
                                 </button>
@@ -2342,7 +2342,7 @@ export default function HealthNutritionPage() {
                         value={editFoodDraft.name}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, name: event.target.value }))}
                         placeholder="Food name"
-                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
@@ -2352,7 +2352,7 @@ export default function HealthNutritionPage() {
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, servingSize: event.target.value }))}
                         placeholder="e.g. 84"
                         inputMode="decimal"
-                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                       />
                       <span className="block text-[10px] text-[var(--text-soft)]">How much is in one serving (e.g. 84 grams).</span>
                     </label>
@@ -2361,7 +2361,7 @@ export default function HealthNutritionPage() {
                       <select
                         value={editFoodDraft.servingUnit}
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, servingUnit: event.target.value }))}
-                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-[var(--line-focus)] focus:outline-none"
                       >
                         {SERVING_UNIT_OPTIONS.map((unit) => (
                           <option key={unit} value={unit}>
@@ -2377,7 +2377,7 @@ export default function HealthNutritionPage() {
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, calories: event.target.value }))}
                         placeholder="Calories"
                         inputMode="decimal"
-                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
@@ -2387,7 +2387,7 @@ export default function HealthNutritionPage() {
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, protein: event.target.value }))}
                         placeholder="Protein"
                         inputMode="decimal"
-                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
@@ -2397,7 +2397,7 @@ export default function HealthNutritionPage() {
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, carbs: event.target.value }))}
                         placeholder="Carbs"
                         inputMode="decimal"
-                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
@@ -2407,7 +2407,7 @@ export default function HealthNutritionPage() {
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, fat: event.target.value }))}
                         placeholder="Fat"
                         inputMode="decimal"
-                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
@@ -2417,7 +2417,7 @@ export default function HealthNutritionPage() {
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, sugar: event.target.value }))}
                         placeholder="Sugar"
                         inputMode="decimal"
-                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1">
@@ -2427,7 +2427,7 @@ export default function HealthNutritionPage() {
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, fiber: event.target.value }))}
                         placeholder="Fiber"
                         inputMode="decimal"
-                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                       />
                     </label>
                     <label className="space-y-1 sm:col-span-2">
@@ -2437,7 +2437,7 @@ export default function HealthNutritionPage() {
                         onChange={(event) => setEditFoodDraft((prev) => ({ ...prev, saturatedFat: event.target.value }))}
                         placeholder="Saturated fat"
                         inputMode="decimal"
-                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                        className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                       />
                     </label>
                     <div className="sm:col-span-2 flex items-center gap-2">
@@ -2511,7 +2511,7 @@ export default function HealthNutritionPage() {
                       }
                       placeholder="0"
                       inputMode="decimal"
-                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-white/30 focus:outline-none"
+                      className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none"
                     />
                   </label>
                 ))}
@@ -2579,7 +2579,7 @@ export default function HealthNutritionPage() {
                     type="date"
                     value={copyTargetDate}
                     onChange={(event) => setCopyTargetDate(event.target.value)}
-                    className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-white/30 focus:outline-none"
+                    className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-[var(--line-focus)] focus:outline-none"
                   />
                 </label>
 
@@ -2588,7 +2588,7 @@ export default function HealthNutritionPage() {
                   <select
                     value={copyTargetMeal}
                     onChange={(event) => setCopyTargetMeal(event.target.value as MealKey)}
-                    className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-white/30 focus:outline-none"
+                    className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-2 text-sm text-[var(--text)] focus:border-[var(--line-focus)] focus:outline-none"
                   >
                     {meals.map((meal) => (
                       <option key={`copy-target-${meal.key}`} value={meal.key}>
