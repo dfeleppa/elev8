@@ -21,6 +21,7 @@ import {
 
 import { Panel } from "@/components/ui";
 import { useDismissable } from "@/hooks/useDismissable";
+import { useModalBehavior } from "@/hooks/useModalBehavior";
 
 type NutritionEntry = {
   id: string;
@@ -289,6 +290,7 @@ function hasTargetWeightGoal(goalType: string | null | undefined) {
 export default function HealthNutritionPage() {
   const [selectedDate, setSelectedDate] = useState(() => toLocalDateInputValue(new Date()));
   const [entries, setEntries] = useState<NutritionEntry[]>([]);
+  const [dayLoading, setDayLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<FoodSearchResult[]>([]);
@@ -366,6 +368,16 @@ export default function HealthNutritionPage() {
 
   useDismissable(mealMenuOpen !== null, () => setMealMenuOpen(null), [openMealMenuRef]);
 
+  function closeFoodDialog() {
+    setFoodDialogOpen(false);
+    setActiveMealDialog(null);
+    setEditingFoodId(null);
+  }
+
+  useModalBehavior(foodDialogOpen, closeFoodDialog);
+  useModalBehavior(manualEntryOpen, () => setManualEntryOpen(false));
+  useModalBehavior(copyDialogMeal !== null, () => setCopyDialogMeal(null));
+
   async function loadFoodLibraries(options?: {
     includeRecent?: boolean;
     includeMine?: boolean;
@@ -425,6 +437,7 @@ export default function HealthNutritionPage() {
   useEffect(() => {
     let isActive = true;
     setError(null);
+    setDayLoading(true);
     fetch(`/api/nutrition-days?date=${selectedDate}`)
       .then(async (response) => {
         const payload = await response.json();
@@ -448,7 +461,11 @@ export default function HealthNutritionPage() {
           setError(err instanceof Error ? err.message : "Unable to load nutrition day.");
         }
       })
-      .finally(() => undefined);
+      .finally(() => {
+        if (isActive) {
+          setDayLoading(false);
+        }
+      });
     return () => {
       isActive = false;
     };
@@ -1292,7 +1309,11 @@ export default function HealthNutritionPage() {
       <section
         className="nutrition-dashboard premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 pb-4 pt-[calc(4.75rem+env(safe-area-inset-top))] text-[#0f0f10] sm:px-8 sm:pt-4 lg:px-10 lg:pb-6 lg:pt-20 2xl:px-12"
       >
-        <div className="flex w-full flex-col gap-5">
+        <div
+          className={`flex w-full flex-col gap-5 transition-opacity duration-200 ${
+            dayLoading ? "opacity-60" : "opacity-100"
+          }`}
+        >
         <header className="pointer-events-none relative z-[35] mb-[-4px] flex flex-col items-center">
           <div className="nutrition-date-pill premium-glass-pill pointer-events-auto mx-auto flex w-full max-w-[calc(100vw-176px)] items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
             <button
@@ -1341,7 +1362,7 @@ export default function HealthNutritionPage() {
         </header>
 
         {error ? (
-          <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+          <div className="nutrition-error-banner rounded-2xl border border-rose-300/70 bg-rose-50/90 px-4 py-3 text-sm font-semibold text-rose-700">
             {error}
           </div>
         ) : null}
@@ -1874,7 +1895,15 @@ export default function HealthNutritionPage() {
 
 
         {foodDialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-4 sm:items-center sm:py-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Search foods"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) closeFoodDialog();
+            }}
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-4 sm:items-center sm:py-6"
+          >
             <div className="panel my-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)] [--line:rgba(148,188,221,0.16)] [--line-strong:rgba(148,188,221,0.26)] [--panel:rgba(20,58,91,0.98)] [--panel-2:rgba(31,72,106,0.92)] [--panel-3:rgba(39,86,124,0.92)] [--text:#E8F2FF] [--text-muted:#A9BED5] [--text-soft:#7F9BB8]">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -1899,11 +1928,7 @@ export default function HealthNutritionPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setFoodDialogOpen(false);
-                      setActiveMealDialog(null);
-                      setEditingFoodId(null);
-                    }}
+                    onClick={closeFoodDialog}
                     className="grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-lg text-[var(--text-muted)] transition hover:text-[var(--text)]"
                     aria-label="Close food dialog"
                   >
@@ -2440,7 +2465,15 @@ export default function HealthNutritionPage() {
 
 
         {manualEntryOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Quick add macros"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) setManualEntryOpen(false);
+            }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          >
             <div className="panel w-full max-w-md rounded-3xl p-5 shadow-2xl">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -2512,7 +2545,15 @@ export default function HealthNutritionPage() {
         )}
 
         {copyDialogMeal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Copy meal"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) setCopyDialogMeal(null);
+            }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          >
             <Panel padding="lg" className="w-full max-w-md shadow-[var(--shadow-lg)]">
               <div className="flex items-center justify-between gap-3">
                 <div>

@@ -8,6 +8,7 @@ import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Micro } from "@/components/ui";
 import { useDismissable } from "@/hooks/useDismissable";
+import { useModalBehavior } from "@/hooks/useModalBehavior";
 import { isMemberPathLive } from "@/lib/feature-flags";
 import {
   Activity,
@@ -292,18 +293,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
   useDismissable(menuOpen, () => setMenuOpen(false), [mobileMenuRef, desktopMenuRef]);
 
-  useEffect(() => {
-    if (!comingSoon) {
-      return;
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setComingSoon(null);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [comingSoon]);
+  useModalBehavior(Boolean(comingSoon), () => setComingSoon(null));
+  useModalBehavior(mobileSidebarOpen, () => setMobileSidebarOpen(false));
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -640,7 +631,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
-              className="pointer-events-auto inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center text-[#17141F] transition hover:text-[#0f0f10]"
+              className="pointer-events-auto inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-full border border-white/75 bg-white/72 text-[#17141F] shadow-[0_10px_24px_rgba(16,24,40,0.10)] backdrop-blur-md transition hover:text-[#0f0f10]"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
@@ -649,7 +640,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               <button
                 type="button"
                 onClick={() => setMenuOpen((open) => !open)}
-                className="pointer-events-auto inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center text-[#475467] transition hover:text-[#17141F]"
+                className="pointer-events-auto inline-flex h-12 w-12 shrink-0 touch-manipulation items-center justify-center rounded-full border border-white/75 bg-white/72 text-[#475467] shadow-[0_10px_24px_rgba(16,24,40,0.10)] backdrop-blur-md transition hover:text-[#17141F]"
                 aria-label="More options"
                 aria-expanded={menuOpen}
               >
@@ -676,7 +667,10 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                   ) : null}
                   <button
                     type="button"
-                    onClick={() => setMenuOpen(false)}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setComingSoon("TV Mode");
+                    }}
                     className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-bold text-[#17141F] opacity-70 transition hover:bg-[rgba(20,210,220,0.08)]"
                   >
                     <Tv className="h-4 w-4" aria-hidden="true" />
@@ -1010,6 +1004,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         <div className={`mt-4 border-t border-white/10 pt-4 ${sidebarCollapsed ? "flex justify-center" : "px-2"}`}>
           <button
             type="button"
+            onClick={() => setComingSoon("Account settings")}
             className={`flex min-w-0 items-center gap-2 rounded-xl border border-white/10 bg-white/5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-white/20 hover:bg-white/10 ${
               sidebarCollapsed ? "h-10 w-10 justify-center" : "w-full px-3 py-2"
             }`}
@@ -1049,7 +1044,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             ) : null}
           </div>
 
-          <div className="pointer-events-auto fixed right-5 top-3 z-[90] hidden shrink-0 items-center gap-1.5 text-sm lg:flex">
+          <div className="pointer-events-auto fixed right-5 top-3 z-[90] hidden shrink-0 items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--panel)] px-2 py-0.5 text-sm shadow-[0_10px_28px_rgba(16,24,40,0.12)] backdrop-blur-md lg:flex">
             <Link
               href="/member/chat"
               className="inline-flex h-9 w-8 items-center justify-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
@@ -1060,6 +1055,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
             <button
               type="button"
+              onClick={() => setComingSoon("Notifications")}
               className="inline-flex h-9 w-8 items-center justify-center text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="Notifications"
             >
@@ -1087,7 +1083,10 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                 <div className="app-shell-desktop-menu-panel absolute right-0 mt-2 w-56 rounded-xl border border-[var(--line-strong)] p-2 shadow-2xl">
                   <button
                     type="button"
-                    onClick={() => setMenuOpen(false)}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setComingSoon("TV Mode");
+                    }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--text)] opacity-70 transition hover:bg-[var(--panel)]"
                   >
                     <Tv className="h-4 w-4" aria-hidden="true" />
@@ -1173,7 +1172,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             </div>
             <h2 className="mt-4 text-xl font-bold tracking-[-0.02em] text-[var(--text)]">Coming Soon</h2>
             <p className="mt-2 text-sm font-medium text-[var(--text-muted)]">
-              {comingSoon} isn&apos;t ready yet — it&apos;s on the way. For now you&apos;ve got Nutrition.
+              {comingSoon} isn&apos;t ready yet — it&apos;s on the way.
+              {userRole === "member" ? " For now you've got Nutrition." : ""}
             </p>
             <button
               type="button"

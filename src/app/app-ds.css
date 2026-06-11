@@ -1354,6 +1354,12 @@
     linear-gradient(145deg, #0f0f10 0%, #151516 48%, #2a2a2a 100%) !important;
 }
 
+:root[data-theme="dark"] .nutrition-dashboard .nutrition-error-banner {
+  border-color: rgba(244, 63, 94, 0.4) !important;
+  background: rgba(244, 63, 94, 0.14) !important;
+  color: #fda4af !important;
+}
+
 /* iOS Safari auto-zooms the viewport when a focused field's font-size is
    under 16px. Keep fields at 16px on touch-sized screens so focusing an
    input doesn't jump the zoom level. */
