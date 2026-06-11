@@ -1353,3 +1353,14 @@
     radial-gradient(circle at 20% 8%, rgba(255, 79, 147, 0.16), transparent 24%),
     linear-gradient(145deg, #0f0f10 0%, #151516 48%, #2a2a2a 100%) !important;
 }
+
+/* iOS Safari auto-zooms the viewport when a focused field's font-size is
+   under 16px. Keep fields at 16px on touch-sized screens so focusing an
+   input doesn't jump the zoom level. */
+@media (max-width: 1023.98px) {
+  .nutrition-dashboard input,
+  .nutrition-dashboard select,
+  .nutrition-dashboard textarea {
+    font-size: 16px !important;
+  }
+}

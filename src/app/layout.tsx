@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   description: "Your gym management platform — training, nutrition, and performance.",
 };
 
+// viewportFit: "cover" is required for env(safe-area-inset-*) to resolve to
+// non-zero values on notched iPhones — the shell and nutrition page pad with it.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,10 +34,10 @@ export default function RootLayout({
     (function () {
       try {
         var storedTheme = window.localStorage.getItem("elev8-theme");
-        var theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
+        var theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
         document.documentElement.setAttribute("data-theme", theme);
       } catch (error) {
-        document.documentElement.setAttribute("data-theme", "dark");
+        document.documentElement.setAttribute("data-theme", "light");
       }
     })();
   `;

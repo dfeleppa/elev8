@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Micro } from "@/components/ui";
+import { useDismissable } from "@/hooks/useDismissable";
 import { isMemberPathLive } from "@/lib/feature-flags";
 import {
   Activity,
@@ -268,10 +269,13 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const [isImportingResults, setIsImportingResults] = useState(false);
   const [topBarNotice, setTopBarNotice] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+  const desktopMenuRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
   const router = useRouter();
-  const mainClasses = mainClassName ??
-    "mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[1.6fr_1fr] lg:py-16";
+  // Pages provide their own layout wrapper; the shell main only handles
+  // universal concerns (mobile nav padding compensation below).
+  const mainClasses = mainClassName ?? "w-full";
   const hamburgerIcon = (
     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
       <path
@@ -285,6 +289,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   );
   const canAccessGymView = roleRank[userRole] >= roleRank.coach;
   const showViewToggle = canAccessGymView;
+
+  useDismissable(menuOpen, () => setMenuOpen(false), [mobileMenuRef, desktopMenuRef]);
 
   useEffect(() => {
     if (!comingSoon) {
@@ -639,7 +645,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
-            <div className="relative flex min-w-0 items-center justify-end">
+            <div ref={mobileMenuRef} className="relative flex min-w-0 items-center justify-end">
               <button
                 type="button"
                 onClick={() => setMenuOpen((open) => !open)}
@@ -701,7 +707,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       </div>
 
       {showMobileMemberNav ? (
-        <nav className="fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 rounded-[24px] border border-white/80 bg-white/82 p-1.5 shadow-[0_18px_48px_rgba(16,24,40,0.18)] backdrop-blur-xl lg:hidden" aria-label="Member mobile navigation">
+        <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 grid grid-cols-5 rounded-[24px] border border-white/80 bg-white/82 p-1.5 shadow-[0_18px_48px_rgba(16,24,40,0.18)] backdrop-blur-xl lg:hidden" aria-label="Member mobile navigation">
           {mobileQuickLinks.map((link) => {
             const locked = !link.href || isLocked(link.href);
             const isActive = link.href && !locked ? pathname === link.href || pathname.startsWith(link.href + "/") : false;
@@ -742,7 +748,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       ) : null}
 
       {showMobileGymNav ? (
-        <nav className={`fixed inset-x-3 bottom-3 z-30 grid ${gymBottomGridCols} rounded-[24px] border border-white/80 bg-white/82 p-1.5 shadow-[0_18px_48px_rgba(16,24,40,0.18)] backdrop-blur-xl lg:hidden`} aria-label="Gym mobile navigation">
+        <nav className={`fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 grid ${gymBottomGridCols} rounded-[24px] border border-white/80 bg-white/82 p-1.5 shadow-[0_18px_48px_rgba(16,24,40,0.18)] backdrop-blur-xl lg:hidden`} aria-label="Gym mobile navigation">
           {gymBottomLinks.map((link) => {
             const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
@@ -1063,7 +1069,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
               </svg>
             </button>
 
-            <div className="app-shell-desktop-menu relative">
+            <div ref={desktopMenuRef} className="app-shell-desktop-menu relative">
               <button
                 type="button"
                 onClick={() => setMenuOpen((open) => !open)}
@@ -1140,7 +1146,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
         ) : null}
 
         <main
-          className={`${mainClasses} ${showMobileMemberNav || showMobileGymNav ? "pb-28 lg:pb-0" : ""} ${
+          className={`${mainClasses} ${showMobileMemberNav || showMobileGymNav ? "pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-0" : ""} ${
             reserveMobileTopbarSpace ? "pt-[calc(4.25rem+env(safe-area-inset-top))] lg:pt-0" : ""
           }`}
         >
