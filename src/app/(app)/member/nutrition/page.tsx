@@ -1307,7 +1307,7 @@ export default function HealthNutritionPage() {
   return (
     <div className="w-full">
       <section
-        className="nutrition-dashboard premium-main-glow flex min-h-[calc(100vh-3.5rem)] w-full flex-col gap-5 px-5 pb-4 pt-[calc(4.75rem+env(safe-area-inset-top))] text-[#0f0f10] sm:px-8 sm:pt-4 lg:px-10 lg:pb-6 lg:pt-20 2xl:px-12"
+        className="nutrition-dashboard premium-main-glow flex min-h-[calc(100dvh-3.5rem)] w-full flex-col gap-5 px-5 pb-4 pt-[calc(4.75rem+env(safe-area-inset-top))] text-[#0f0f10] sm:px-8 sm:pt-4 lg:px-10 lg:pb-6 lg:pt-20 2xl:px-12"
       >
         <div
           className={`flex w-full flex-col gap-5 transition-opacity duration-200 ${
@@ -1433,10 +1433,11 @@ export default function HealthNutritionPage() {
               </div>
 
               <div className="grid gap-1.5">
-                {macroBars.slice(0, 3).map((bar, index) => {
-                  const baseColor = index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : "#FF5CA8";
+                {macroBars.map((bar, index) => {
+                  const baseColor =
+                    index === 0 ? "#14D2DC" : index === 1 ? "#61A7B3" : index === 2 ? "#FF5CA8" : "#7A8699";
                   const statusColor = STATUS_TEXT_COLOR[bar.status];
-                  const shortLabel = index === 0 ? "P" : index === 1 ? "C" : "F";
+                  const shortLabel = index === 0 ? "P" : index === 1 ? "C" : index === 2 ? "F" : "Fb";
                   return (
                     <div key={`mobile-macro-${bar.label}`} className="nutrition-metric-card grid min-w-0 grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2 rounded-[12px] border border-[#D4DAE4]/85 bg-white/84 px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.94)]">
                       <p className="text-[12px] font-extrabold text-[#17141F]">{shortLabel}</p>

@@ -1369,4 +1369,13 @@
   .nutrition-dashboard textarea {
     font-size: 16px !important;
   }
+
+  /* Stacked 20-24px backdrop blurs are a scroll-jank source on low-end
+     phones; soften them where GPUs are weakest. */
+  .premium-glass-card {
+    backdrop-filter: blur(14px);
+  }
+  .premium-glass-pill {
+    backdrop-filter: blur(12px);
+  }
 }
