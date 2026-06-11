@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera } from "lucide-react";
+import { Camera, Upload } from "lucide-react";
 
 import { useModalBehavior } from "@/hooks/useModalBehavior";
 import {
@@ -529,24 +529,44 @@ export default function FoodDialog({
                 </p>
               </div>
             </div>
-            <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--line-strong)] bg-black/10 px-4 py-8 text-center transition hover:border-[var(--pink)]/50">
-              <Camera className="h-7 w-7 text-[var(--text-muted)]" aria-hidden="true" />
-              <span className="mt-3 text-sm font-semibold text-[var(--text)]">
-                {labelScanLoading ? "Scanning label..." : "Choose or take photo"}
-              </span>
-              <span className="mt-1 text-xs text-[var(--text-soft)]">JPG, PNG, or WebP up to 8 MB</span>
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                capture="environment"
-                disabled={labelScanLoading}
-                onChange={(event) => {
-                  void scanNutritionLabel(event.target.files?.[0]);
-                  event.currentTarget.value = "";
-                }}
-                className="sr-only"
-              />
-            </label>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--line-strong)] bg-black/10 px-4 py-6 text-center transition hover:border-[var(--pink)]/50">
+                <Camera className="h-7 w-7 text-[var(--text-muted)]" aria-hidden="true" />
+                <span className="mt-3 text-sm font-semibold text-[var(--text)]">
+                  {labelScanLoading ? "Scanning label..." : "Take photo"}
+                </span>
+                <span className="mt-1 text-xs text-[var(--text-soft)]">Open the camera</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  capture="environment"
+                  disabled={labelScanLoading}
+                  onChange={(event) => {
+                    void scanNutritionLabel(event.target.files?.[0]);
+                    event.currentTarget.value = "";
+                  }}
+                  className="sr-only"
+                />
+              </label>
+              <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--line-strong)] bg-black/10 px-4 py-6 text-center transition hover:border-[var(--pink)]/50">
+                <Upload className="h-7 w-7 text-[var(--text-muted)]" aria-hidden="true" />
+                <span className="mt-3 text-sm font-semibold text-[var(--text)]">
+                  {labelScanLoading ? "Scanning label..." : "Upload photo"}
+                </span>
+                <span className="mt-1 text-xs text-[var(--text-soft)]">Choose from your library</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  disabled={labelScanLoading}
+                  onChange={(event) => {
+                    void scanNutritionLabel(event.target.files?.[0]);
+                    event.currentTarget.value = "";
+                  }}
+                  className="sr-only"
+                />
+              </label>
+            </div>
+            <p className="mt-2 text-center text-xs text-[var(--text-soft)]">JPG, PNG, or WebP up to 8 MB</p>
             {labelScanError ? (
               <div className="nutrition-error-banner mt-4 rounded-2xl border border-rose-300/70 bg-rose-50/90 p-4 text-sm font-semibold text-rose-700">
                 {labelScanError}
