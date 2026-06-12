@@ -117,12 +117,12 @@ function metricCard(label: string, value: string, accent: MetricAccent = "neutra
       ? "border-[rgba(20,210,220,0.18)] bg-[rgba(20,210,220,0.08)]"
       : accent === "pink"
         ? "border-[rgba(255,92,168,0.18)] bg-[rgba(255,92,168,0.08)]"
-        : "border-[rgba(16,24,40,0.08)] bg-white/66";
+        : "border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)]/66";
 
   return (
     <div key={label} className={`rounded-[16px] border p-3 sm:rounded-[20px] sm:p-4 ${accentClass}`}>
-      <dt className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#667085] sm:text-[11px]">{label}</dt>
-      <dd className="mt-1 text-base font-bold leading-tight text-[#17141F] sm:mt-2 sm:text-lg">{value}</dd>
+      <dt className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--nutrition-text-soft)] sm:text-[11px]">{label}</dt>
+      <dd className="mt-1 text-base font-bold leading-tight text-[var(--nutrition-text-primary)] sm:mt-2 sm:text-lg">{value}</dd>
     </div>
   );
 }
@@ -205,7 +205,7 @@ export default function CoachPlanClient() {
   if (loading) {
     return (
       <div className="premium-glass-card p-5">
-        <p className="text-sm font-semibold text-[#667085]">Loading coach plan...</p>
+        <p className="text-sm font-semibold text-[var(--nutrition-text-soft)]">Loading coach plan...</p>
       </div>
     );
   }
@@ -214,15 +214,15 @@ export default function CoachPlanClient() {
     return (
       <div className="premium-glass-card flex min-h-[320px] flex-col items-start justify-center gap-4 p-6">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">No active plan</p>
-          <h2 className="mt-2 text-2xl font-bold text-[#17141F]">Start your coach plan</h2>
-          <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-[#667085]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--nutrition-text-soft)]">No active plan</p>
+          <h2 className="mt-2 text-2xl font-bold text-[var(--nutrition-text-primary)]">Start your coach plan</h2>
+          <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-[var(--nutrition-text-soft)]">
             You don&apos;t have an active nutrition plan yet. Set one up to get target macros and weekly check-ins.
           </p>
         </div>
         <Link
           href={SETUP_HREF}
-          className="rounded-2xl bg-[#14D2DC] px-5 py-3 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105"
+          className="rounded-2xl bg-[var(--nutrition-accent-teal)] px-5 py-3 text-sm font-bold text-[var(--nutrition-accent-teal-ink)] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105"
         >
           Start a plan
         </Link>
@@ -269,14 +269,14 @@ export default function CoachPlanClient() {
         <div className="premium-glass-card p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3 sm:gap-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Plan Overview</p>
-              <h2 className="mt-1 text-[24px] font-bold leading-tight text-[#17141F] sm:text-[28px]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--nutrition-text-soft)] sm:text-[11px]">Plan Overview</p>
+              <h2 className="mt-1 text-[24px] font-bold leading-tight text-[var(--nutrition-text-primary)] sm:text-[28px]">
                 {GOAL_LABEL[summary?.goalType ?? ""] ?? "Not set"}
               </h2>
             </div>
             <Link
               href={SETUP_HREF}
-              className="shrink-0 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/70 px-3 py-2 text-xs font-bold text-[#17141F] transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)] sm:px-4 sm:py-2.5 sm:text-sm"
+              className="shrink-0 rounded-2xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2 text-xs font-bold text-[var(--nutrition-text-primary)] transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)] sm:px-4 sm:py-2.5 sm:text-sm"
             >
               Change Plan
             </Link>
@@ -289,9 +289,9 @@ export default function CoachPlanClient() {
 
         {/* Check-in history */}
         <div className="premium-glass-card p-4 sm:p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Check-In History</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--nutrition-text-soft)] sm:text-[11px]">Check-In History</p>
           {history.length === 0 ? (
-            <p className="mt-3 text-sm font-semibold text-[#667085]">
+            <p className="mt-3 text-sm font-semibold text-[var(--nutrition-text-soft)]">
               No check-ins yet. Complete your first weekly check-in above to start tracking progress.
             </p>
           ) : (
@@ -301,11 +301,11 @@ export default function CoachPlanClient() {
                 return (
                   <li
                     key={item.id}
-                    className="flex flex-col gap-1.5 rounded-[16px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-1.5 rounded-[16px] border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)]/66 p-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-[#17141F]">{formatDate(item.date)}</p>
-                      <p className="text-xs font-semibold text-[#667085]">
+                      <p className="text-sm font-bold text-[var(--nutrition-text-primary)]">{formatDate(item.date)}</p>
+                      <p className="text-xs font-semibold text-[var(--nutrition-text-soft)]">
                         {formatWeight(item.bodyWeightLbs)}
                         {item.bodyFatPercent != null ? ` · ${formatBodyFat(item.bodyFatPercent)} bf` : ""}
                         {item.reason ? ` · ${item.reason}` : ""}
@@ -316,8 +316,8 @@ export default function CoachPlanClient() {
                         <span
                           className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] ${
                             accountable
-                              ? "bg-[rgba(18,183,106,0.12)] text-[#0B7B47]"
-                              : "bg-[rgba(240,68,56,0.1)] text-[#B42318]"
+                              ? "bg-[rgba(18,183,106,0.12)] text-[var(--nutrition-status-good)]"
+                              : "bg-[rgba(240,68,56,0.1)] text-[var(--nutrition-status-over)]"
                           }`}
                         >
                           {accountable ? "Accountable" : "Not accountable"}
@@ -326,8 +326,8 @@ export default function CoachPlanClient() {
                       <span
                         className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
                           item.outcome === "adjusted"
-                            ? "bg-[rgba(20,210,220,0.12)] text-[#0B7C84]"
-                            : "bg-[rgba(16,24,40,0.06)] text-[#475467]"
+                            ? "bg-[rgba(20,210,220,0.12)] text-[var(--nutrition-teal-text)]"
+                            : "bg-[rgba(16,24,40,0.06)] text-[var(--nutrition-text-muted)]"
                         }`}
                       >
                         {outcomeLabel(item)}
@@ -343,11 +343,11 @@ export default function CoachPlanClient() {
 
       <aside className="flex flex-col gap-4 sm:gap-5">
         <div className="premium-glass-card p-4 sm:p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Daily Targets</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--nutrition-text-soft)] sm:text-[11px]">Daily Targets</p>
           <div className="mt-3 rounded-[20px] border border-[rgba(20,210,220,0.18)] bg-[rgba(20,210,220,0.08)] p-3 sm:mt-4 sm:rounded-[24px] sm:p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#667085] sm:text-[11px]">Calories</p>
-            <p className="mt-1 text-3xl font-bold leading-none text-[#17141F] sm:mt-2 sm:text-4xl">{formatCalories(summary?.targetCalories)}</p>
-            <p className="mt-1 text-xs font-semibold text-[#667085] sm:mt-2 sm:text-sm">Metabolism: {formatCalories(summary?.estimatedMetabolism)}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--nutrition-text-soft)] sm:text-[11px]">Calories</p>
+            <p className="mt-1 text-3xl font-bold leading-none text-[var(--nutrition-text-primary)] sm:mt-2 sm:text-4xl">{formatCalories(summary?.targetCalories)}</p>
+            <p className="mt-1 text-xs font-semibold text-[var(--nutrition-text-soft)] sm:mt-2 sm:text-sm">Metabolism: {formatCalories(summary?.estimatedMetabolism)}</p>
           </div>
 
           <dl className="mt-3 grid gap-2 sm:gap-3">
@@ -356,8 +356,8 @@ export default function CoachPlanClient() {
         </div>
 
         <div className="premium-glass-card p-4 sm:p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Check-In Status</p>
-          <h2 className="mt-1 text-[20px] font-bold text-[#17141F] sm:text-[22px]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--nutrition-text-soft)] sm:text-[11px]">Check-In Status</p>
+          <h2 className="mt-1 text-[20px] font-bold text-[var(--nutrition-text-primary)] sm:text-[22px]">
             {checkInDue ? "Due now" : daysUntilCheckIn === null ? "Not scheduled" : `${daysUntilCheckIn} days away`}
           </h2>
           <div className="mt-3 grid gap-2 sm:mt-4 sm:gap-3">
@@ -371,8 +371,8 @@ export default function CoachPlanClient() {
         </div>
 
         <div className="premium-glass-card p-4 sm:p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#667085] sm:text-[11px]">Start Over</p>
-          <p className="mt-2 text-sm font-semibold leading-5 text-[#475467] sm:mt-3 sm:leading-6">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--nutrition-text-soft)] sm:text-[11px]">Start Over</p>
+          <p className="mt-2 text-sm font-semibold leading-5 text-[var(--nutrition-text-muted)] sm:mt-3 sm:leading-6">
             Wipe your plan and all check-in history, then rebuild from scratch. Your weigh-ins and food
             logs are kept.
           </p>
@@ -382,7 +382,7 @@ export default function CoachPlanClient() {
               setResetError(null);
               setShowResetConfirm(true);
             }}
-            className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-[rgba(240,68,56,0.28)] bg-[rgba(240,68,56,0.06)] px-4 py-2 text-sm font-bold text-[#B42318] transition hover:bg-[rgba(240,68,56,0.12)]"
+            className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-[rgba(240,68,56,0.28)] bg-[rgba(240,68,56,0.06)] px-4 py-2 text-sm font-bold text-[var(--nutrition-status-over)] transition hover:bg-[rgba(240,68,56,0.12)]"
           >
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
             Wipe &amp; start over
@@ -392,9 +392,9 @@ export default function CoachPlanClient() {
 
       {showResetConfirm ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-[#17141F]">Wipe plan and check-in history?</h3>
-            <p className="mt-2 text-sm font-semibold leading-6 text-[#667085]">
+          <div className="w-full max-w-md rounded-[24px] bg-[var(--nutrition-surface-solid)] p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-[var(--nutrition-text-primary)]">Wipe plan and check-in history?</h3>
+            <p className="mt-2 text-sm font-semibold leading-6 text-[var(--nutrition-text-soft)]">
               This permanently deletes your nutrition plan and every check-in record. You&apos;ll start
               fresh by building a new plan. Weigh-ins and food logs are not affected.
             </p>
@@ -404,7 +404,7 @@ export default function CoachPlanClient() {
                 type="button"
                 onClick={() => setShowResetConfirm(false)}
                 disabled={resetting}
-                className="rounded-2xl border border-[rgba(16,24,40,0.12)] bg-white px-4 py-2 text-sm font-bold text-[#17141F] transition hover:bg-[rgba(16,24,40,0.04)] disabled:opacity-60"
+                className="rounded-2xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)] px-4 py-2 text-sm font-bold text-[var(--nutrition-text-primary)] transition hover:bg-[rgba(16,24,40,0.04)] disabled:opacity-60"
               >
                 Cancel
               </button>

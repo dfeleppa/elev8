@@ -36,8 +36,8 @@ export default function NutritionTopBar({
             className={clsx(
               "relative inline-flex items-center rounded-full px-3 py-1.5 transition sm:px-4 sm:py-2",
               isActive
-                ? "bg-[#14D2DC] font-semibold text-[#071A1C] shadow-[0_10px_20px_rgba(20,210,220,0.22)]"
-                : "text-[#667085] hover:bg-white/70 hover:text-[#17141F]",
+                ? "bg-[var(--nutrition-accent-teal)] font-semibold text-[var(--nutrition-accent-teal-ink)] shadow-[0_10px_20px_rgba(20,210,220,0.22)]"
+                : "text-[var(--nutrition-text-soft)] hover:bg-[var(--nutrition-surface-soft)] hover:text-[var(--nutrition-text-primary)]",
             )}
           >
             {t.label}
@@ -53,15 +53,10 @@ export default function NutritionTopBar({
 
   return (
     <div className="flex w-full min-w-0 items-center justify-between gap-2 lg:w-auto lg:gap-6">
-      <div
-        className="premium-glass-pill flex min-w-0 items-center gap-1.5 px-3 py-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] sm:gap-2 sm:px-4 sm:text-[11px]"
-        style={{ color: "#475467" }}
-      >
+      <div className="premium-glass-pill flex min-w-0 items-center gap-1.5 px-3 py-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-[var(--nutrition-text-muted)] sm:gap-2 sm:px-4 sm:text-[11px]">
         <span className="shrink-0">{day}</span>
-        <span style={{ color: "var(--text-soft)" }}>·</span>
-        <span className="truncate" style={{ color: "var(--text-soft)" }}>
-          {datePart}
-        </span>
+        <span className="text-[var(--nutrition-text-soft)]">·</span>
+        <span className="truncate text-[var(--nutrition-text-soft)]">{datePart}</span>
       </div>
 
       {tabsNav}

@@ -244,7 +244,7 @@ export default function HealthNutritionPage() {
   return (
     <div className="w-full">
       <section
-        className="nutrition-dashboard premium-main-glow flex min-h-[calc(100dvh-3.5rem)] w-full flex-col gap-5 px-5 pb-4 pt-[calc(4.75rem+env(safe-area-inset-top))] text-[var(--nutrition-text-primary)] sm:px-8 sm:pt-4 lg:px-10 lg:pb-6 lg:pt-20 2xl:px-12"
+        className="nutrition-theme nutrition-dashboard premium-main-glow flex min-h-[calc(100dvh-3.5rem)] w-full flex-col gap-5 px-5 pb-4 pt-[calc(4.75rem+env(safe-area-inset-top))] text-[var(--nutrition-text-primary)] sm:px-8 sm:pt-4 lg:px-10 lg:pb-6 lg:pt-20 2xl:px-12"
       >
         <div
           className={`flex w-full flex-col gap-5 transition-opacity duration-200 ${

@@ -368,54 +368,62 @@
   color: #f8fbff;
 }
 
-:root[data-theme="dark"] .nutrition-dashboard {
-  --nutrition-bg-main: #080b12;
-  --nutrition-bg-soft: #0e1320;
-  --nutrition-card: #121826;
-  --nutrition-card-elevated: #171f30;
-  --nutrition-card-border: rgba(255,255,255,0.1);
-  --nutrition-text-primary: #f8fafc;
-  --nutrition-text-secondary: #f8fafc;
-  --nutrition-text-muted: #a8b3c7;
-  --nutrition-text-soft: #a8b3c7;
-  --nutrition-text-faint: #8b97ab;
-  --nutrition-accent-teal: #16d4d8;
+/* Dark theme tokens — greyscale base with teal/pink accents. Scoped to
+   .nutrition-theme so the daily dashboard AND the coach plan/setup pages
+   share one palette. */
+:root[data-theme="dark"] .nutrition-theme {
+  --nutrition-bg-main: #0f0f10;
+  --nutrition-bg-soft: #1b1b1d;
+  --nutrition-card: #1c1c1e;
+  --nutrition-card-elevated: #232326;
+  --nutrition-card-border: rgba(255, 255, 255, 0.1);
+  --nutrition-text-primary: #f5f5f6;
+  --nutrition-text-secondary: #f5f5f6;
+  --nutrition-text-muted: #b9b9be;
+  --nutrition-text-soft: #a4a4aa;
+  --nutrition-text-faint: #818187;
+  --nutrition-accent-teal: #14d2dc;
   --nutrition-accent-teal-ink: #071a1c;
-  --nutrition-teal-text: #16d4d8;
+  --nutrition-teal-text: #2cd9e2;
   --nutrition-accent-pink: #ff4f93;
   --nutrition-accent-purple: #a78bfa;
-  --nutrition-button-bg: #f8fafc;
-  --nutrition-button-text: #0b1020;
-  --nutrition-surface: var(--nutrition-bg-soft);
-  --nutrition-surface-soft: var(--nutrition-bg-soft);
-  --nutrition-surface-faint: var(--nutrition-bg-soft);
-  --nutrition-surface-solid: #121826;
-  --nutrition-menu-hover: rgba(255, 255, 255, 0.06);
-  --nutrition-track: #243044;
+  --nutrition-button-bg: #f5f5f6;
+  --nutrition-button-text: #131315;
+  --nutrition-surface: #1f1f22;
+  --nutrition-surface-soft: #1b1b1d;
+  --nutrition-surface-faint: #1b1b1d;
+  --nutrition-surface-solid: #232326;
+  --nutrition-menu-hover: rgba(255, 255, 255, 0.07);
+  --nutrition-track: #2c2c30;
   --nutrition-status-good: #4ade80;
   --nutrition-status-over: #f87171;
-  --nutrition-bar-protein: #16d4d8;
-  --nutrition-bar-carbs: #6fc1cd;
+  --nutrition-warning-text: #fbbf24;
+  --nutrition-bar-protein: #14d2dc;
+  --nutrition-bar-carbs: #72c7cf;
   --nutrition-bar-fat: #ff4f93;
-  --nutrition-bar-fiber: #94a3b8;
-  --nutrition-input-bg: #0b1020;
-  --nutrition-input-border: rgba(255,255,255,0.12);
+  --nutrition-bar-fiber: #97979e;
+  --nutrition-input-bg: #161618;
+  --nutrition-input-border: rgba(255, 255, 255, 0.14);
 
+  color: var(--nutrition-text-primary);
+}
+
+:root[data-theme="dark"] .nutrition-dashboard {
   background:
-    radial-gradient(circle at top left, rgba(22,212,216,0.08), transparent 30%),
-    radial-gradient(circle at top right, rgba(255,79,147,0.08), transparent 28%),
+    radial-gradient(circle at top left, rgba(20,210,220,0.06), transparent 30%),
+    radial-gradient(circle at top right, rgba(255,79,147,0.06), transparent 28%),
     var(--nutrition-bg-main) !important;
   color: var(--nutrition-text-primary) !important;
 }
 
 :root[data-theme="dark"] .nutrition-dashboard .premium-glass-card {
-  background: linear-gradient(145deg, rgba(23,31,48,0.96), rgba(18,24,38,0.94)) !important;
+  background: linear-gradient(145deg, rgba(33,33,36,0.96), rgba(24,24,26,0.94)) !important;
   border-color: var(--nutrition-card-border) !important;
   box-shadow: 0 22px 60px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.06) !important;
 }
 
 :root[data-theme="dark"] .nutrition-dashboard .premium-glass-pill {
-  background: rgba(18,24,38,0.92) !important;
+  background: rgba(28,28,30,0.92) !important;
   border-color: rgba(255,255,255,0.10) !important;
   box-shadow: 0 18px 42px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06) !important;
 }
@@ -477,7 +485,7 @@
 }
 
 :root[data-theme="dark"] .nutrition-dashboard svg circle[stroke="#E7EAEE"] {
-  stroke: #243044 !important;
+  stroke: var(--nutrition-track) !important;
 }
 
 :root[data-theme="dark"] .nutrition-dashboard .shadow-\[inset_0_1px_0_rgba\(255\,255\,255\,0\.94\)\],
@@ -487,31 +495,31 @@
 }
 
 :root[data-theme="dark"] .app-shell-topbar .inline-flex.h-12.w-12 {
-  background: rgba(18,24,38,0.90) !important;
+  background: rgba(28,28,30,0.90) !important;
   border-color: rgba(255,255,255,0.10) !important;
-  color: #f8fafc !important;
+  color: #f5f5f6 !important;
   box-shadow: 0 14px 34px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06) !important;
   backdrop-filter: blur(18px);
 }
 
 :root[data-theme="dark"] .app-shell-topbar .absolute.right-0.top-\[calc\(3\.5rem\+env\(safe-area-inset-top\)\)\] {
-  background: rgba(18,24,38,0.94) !important;
+  background: rgba(28,28,30,0.94) !important;
   border-color: rgba(255,255,255,0.10) !important;
   box-shadow: 0 24px 60px rgba(0,0,0,0.36) !important;
 }
 
 :root[data-theme="dark"] .app-shell-topbar .absolute.right-0.top-\[calc\(3\.5rem\+env\(safe-area-inset-top\)\)\] button {
-  color: #f8fafc !important;
+  color: #f5f5f6 !important;
 }
 
 :root[data-theme="dark"] .app-shell-desktop-menu-panel {
-  background: #121826 !important;
+  background: #1c1c1e !important;
   border-color: rgba(255,255,255,0.12) !important;
   box-shadow: 0 28px 70px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.06) !important;
 }
 
 :root[data-theme="dark"] nav[aria-label="Member mobile navigation"] {
-  background: rgba(15,21,34,0.92) !important;
+  background: rgba(22,22,24,0.92) !important;
   border-color: rgba(255,255,255,0.08) !important;
   box-shadow: 0 -12px 30px rgba(0,0,0,0.35) !important;
   backdrop-filter: blur(18px);
@@ -519,12 +527,12 @@
 
 :root[data-theme="dark"] nav[aria-label="Member mobile navigation"] a,
 :root[data-theme="dark"] nav[aria-label="Member mobile navigation"] button {
-  color: #a8b3c7 !important;
+  color: #a4a4aa !important;
 }
 
 :root[data-theme="dark"] nav[aria-label="Member mobile navigation"] a[aria-current="page"] {
-  background: rgba(22,212,216,0.10) !important;
-  color: #16d4d8 !important;
+  background: rgba(20,210,220,0.10) !important;
+  color: #14d2dc !important;
 }
 
 .app-shell-main {
@@ -1009,7 +1017,7 @@
 }
 
 :root[data-theme="dark"] .premium-glass-card {
-  background: linear-gradient(145deg, rgba(23, 31, 48, 0.96), rgba(18, 24, 38, 0.94));
+  background: linear-gradient(145deg, rgba(33, 33, 36, 0.96), rgba(24, 24, 26, 0.94));
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow:
     0 22px 60px rgba(0, 0, 0, 0.32),
@@ -1017,24 +1025,17 @@
 }
 
 :root[data-theme="dark"] .premium-glass-pill {
-  background: rgba(18, 24, 38, 0.92);
+  background: rgba(28, 28, 30, 0.92);
   border-color: rgba(255, 255, 255, 0.10);
   box-shadow:
     0 18px 42px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* ---------- Luxury nutrition dashboard refinement ---------- */
-.nutrition-dashboard {
-  --luxury-ink: #0f0f10;
-  --luxury-charcoal: #2a2a2a;
-  --luxury-muted: #6f6f72;
-  --luxury-soft: #ececec;
-  --luxury-teal: #14d2dc;
-  --luxury-pink: #ff4f93;
-
-  /* Theme tokens — components reference these instead of hardcoded hex so
-     the dark block below only has to redefine variables, not chase classes. */
+/* Theme tokens — components reference these instead of hardcoded hex so the
+   dark block only has to redefine variables, not chase classes. Scoped to
+   .nutrition-theme, shared by the daily dashboard and coach plan/setup pages. */
+.nutrition-theme {
   --nutrition-text-primary: #17141f;
   --nutrition-text-secondary: #344054;
   --nutrition-text-muted: #475467;
@@ -1056,10 +1057,21 @@
   --nutrition-track: #e1e6ee;
   --nutrition-status-good: #16a34a;
   --nutrition-status-over: #dc2626;
+  --nutrition-warning-text: #92610a;
   --nutrition-bar-protein: #14d2dc;
   --nutrition-bar-carbs: #61a7b3;
   --nutrition-bar-fat: #ff5ca8;
   --nutrition-bar-fiber: #7a8699;
+}
+
+/* ---------- Luxury nutrition dashboard refinement ---------- */
+.nutrition-dashboard {
+  --luxury-ink: #0f0f10;
+  --luxury-charcoal: #2a2a2a;
+  --luxury-muted: #6f6f72;
+  --luxury-soft: #ececec;
+  --luxury-teal: #14d2dc;
+  --luxury-pink: #ff4f93;
 
   background: var(--app-page-background) !important;
   color: var(--luxury-ink) !important;

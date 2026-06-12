@@ -160,9 +160,9 @@ function daysSince(isoDate: string) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/66 p-4">
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">{label}</p>
-      <p className="mt-1 text-xl font-bold text-[#17141F]">{value}</p>
+    <div className="rounded-2xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)]/66 p-4">
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">{label}</p>
+      <p className="mt-1 text-xl font-bold text-[var(--nutrition-text-primary)]">{value}</p>
     </div>
   );
 }
@@ -417,7 +417,7 @@ export default function CoachSetupClient({
   }
 
   if (loading) {
-    return <p className="text-sm text-[#667085]">Loading nutrition coach...</p>;
+    return <p className="text-sm text-[var(--nutrition-text-soft)]">Loading nutrition coach...</p>;
   }
 
   // ── Dashboard (active plan exists) ───────────────────────────────────────
@@ -442,13 +442,13 @@ export default function CoachSetupClient({
       <section className="space-y-6">
         <header className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold text-[#17141F]">Nutrition Coach</h1>
-            <p className="mt-1 text-sm text-[#667085]">Your active plan and progress.</p>
+            <h1 className="text-3xl font-semibold text-[var(--nutrition-text-primary)]">Nutrition Coach</h1>
+            <p className="mt-1 text-sm text-[var(--nutrition-text-soft)]">Your active plan and progress.</p>
           </div>
           <button
             type="button"
             onClick={startChangePlan}
-            className="shrink-0 rounded-full border border-[rgba(16,24,40,0.12)] bg-white/70 px-4 py-2 text-xs font-bold text-[#17141F] transition hover:bg-white"
+            className="shrink-0 rounded-full border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-4 py-2 text-xs font-bold text-[var(--nutrition-text-primary)] transition hover:bg-[var(--nutrition-surface-solid)]"
           >
             Change Plan
           </button>
@@ -457,8 +457,8 @@ export default function CoachSetupClient({
         {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
 
         {/* Plan Overview */}
-        <div className="rounded-3xl border border-[rgba(16,24,40,0.08)] bg-white/66 p-5 space-y-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#667085]">Plan Overview</p>
+        <div className="rounded-3xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)]/66 p-5 space-y-4">
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--nutrition-text-soft)]">Plan Overview</p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               label="Goal"
@@ -490,8 +490,8 @@ export default function CoachSetupClient({
         </div>
 
         {/* Starting Stats */}
-        <div className="rounded-3xl border border-[rgba(16,24,40,0.08)] bg-white/66 p-5 space-y-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#667085]">Starting Stats</p>
+        <div className="rounded-3xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)]/66 p-5 space-y-4">
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--nutrition-text-soft)]">Starting Stats</p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               label="Start Weight"
@@ -509,8 +509,8 @@ export default function CoachSetupClient({
         </div>
 
         {/* Current Stats & Progress */}
-        <div className="rounded-3xl border border-[rgba(16,24,40,0.08)] bg-white/66 p-5 space-y-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#667085]">Current Stats & Progress</p>
+        <div className="rounded-3xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)]/66 p-5 space-y-4">
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--nutrition-text-soft)]">Current Stats & Progress</p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               label="Current Weight"
@@ -558,8 +558,8 @@ export default function CoachSetupClient({
       {!redirectAfterSaveTo ? (
         <header className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold text-[#17141F]">Nutrition Coach</h1>
-            <p className="mt-3 text-sm text-[#667085]">
+            <h1 className="text-3xl font-semibold text-[var(--nutrition-text-primary)]">Nutrition Coach</h1>
+            <p className="mt-3 text-sm text-[var(--nutrition-text-soft)]">
               {hasPlan ? "Update your nutrition plan." : "Build a nutrition plan in 5 steps, then apply today's targets."}
             </p>
           </div>
@@ -567,7 +567,7 @@ export default function CoachSetupClient({
             <button
               type="button"
               onClick={() => { setMessage(null); setError(null); setViewMode("dashboard"); }}
-              className="shrink-0 rounded-full border border-[rgba(16,24,40,0.12)] bg-white/70 px-4 py-2 text-xs font-bold text-[#17141F] transition hover:bg-white"
+              className="shrink-0 rounded-full border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-4 py-2 text-xs font-bold text-[var(--nutrition-text-primary)] transition hover:bg-[var(--nutrition-surface-solid)]"
             >
               Back to Plan
             </button>
@@ -577,15 +577,15 @@ export default function CoachSetupClient({
 
       <div className="premium-glass-card p-4 sm:p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#667085]">{stepTitle}</p>
-          <p className="text-xs font-bold text-[#475467]">{step}/5</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--nutrition-text-soft)]">{stepTitle}</p>
+          <p className="text-xs font-bold text-[var(--nutrition-text-muted)]">{step}/5</p>
         </div>
 
         <div className="mb-5 grid grid-cols-5 gap-2">
           {Array.from({ length: 5 }).map((_, index) => (
             <span
               key={`step-${index}`}
-              className={`h-1.5 rounded-full ${index + 1 <= step ? "bg-[#14D2DC]" : "bg-[rgba(16,24,40,0.1)]"}`}
+              className={`h-1.5 rounded-full ${index + 1 <= step ? "bg-[var(--nutrition-accent-teal)]" : "bg-[rgba(16,24,40,0.1)]"}`}
             />
           ))}
         </div>
@@ -603,11 +603,11 @@ export default function CoachSetupClient({
                 className={`rounded-2xl border p-4 text-left transition ${
                   goalType === option.value
                     ? "border-[rgba(20,210,220,0.4)] bg-[rgba(20,210,220,0.08)]"
-                    : "border-[rgba(16,24,40,0.08)] bg-white/60 hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.05)]"
+                    : "border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-faint)] hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.05)]"
                 }`}
               >
-                <p className="text-sm font-bold text-[#17141F]">{option.label}</p>
-                <p className="mt-1 text-xs font-semibold text-[#667085]">{option.description}</p>
+                <p className="text-sm font-bold text-[var(--nutrition-text-primary)]">{option.label}</p>
+                <p className="mt-1 text-xs font-semibold text-[var(--nutrition-text-soft)]">{option.description}</p>
               </button>
             ))}
           </div>
@@ -616,48 +616,48 @@ export default function CoachSetupClient({
         {step === 2 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Sex</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Sex</span>
               <select
                 value={sex}
                 onChange={(event) => setSex(event.target.value as "male" | "female")}
-                className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
               </select>
             </label>
             <label className="space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Birth Date</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Birth Date</span>
               <input
                 type="date"
                 value={birthDate}
                 onChange={(event) => setBirthDate(event.target.value)}
-                className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
               />
             </label>
             <label className="space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Current Weight (lbs)</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Current Weight (lbs)</span>
               <input
                 value={currentWeightLbs}
                 onChange={(event) => setCurrentWeightLbs(event.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
               />
             </label>
             <label className="space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Body Fat % (optional)</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Body Fat % (optional)</span>
               <input
                 value={bodyFatPercentage}
                 onChange={(event) => setBodyFatPercentage(event.target.value)}
                 inputMode="decimal"
-                className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
               />
-              <span className="block text-xs text-[#98A2B3]">
+              <span className="block text-xs text-[var(--nutrition-text-faint)]">
                 If unknown, test body fat when you can. Until then, protein uses a BMI-based body fat estimate.
               </span>
             </label>
             <div className="space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Height</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Height</span>
               <div className="grid grid-cols-2 gap-2">
                 <div className="relative">
                   <input
@@ -665,9 +665,9 @@ export default function CoachSetupClient({
                     onChange={(event) => setHeightFeet(event.target.value)}
                     inputMode="numeric"
                     aria-label="Height (feet)"
-                    className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 pr-8 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                    className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 pr-8 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
                   />
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-[#98A2B3]">ft</span>
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-[var(--nutrition-text-faint)]">ft</span>
                 </div>
                 <div className="relative">
                   <input
@@ -675,20 +675,20 @@ export default function CoachSetupClient({
                     onChange={(event) => setHeightInches(event.target.value)}
                     inputMode="numeric"
                     aria-label="Height (inches)"
-                    className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 pr-8 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                    className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 pr-8 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
                   />
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-[#98A2B3]">in</span>
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-[var(--nutrition-text-faint)]">in</span>
                 </div>
               </div>
             </div>
             {goalType === "maintain_weight" ? null : (
               <label className="space-y-1">
-                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Target Weight (lbs)</span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Target Weight (lbs)</span>
                 <input
                   value={targetWeightLbs}
                   onChange={(event) => setTargetWeightLbs(event.target.value)}
                   inputMode="decimal"
-                  className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                  className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
                 />
               </label>
             )}
@@ -699,21 +699,21 @@ export default function CoachSetupClient({
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1">
-                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Sessions / Week</span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Sessions / Week</span>
                 <input
                   value={sessionsPerWeek}
                   onChange={(event) => setSessionsPerWeek(event.target.value)}
                   inputMode="decimal"
-                  className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                  className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
                 />
               </label>
               <label className="space-y-1">
-                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Effective Date</span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Effective Date</span>
                 <input
                   type="date"
                   value={effectiveDate}
                   onChange={(event) => setEffectiveDate(event.target.value)}
-                  className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                  className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
                 />
               </label>
             </div>
@@ -722,36 +722,36 @@ export default function CoachSetupClient({
               type="button"
               onClick={() => void runPlan("preview")}
               disabled={saving}
-              className="rounded-2xl bg-[#14D2DC] px-5 py-2.5 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105 disabled:opacity-60"
+              className="rounded-2xl bg-[var(--nutrition-accent-teal)] px-5 py-2.5 text-sm font-bold text-[var(--nutrition-accent-teal-ink)] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105 disabled:opacity-60"
             >
               {saving ? "Calculating..." : "Generate Targets"}
             </button>
 
             {planPreview ? (
-              <div className="grid gap-3 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/66 p-4 sm:grid-cols-2">
-                <p className="text-sm text-[#475467]">Formula: <span className="font-semibold text-[#17141F]">{planPreview.formulaUsed}</span></p>
-                <p className="text-sm text-[#475467]">BMR: <span className="font-semibold text-[#17141F]">{planPreview.bmr}</span></p>
-                <p className="text-sm text-[#475467]">Maintenance: <span className="font-semibold text-[#17141F]">{planPreview.maintenanceCalories} kcal</span></p>
-                <p className="text-sm text-[#475467]">Target: <span className="font-semibold text-[#17141F]">{planPreview.targetCalories} kcal</span></p>
-                <p className="text-sm text-[#475467]">Protein: <span className="font-semibold text-[#17141F]">{toDisplayNumber(planPreview.proteinGrams)} g</span></p>
+              <div className="grid gap-3 rounded-2xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)]/66 p-4 sm:grid-cols-2">
+                <p className="text-sm text-[var(--nutrition-text-muted)]">Formula: <span className="font-semibold text-[var(--nutrition-text-primary)]">{planPreview.formulaUsed}</span></p>
+                <p className="text-sm text-[var(--nutrition-text-muted)]">BMR: <span className="font-semibold text-[var(--nutrition-text-primary)]">{planPreview.bmr}</span></p>
+                <p className="text-sm text-[var(--nutrition-text-muted)]">Maintenance: <span className="font-semibold text-[var(--nutrition-text-primary)]">{planPreview.maintenanceCalories} kcal</span></p>
+                <p className="text-sm text-[var(--nutrition-text-muted)]">Target: <span className="font-semibold text-[var(--nutrition-text-primary)]">{planPreview.targetCalories} kcal</span></p>
+                <p className="text-sm text-[var(--nutrition-text-muted)]">Protein: <span className="font-semibold text-[var(--nutrition-text-primary)]">{toDisplayNumber(planPreview.proteinGrams)} g</span></p>
                 {planPreview.proteinBasis === "bmi_estimated_body_fat" || !bodyFatPercentage.trim() ? (
-                  <p className="sm:col-span-2 rounded-xl border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.12)] px-3 py-2 text-sm font-semibold text-[#92610A]">
+                  <p className="sm:col-span-2 rounded-xl border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.12)] px-3 py-2 text-sm font-semibold text-[var(--nutrition-warning-text)]">
                     <span className="font-semibold">Protein calculation:</span>{" "}
                     {formatProteinCalculation(currentWeightLbs, planPreview)}
                   </p>
                 ) : null}
-                <p className="text-sm text-[#475467]">Lean Mass: <span className="font-semibold text-[#17141F]">{toDisplayNumber(planPreview.leanBodyMassLbs)} lb</span></p>
-                <p className="text-sm text-[#475467]">
+                <p className="text-sm text-[var(--nutrition-text-muted)]">Lean Mass: <span className="font-semibold text-[var(--nutrition-text-primary)]">{toDisplayNumber(planPreview.leanBodyMassLbs)} lb</span></p>
+                <p className="text-sm text-[var(--nutrition-text-muted)]">
                   Protein basis:{" "}
-                  <span className="font-semibold text-[#17141F]">
+                  <span className="font-semibold text-[var(--nutrition-text-primary)]">
                     {planPreview.proteinBasis === "measured_body_fat" ? "Measured body fat" : "BMI estimate"}
                   </span>
                 </p>
-                <p className="text-sm text-[#475467]">Carbs: <span className="font-semibold text-[#17141F]">{toDisplayNumber(planPreview.carbsGrams)} g</span></p>
-                <p className="text-sm text-[#475467]">Fat: <span className="font-semibold text-[#17141F]">{toDisplayNumber(planPreview.fatGrams)} g</span></p>
-                <p className="text-sm text-[#475467]">Activity: <span className="font-semibold text-[#17141F]">x{toDisplayNumber(planPreview.activityMultiplier)}</span></p>
+                <p className="text-sm text-[var(--nutrition-text-muted)]">Carbs: <span className="font-semibold text-[var(--nutrition-text-primary)]">{toDisplayNumber(planPreview.carbsGrams)} g</span></p>
+                <p className="text-sm text-[var(--nutrition-text-muted)]">Fat: <span className="font-semibold text-[var(--nutrition-text-primary)]">{toDisplayNumber(planPreview.fatGrams)} g</span></p>
+                <p className="text-sm text-[var(--nutrition-text-muted)]">Activity: <span className="font-semibold text-[var(--nutrition-text-primary)]">x{toDisplayNumber(planPreview.activityMultiplier)}</span></p>
                 {planPreview.bodyFatRecommendation ? (
-                  <p className="sm:col-span-2 text-sm font-semibold text-[#B45309]">{planPreview.bodyFatRecommendation}</p>
+                  <p className="sm:col-span-2 text-sm font-semibold text-[var(--nutrition-warning-text)]">{planPreview.bodyFatRecommendation}</p>
                 ) : null}
               </div>
             ) : null}
@@ -762,28 +762,28 @@ export default function CoachSetupClient({
           <div className="space-y-5">
             {isReverseDiet ? (
               <label className="space-y-1">
-                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Reverse Diet — Weekly kcal Increase</span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Reverse Diet — Weekly kcal Increase</span>
                 <input
                   value={reverseDietWeeklyKcalOverride}
                   onChange={(event) => setReverseDietWeeklyKcalOverride(event.target.value)}
                   inputMode="decimal"
                   placeholder="e.g. 105"
-                  className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                  className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
                 />
-                <span className="block text-xs text-[#98A2B3]">
+                <span className="block text-xs text-[var(--nutrition-text-faint)]">
                   Calories step up gradually each week (0–700 kcal/week). Leave blank to use the intensity default.
                 </span>
               </label>
             ) : (
               <div className="space-y-3">
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">
                     {rateLabel} — % bodyweight / week
                   </span>
-                  <span className="text-sm font-semibold text-[#0B7C84]">
+                  <span className="text-sm font-semibold text-[var(--nutrition-teal-text)]">
                     {weeklyRatePercent.toFixed(2)} %/wk
                     {rateWeightLbs > 0 ? (
-                      <span className="ml-2 text-[#667085]">
+                      <span className="ml-2 text-[var(--nutrition-text-soft)]">
                         ≈ {rateLbsPerWeek.toFixed(1)} lb/week
                       </span>
                     ) : null}
@@ -798,13 +798,13 @@ export default function CoachSetupClient({
                   onChange={(event) =>
                     setWeeklyRatePercent(clampWeeklyRatePercent(goalType, Number(event.target.value)))
                   }
-                  className="w-full accent-[#14D2DC]"
+                  className="w-full accent-[var(--nutrition-accent-teal)]"
                 />
-                <div className="flex justify-between text-xs text-[#98A2B3]">
+                <div className="flex justify-between text-xs text-[var(--nutrition-text-faint)]">
                   <span>{rateBounds.min}% (min)</span>
                   <span>{rateBounds.max}% (max — hard cap)</span>
                 </div>
-                <p className="rounded-xl border border-[rgba(20,210,220,0.22)] bg-[rgba(20,210,220,0.07)] px-3 py-2 text-xs font-semibold text-[#475467]">
+                <p className="rounded-xl border border-[rgba(20,210,220,0.22)] bg-[rgba(20,210,220,0.07)] px-3 py-2 text-xs font-semibold text-[var(--nutrition-text-muted)]">
                   Capped to a safe range for this goal. Faster is not better — sustainable rates protect
                   muscle and adherence.
                 </p>
@@ -812,7 +812,7 @@ export default function CoachSetupClient({
             )}
 
             <label className="space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#667085]">Intensity Preset</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--nutrition-text-soft)]">Intensity Preset</span>
               <select
                 value={intensityPreset}
                 onChange={(event) => {
@@ -822,7 +822,7 @@ export default function CoachSetupClient({
                     setWeeklyRatePercent(defaultRateFor(goalType, preset));
                   }
                 }}
-                className="w-full rounded-xl border border-[rgba(16,24,40,0.1)] bg-white/72 px-3 py-2.5 text-sm font-semibold text-[#17141F] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
+                className="w-full rounded-xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-3 py-2.5 text-sm font-semibold text-[var(--nutrition-text-primary)] focus:border-[rgba(20,210,220,0.34)] focus:outline-none"
               >
                 {INTENSITY_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -831,7 +831,7 @@ export default function CoachSetupClient({
                 ))}
               </select>
               {!isReverseDiet ? (
-                <span className="block text-xs text-[#98A2B3]">Picks a starting rate; fine-tune with the slider above.</span>
+                <span className="block text-xs text-[var(--nutrition-text-faint)]">Picks a starting rate; fine-tune with the slider above.</span>
               ) : null}
             </label>
 
@@ -839,7 +839,7 @@ export default function CoachSetupClient({
               type="button"
               onClick={() => void runPlan("preview")}
               disabled={saving}
-              className="rounded-full border border-[rgba(16,24,40,0.12)] bg-white/70 px-4 py-2 text-sm font-semibold text-[#17141F] disabled:opacity-60"
+              className="rounded-full border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-4 py-2 text-sm font-semibold text-[var(--nutrition-text-primary)] disabled:opacity-60"
             >
               Recalculate with rate
             </button>
@@ -847,34 +847,34 @@ export default function CoachSetupClient({
         ) : null}
 
         {step === 5 ? (
-          <div className="space-y-4 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/66 p-4">
-            <p className="text-sm font-semibold text-[#17141F]">Review</p>
-            <p className="text-sm text-[#475467]">Goal: {goalType ? GOAL_LABELS[goalType] : "—"}</p>
-            <p className="text-sm text-[#475467]">Current Weight: {currentWeightLbs} lbs</p>
+          <div className="space-y-4 rounded-2xl border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-solid)]/66 p-4">
+            <p className="text-sm font-semibold text-[var(--nutrition-text-primary)]">Review</p>
+            <p className="text-sm text-[var(--nutrition-text-muted)]">Goal: {goalType ? GOAL_LABELS[goalType] : "—"}</p>
+            <p className="text-sm text-[var(--nutrition-text-muted)]">Current Weight: {currentWeightLbs} lbs</p>
             {goalType === "maintain_weight" ? null : (
-              <p className="text-sm text-[#475467]">Target Weight: {targetWeightLbs || "—"} lbs</p>
+              <p className="text-sm text-[var(--nutrition-text-muted)]">Target Weight: {targetWeightLbs || "—"} lbs</p>
             )}
-            <p className="text-sm text-[#475467]">Intensity: {intensityPreset}</p>
+            <p className="text-sm text-[var(--nutrition-text-muted)]">Intensity: {intensityPreset}</p>
             {!isReverseDiet ? (
-              <p className="text-sm text-[#475467]">
+              <p className="text-sm text-[var(--nutrition-text-muted)]">
                 {rateLabel}: {weeklyRatePercent.toFixed(2)} %/wk
                 {rateWeightLbs > 0 ? ` (≈ ${rateLbsPerWeek.toFixed(1)} lb/week)` : ""}
               </p>
             ) : null}
             {planPreview ? (
-              <p className="text-sm text-[#475467]">
+              <p className="text-sm text-[var(--nutrition-text-muted)]">
                 Targets: {planPreview.targetCalories} kcal, {toDisplayNumber(planPreview.proteinGrams)}p,{" "}
                 {toDisplayNumber(planPreview.carbsGrams)}c, {toDisplayNumber(planPreview.fatGrams)}f
               </p>
             ) : (
-              <p className="text-sm font-semibold text-[#B45309]">Generate targets before applying.</p>
+              <p className="text-sm font-semibold text-[var(--nutrition-warning-text)]">Generate targets before applying.</p>
             )}
 
             <button
               type="button"
               onClick={() => void runPlan("apply")}
               disabled={saving || !planPreview}
-              className="rounded-2xl bg-[#14D2DC] px-5 py-2.5 text-sm font-bold text-[#071317] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105 disabled:opacity-60"
+              className="rounded-2xl bg-[var(--nutrition-accent-teal)] px-5 py-2.5 text-sm font-bold text-[var(--nutrition-accent-teal-ink)] shadow-[0_14px_30px_rgba(20,210,220,0.24)] transition hover:brightness-105 disabled:opacity-60"
             >
               {saving ? "Applying..." : "Apply Now"}
             </button>
@@ -889,7 +889,7 @@ export default function CoachSetupClient({
             type="button"
             onClick={() => setStep((current) => Math.max(1, current - 1))}
             disabled={step === 1}
-            className="rounded-full border border-[rgba(16,24,40,0.12)] bg-white/70 px-4 py-2 text-xs font-semibold text-[#17141F] disabled:opacity-50"
+            className="rounded-full border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-4 py-2 text-xs font-semibold text-[var(--nutrition-text-primary)] disabled:opacity-50"
           >
             Back
           </button>
@@ -897,7 +897,7 @@ export default function CoachSetupClient({
             type="button"
             onClick={goNext}
             disabled={step === 5}
-            className="rounded-full border border-[rgba(16,24,40,0.12)] bg-white/70 px-4 py-2 text-xs font-semibold text-[#17141F] disabled:opacity-50"
+            className="rounded-full border border-[var(--nutrition-card-border)] bg-[var(--nutrition-surface-soft)] px-4 py-2 text-xs font-semibold text-[var(--nutrition-text-primary)] disabled:opacity-50"
           >
             Next
           </button>

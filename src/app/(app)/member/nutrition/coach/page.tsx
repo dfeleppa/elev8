@@ -12,11 +12,11 @@ export default async function MemberNutritionCoachPlanPage() {
 
   return (
     <div className="w-full">
-      <section className="premium-main-glow min-h-[calc(100vh-3.5rem)] w-full px-5 py-4 text-[#17141F] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
+      <section className="nutrition-theme premium-main-glow min-h-[calc(100dvh-3.5rem)] w-full px-5 py-4 text-[var(--nutrition-text-primary)] sm:px-8 lg:px-10 lg:py-6 2xl:px-12">
         <div className="flex w-full flex-col gap-4 sm:gap-5">
           <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="-mt-[56px] flex h-10 items-center justify-center sm:mt-0 sm:h-auto sm:justify-start">
-              <h1 className="max-w-[calc(100vw-136px)] truncate text-center font-head text-[18px] font-extrabold leading-tight tracking-normal text-[#17141F] sm:max-w-none sm:text-left sm:text-[32px]">
+              <h1 className="max-w-[calc(100vw-136px)] truncate text-center font-head text-[18px] font-extrabold leading-tight tracking-normal text-[var(--nutrition-text-primary)] sm:max-w-none sm:text-left sm:text-[32px]">
                 Nutrition Plan
               </h1>
             </div>
