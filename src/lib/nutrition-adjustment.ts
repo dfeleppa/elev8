@@ -62,7 +62,7 @@ export type CurrentPlan = {
 
 export type AdjustmentInputs = {
   plan: CurrentPlan;
-  /** Daily log totals for the trailing window (ideally 14 days). */
+  /** Daily log totals for the trailing adherence window. */
   dailyLogs: DailyLog[];
   /** Weight entries for the trailing window (ideally 21 days). */
   weights: WeightEntry[];

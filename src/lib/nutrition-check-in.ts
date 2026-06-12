@@ -13,7 +13,7 @@ import {
 } from "@/lib/nutrition-adjustment";
 import type { GoalType } from "@/lib/nutrition-calculations";
 
-export const ADHERENCE_WINDOW_DAYS = 14;
+export const ADHERENCE_WINDOW_DAYS = 7;
 export const WEIGHT_WINDOW_DAYS = 21;
 export const METABOLISM_WINDOW_DAYS = 7;
 export const NEXT_CHECK_IN_DAYS = 7;
@@ -73,12 +73,14 @@ export async function loadLatestPlan(memberId: string): Promise<LatestPlanRow | 
   return data;
 }
 
-async function loadDailyLogs(memberId: string, sinceIso: string): Promise<DailyLog[]> {
+async function loadDailyLogs(memberId: string, sinceIso: string, untilIso: string): Promise<DailyLog[]> {
   const { data: days, error: daysError } = await supabaseAdmin
     .from("nutrition_days")
     .select("id, day_date")
     .eq("member_id", memberId)
-    .gte("day_date", sinceIso);
+    .gte("day_date", sinceIso)
+    .lte("day_date", untilIso)
+    .order("day_date", { ascending: true });
 
   if (daysError) throw new Error(daysError.message);
   const dayRows = days ?? [];
@@ -179,10 +181,11 @@ export async function buildCheckInRecommendation(
 
   const today = todayIsoDate();
   const adherenceSince = datePlusDays(today, -ADHERENCE_WINDOW_DAYS);
+  const adherenceUntil = datePlusDays(today, -1);
   const weightSince = datePlusDays(today, -WEIGHT_WINDOW_DAYS);
 
   const [dailyLogs, weights] = await Promise.all([
-    loadDailyLogs(memberId, adherenceSince),
+    loadDailyLogs(memberId, adherenceSince, adherenceUntil),
     loadWeights(memberId, weightSince),
   ]);
 
