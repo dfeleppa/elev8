@@ -177,13 +177,18 @@ export async function requireUserContextFromBearer(request: Request): Promise<Us
 
 export async function requireUserContext(): Promise<UserContext> {
   const session = await getServerSession(authOptions);
-  const email = session?.user?.email?.toLowerCase().trim() ?? null;
+  const sessionEmail = session?.user?.email?.toLowerCase().trim() ?? null;
+  const devEmail =
+    process.env.NODE_ENV === "development"
+      ? process.env.DEV_AUTH_EMAIL?.toLowerCase().trim()
+      : null;
+  const email = sessionEmail || devEmail || null;
 
   if (!email) {
     return { userId: null, role: "member", error: "Unauthorized" };
   }
 
-  const { fullName } = splitName(session?.user?.name);
+  const { fullName } = splitName(sessionEmail ? session?.user?.name : null);
 
   const { data: existingUser, error: existingUserError } = await supabaseAdmin
     .from("app_users")
@@ -204,16 +209,18 @@ export async function requireUserContext(): Promise<UserContext> {
 
   if (existingUser) {
     if ((existingUser.full_name ?? null) !== fullName) {
-      const { error: updateError } = await supabaseAdmin
-        .from("app_users")
-        .update({
-          full_name: fullName,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", existingUser.id);
+      if (sessionEmail) {
+        const { error: updateError } = await supabaseAdmin
+          .from("app_users")
+          .update({
+            full_name: fullName,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingUser.id);
 
-      if (updateError) {
-        userError = updateError.message;
+        if (updateError) {
+          userError = updateError.message;
+        }
       }
     }
   } else {

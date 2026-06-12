@@ -23,6 +23,10 @@ function isAuthPage(pathname: string) {
   return pathname === "/login" || pathname === "/register";
 }
 
+export function hasDevAuthBypass() {
+  return process.env.NODE_ENV === "development" && Boolean(process.env.DEV_AUTH_EMAIL?.trim());
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -30,16 +34,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const devAuthBypass = hasDevAuthBypass();
+
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
   if (isAuthPage(pathname)) {
-    if (token) {
+    if (token || devAuthBypass) {
       return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
   }
 
-  if (!token) {
+  if (!token && !devAuthBypass) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", request.url);
     return NextResponse.redirect(loginUrl);

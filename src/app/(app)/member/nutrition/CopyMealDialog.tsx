@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Panel } from "@/components/ui";
 import { useModalBehavior } from "@/hooks/useModalBehavior";
@@ -24,8 +24,9 @@ export default function CopyMealDialog({
 }: CopyMealDialogProps) {
   const [targetDate, setTargetDate] = useState(() => toLocalDateInputValue(new Date()));
   const [targetMeal, setTargetMeal] = useState<MealKey>("breakfast");
+  const overlayRef = useRef<HTMLDivElement | null>(null);
 
-  useModalBehavior(mealKey !== null, onClose);
+  useModalBehavior(mealKey !== null, onClose, overlayRef);
 
   // Re-seed the form each time the dialog opens for a meal.
   useEffect(() => {
@@ -51,13 +52,15 @@ export default function CopyMealDialog({
 
   return (
     <div
+      ref={overlayRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label="Copy meal"
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 outline-none"
     >
       <Panel padding="lg" className="w-full max-w-md shadow-[var(--shadow-lg)]">
         <div className="flex items-center justify-between gap-3">

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { shiftDate, toLocalDateInputValue } from "./lib";
@@ -11,8 +10,6 @@ type DateNavigatorProps = {
 };
 
 export default function DateNavigator({ selectedDate, onChange }: DateNavigatorProps) {
-  const dateInputRef = useRef<HTMLInputElement | null>(null);
-
   const selectedDateObj = new Date(`${selectedDate}T00:00:00`);
   const todayDate = new Date();
   const todayValue = toLocalDateInputValue(todayDate);
@@ -27,7 +24,7 @@ export default function DateNavigator({ selectedDate, onChange }: DateNavigatorP
         });
 
   return (
-    <div className="nutrition-date-pill premium-glass-pill pointer-events-auto mx-auto flex w-full max-w-[calc(100vw-176px)] items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
+    <div className="nutrition-date-pill premium-glass-pill pointer-events-auto mx-auto flex w-full items-center justify-center p-1.5 shadow-[0_12px_30px_rgba(16,24,40,0.10)] sm:max-w-[330px]">
       <button
         type="button"
         onClick={() => onChange(shiftDate(selectedDate, -1))}
@@ -36,30 +33,30 @@ export default function DateNavigator({ selectedDate, onChange }: DateNavigatorP
       >
         <ChevronLeft className="h-5 w-5" aria-hidden="true" />
       </button>
-      <div className="flex min-w-0 flex-1 items-center justify-center px-1">
-        <button
-          type="button"
-          onClick={() => {
-            if (dateInputRef.current?.showPicker) {
-              dateInputRef.current.showPicker();
-              return;
-            }
-            dateInputRef.current?.click();
-          }}
-          className="min-w-0 rounded-full px-2 py-2 text-center text-[13px] font-extrabold leading-none text-[var(--nutrition-text-primary)] transition hover:bg-[var(--nutrition-surface-solid)] focus:outline-none focus:ring-2 focus:ring-[var(--nutrition-accent-teal)]/35 min-[380px]:px-3 min-[380px]:text-[14px] sm:text-[15px]"
-          aria-label="Open date picker"
-        >
-          <span className="block truncate">{compactDateLabel}</span>
-        </button>
+      <div className="relative flex min-w-0 flex-1 items-center justify-center px-1">
+        {/* The transparent native input sits on top of the styled label, so a
+            tap opens the platform date picker on every browser; showPicker()
+            upgrades the experience where it exists (e.g. desktop Chrome). */}
         <input
-          ref={dateInputRef}
           id="nutrition-date-mobile"
           name="nutritionDateMobile"
           type="date"
           value={selectedDate}
           onChange={(event) => onChange(event.target.value)}
-          className="sr-only"
+          onClick={(event) => {
+            try {
+              event.currentTarget.showPicker?.();
+            } catch {
+              // Some browsers reject showPicker outside trusted gestures —
+              // focusing the native input still opens their picker UI.
+            }
+          }}
+          aria-label="Open date picker"
+          className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0"
         />
+        <span className="pointer-events-none block min-w-0 truncate rounded-full px-2 py-2 text-center text-[13px] font-extrabold leading-none text-[var(--nutrition-text-primary)] transition peer-hover:bg-[var(--nutrition-surface-solid)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--nutrition-accent-teal)]/35 min-[380px]:px-3 min-[380px]:text-[14px] sm:text-[15px]">
+          {compactDateLabel}
+        </span>
       </div>
       <button
         type="button"

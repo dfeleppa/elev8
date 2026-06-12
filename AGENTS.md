@@ -48,6 +48,13 @@ Routes are organized by role:
 | `instagram.ts` | Instagram/Facebook Graph API + publishing |
 | `agent-auth.ts` | Token auth for external agent integrations |
 
+### Programming Knowledge
+Lyfe Fitness programming guidance lives outside this repo as a local, living knowledge folder:
+
+`C:\Users\DFele\Documents\Daniel\Operations\Lyfe Fitness\Programming\`
+
+When working on workout programming features, importing workouts, or drafting Lyfe Fitness programming, reference that folder first. In particular, use `Lyfe Fitness - Programming Parameters.md` as the current source of truth for programming standards and constraints.
+
 ### API Patterns
 - All API routes under `src/app/api/` use method-based handlers (GET/POST/PUT/DELETE in the same file)
 - Call `requireUserContext()` first for auth; return 401/403 otherwise

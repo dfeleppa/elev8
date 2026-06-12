@@ -80,8 +80,9 @@ export default function FoodDialog({
   const [labelScanResult, setLabelScanResult] = useState<LabelScanResult | null>(null);
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   const [editFoodDraft, setEditFoodDraft] = useState({ ...EMPTY_FOOD_DRAFT });
+  const overlayRef = useRef<HTMLDivElement | null>(null);
 
-  useModalBehavior(open, onClose);
+  useModalBehavior(open, onClose, overlayRef);
 
   async function loadFoodLibraries(options?: {
     includeRecent?: boolean;
@@ -454,13 +455,15 @@ export default function FoodDialog({
 
   return (
     <div
+      ref={overlayRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label="Search foods"
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-4 sm:items-center sm:py-6"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-4 outline-none sm:items-center sm:py-6"
     >
       <div className="panel my-auto w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
         <div className="flex items-start justify-between gap-3">

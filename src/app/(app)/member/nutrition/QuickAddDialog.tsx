@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
 
 import { useModalBehavior } from "@/hooks/useModalBehavior";
@@ -23,8 +23,9 @@ export default function QuickAddDialog({
 }: QuickAddDialogProps) {
   const [macros, setMacros] = useState({ protein: "", carbs: "", fat: "", fiber: "" });
   const [saving, setSaving] = useState(false);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
 
-  useModalBehavior(open, onClose);
+  useModalBehavior(open, onClose, overlayRef);
 
   if (!open) {
     return null;
@@ -80,13 +81,15 @@ export default function QuickAddDialog({
 
   return (
     <div
+      ref={overlayRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label="Quick add macros"
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 outline-none"
     >
       <div className="panel w-full max-w-md rounded-3xl p-5 shadow-2xl">
         <div className="flex items-center justify-between gap-3">

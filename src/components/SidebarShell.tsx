@@ -272,6 +272,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const desktopMenuRef = useRef<HTMLDivElement | null>(null);
+  const comingSoonRef = useRef<HTMLDivElement | null>(null);
+  const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   // Pages provide their own layout wrapper; the shell main only handles
@@ -293,8 +295,8 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
   useDismissable(menuOpen, () => setMenuOpen(false), [mobileMenuRef, desktopMenuRef]);
 
-  useModalBehavior(Boolean(comingSoon), () => setComingSoon(null));
-  useModalBehavior(mobileSidebarOpen, () => setMobileSidebarOpen(false));
+  useModalBehavior(Boolean(comingSoon), () => setComingSoon(null), comingSoonRef);
+  useModalBehavior(mobileSidebarOpen, () => setMobileSidebarOpen(false), mobileDrawerRef);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -766,7 +768,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
       ) : null}
 
       {mobileSidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div ref={mobileDrawerRef} tabIndex={-1} className="fixed inset-0 z-50 outline-none lg:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-black/75"
@@ -1155,7 +1157,9 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
       {comingSoon ? (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          ref={comingSoonRef}
+          tabIndex={-1}
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 outline-none"
           role="dialog"
           aria-modal="true"
           aria-label={`${comingSoon} coming soon`}
