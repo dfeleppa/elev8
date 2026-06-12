@@ -627,7 +627,32 @@ function CoachTrendChart({
     const dates = new Set<string>();
     const caloriesByDate = new Map<string, number>();
     const weightByDate = new Map<string, number>();
-    const metabolismByDate = new Map<string, number>();
+    const sortedPlans = [...plans]
+      .map((plan) => {
+        const date =
+          dateFromIsoLike(plan.maintenance_calories_estimated_at) ??
+          dateFromIsoLike(plan.last_check_in_date) ??
+          dateFromIsoLike(plan.effective_date);
+        const empirical = plan.last_metabolism_estimate?.estimatedTdee;
+        const metabolism =
+          typeof empirical === "number" && Number.isFinite(empirical)
+            ? empirical
+            : typeof plan.maintenance_calories === "number" && Number.isFinite(plan.maintenance_calories)
+              ? plan.maintenance_calories
+              : null;
+        return date && metabolism !== null ? { date, metabolism: Math.round(metabolism) } : null;
+      })
+      .filter((plan): plan is { date: string; metabolism: number } => plan !== null)
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
+
+    function metabolismForDate(date: string) {
+      let active = sortedPlans[0] ?? null;
+      for (const plan of sortedPlans) {
+        if (plan.date > date) break;
+        active = plan;
+      }
+      return active?.metabolism ?? null;
+    }
 
     for (const day of nutritionDays) {
       const date = dateFromIsoLike(day.date);
@@ -657,17 +682,10 @@ function CoachTrendChart({
       weightByDate.set(weight.date, Math.round(trend * 10) / 10);
     });
 
-    for (const plan of plans) {
-      const estimate = plan.last_metabolism_estimate;
-      const estimatedTdee = estimate?.estimatedTdee;
-      if (typeof estimatedTdee !== "number" || !Number.isFinite(estimatedTdee)) continue;
-      const date =
-        dateFromIsoLike(plan.maintenance_calories_estimated_at) ??
-        dateFromIsoLike(plan.last_check_in_date) ??
-        dateFromIsoLike(plan.effective_date);
-      if (!date || date < rangeStart || date > rangeEnd) continue;
-      dates.add(date);
-      metabolismByDate.set(date, Math.round(estimatedTdee));
+    for (const plan of sortedPlans) {
+      if (plan.date >= rangeStart && plan.date <= rangeEnd) {
+        dates.add(plan.date);
+      }
     }
 
     return [...dates]
@@ -676,7 +694,7 @@ function CoachTrendChart({
         date,
         label: formatTrendLabel(date),
         trendWeight: weightByDate.get(date) ?? null,
-        metabolism: metabolismByDate.get(date) ?? null,
+        metabolism: metabolismForDate(date),
         calories: caloriesByDate.get(date) ?? null,
       }));
   }, [nutritionDays, plans, rangeEnd, rangeStart, weights]);
@@ -819,7 +837,7 @@ function CoachTrendChart({
                     strokeWidth={series.key === "metabolism" ? 2.5 : 2}
                     dot={{ r: series.key === "metabolism" ? 4 : 2.5, fill: series.color, strokeWidth: 0 }}
                     activeDot={{ r: 5, fill: series.color, strokeWidth: 0 }}
-                    connectNulls={series.key === "metabolism"}
+                    connectNulls={series.key === "metabolism" || series.key === "trendWeight"}
                   />
                 ) : null
               )}
