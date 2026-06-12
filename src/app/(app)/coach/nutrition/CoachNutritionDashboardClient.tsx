@@ -2,6 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import NutritionCheckInBanner from "@/components/health/NutritionCheckInBanner";
 
@@ -103,6 +112,7 @@ type Detail = {
   checkIns: CheckInRow[];
   weights: WeightRow[];
   recentNutritionDays: RecentNutritionDay[];
+  nutritionTrendDays?: RecentNutritionDay[];
 };
 
 type LiveRecommendation = {
@@ -153,6 +163,23 @@ const CONFIDENCE_TONE: Record<MetabolismEstimateSnapshot["confidence"], string> 
   low: "border-[var(--line)] bg-white/5 text-[var(--text-muted)]",
 };
 
+const TREND_SERIES = [
+  { key: "trendWeight", label: "Trend weight", color: "#63f7ff", unit: " lb", axis: "weight" },
+  { key: "metabolism", label: "Estimated metabolism", color: "#ffb1c4", unit: " kcal", axis: "kcal" },
+  { key: "calories", label: "Calories consumed", color: "#fbbf24", unit: " kcal", axis: "kcal" },
+] as const;
+
+type TrendSeriesKey = (typeof TREND_SERIES)[number]["key"];
+type TrendRange = "14" | "30" | "60" | "90" | "custom";
+
+type TrendChartPoint = {
+  date: string;
+  label: string;
+  trendWeight: number | null;
+  metabolism: number | null;
+  calories: number | null;
+};
+
 function formatNumber(value: number | null | undefined, digits = 0) {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) return "-";
   return Number(value).toLocaleString(undefined, {
@@ -186,6 +213,34 @@ function formatDateTime(value: string | null | undefined) {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
   return parsed.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+function toDateInputValue(date: Date) {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+}
+
+function addDays(isoDate: string, days: number) {
+  const parsed = new Date(`${isoDate}T00:00:00`);
+  parsed.setDate(parsed.getDate() + days);
+  return toDateInputValue(parsed);
+}
+
+function dateFromIsoLike(value: string | null | undefined) {
+  if (!value) return null;
+  const date = value.includes("T") ? value.slice(0, 10) : value;
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+}
+
+function formatTrendLabel(value: string) {
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function average(values: number[]) {
+  if (values.length === 0) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 function formatMacroCell(value: number | null | undefined, target?: number | null) {
@@ -267,6 +322,14 @@ export default function CoachNutritionDashboardClient() {
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [liveRec, setLiveRec] = useState<LiveRecommendation>(null);
+  const [visibleTrendSeries, setVisibleTrendSeries] = useState<Record<TrendSeriesKey, boolean>>({
+    trendWeight: true,
+    metabolism: true,
+    calories: true,
+  });
+  const [trendRange, setTrendRange] = useState<TrendRange>("30");
+  const [trendFrom, setTrendFrom] = useState(() => addDays(toDateInputValue(new Date()), -30));
+  const [trendTo, setTrendTo] = useState(() => toDateInputValue(new Date()));
 
   useEffect(() => {
     let active = true;
@@ -439,6 +502,19 @@ export default function CoachNutritionDashboardClient() {
           {currentPlan ? (
             <>
               <CurrentPlanCards plan={currentPlan} />
+              <CoachTrendChart
+                plans={detail.plans}
+                weights={detail.weights}
+                nutritionDays={detail.nutritionTrendDays ?? detail.recentNutritionDays ?? []}
+                visibleSeries={visibleTrendSeries}
+                onVisibleSeriesChange={setVisibleTrendSeries}
+                range={trendRange}
+                onRangeChange={setTrendRange}
+                customFrom={trendFrom}
+                customTo={trendTo}
+                onCustomFromChange={setTrendFrom}
+                onCustomToChange={setTrendTo}
+              />
               <MacroCalculationCard plan={currentPlan} memberSex={detail.member.sex ?? null} />
               <RecentNutritionDaysTable days={detail.recentNutritionDays ?? []} />
               <MetabolismCard plan={currentPlan} />
@@ -513,6 +589,255 @@ function RecentNutritionDaysTable({ days }: { days: RecentNutritionDay[] }) {
           </table>
         </div>
       )}
+    </section>
+  );
+}
+
+function CoachTrendChart({
+  plans,
+  weights,
+  nutritionDays,
+  visibleSeries,
+  onVisibleSeriesChange,
+  range,
+  onRangeChange,
+  customFrom,
+  customTo,
+  onCustomFromChange,
+  onCustomToChange,
+}: {
+  plans: PlanRow[];
+  weights: WeightRow[];
+  nutritionDays: RecentNutritionDay[];
+  visibleSeries: Record<TrendSeriesKey, boolean>;
+  onVisibleSeriesChange: (next: Record<TrendSeriesKey, boolean>) => void;
+  range: TrendRange;
+  onRangeChange: (next: TrendRange) => void;
+  customFrom: string;
+  customTo: string;
+  onCustomFromChange: (next: string) => void;
+  onCustomToChange: (next: string) => void;
+}) {
+  const today = toDateInputValue(new Date());
+  const rangeStart = range === "custom" ? customFrom : addDays(today, -Number(range));
+  const rangeEnd = range === "custom" ? customTo : today;
+  const activeSeries = TREND_SERIES.filter((series) => visibleSeries[series.key]);
+
+  const chartData = useMemo<TrendChartPoint[]>(() => {
+    const dates = new Set<string>();
+    const caloriesByDate = new Map<string, number>();
+    const weightByDate = new Map<string, number>();
+    const metabolismByDate = new Map<string, number>();
+
+    for (const day of nutritionDays) {
+      const date = dateFromIsoLike(day.date);
+      if (!date || date < rangeStart || date > rangeEnd) continue;
+      dates.add(date);
+      caloriesByDate.set(date, Math.round(Number(day.calories) || 0));
+    }
+
+    const sortedWeights = [...weights]
+      .map((weight) => {
+        const date = dateFromIsoLike(weight.entry_date);
+        if (!date) return null;
+        const rawValue = Number(weight.value);
+        if (!Number.isFinite(rawValue) || rawValue <= 0) return null;
+        const unit = String(weight.unit ?? "lb").toLowerCase();
+        return { date, weightLbs: unit.startsWith("kg") ? rawValue * 2.20462 : rawValue };
+      })
+      .filter((weight): weight is { date: string; weightLbs: number } => weight !== null)
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
+
+    sortedWeights.forEach((weight, index) => {
+      if (weight.date < rangeStart || weight.date > rangeEnd) return;
+      const window = sortedWeights.slice(Math.max(0, index - 2), index + 1).map((entry) => entry.weightLbs);
+      const trend = average(window);
+      if (trend === null) return;
+      dates.add(weight.date);
+      weightByDate.set(weight.date, Math.round(trend * 10) / 10);
+    });
+
+    for (const plan of plans) {
+      const estimate = plan.last_metabolism_estimate;
+      const estimatedTdee = estimate?.estimatedTdee;
+      if (typeof estimatedTdee !== "number" || !Number.isFinite(estimatedTdee)) continue;
+      const date =
+        dateFromIsoLike(plan.maintenance_calories_estimated_at) ??
+        dateFromIsoLike(plan.last_check_in_date) ??
+        dateFromIsoLike(plan.effective_date);
+      if (!date || date < rangeStart || date > rangeEnd) continue;
+      dates.add(date);
+      metabolismByDate.set(date, Math.round(estimatedTdee));
+    }
+
+    return [...dates]
+      .sort()
+      .map((date) => ({
+        date,
+        label: formatTrendLabel(date),
+        trendWeight: weightByDate.get(date) ?? null,
+        metabolism: metabolismByDate.get(date) ?? null,
+        calories: caloriesByDate.get(date) ?? null,
+      }));
+  }, [nutritionDays, plans, rangeEnd, rangeStart, weights]);
+
+  const hasVisibleData = chartData.some((point) =>
+    activeSeries.some((series) => point[series.key] !== null)
+  );
+  const latestPoint = [...chartData].reverse().find((point) =>
+    activeSeries.some((series) => point[series.key] !== null)
+  );
+
+  function toggleSeries(key: TrendSeriesKey) {
+    const enabledCount = Object.values(visibleSeries).filter(Boolean).length;
+    if (visibleSeries[key] && enabledCount === 1) return;
+    onVisibleSeriesChange({ ...visibleSeries, [key]: !visibleSeries[key] });
+  }
+
+  return (
+    <section className="panel rounded-3xl p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-semibold text-[var(--text)]">Nutrition Trend Chart</h2>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            Trend weight is a rolling 3-entry average; calories are daily logged totals.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={range}
+            onChange={(event) => onRangeChange(event.target.value as TrendRange)}
+            className="min-h-10 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-3 text-xs font-semibold text-[var(--text)] outline-none transition focus:border-[var(--accent-cyan)]"
+          >
+            <option value="14">Last 14 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="60">Last 60 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+      </div>
+
+      {range === "custom" ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <input
+            type="date"
+            value={customFrom}
+            max={customTo || undefined}
+            onChange={(event) => onCustomFromChange(event.target.value)}
+            className="min-h-10 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-3 text-xs text-[var(--text)] outline-none transition focus:border-[var(--accent-cyan)]"
+          />
+          <span className="text-xs text-[var(--text-muted)]">to</span>
+          <input
+            type="date"
+            value={customTo}
+            min={customFrom || undefined}
+            onChange={(event) => onCustomToChange(event.target.value)}
+            className="min-h-10 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] px-3 text-xs text-[var(--text)] outline-none transition focus:border-[var(--accent-cyan)]"
+          />
+        </div>
+      ) : null}
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {TREND_SERIES.map((series) => (
+          <label
+            key={series.key}
+            className={`inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-2xl border px-3 text-xs font-semibold transition ${
+              visibleSeries[series.key]
+                ? "border-white/15 bg-white/[0.08] text-[var(--text)]"
+                : "border-[var(--line)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:text-[var(--text)]"
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={visibleSeries[series.key]}
+              onChange={() => toggleSeries(series.key)}
+              className="h-4 w-4 accent-[var(--accent-cyan)]"
+            />
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: series.color }} />
+            {series.label}
+          </label>
+        ))}
+      </div>
+
+      <div className="mt-5 h-[340px] min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-3">
+        {!hasVisibleData ? (
+          <div className="flex h-full items-center justify-center text-center text-sm text-[var(--text-muted)]">
+            No trend data in this timeframe.
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <LineChart data={chartData} margin={{ top: 12, right: 8, left: 4, bottom: 4 }}>
+              <CartesianGrid stroke="rgba(255,255,255,0.07)" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: "rgba(255,255,255,0.56)", fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                yAxisId="kcal"
+                tick={{ fill: "rgba(255,255,255,0.56)", fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                width={54}
+                tickFormatter={(value) => `${formatNumber(Number(value) / 1000, 1)}k`}
+              />
+              <YAxis
+                yAxisId="weight"
+                orientation="right"
+                tick={{ fill: "rgba(255,255,255,0.56)", fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                width={44}
+                tickFormatter={(value) => `${formatNumber(Number(value), 0)}`}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#17141f",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: "14px",
+                  color: "var(--text)",
+                  fontSize: 12,
+                  boxShadow: "0 18px 48px rgba(0,0,0,0.32)",
+                }}
+                labelStyle={{ color: "var(--text-muted)", marginBottom: 6 }}
+                formatter={(value, name) => {
+                  const series = TREND_SERIES.find((item) => item.key === name);
+                  return [`${formatNumber(Number(value), series?.key === "trendWeight" ? 1 : 0)}${series?.unit ?? ""}`, series?.label ?? name];
+                }}
+              />
+              {TREND_SERIES.map((series) =>
+                visibleSeries[series.key] ? (
+                  <Line
+                    key={series.key}
+                    yAxisId={series.axis}
+                    type="monotone"
+                    dataKey={series.key}
+                    stroke={series.color}
+                    strokeWidth={series.key === "metabolism" ? 2.5 : 2}
+                    dot={{ r: series.key === "metabolism" ? 4 : 2.5, fill: series.color, strokeWidth: 0 }}
+                    activeDot={{ r: 5, fill: series.color, strokeWidth: 0 }}
+                    connectNulls={series.key === "metabolism"}
+                  />
+                ) : null
+              )}
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
+        <p>
+          Showing {formatDate(rangeStart)} to {formatDate(rangeEnd)}
+        </p>
+        {latestPoint ? (
+          <p>
+            Latest visible date: <span className="text-[var(--text)]">{formatDate(latestPoint.date)}</span>
+          </p>
+        ) : null}
+      </div>
     </section>
   );
 }

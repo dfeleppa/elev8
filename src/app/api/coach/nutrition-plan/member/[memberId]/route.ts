@@ -155,7 +155,7 @@ async function repairLegacyLeanMassMacros(
   return updatedPlan as CoachPlanRow;
 }
 
-async function getRecentNutritionDays(memberId: string) {
+async function getNutritionDays(memberId: string) {
   const { data: days, error: daysError } = await runNutritionQueryWithFallbacks<NutritionDayRow[]>([
     () =>
       supabaseAdmin
@@ -256,8 +256,7 @@ async function getRecentNutritionDays(memberId: string) {
         fiberTarget: day.fiber_target ?? null,
       };
     })
-    .filter((day): day is NonNullable<typeof day> => day !== null)
-    .slice(0, 14);
+    .filter((day): day is NonNullable<typeof day> => day !== null);
 }
 
 export async function GET(
@@ -277,7 +276,7 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const [memberRes, plansRes, checkInsRes, weightsRes, recentNutritionDays] = await Promise.all([
+  const [memberRes, plansRes, checkInsRes, weightsRes, nutritionDays] = await Promise.all([
     supabaseAdmin.from("app_users").select("id, full_name, email, sex").eq("id", memberId).maybeSingle(),
     supabaseAdmin
       .from("coach_nutrition_plans")
@@ -297,8 +296,8 @@ export async function GET(
       .eq("member_id", memberId)
       .eq("stat_key", "body_weight")
       .order("entry_date", { ascending: false })
-      .limit(60),
-    getRecentNutritionDays(memberId),
+      .limit(120),
+    getNutritionDays(memberId),
   ]);
 
   if (memberRes.error) {
@@ -318,6 +317,7 @@ export async function GET(
     plans,
     checkIns: checkInsRes.data ?? [],
     weights: weightsRes.data ?? [],
-    recentNutritionDays,
+    recentNutritionDays: nutritionDays.slice(0, 14),
+    nutritionTrendDays: nutritionDays,
   });
 }
