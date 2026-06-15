@@ -45,7 +45,7 @@ next-env.d.ts
 
 # claude code worktrees (transient working copies; should never be tracked)
 .claude/worktrees/
-/claude/settings.local.json
+.claude/settings.local.json
 
 # codex agent scratch artifacts (browser profiles, screenshots, dev-server logs)
 .codex-*
