@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Upload } from "lucide-react";
+import { Camera, Edit3, Upload } from "lucide-react";
 
 import { useModalBehavior } from "@/hooks/useModalBehavior";
 import {
@@ -21,6 +21,7 @@ import {
   type FoodSearchResult,
   type LabelScanResult,
   type LibraryFood,
+  type MealDescriptionItem,
   type MealKey,
   type NutritionEntry,
 } from "./lib";
@@ -57,7 +58,7 @@ export default function FoodDialog({
   onError,
 }: FoodDialogProps) {
   const searchMeal: MealKey = "lunch";
-  const [dialogTab, setDialogTab] = useState<"recent" | "mine" | "scan" | "create" | "usda">("recent");
+  const [dialogTab, setDialogTab] = useState<"recent" | "mine" | "scan" | "create" | "usda" | "describe">("recent");
   const [dialogSearch, setDialogSearch] = useState("");
   const [dialogLoading, setDialogLoading] = useState(false);
   const [dialogSaving, setDialogSaving] = useState(false);
@@ -80,6 +81,11 @@ export default function FoodDialog({
   const [labelScanResult, setLabelScanResult] = useState<LabelScanResult | null>(null);
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   const [editFoodDraft, setEditFoodDraft] = useState({ ...EMPTY_FOOD_DRAFT });
+  // Meal describe states
+  const [mealDescribeLoading, setMealDescribeLoading] = useState(false);
+  const [mealDescribeError, setMealDescribeError] = useState<string | null>(null);
+  const [mealDescribeItems, setMealDescribeItems] = useState<MealDescriptionItem[]>([]);
+  const [mealDescriptionDraft, setMealDescriptionDraft] = useState("");
   const overlayRef = useRef<HTMLDivElement | null>(null);
 
   useModalBehavior(open, onClose, overlayRef);
@@ -306,6 +312,74 @@ export default function FoodDialog({
     onEntryAdded(payload.entry);
   }
 
+  async function runMealDescribe() {
+    const description = mealDescriptionDraft.trim();
+    if (!description) {
+      setMealDescribeError("Please describe your meal.");
+      return;
+    }
+
+    setMealDescribeLoading(true);
+    setMealDescribeError(null);
+    onError(null);
+
+    try {
+      const response = await fetch("/api/foods/meal-describe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error((payload as { error?: string })?.error ?? "Failed to parse meal description.");
+      }
+      setMealDescribeItems((payload as { items?: MealDescriptionItem[] }).items ?? []);
+    } catch (err) {
+      setMealDescribeError(err instanceof Error ? err.message : "Failed to parse meal description.");
+    } finally {
+      setMealDescribeLoading(false);
+    }
+  }
+
+  async function addMealDescribeItem(item: MealDescriptionItem, index: number) {
+    const targetMeal = mealKey ?? searchMeal;
+    onError(null);
+    const rowKey = `meal-describe-${index}`;
+    setAddingFoodKey(rowKey);
+    try {
+      const response = await fetch("/api/nutrition-entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dayDate: selectedDate,
+          mealType: targetMeal,
+          name: item.name,
+          quantity: item.quantity,
+          calories: item.calories,
+          protein: item.protein,
+          carbs: item.carbs,
+          fat: item.fat,
+          sugar: item.sugar,
+          fiber: item.fiber,
+          saturatedFat: item.saturatedFat,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        onError(payload?.error ?? "Failed to add entry.");
+        return;
+      }
+
+      onEntryAdded(payload.entry);
+      setAddedFlashKey(rowKey);
+      setTimeout(() => {
+        setAddedFlashKey((current) => (current === rowKey ? null : current));
+      }, 1200);
+    } finally {
+      setAddingFoodKey((current) => (current === rowKey ? null : current));
+    }
+  }
+
   async function addLibraryFood(food: LibraryFood, targetMeal: MealKey, quantityOverride?: number) {
     onError(null);
     const rowKey = `${dialogTab}-${food.id}`;
@@ -521,6 +595,19 @@ export default function FoodDialog({
             </button>
             <button
               type="button"
+              onClick={() => setDialogTab("describe")}
+              className={`inline-flex h-10 items-center gap-2 rounded-full border px-3 text-sm font-extrabold shadow-[0_12px_24px_rgba(161,98,255,0.18)] transition hover:-translate-y-0.5 hover:brightness-105 ${
+                dialogTab === "describe"
+                  ? "border-[var(--nutrition-accent-purple)]/60 bg-[var(--nutrition-accent-purple)] text-[var(--nutrition-accent-teal-ink)]"
+                  : "border-[var(--nutrition-accent-purple)]/40 bg-[linear-gradient(135deg,rgba(161,98,255,0.24),rgba(20,210,220,0.22))] text-[var(--nutrition-accent-purple)]"
+              }`}
+              aria-pressed={dialogTab === "describe"}
+            >
+              <Edit3 className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden min-[380px]:inline">Describe</span>
+            </button>
+            <button
+              type="button"
               onClick={onClose}
               className="grid h-10 w-10 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--panel-2)] text-lg text-[var(--text-muted)] transition hover:text-[var(--text)]"
               aria-label="Close food dialog"
@@ -546,7 +633,7 @@ export default function FoodDialog({
                   : "border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:text-[var(--text)]"
               }`}
             >
-              {tab === "recent" ? "Recents" : tab === "mine" ? "My foods" : tab === "usda" ? "USDA" : "Create food"}
+              {tab === "recent" ? "Recents" : tab === "mine" ? "My foods" : tab === "usda" ? "USDA" : tab === "describe" ? "Describe" : "Create food"}
             </button>
           ))}
         </div>
@@ -769,6 +856,99 @@ export default function FoodDialog({
               )}
             </div>
           </>
+        ) : dialogTab === "describe" ? (
+          <div className="mt-4 grid gap-3">
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-4">
+              <div className="flex items-start gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--nutrition-accent-purple)]/40 bg-[var(--nutrition-accent-purple)]/12 text-[var(--nutrition-accent-purple)]">
+                  <Edit3 className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--text)]">Describe your meal in words</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
+                    The AI will estimate nutrition values for each item.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4">
+                <textarea
+                  value={mealDescriptionDraft}
+                  onChange={(event) => setMealDescriptionDraft(event.target.value)}
+                  placeholder="e.g. 2 scrambled eggs, 1 slice of whole wheat toast, and an 8 oz iced coffee"
+                  rows={3}
+                  className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--panel-2)] px-4 py-3 text-sm text-[var(--text)] placeholder:text-[var(--text-soft)] focus:border-[var(--line-focus)] focus:outline-none resize-none"
+                />
+              </div>
+              <div className="mt-3 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={runMealDescribe}
+                  disabled={mealDescribeLoading || !mealDescriptionDraft.trim()}
+                  className="accent-violet rounded-2xl px-4 py-2 text-sm font-semibold transition hover:brightness-110 disabled:opacity-60"
+                >
+                  {mealDescribeLoading ? "Parsing..." : "Parse Meal"}
+                </button>
+              </div>
+              {mealDescribeError ? (
+                <div className="nutrition-error-banner mt-4 rounded-2xl border border-[var(--danger-line)] bg-[var(--danger-bg)] p-4 text-sm font-semibold">
+                  {mealDescribeError}
+                </div>
+              ) : null}
+            </div>
+
+            {mealDescribeItems.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {mealDescribeItems.map((item, index) => {
+                  const rowKey = `meal-describe-${index}`;
+                  const isAdding = addingFoodKey === rowKey;
+                  const justAdded = addedFlashKey === rowKey;
+                  const targetMeal = mealKey ?? searchMeal;
+                  return (
+                    <div
+                      key={rowKey}
+                      className="flex flex-col justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--panel-2)] p-4"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-semibold text-[var(--text)]">
+                            {item.quantity > 1 ? `${item.quantity}× ` : ""}{item.name}
+                          </p>
+                          <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${
+                            item.confidence === "high"
+                              ? "bg-green-500/20 text-green-400"
+                              : item.confidence === "medium"
+                              ? "bg-amber-500/20 text-amber-400"
+                              : "bg-rose-500/20 text-rose-400"
+                          }`}>
+                            {item.confidence} confidence
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-[var(--text-muted)]">
+                          {roundToWhole(item.calories)} cal · {formatGrams(item.protein)}p · {formatGrams(item.carbs)}c · {formatGrams(item.fat)}f
+                        </p>
+                      </div>
+                      {mealKey ? (
+                        <button
+                          type="button"
+                          onClick={() => addMealDescribeItem(item, index)}
+                          disabled={isAdding}
+                          className="accent-violet rounded-xl px-3 py-2 text-xs font-semibold transition hover:brightness-110 disabled:opacity-60"
+                        >
+                          {justAdded ? "Added ✓" : isAdding ? "Adding…" : `Add to ${meals.find((m) => m.key === targetMeal)?.label}`}
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : mealDescribeLoading ? null : (
+              <p className="mt-4 text-sm text-[var(--text-muted)]">
+                {mealDescribeItems.length === 0 && !mealDescriptionDraft.trim()
+                  ? "Describe your meal above to get nutrition estimates."
+                  : "No food items could be parsed. Try rephrasing your description."}
+              </p>
+            )}
+          </div>
         ) : (
           <>
             <div className="mt-4">
