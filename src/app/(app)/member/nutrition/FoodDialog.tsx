@@ -202,7 +202,38 @@ export default function FoodDialog({
     }
   }
 
-  async function scanNutritionLabel(file: File | null | undefined) {
+  function applyScanResult(result: LabelScanResult) {
+    setLabelScanResult(result);
+    setCreateFoodDraft({
+      name: result.name ?? "",
+      servingSize: toDraftNumber(result.servingSize) || "1",
+      servingUnit: normalizeServingUnit(result.servingUnit),
+      calories: toDraftNumber(result.calories),
+      protein: toDraftNumber(result.protein),
+      carbs: toDraftNumber(result.carbs),
+      fat: toDraftNumber(result.fat),
+      sugar: toDraftNumber(result.sugar),
+      fiber: toDraftNumber(result.fiber),
+      saturatedFat: toDraftNumber(result.saturatedFat),
+    });
+    setDialogTab("create");
+  }
+
+  async function runLabelScan(file: File) {
+    const form = new FormData();
+    form.append("image", file);
+    const response = await fetch("/api/foods/label-scan", {
+      method: "POST",
+      body: form,
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.result) {
+      throw new Error(payload?.error ?? "Label scan failed.");
+    }
+    applyScanResult(payload.result as LabelScanResult);
+  }
+
+  async function scanFoodImage(file: File | null | undefined) {
     if (!file) {
       return;
     }
@@ -215,32 +246,33 @@ export default function FoodDialog({
     try {
       const form = new FormData();
       form.append("image", file);
-      const response = await fetch("/api/foods/label-scan", {
+      const response = await fetch("/api/foods/image-scan", {
         method: "POST",
         body: form,
       });
       const payload = await response.json().catch(() => null);
-      if (!response.ok || !payload?.result) {
-        throw new Error(payload?.error ?? "Label scan failed.");
+
+      if (response.status === 503) {
+        await runLabelScan(file);
+        return;
       }
 
-      const result = payload.result as LabelScanResult;
-      setLabelScanResult(result);
-      setCreateFoodDraft({
-        name: result.name ?? "",
-        servingSize: toDraftNumber(result.servingSize) || "1",
-        servingUnit: normalizeServingUnit(result.servingUnit),
-        calories: toDraftNumber(result.calories),
-        protein: toDraftNumber(result.protein),
-        carbs: toDraftNumber(result.carbs),
-        fat: toDraftNumber(result.fat),
-        sugar: toDraftNumber(result.sugar),
-        fiber: toDraftNumber(result.fiber),
-        saturatedFat: toDraftNumber(result.saturatedFat),
-      });
-      setDialogTab("create");
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Food scan failed.");
+      }
+
+      if (payload?.isLabel) {
+        await runLabelScan(file);
+        return;
+      }
+
+      if (!payload?.result) {
+        throw new Error("Food scan returned no nutrition data.");
+      }
+
+      applyScanResult(payload.result as LabelScanResult);
     } catch (err) {
-      setLabelScanError(err instanceof Error ? err.message : "Label scan failed.");
+      setLabelScanError(err instanceof Error ? err.message : "Food scan failed.");
     } finally {
       setLabelScanLoading(false);
     }
@@ -485,7 +517,7 @@ export default function FoodDialog({
               aria-pressed={dialogTab === "scan"}
             >
               <Camera className="h-4 w-4" aria-hidden="true" />
-              <span className="hidden min-[380px]:inline">Scan label</span>
+              <span className="hidden min-[380px]:inline">Scan</span>
             </button>
             <button
               type="button"
@@ -526,9 +558,9 @@ export default function FoodDialog({
                 <Camera className="h-5 w-5" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[var(--text)]">Upload a Nutrition Facts photo</p>
+                <p className="text-sm font-semibold text-[var(--text)]">Scan a label or food photo</p>
                 <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
-                  Capture the full label straight-on when possible. You can review and edit every value before saving.
+                  Upload a Nutrition Facts label or a photo of food. You can review and edit every value before saving.
                 </p>
               </div>
             </div>
@@ -536,7 +568,7 @@ export default function FoodDialog({
               <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--line-strong)] bg-black/10 px-4 py-6 text-center transition hover:border-[var(--pink)]/50">
                 <Camera className="h-7 w-7 text-[var(--text-muted)]" aria-hidden="true" />
                 <span className="mt-3 text-sm font-semibold text-[var(--text)]">
-                  {labelScanLoading ? "Scanning label..." : "Take photo"}
+                  {labelScanLoading ? "Scanning..." : "Take photo"}
                 </span>
                 <span className="mt-1 text-xs text-[var(--text-soft)]">Open the camera</span>
                 <input
@@ -545,7 +577,7 @@ export default function FoodDialog({
                   capture="environment"
                   disabled={labelScanLoading}
                   onChange={(event) => {
-                    void scanNutritionLabel(event.target.files?.[0]);
+                    void scanFoodImage(event.target.files?.[0]);
                     event.currentTarget.value = "";
                   }}
                   className="sr-only"
@@ -554,7 +586,7 @@ export default function FoodDialog({
               <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--line-strong)] bg-black/10 px-4 py-6 text-center transition hover:border-[var(--pink)]/50">
                 <Upload className="h-7 w-7 text-[var(--text-muted)]" aria-hidden="true" />
                 <span className="mt-3 text-sm font-semibold text-[var(--text)]">
-                  {labelScanLoading ? "Scanning label..." : "Upload photo"}
+                  {labelScanLoading ? "Scanning..." : "Upload photo"}
                 </span>
                 <span className="mt-1 text-xs text-[var(--text-soft)]">Choose from your library</span>
                 <input
@@ -562,7 +594,7 @@ export default function FoodDialog({
                   accept="image/png,image/jpeg,image/webp"
                   disabled={labelScanLoading}
                   onChange={(event) => {
-                    void scanNutritionLabel(event.target.files?.[0]);
+                    void scanFoodImage(event.target.files?.[0]);
                     event.currentTarget.value = "";
                   }}
                   className="sr-only"
@@ -577,7 +609,17 @@ export default function FoodDialog({
             ) : null}
             {labelScanResult ? (
               <div className="mt-4 rounded-2xl border border-[var(--success-line)] bg-[var(--success-bg)] p-4 text-sm font-semibold text-[var(--success-text)]">
-                Label scanned with {labelScanResult.confidence} confidence. Review the filled fields in Create food.
+                {labelScanResult.source === "usda" ? (
+                  <>
+                    Identified {labelScanResult.identifiedFoodName ?? labelScanResult.name} — USDA verified (
+                    {labelScanResult.confidence} confidence). Review the filled fields in Create food.
+                  </>
+                ) : (
+                  <>
+                    Label scanned with {labelScanResult.confidence} confidence. Review the filled fields in Create
+                    food.
+                  </>
+                )}
               </div>
             ) : null}
           </div>
@@ -585,7 +627,14 @@ export default function FoodDialog({
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {labelScanResult ? (
               <div className="rounded-2xl border border-[var(--pink)]/25 bg-[var(--pink)]/10 p-3 text-xs leading-5 text-[var(--text-muted)] sm:col-span-2">
-                Scanned label filled these values with {labelScanResult.confidence} confidence.
+                {labelScanResult.source === "usda" ? (
+                  <>
+                    Identified {labelScanResult.identifiedFoodName ?? labelScanResult.name} with USDA nutrition (
+                    {labelScanResult.confidence} confidence).
+                  </>
+                ) : (
+                  <>Scanned label filled these values with {labelScanResult.confidence} confidence.</>
+                )}
                 {labelScanResult.notes ? ` ${labelScanResult.notes}` : ""}
               </div>
             ) : null}

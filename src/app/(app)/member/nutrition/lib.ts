@@ -61,6 +61,8 @@ export type LabelScanResult = {
   saturatedFat: number | null;
   confidence: "low" | "medium" | "high";
   notes: string | null;
+  source?: "label" | "usda";
+  identifiedFoodName?: string | null;
 };
 
 export type CoachPlanSummary = {
