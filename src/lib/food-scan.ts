@@ -37,6 +37,16 @@ export type LabelScanNutrition = {
   identifiedFoodName?: string | null;
 };
 
+export type FoodScanStatus = "food" | "label" | "unsupported";
+
+export type FoodScanResult = {
+  isLabel: boolean;
+  status: FoodScanStatus;
+  result: LabelScanNutrition | null;
+  message?: string;
+  statusCode?: number;
+};
+
 export function isFoodImageScanEnabled() {
   return process.env.ENABLE_FOOD_IMAGE_SCAN !== "false";
 }
@@ -215,6 +225,43 @@ const IMAGE_CLASSIFICATION_SCHEMA = {
   required: ["foodName", "confidence", "notes", "isLabel"],
 } as const;
 
+const COMBINED_FOOD_SCAN_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    imageType: { type: "string", enum: ["food_item", "nutrition_label", "other"] },
+    foodName: { type: ["string", "null"] },
+    confidence: { type: "string", enum: ["low", "medium", "high"] },
+    notes: { type: ["string", "null"] },
+    name: { type: ["string", "null"] },
+    servingSize: { type: ["number", "null"] },
+    servingUnit: { type: ["string", "null"] },
+    calories: { type: ["number", "null"] },
+    protein: { type: ["number", "null"] },
+    carbs: { type: ["number", "null"] },
+    fat: { type: ["number", "null"] },
+    sugar: { type: ["number", "null"] },
+    fiber: { type: ["number", "null"] },
+    saturatedFat: { type: ["number", "null"] },
+  },
+  required: [
+    "imageType",
+    "foodName",
+    "confidence",
+    "notes",
+    "name",
+    "servingSize",
+    "servingUnit",
+    "calories",
+    "protein",
+    "carbs",
+    "fat",
+    "sugar",
+    "fiber",
+    "saturatedFat",
+  ],
+} as const;
+
 const LABEL_SCAN_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -247,6 +294,81 @@ const LABEL_SCAN_SCHEMA = {
     "notes",
   ],
 } as const;
+
+function unsupportedFoodScan(message: string, statusCode = 422): FoodScanResult {
+  return {
+    isLabel: false,
+    status: "unsupported",
+    result: null,
+    message,
+    statusCode,
+  };
+}
+
+export async function scanFoodImage(imageUrl: string, apiKey: string): Promise<FoodScanResult> {
+  const response = await callOpenAiStructuredResponse({
+    apiKey,
+    model: process.env.OPENAI_FOOD_IMAGE_MODEL ?? "gpt-4.1-mini",
+    prompt:
+      "Analyze this image for nutrition logging. Choose exactly one imageType: " +
+      "'nutrition_label' if the image is primarily a readable Nutrition Facts label; " +
+      "'food_item' if it is a photo of an actual food item, meal, produce, or packaged food where the label is not the focus; " +
+      "or 'other' if it is not food-related or is too unclear to classify. " +
+      "For nutrition_label, return per-serving values only, use grams for macros and nutrients, include the product name when visible, " +
+      "and return null for values that are not visible. Do not infer from daily values. " +
+      "For food_item, set foodName to the most specific common food name you can identify. If multiple foods are visible, pick the most prominent single item. " +
+      "Use notes for uncertainty, preparation style, or multiple-item warnings.",
+    imageUrl,
+    schemaName: "combined_food_scan",
+    schema: COMBINED_FOOD_SCAN_SCHEMA,
+  });
+
+  if (!response.ok) {
+    return unsupportedFoodScan(response.error, response.status);
+  }
+
+  const imageType = typeof response.data.imageType === "string" ? response.data.imageType : null;
+
+  if (imageType === "nutrition_label") {
+    return {
+      isLabel: true,
+      status: "label",
+      result: normalizeLabelScan(response.data),
+    };
+  }
+
+  if (imageType === "food_item") {
+    const foodName = toNullableString(response.data.foodName);
+    if (!foodName) {
+      return unsupportedFoodScan("Could not identify a food item in this photo. Try a clearer single-item photo.");
+    }
+
+    const usdaMatch = await lookupUsdaFood(foodName);
+    if (!usdaMatch) {
+      return unsupportedFoodScan(
+        `Identified "${foodName}" but could not find matching USDA nutrition data. Try searching manually.`,
+        404,
+      );
+    }
+
+    return {
+      isLabel: false,
+      status: "food",
+      result: usdaMatchToScanResult(
+        {
+          foodName,
+          confidence: toConfidence(response.data.confidence),
+          notes: toNullableString(response.data.notes),
+          isLabel: false,
+        },
+        usdaMatch,
+      ),
+    };
+  }
+
+  const reason = toNullableString(response.data.notes);
+  return unsupportedFoodScan(reason ?? "Could not classify this image as a food item or Nutrition Facts label.");
+}
 
 export async function classifyFoodImage(imageUrl: string, apiKey: string) {
   return callOpenAiStructuredResponse({

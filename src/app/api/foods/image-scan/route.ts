@@ -1,14 +1,6 @@
 import { NextResponse } from "next/server";
 
-import {
-  classifyFoodImage,
-  fileToDataUrl,
-  isFoodImageScanEnabled,
-  lookupUsdaFood,
-  normalizeImageClassification,
-  usdaMatchToScanResult,
-  validateImageFile,
-} from "@/lib/food-scan";
+import { fileToDataUrl, isFoodImageScanEnabled, scanFoodImage, validateImageFile } from "@/lib/food-scan";
 import { requireUserContext } from "@/lib/member";
 
 export const runtime = "nodejs";
@@ -39,44 +31,14 @@ export async function POST(request: Request) {
   }
 
   const imageUrl = await fileToDataUrl(validated.file);
-  const classificationResponse = await classifyFoodImage(imageUrl, apiKey);
-  if (!classificationResponse.ok) {
-    return NextResponse.json({ error: classificationResponse.error }, { status: classificationResponse.status });
-  }
+  const scan = await scanFoodImage(imageUrl, apiKey);
 
-  const classification = normalizeImageClassification(classificationResponse.data);
-  if (classification.isLabel) {
-    return NextResponse.json({
-      isLabel: true,
-      result: null,
-      message: "Nutrition label detected. Running label scan.",
-    });
-  }
-
-  const foodName = classification.foodName?.trim();
-  if (!foodName) {
+  if (scan.status === "unsupported") {
     return NextResponse.json(
-      {
-        error: "Could not identify a food item in this photo. Try a clearer single-item photo.",
-      },
-      { status: 422 },
+      { error: scan.message ?? "Could not scan this image." },
+      { status: scan.statusCode ?? 422 },
     );
   }
 
-  const usdaMatch = await lookupUsdaFood(foodName);
-  if (!usdaMatch) {
-    return NextResponse.json(
-      {
-        error: `Identified "${foodName}" but could not find matching USDA nutrition data. Try searching manually.`,
-        identifiedFoodName: foodName,
-        confidence: classification.confidence,
-      },
-      { status: 404 },
-    );
-  }
-
-  return NextResponse.json({
-    isLabel: false,
-    result: usdaMatchToScanResult(classification, usdaMatch),
-  });
+  return NextResponse.json(scan);
 }

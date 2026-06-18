@@ -225,21 +225,7 @@ export default function FoodDialog({
     setDialogTab("create");
   }
 
-  async function runLabelScan(file: File) {
-    const form = new FormData();
-    form.append("image", file);
-    const response = await fetch("/api/foods/label-scan", {
-      method: "POST",
-      body: form,
-    });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok || !payload?.result) {
-      throw new Error(payload?.error ?? "Label scan failed.");
-    }
-    applyScanResult(payload.result as LabelScanResult);
-  }
-
-  async function scanFoodImage(file: File | null | undefined) {
+  async function handleFoodImageScan(file: File | null | undefined) {
     if (!file) {
       return;
     }
@@ -258,22 +244,12 @@ export default function FoodDialog({
       });
       const payload = await response.json().catch(() => null);
 
-      if (response.status === 503) {
-        await runLabelScan(file);
-        return;
-      }
-
       if (!response.ok) {
         throw new Error(payload?.error ?? "Food scan failed.");
       }
 
-      if (payload?.isLabel) {
-        await runLabelScan(file);
-        return;
-      }
-
       if (!payload?.result) {
-        throw new Error("Food scan returned no nutrition data.");
+        throw new Error(payload?.message ?? "Food scan returned no nutrition data.");
       }
 
       applyScanResult(payload.result as LabelScanResult);
@@ -633,7 +609,7 @@ export default function FoodDialog({
                   : "border-[var(--line-strong)] bg-[var(--panel-2)] text-[var(--text-muted)] hover:text-[var(--text)]"
               }`}
             >
-              {tab === "recent" ? "Recents" : tab === "mine" ? "My foods" : tab === "usda" ? "USDA" : tab === "describe" ? "Describe" : "Create food"}
+              {tab === "recent" ? "Recents" : tab === "mine" ? "My foods" : tab === "usda" ? "USDA" : "Create food"}
             </button>
           ))}
         </div>
@@ -664,7 +640,7 @@ export default function FoodDialog({
                   capture="environment"
                   disabled={labelScanLoading}
                   onChange={(event) => {
-                    void scanFoodImage(event.target.files?.[0]);
+                    void handleFoodImageScan(event.target.files?.[0]);
                     event.currentTarget.value = "";
                   }}
                   className="sr-only"
@@ -681,7 +657,7 @@ export default function FoodDialog({
                   accept="image/png,image/jpeg,image/webp"
                   disabled={labelScanLoading}
                   onChange={(event) => {
-                    void scanFoodImage(event.target.files?.[0]);
+                    void handleFoodImageScan(event.target.files?.[0]);
                     event.currentTarget.value = "";
                   }}
                   className="sr-only"
