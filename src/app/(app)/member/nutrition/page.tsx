@@ -265,7 +265,7 @@ export default function HealthNutritionPage() {
           </div>
         ) : null}
 
-        <section className="space-y-3 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.55fr)] lg:items-stretch lg:gap-5 lg:space-y-0 2xl:grid-cols-[minmax(0,1fr)_minmax(440px,0.5fr)]">
+        <section className="space-y-3 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.55fr)] xl:items-stretch xl:gap-5 xl:space-y-0 2xl:grid-cols-[minmax(0,1fr)_minmax(440px,0.5fr)]">
           <MacroSummaryCard totals={totals} targets={targets} onError={setError} />
           <CoachPanel />
         </section>
