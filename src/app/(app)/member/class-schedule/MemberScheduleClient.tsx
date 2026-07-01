@@ -392,6 +392,7 @@ export default function MemberScheduleClient() {
                   const status = getSessionStatusCopy(session);
                   const isPending = pendingSessionId === session.id;
                   const reserveEnabled = canReserve(session);
+                  const classTimeLabel = formatClassTimeRange(session.class_time, session.duration_minutes);
 
                   return (
                     <article
@@ -406,7 +407,7 @@ export default function MemberScheduleClient() {
                       <div className="flex items-center gap-2 px-3 py-2 pl-4 sm:hidden">
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[13px] font-bold leading-tight text-[#8A94A3]">
-                            {formatClassTimeRange(session.class_time, session.duration_minutes)}
+                            {classTimeLabel}
                           </p>
                           <h3 className="mt-0.5 truncate text-[15px] font-bold leading-tight text-[#475467]">
                             {session.name}
@@ -426,7 +427,7 @@ export default function MemberScheduleClient() {
                             type="button"
                             onClick={() => setRosterSession(session)}
                             className="text-right text-[20px] font-bold leading-none text-[#667085]"
-                            aria-label={`View reserved members for ${session.name}`}
+                            aria-label={`View class roster for ${session.name} at ${classTimeLabel}`}
                           >
                             {session.reservedCount}
                             {session.size_limit > 0 ? (
@@ -454,7 +455,7 @@ export default function MemberScheduleClient() {
                                 reserveEnabled ? `Reserve ${session.name}` : `${session.name} is not available`
                               }
                             >
-                              {isPending ? <LoaderCircle size={16} className="animate-spin" /> : <Users size={17} />}
+                              {isPending ? <LoaderCircle size={16} className="animate-spin" /> : <CheckCircle2 size={17} />}
                             </button>
                           )}
                         </div>
@@ -462,43 +463,28 @@ export default function MemberScheduleClient() {
 
                       <div className="hidden flex-col gap-4 p-4 pl-5 sm:flex lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0 flex-1 space-y-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full shadow-[0_0_0_5px_rgba(20,210,220,0.08)]"
-                              style={{ backgroundColor: session.calendar_color }}
-                            />
-                            <h3 className="text-[22px] font-bold leading-tight text-[#17141F]">{session.name}</h3>
-                            {session.track ? (
+                          <div className="space-y-1.5">
+                            <p className="text-sm font-extrabold leading-tight text-[#17141F]">
+                              {classTimeLabel}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
                               <span
-                                className="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em]"
-                                style={{
-                                  color: session.calendar_color,
-                                  backgroundColor: `${session.calendar_color}22`,
-                                }}
-                              >
-                                {session.track.name}
-                              </span>
-                            ) : null}
-                          </div>
-
-                          <div className="grid gap-2.5 sm:grid-cols-2 xl:max-w-[520px]">
-                            <div className="rounded-[16px] border border-[rgba(16,24,40,0.07)] bg-white/72 p-2.5">
-                              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Time</p>
-                              <p className="mt-1 text-sm font-bold text-[#17141F]">
-                                {formatClassTimeRange(session.class_time, session.duration_minutes)}
-                              </p>
+                                className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full shadow-[0_0_0_5px_rgba(20,210,220,0.08)]"
+                                style={{ backgroundColor: session.calendar_color }}
+                              />
+                              <h3 className="text-[22px] font-bold leading-tight text-[#17141F]">{session.name}</h3>
+                              {session.track ? (
+                                <span
+                                  className="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em]"
+                                  style={{
+                                    color: session.calendar_color,
+                                    backgroundColor: `${session.calendar_color}22`,
+                                  }}
+                                >
+                                  {session.track.name}
+                                </span>
+                              ) : null}
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => setRosterSession(session)}
-                              className="rounded-[16px] border border-[rgba(16,24,40,0.07)] bg-white/72 p-2.5 text-left transition hover:border-[rgba(20,210,220,0.24)] hover:bg-[rgba(20,210,220,0.08)]"
-                            >
-                              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">Reserved</p>
-                              <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-bold text-[#17141F]">
-                                <Users size={14} />
-                                {session.size_limit > 0 ? `${session.reservedCount} / ${session.size_limit}` : session.reservedCount}
-                              </p>
-                            </button>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium text-[#667085]">
@@ -517,6 +503,21 @@ export default function MemberScheduleClient() {
                         </div>
 
                         <div className="flex flex-col gap-2.5 lg:min-w-[190px] lg:items-end">
+                          <button
+                            type="button"
+                            onClick={() => setRosterSession(session)}
+                            className="inline-flex min-w-[170px] items-center justify-between gap-3 rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-4 py-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] transition hover:border-[rgba(20,210,220,0.3)] hover:bg-[rgba(20,210,220,0.08)]"
+                            aria-label={`View class roster for ${session.name} at ${classTimeLabel}`}
+                          >
+                            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#667085]">
+                              <Users size={14} />
+                              Reserved
+                            </span>
+                            <span className="text-sm font-extrabold text-[#17141F]">
+                              {session.size_limit > 0 ? `${session.reservedCount} / ${session.size_limit}` : session.reservedCount}
+                            </span>
+                          </button>
+
                           {session.isReservedByCurrentUser ? (
                             <button
                               type="button"
@@ -563,9 +564,11 @@ export default function MemberScheduleClient() {
             <div className="premium-glass-card w-full max-w-md p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Reserved Members</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Class Roster</p>
                   <h3 className="mt-2 text-xl font-bold text-[#17141F]">{rosterSession.name}</h3>
-                  <p className="mt-1 text-sm font-medium text-[#667085]">{formatLongDate(rosterSession.classDate)}</p>
+                  <p className="mt-1 text-sm font-medium text-[#667085]">
+                    {formatLongDate(rosterSession.classDate)} · {formatClassTimeRange(rosterSession.class_time, rosterSession.duration_minutes)}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -578,16 +581,26 @@ export default function MemberScheduleClient() {
               </div>
 
               <div className="mt-5 rounded-[24px] border border-[rgba(16,24,40,0.08)] bg-white/66 p-4">
-                <p className="text-sm font-semibold text-[#475467]">
-                  {rosterSession.size_limit > 0
-                    ? `${rosterSession.reservedCount} of ${rosterSession.size_limit} spots reserved`
-                    : `${rosterSession.reservedCount} members reserved`}
-                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#667085]">Reserved</p>
+                    <p className="mt-1 text-base font-extrabold text-[#17141F]">
+                      {rosterSession.size_limit > 0
+                        ? `${rosterSession.reservedCount} / ${rosterSession.size_limit}`
+                        : rosterSession.reservedCount}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-[rgba(16,24,40,0.08)] bg-white/72 px-3 py-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#667085]">Checked in</p>
+                    <p className="mt-1 text-base font-extrabold text-[#17141F]">0</p>
+                  </div>
+                </div>
 
                 {rosterSession.reservedMembers.length === 0 ? (
                   <p className="mt-4 text-sm font-medium text-[#667085]">No one has reserved this class yet.</p>
                 ) : (
                   <div className="mt-4 space-y-2">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#667085]">Reserved athletes</p>
                     {rosterSession.reservedMembers.map((member, index) => (
                       <div
                         key={`${member.id}-${index}`}
@@ -606,6 +619,11 @@ export default function MemberScheduleClient() {
                     ))}
                   </div>
                 )}
+
+                <div className="mt-4 rounded-2xl border border-dashed border-[rgba(16,24,40,0.12)] bg-white/48 px-3 py-3">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#667085]">Checked in</p>
+                  <p className="mt-1 text-sm font-medium text-[#667085]">No check-ins recorded yet.</p>
+                </div>
               </div>
             </div>
           </div>
