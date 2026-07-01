@@ -95,48 +95,11 @@ function formatLongDate(dateKey: string) {
   });
 }
 
-function getSessionStatusCopy(session: ScheduleSession) {
-  if (session.isReservedByCurrentUser) {
-    return {
-      title: "Reserved",
-    };
-  }
-
-  if (session.isReservationClosed) {
-    return {
-      title: "Reservation closed",
-    };
-  }
-
-  if (session.size_limit > 0 && session.capacityRemaining === 0) {
-    return {
-      title: "Class full",
-    };
-  }
-
-  return {
-    title: "Open for reservations",
-  };
-}
-
 function canReserve(session: ScheduleSession) {
   if (session.isReservedByCurrentUser) return false;
   if (session.isReservationClosed) return false;
   if (session.size_limit > 0 && session.capacityRemaining === 0) return false;
   return true;
-}
-
-function statusPillClass(session: ScheduleSession) {
-  if (session.isReservedByCurrentUser) {
-    return "border-emerald-400/30 bg-emerald-500/10 text-emerald-700";
-  }
-  if (session.isReservationClosed) {
-    return "border-amber-400/35 bg-amber-500/10 text-amber-700";
-  }
-  if (session.size_limit > 0 && session.capacityRemaining === 0) {
-    return "border-rose-400/30 bg-rose-500/10 text-rose-700";
-  }
-  return "border-[rgba(20,210,220,0.28)] bg-[rgba(20,210,220,0.09)] text-[#0D98A1]";
 }
 
 export default function MemberScheduleClient() {
@@ -389,10 +352,12 @@ export default function MemberScheduleClient() {
               <div className="grid gap-2 sm:gap-3">
                 {sessions.map((session) => {
                   const coachLabel = session.default_coach?.full_name ?? session.default_coach?.email ?? null;
-                  const status = getSessionStatusCopy(session);
                   const isPending = pendingSessionId === session.id;
                   const reserveEnabled = canReserve(session);
                   const classTimeLabel = formatClassTimeRange(session.class_time, session.duration_minutes);
+                  const showTrackPill =
+                    session.track &&
+                    session.track.name.trim().toLowerCase() !== session.name.trim().toLowerCase();
 
                   return (
                     <article
@@ -417,9 +382,6 @@ export default function MemberScheduleClient() {
                               {coachLabel}
                             </p>
                           ) : null}
-                          <p className="mt-1 truncate text-[11px] font-semibold leading-tight text-rose-300">
-                            {status.title}
-                          </p>
                         </div>
 
                         <div className="flex shrink-0 items-center gap-2">
@@ -473,7 +435,7 @@ export default function MemberScheduleClient() {
                                 style={{ backgroundColor: session.calendar_color }}
                               />
                               <h3 className="text-[22px] font-bold leading-tight text-[#17141F]">{session.name}</h3>
-                              {session.track ? (
+                              {showTrackPill ? (
                                 <span
                                   className="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em]"
                                   style={{
@@ -494,10 +456,6 @@ export default function MemberScheduleClient() {
                                 {coachLabel}
                               </span>
                             ) : null}
-                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${statusPillClass(session)}`}>
-                              {session.isReservedByCurrentUser ? <CheckCircle2 size={12} /> : null}
-                              {status.title}
-                            </span>
                           </div>
 
                         </div>
