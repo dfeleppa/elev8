@@ -355,9 +355,9 @@ export default function MemberScheduleClient() {
                   const isPending = pendingSessionId === session.id;
                   const reserveEnabled = canReserve(session);
                   const classTimeLabel = formatClassTimeRange(session.class_time, session.duration_minutes);
+                  const trackName = session.track?.name ?? null;
                   const showTrackPill =
-                    session.track &&
-                    session.track.name.trim().toLowerCase() !== session.name.trim().toLowerCase();
+                    trackName !== null && trackName.trim().toLowerCase() !== session.name.trim().toLowerCase();
 
                   return (
                     <article
@@ -443,7 +443,7 @@ export default function MemberScheduleClient() {
                                     backgroundColor: `${session.calendar_color}22`,
                                   }}
                                 >
-                                  {session.track.name}
+                                  {trackName}
                                 </span>
                               ) : null}
                             </div>
