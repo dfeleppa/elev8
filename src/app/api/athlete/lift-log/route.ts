@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { isValidDate } from "@/lib/programming";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -21,7 +21,7 @@ function parseSets(value: unknown): LiftSet[] {
 }
 
 export async function POST(request: Request) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

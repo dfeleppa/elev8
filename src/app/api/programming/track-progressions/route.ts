@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { hasOrgRole } from "@/lib/programming-access";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 // or { progression: null } if none exists.
 // ---------------------------------------------------------------------------
 export async function GET(request: Request) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
 // Body: { blockId, organizationId, trackId, category, startDate, durationWeeks, weeks[] }
 // ---------------------------------------------------------------------------
 export async function PUT(request: Request) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

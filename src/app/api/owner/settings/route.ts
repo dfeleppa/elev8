@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-export async function GET() {
-  const { error, role } = await requireUserContext();
+export async function GET(request: Request) {
+  const { error, role } = await requireRequestUserContext(request);
   if (error || !hasRole("owner", role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -29,7 +29,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const { error, role } = await requireUserContext();
+  const { error, role } = await requireRequestUserContext(request);
   if (error || !hasRole("owner", role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

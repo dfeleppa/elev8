@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { buildSocialOverview } from "@/lib/social";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const { error, role } = await requireUserContext();
+  const { error, role } = await requireRequestUserContext(request);
   if (error || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }

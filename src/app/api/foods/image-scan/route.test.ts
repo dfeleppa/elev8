@@ -4,6 +4,8 @@ const requireUserContextMock = vi.fn();
 
 vi.mock("@/lib/member", () => ({
   requireUserContext: requireUserContextMock,
+
+  requireRequestUserContext: requireUserContextMock,
 }));
 
 describe("foods image-scan POST", () => {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -17,8 +17,8 @@ function computeAge(birthDate: string | null): number | null {
   return age;
 }
 
-export async function GET() {
-  const { error, userId, role } = await requireUserContext();
+export async function GET(request: Request) {
+  const { error, userId, role } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error }, { status: 401 });
   }
@@ -49,7 +49,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error }, { status: 401 });
   }

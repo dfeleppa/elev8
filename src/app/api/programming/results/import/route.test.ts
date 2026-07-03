@@ -10,6 +10,8 @@ vi.mock("@/lib/member", () => {
   const order = { member: 1, coach: 2, admin: 3, owner: 4 } as const;
   return {
     requireUserContext: requireUserContextMock,
+
+    requireRequestUserContext: requireUserContextMock,
     authorizeRole: (ctx: { error: string | null; userId: string | null; role: keyof typeof order }, required: keyof typeof order) => {
       if (ctx.error || !ctx.userId) {
         return { ok: false, response: NextResponse.json({ error: ctx.error ?? "Unauthorized" }, { status: 401 }) };

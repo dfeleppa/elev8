@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { hasOrgRole, isOrgMember } from "@/lib/programming-access";
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -45,10 +45,10 @@ type TrackUpdatePayload = {
 };
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
@@ -84,7 +84,7 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

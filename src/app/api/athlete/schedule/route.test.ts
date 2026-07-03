@@ -5,6 +5,8 @@ const fromMock = vi.fn();
 
 vi.mock("@/lib/member", () => ({
   requireUserContext: requireUserContextMock,
+
+  requireRequestUserContext: requireUserContextMock,
   hasRole: (_required: string, actual: string) => ["member", "coach", "admin", "owner"].includes(actual),
 }));
 

@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { authorizeRole, requireUserContext } from "@/lib/member";
+import { authorizeRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
   // Listing programs is a gym-side management view; restrict to admins to match
   // the POST handler below and the [programId] PATCH/DELETE routes.
-  const auth = authorizeRole(await requireUserContext(), "admin");
+  const auth = authorizeRole(await requireRequestUserContext(request), "admin");
   if (!auth.ok) return auth.response;
 
   const { data, error: fetchError } = await supabaseAdmin
@@ -24,7 +24,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = authorizeRole(await requireUserContext(), "admin");
+  const auth = authorizeRole(await requireRequestUserContext(request), "admin");
   if (!auth.ok) return auth.response;
   const { userId } = auth;
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireRequestUserContext, requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -189,7 +189,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error }, { status: 401 });
   }

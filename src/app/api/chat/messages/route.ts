@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { CHAT_IMAGE_TYPES, CHAT_MAX_IMAGE_SIZE, CHAT_THREADS, isChatThreadSlug, sanitizeChatBody } from "@/lib/chat";
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -208,7 +208,7 @@ function formatSocialMessage(row: Record<string, unknown>) {
 }
 
 export async function GET(request: NextRequest) {
-  const { error } = await requireUserContext();
+  const { error } = await requireRequestUserContext(request);
   if (error) {
     return NextResponse.json({ error }, { status: 401 });
   }
@@ -254,7 +254,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

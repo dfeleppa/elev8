@@ -2,7 +2,7 @@ import { createHmac, randomBytes } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import {
   getInstagramAuthUrl,
   INSTAGRAM_OAUTH_STATE_COOKIE,
@@ -28,7 +28,7 @@ function createSignedState() {
 
 export async function GET(request: Request) {
   try {
-    const { error, role } = await requireUserContext();
+    const { error, role } = await requireRequestUserContext(request);
     if (error || !hasRole("admin", role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

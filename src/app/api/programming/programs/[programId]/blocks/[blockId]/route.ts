@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { hasOrgRole } from "@/lib/programming-access";
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { isWorkoutBlockType, isWorkoutScoreType } from "@/lib/programming";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -19,7 +19,7 @@ async function programExists(programId: string) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
@@ -75,8 +75,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   return NextResponse.json({ block: data });
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
-  const { error, userId } = await requireUserContext();
+export async function DELETE(request: Request, context: RouteContext) {
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

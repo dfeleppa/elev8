@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { omitNutritionKeys, runNutritionQueryWithFallbacks } from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -25,8 +25,8 @@ function toOptionalString(value: unknown) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-export async function GET() {
-  const { error: userError, userId } = await requireUserContext();
+export async function GET(request: Request) {
+  const { error: userError, userId } = await requireRequestUserContext(request);
   if (userError || !userId) {
     return NextResponse.json({ error: userError }, { status: 401 });
   }
@@ -66,7 +66,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { error: userError, userId } = await requireUserContext();
+  const { error: userError, userId } = await requireRequestUserContext(request);
   if (userError || !userId) {
     return NextResponse.json({ error: userError }, { status: 401 });
   }

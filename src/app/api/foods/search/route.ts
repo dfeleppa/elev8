@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext, requireUserContextFromBearer } from "@/lib/member";
+import { requireRequestUserContext, requireUserContextFromBearer } from "@/lib/member";
 
 export const runtime = "nodejs";
 
@@ -152,7 +152,7 @@ export async function GET(request: Request) {
     }
     requesterId = userId;
   } else {
-    const { error, userId } = await requireUserContext();
+    const { error, userId } = await requireRequestUserContext(request);
     if (error || !userId) {
       return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
     }

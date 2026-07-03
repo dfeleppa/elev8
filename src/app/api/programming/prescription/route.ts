@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 
 import { hasOrgRole, isOrgMember } from "@/lib/programming-access";
 import { calculatePrescriptionWeight } from "@/lib/programming";
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

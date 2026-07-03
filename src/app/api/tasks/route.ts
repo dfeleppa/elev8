@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: Request) {
-  const { error, role, userId } = await requireUserContext();
+  const { error, role, userId } = await requireRequestUserContext(request);
   if (error || !userId || !hasRole("owner", role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

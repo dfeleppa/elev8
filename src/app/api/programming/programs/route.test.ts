@@ -10,6 +10,8 @@ vi.mock("@/lib/member", () => {
   const order = { member: 1, coach: 2, admin: 3, owner: 4 } as const;
   return {
     requireUserContext: requireUserContextMock,
+
+    requireRequestUserContext: requireUserContextMock,
     authorizeRole: (ctx: { error: string | null; userId: string | null; role: keyof typeof order }, required: keyof typeof order) => {
       if (ctx.error || !ctx.userId) {
         return { ok: false, response: NextResponse.json({ error: ctx.error ?? "Unauthorized" }, { status: 401 }) };
@@ -44,7 +46,7 @@ describe("programming programs GET authorization", () => {
     requireUserContextMock.mockResolvedValue({ error: null, userId: "member-1", role: "member" });
 
     const { GET } = await import("./route");
-    const res = await GET();
+    const res = await GET(new Request('http://localhost/test'));
 
     expect(res.status).toBe(403);
     expect(fromMock).not.toHaveBeenCalled();
@@ -54,7 +56,7 @@ describe("programming programs GET authorization", () => {
     requireUserContextMock.mockResolvedValue({ error: null, userId: "admin-1", role: "admin" });
 
     const { GET } = await import("./route");
-    const res = await GET();
+    const res = await GET(new Request('http://localhost/test'));
     const payload = await res.json();
 
     expect(res.status).toBe(200);

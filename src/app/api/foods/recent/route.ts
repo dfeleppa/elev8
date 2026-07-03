@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import {
   readNutritionNumberField,
   readNutritionStringField,
@@ -28,7 +28,7 @@ function safeId(name: string) {
 }
 
 export async function GET(request: Request) {
-  const { error: userError, userId } = await requireUserContext();
+  const { error: userError, userId } = await requireRequestUserContext(request);
   if (userError || !userId) {
     return NextResponse.json({ error: userError }, { status: 401 });
   }

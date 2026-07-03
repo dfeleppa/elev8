@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { error: userError, role, userId } = await requireUserContext();
+  const { error: userError, role, userId } = await requireRequestUserContext(request);
   if (userError || !userId || !hasRole("owner", role)) {
     return NextResponse.json({ error: userError }, { status: 401 });
   }
@@ -30,7 +30,7 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { error: userError, role, userId } = await requireUserContext();
+  const { error: userError, role, userId } = await requireRequestUserContext(request);
   if (userError || !userId || !hasRole("owner", role)) {
     return NextResponse.json({ error: userError }, { status: 401 });
   }

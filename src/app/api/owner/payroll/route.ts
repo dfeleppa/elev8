@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireRequestUserContext, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const SELECT_COLUMNS =
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { error, role } = await requireUserContext();
+  const { error, role } = await requireRequestUserContext(request);
   if (error) {
     return NextResponse.json({ error }, { status: 401 });
   }
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const { error, role } = await requireUserContext();
+  const { error, role } = await requireRequestUserContext(request);
   if (error) {
     return NextResponse.json({ error }, { status: 401 });
   }
@@ -155,7 +155,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const { error, role } = await requireUserContext();
+  const { error, role } = await requireRequestUserContext(request);
   if (error) {
     return NextResponse.json({ error }, { status: 401 });
   }

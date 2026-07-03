@@ -25,7 +25,7 @@ npm run import:workouts:dry  # Dry run (preview only)
 - **Fonts**: Space Grotesk (headings), Manrope (body) via `next/font`
 
 ### Role Hierarchy & Routing
-Users have roles: `member → coach → admin → owner`. Role resolution lives in `src/lib/member.ts` (`requireUserContext()` — server-only). Every API route calls this at the start to authenticate and resolve the user's role.
+Users have roles: `member → coach → admin → owner`. Role resolution lives in `src/lib/member.ts` (`requireRequestUserContext(request)` — server-only). Every API route calls this at the start to authenticate and resolve the user's role.
 
 Routes are organized by role:
 - `/owner/` — owner-only tools
@@ -39,7 +39,7 @@ Routes are organized by role:
 ### Key Libraries (`src/lib/`)
 | File | Purpose |
 |------|---------|
-| `member.ts` | `requireUserContext()` — auth + role resolution for API routes |
+| `member.ts` | `requireRequestUserContext(request)` — auth + role resolution for API routes |
 | `supabase-admin.ts` | Supabase service-role client (server-only) |
 | `auth.ts` | NextAuth config |
 | `nutrition-calculations.ts` | Macro/calorie math |
@@ -50,7 +50,7 @@ Routes are organized by role:
 
 ### API Patterns
 - All API routes under `src/app/api/` use method-based handlers (GET/POST/PUT/DELETE in the same file)
-- Call `requireUserContext()` first for auth; return 401/403 otherwise
+- Call `requireRequestUserContext(request)` first for auth; return 401/403 otherwise. It accepts a Supabase Bearer token (Flutter mobile app) or falls back to the NextAuth session (web) — never use session-only `requireUserContext()` in new routes, or the route won't work from mobile. Sole exception: `oauth/mcp/authorize`, which is a browser redirect flow.
 - Use the Supabase admin client for all DB operations
 - Error responses: `{ error: string }` with appropriate HTTP status
 
@@ -78,4 +78,4 @@ Required in `.env.local`:
 Vercel-native. Cron job defined in `vercel.json`: `/api/cron/instagram-publish` runs every 15 minutes.
 
 ### Mobile
-`/elev8_mobile/` is a separate Flutter/Dart project — not part of the Next.js build.
+`/elev8_mobile/` is a separate Flutter/Dart project — not part of the Next.js build. It consumes the same `src/app/api/` routes as the web app (never Supabase tables directly), authenticating with Supabase Auth Bearer tokens against `requireRequestUserContext`.

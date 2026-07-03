@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { CHAT_THREADS } from "@/lib/chat";
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -164,8 +164,8 @@ async function getFallbackThreadsResponse() {
   });
 }
 
-export async function GET() {
-  const { error } = await requireUserContext();
+export async function GET(request: Request) {
+  const { error } = await requireRequestUserContext(request);
   if (error) {
     return NextResponse.json({ error }, { status: 401 });
   }

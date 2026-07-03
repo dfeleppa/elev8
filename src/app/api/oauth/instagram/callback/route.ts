@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import {
   exchangeInstagramCode,
@@ -68,7 +68,7 @@ function readStateCookie(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { error: userError, role, userId } = await requireUserContext();
+    const { error: userError, role, userId } = await requireRequestUserContext(request);
     if (userError || !userId || !hasRole("admin", role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

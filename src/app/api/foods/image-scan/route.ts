@@ -9,12 +9,12 @@ import {
   usdaMatchToScanResult,
   validateImageFile,
 } from "@/lib/food-scan";
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const { error: userError, userId } = await requireUserContext();
+  const { error: userError, userId } = await requireRequestUserContext(request);
   if (userError || !userId) {
     return NextResponse.json({ error: userError }, { status: 401 });
   }

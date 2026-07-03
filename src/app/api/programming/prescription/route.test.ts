@@ -7,6 +7,8 @@ const fromMock = vi.fn();
 
 vi.mock("@/lib/member", () => ({
   requireUserContext: requireUserContextMock,
+
+  requireRequestUserContext: requireUserContextMock,
 }));
 
 vi.mock("@/lib/programming-access", () => ({

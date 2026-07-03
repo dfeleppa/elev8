@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, role, userId } = await requireUserContext();
+  const { error, role, userId } = await requireRequestUserContext(request);
   if (error || !userId || !hasRole("member", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

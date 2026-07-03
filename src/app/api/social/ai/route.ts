@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { runSocialAi } from "@/lib/social";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  const { error, role, userId } = await requireUserContext();
+  const { error, role, userId } = await requireRequestUserContext(request);
   if (error || !userId || !hasRole("admin", role)) {
     return NextResponse.json({ error: error ?? "Forbidden" }, { status: 403 });
   }

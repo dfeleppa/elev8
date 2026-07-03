@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const { error, userId, role } = await requireUserContext();
+export async function GET(request: Request) {
+  const { error, userId, role } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

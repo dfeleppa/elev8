@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { hasOrgRole } from "@/lib/programming-access";
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { isWorkoutBlockType, isWorkoutScoreType, WORKOUT_BLOCK_TYPES, WORKOUT_SCORE_TYPES } from "@/lib/programming";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ programId: string }> };
 
 export async function POST(request: Request, context: RouteContext) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

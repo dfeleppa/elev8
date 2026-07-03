@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type RouteContext = { params: Promise<{ productId: string }> };
@@ -14,7 +14,7 @@ function parseNonNegativeNumber(value: unknown): number | null {
 
 // PATCH /api/owner/store/[productId] — update product
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const { error, role } = await requireUserContext();
+  const { error, role } = await requireRequestUserContext(request);
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -67,8 +67,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 // DELETE /api/owner/store/[productId] — delete product
-export async function DELETE(_request: NextRequest, context: RouteContext) {
-  const { error, role } = await requireUserContext();
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const { error, role } = await requireRequestUserContext(request);
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("owner", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCoachNutritionPlan } from "@/lib/coach-plan";
-import { requireUserContext, requireUserContextFromBearer } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -14,10 +14,7 @@ const VALID_GOAL_TYPES = new Set([
 ]);
 
 export async function PATCH(request: Request) {
-  const authHeader = request.headers.get("Authorization");
-  const { error, userId } = authHeader?.startsWith("Bearer ")
-    ? await requireUserContextFromBearer(request)
-    : await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

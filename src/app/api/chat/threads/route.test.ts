@@ -5,6 +5,8 @@ const fromMock = vi.fn();
 
 vi.mock("@/lib/member", () => ({
   requireUserContext: requireUserContextMock,
+
+  requireRequestUserContext: requireUserContextMock,
 }));
 
 vi.mock("@/lib/supabase-admin", () => ({
@@ -83,7 +85,7 @@ describe("chat threads API", () => {
     requireUserContextMock.mockResolvedValue({ error: "Unauthorized", userId: null, role: "member" });
     const { GET } = await import("./route");
 
-    const response = await GET();
+    const response = await GET(new Request('http://localhost/test'));
 
     expect(response.status).toBe(401);
   });
@@ -91,7 +93,7 @@ describe("chat threads API", () => {
   it("returns chat threads with metadata", async () => {
     const { GET } = await import("./route");
 
-    const response = await GET();
+    const response = await GET(new Request('http://localhost/test'));
     const payload = await response.json();
 
     expect(response.status).toBe(200);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { omitNutritionKeys, runNutritionQueryWithFallbacks } from "@/lib/nutrition-schema";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -31,7 +31,7 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { error: userError, userId } = await requireUserContext();
+  const { error: userError, userId } = await requireRequestUserContext(request);
   if (userError || !userId) {
     return NextResponse.json({ error: userError }, { status: 401 });
   }
@@ -129,10 +129,10 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { error: userError, userId } = await requireUserContext();
+  const { error: userError, userId } = await requireRequestUserContext(request);
   if (userError || !userId) {
     return NextResponse.json({ error: userError }, { status: 401 });
   }

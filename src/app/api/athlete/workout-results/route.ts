@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -37,7 +37,7 @@ function resolveBlock(raw: WorkoutBlockJoin | WorkoutBlockJoin[] | null) {
 }
 
 export async function GET(request: Request) {
-  const { error, role, userId } = await requireUserContext();
+  const { error, role, userId } = await requireRequestUserContext(request);
   if (error || !userId || !hasRole("member", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

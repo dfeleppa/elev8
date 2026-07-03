@@ -8,6 +8,8 @@ const getPublicUrlMock = vi.fn();
 
 vi.mock("@/lib/member", () => ({
   requireUserContext: requireUserContextMock,
+
+  requireRequestUserContext: requireUserContextMock,
 }));
 
 vi.mock("@/lib/supabase-admin", () => ({

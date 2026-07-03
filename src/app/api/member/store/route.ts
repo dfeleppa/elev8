@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // GET /api/member/store — list visible products for the member's organization
-export async function GET() {
-  const { error, role,  } = await requireUserContext();
+export async function GET(request: Request) {
+  const { error, role,  } = await requireRequestUserContext(request);
   if (error) return NextResponse.json({ error }, { status: 401 });
   if (!hasRole("member", role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

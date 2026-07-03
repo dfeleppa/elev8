@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { canAccessMemberNutrition, hasRole, requireRequestUserContext, requireUserContext } from "@/lib/member";
+import { canAccessMemberNutrition, hasRole, requireRequestUserContext } from "@/lib/member";
 import {
   omitNutritionKeys,
   readNutritionNumberField,
@@ -387,7 +387,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { error: userError, userId } = await requireUserContext();
+  const { error: userError, userId } = await requireRequestUserContext(request);
   if (userError || !userId) {
     return NextResponse.json({ error: userError }, { status: 401 });
   }

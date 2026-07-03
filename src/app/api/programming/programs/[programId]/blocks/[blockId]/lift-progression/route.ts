@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { hasOrgRole } from "@/lib/programming-access";
-import { requireUserContext } from "@/lib/member";
+import { requireRequestUserContext } from "@/lib/member";
 import { isLiftProgressionType, LIFT_PROGRESSION_TYPES } from "@/lib/programs";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -19,8 +19,8 @@ async function resolveProgram(programId: string) {
   return data as { duration_weeks: number };
 }
 
-export async function GET(_request: Request, context: RouteContext) {
-  const { error, userId } = await requireUserContext();
+export async function GET(request: Request, context: RouteContext) {
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
@@ -46,7 +46,7 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
-  const { error, userId } = await requireUserContext();
+  const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
     return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }

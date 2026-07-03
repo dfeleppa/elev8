@@ -8,7 +8,7 @@ import {
   type ReservationRow,
   type ScheduleClassRow,
 } from "@/lib/class-schedule";
-import { hasRole, requireUserContext } from "@/lib/member";
+import { hasRole, requireRequestUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -19,7 +19,7 @@ type ScheduleClassRecord = ScheduleClassRow & {
 };
 
 export async function GET(request: Request) {
-  const { error, userId, role } = await requireUserContext();
+  const { error, userId, role } = await requireRequestUserContext(request);
   if (error || !userId || !hasRole("member", role)) {
     return NextResponse.json({ error: error ?? "Unauthorized." }, { status: 401 });
   }
