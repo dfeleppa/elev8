@@ -7,7 +7,6 @@ import {
   CalendarRange,
   Check,
   ChevronRight,
-  CreditCard,
   ExternalLink,
   Filter,
   Gift,
@@ -15,10 +14,7 @@ import {
   Plus,
   Search,
   TrendingDown,
-  TrendingUp,
-  Undo2,
   Users,
-  XOctagon,
 } from "lucide-react";
 
 import { AccentCard, Micro, Panel, Ring, Sparkline } from "@/components/ui";
@@ -28,7 +24,6 @@ type DashboardMetrics = {
   totalCoaches: number;
   totalAdmins: number;
   totalOwners: number;
-  totalMrr: number;
 };
 
 type TodayClass = {
@@ -48,31 +43,6 @@ type TodayWorkout = {
   dayDate: string;
   trackName: string | null;
   blockCount: number;
-};
-
-type StripeKpis = {
-  mrr: number;
-  arr: number;
-  activeSubscriptions: number;
-  totalCustomers: number;
-  totalRevenue: number;
-};
-
-type StripeIssue = {
-  id: string;
-  kind: "refund" | "failed_payment";
-  amount: number;
-  currency: string;
-  status: string;
-  description: string;
-  createdAt: string;
-};
-
-type StripeIssuesSummary = {
-  refunds30d: number;
-  failedPayments30d: number;
-  issues: StripeIssue[];
-  disputesSupported: boolean;
 };
 
 type BirthdayRow = {
@@ -103,8 +73,6 @@ type DueTask = {
 type DashboardData = {
   todayClasses: TodayClass[];
   todayWorkouts: TodayWorkout[];
-  stripeKpis: StripeKpis | null;
-  stripeIssues: StripeIssuesSummary;
   upcomingBirthdays: BirthdayRow[];
   memberTrend: MemberTrendPoint[];
   dueTasksToday: DueTask[];
@@ -117,7 +85,7 @@ type Props = {
   dashboardData: DashboardData;
 };
 
-const TABS = ["Today", "Members", "Programming", "Money", "Tasks"] as const;
+const TABS = ["Today", "Members", "Programming", "Tasks"] as const;
 type Tab = (typeof TABS)[number];
 
 const SLOT_BUCKETS = [
@@ -128,14 +96,6 @@ const SLOT_BUCKETS = [
 ] as const;
 
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 function formatTime(t: string) {
   const [hStr, mStr] = t.split(":");
@@ -148,18 +108,6 @@ function birthdayWhen(daysUntil: number) {
   if (daysUntil === 0) return "Today";
   if (daysUntil === 1) return "Tomorrow";
   return `In ${daysUntil}d`;
-}
-
-function relativeIssueDate(value: string) {
-  const ts = new Date(value).getTime();
-  if (Number.isNaN(ts)) return "—";
-  const diffMs = Date.now() - ts;
-  const hours = Math.round(diffMs / 3_600_000);
-  if (hours < 1) return "Just now";
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.round(hours / 24);
-  if (days < 2) return "Yesterday";
-  return `${days} days`;
 }
 
 function sign(n: number) {
@@ -223,11 +171,6 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
     []
   );
 
-  const mrr = dashboardData.stripeKpis?.mrr ?? metrics.totalMrr ?? 0;
-  const arr = dashboardData.stripeKpis?.arr ?? mrr * 12;
-  const activeSubs =
-    dashboardData.stripeKpis?.activeSubscriptions ?? metrics.totalMembers ?? 0;
-
   const trend = dashboardData.memberTrend;
   const latest = trend[trend.length - 1];
   const previous = trend[trend.length - 2];
@@ -235,18 +178,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
   const subsDelta = latest && previous ? latest.totalMembers - previous.totalMembers : 0;
   const newMembers30d = latest?.newMembers ?? 0;
   const cancelled30d = latest?.cancelledMembers ?? 0;
-  const mrrDeltaPct =
-    previous && previous.totalMembers > 0 && latest
-      ? ((latest.totalMembers - previous.totalMembers) / previous.totalMembers) * 100
-      : 0;
-
   const memberSpark = trend.map((p) => p.totalMembers);
-  // Synthesize an MRR sparkline from member trend (proxy if no MRR history exists).
-  const mrrSpark = trend.map((p, i) => {
-    const ratio = latest && latest.totalMembers > 0 ? p.totalMembers / latest.totalMembers : 1;
-    return Math.round(mrr * ratio * (0.92 + (i / Math.max(1, trend.length - 1)) * 0.08));
-  });
-
   const utilization = useMemo(() => {
     // Schedule-density proxy: today's class count / 8 (typical daily slots), capped.
     const ratio = dashboardData.todayClasses.length / 8;
@@ -343,47 +275,14 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
       <div className="space-y-6 px-6 pt-6">
         {/* Hero KPI row */}
         <section className="grid grid-cols-12 gap-4">
-          {/* MRR — accent ink */}
-          <AccentCard tone="ink" className="fade-in col-span-12 md:col-span-5" withDots={false}>
-            <div className="flex items-start justify-between">
-              <div>
-                <Micro onAccent>MONTHLY REVENUE</Micro>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="stat-num" style={{ fontSize: 48 }}>
-                    {formatCurrency(mrr)}
-                  </span>
-                  <span
-                    className="pill"
-                    style={{
-                      background: "rgba(126,240,189,0.16)",
-                      color: "#7ef0bd",
-                      border: "1px solid rgba(126,240,189,0.30)",
-                    }}
-                  >
-                    <TrendingUp className="h-3 w-3" /> {sign(Number(mrrDeltaPct.toFixed(1)))}%
-                  </span>
-                </div>
-                <div className="mt-1.5 text-[12.5px]" style={{ color: "rgba(255,255,255,0.55)" }}>
-                  vs. prior month · ARR {formatCurrency(arr)}
-                </div>
-              </div>
-              <CreditCard className="h-5 w-5 opacity-50" />
-            </div>
-            <div className="mt-3" style={{ color: "#ff79a5" }}>
-              {mrrSpark.length > 1 && (
-                <Sparkline values={mrrSpark} stroke="#ff79a5" fill="#ff79a5" width={460} height={48} />
-              )}
-            </div>
-          </AccentCard>
-
-          {/* Active members — accent pink */}
-          <AccentCard tone="pink" className="fade-in col-span-12 md:col-span-4" withDots={false}>
+          {/* Active members */}
+          <AccentCard tone="pink" className="fade-in col-span-12 md:col-span-6" withDots={false}>
             <div className="flex items-start justify-between">
               <div>
                 <Micro onAccent>ACTIVE MEMBERS</Micro>
                 <div className="mt-2 flex items-baseline gap-2">
                   <span className="stat-num" style={{ fontSize: 48 }}>
-                    {activeSubs.toLocaleString()}
+                    {metrics.totalMembers.toLocaleString()}
                   </span>
                   <span
                     className="font-mono rounded px-1.5 py-0.5 text-[12px] font-semibold"
@@ -409,7 +308,7 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
           </AccentCard>
 
           {/* Schedule density / utilization */}
-          <Panel padding="lg" className="fade-in hover-lift col-span-12 flex items-center gap-4 md:col-span-3">
+          <Panel padding="lg" className="fade-in hover-lift col-span-12 flex items-center gap-4 md:col-span-6">
             <Ring progress={utilization} size={96} stroke={10} fillColor="var(--pink)" trackColor="var(--line-strong)">
               <div className="flex flex-col items-center justify-center">
                 <div className="font-head font-semibold leading-none" style={{ fontSize: 26 }}>
@@ -751,81 +650,8 @@ export default function GymDashboardClient({ initialTab, metrics, dashboardData 
           </div>
         </section>
 
-        {/* Stripe + Birthdays + Tasks Today */}
+        {/* Birthdays + Tasks Today */}
         <section className="grid grid-cols-12 gap-4">
-          <div className="col-span-12 lg:col-span-6 xl:col-span-4">
-            <Panel padding="lg" className="fade-in hover-lift">
-              <div className="flex items-start justify-between">
-                <div>
-                  <Micro as="p">PAYMENTS · LAST 30 DAYS</Micro>
-                  <h3 className="font-head mt-1 text-[20px] font-semibold">Money issues</h3>
-                </div>
-                <a
-                  href="https://dashboard.stripe.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="pill pill-ink inline-flex items-center gap-1"
-                >
-                  <ExternalLink className="h-3 w-3" /> Stripe
-                </a>
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="accent-amber-quiet rounded-xl p-3" style={{ background: "var(--panel)" }}>
-                  <Micro as="p">FAILED</Micro>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <span className="font-head text-[24px] font-semibold">
-                      {dashboardData.stripeIssues.failedPayments30d}
-                    </span>
-                  </div>
-                </div>
-                <div className="accent-pink-quiet rounded-xl p-3" style={{ background: "var(--panel)" }}>
-                  <Micro as="p">REFUNDS</Micro>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <span className="font-head text-[24px] font-semibold">
-                      {dashboardData.stripeIssues.refunds30d}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {dashboardData.stripeIssues.issues.length === 0 ? (
-                <div className="ds-empty mt-4">No recent payment issues.</div>
-              ) : (
-                <ul className="mt-4 divide-y" style={{ borderColor: "var(--line)" }}>
-                  {dashboardData.stripeIssues.issues.slice(0, 4).map((issue) => (
-                    <li key={issue.id} className="flex items-center gap-3 py-2.5">
-                      <span
-                        className={
-                          "pill inline-flex items-center gap-1 " +
-                          (issue.kind === "failed_payment" ? "pill-danger" : "pill-amber")
-                        }
-                      >
-                        {issue.kind === "failed_payment" ? (
-                          <XOctagon className="h-3 w-3" />
-                        ) : (
-                          <Undo2 className="h-3 w-3" />
-                        )}
-                        {issue.kind === "failed_payment" ? "FAILED" : "REFUND"}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-[13px] font-semibold">
-                          {issue.description}
-                        </div>
-                        <div className="font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>
-                          {issue.status} · {relativeIssueDate(issue.createdAt)}
-                        </div>
-                      </div>
-                      <div className="font-mono text-[13px] font-semibold">
-                        {formatCurrency(issue.amount)}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Panel>
-          </div>
-
           <div className="col-span-12 lg:col-span-6 xl:col-span-4">
             <Panel padding="lg" className="fade-in hover-lift">
               <div className="flex items-start justify-between">

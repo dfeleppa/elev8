@@ -93,7 +93,6 @@ const navItems: NavItem[] = [
           { label: "Staff", href: "/owner/staff", minRole: "owner" },
           { label: "Class Setup", href: "/owner/schedule", minRole: "owner" },
           { label: "Payroll", href: "/owner/payroll", minRole: "owner" },
-          { label: "Billing", href: "/owner/billing", minRole: "owner" },
           { label: "Tracks & Memberships", href: "/owner/tracks-memberships", minRole: "owner" },
           { label: "Members", href: "/owner/members", minRole: "owner" },
           { label: "Gym Settings", href: "/owner/settings", minRole: "owner" },
@@ -210,7 +209,6 @@ function getNavIcon(href: string) {
     case "/member/class-schedule":
       return <CalendarDays {...iconProps} />;
     case "/owner/payroll":
-    case "/owner/billing":
       return <Wallet {...iconProps} />;
     case "/owner/store-setup":
     case "/member/store":

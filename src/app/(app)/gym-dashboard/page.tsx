@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 
 import { hasRole, requireUserContext } from "@/lib/member";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getOrganizationBillingMetrics } from "@/lib/billing-metrics";
 import GymDashboardClient from "./GymDashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +11,6 @@ type DashboardMetrics = {
   totalCoaches: number;
   totalAdmins: number;
   totalOwners: number;
-  totalMrr: number;
 };
 
 type GymMemberRow = {
@@ -51,31 +49,6 @@ type TodayWorkout = {
   blockCount: number;
 };
 
-type StripeKpis = {
-  mrr: number;
-  arr: number;
-  activeSubscriptions: number;
-  totalCustomers: number;
-  totalRevenue: number;
-};
-
-type StripeIssue = {
-  id: string;
-  kind: "refund" | "failed_payment";
-  amount: number;
-  currency: string;
-  status: string;
-  description: string;
-  createdAt: string;
-};
-
-type StripeIssuesSummary = {
-  refunds30d: number;
-  failedPayments30d: number;
-  issues: StripeIssue[];
-  disputesSupported: boolean;
-};
-
 type BirthdayRow = {
   memberName: string;
   email: string | null;
@@ -104,8 +77,6 @@ type DueTask = {
 type DashboardData = {
   todayClasses: TodayClass[];
   todayWorkouts: TodayWorkout[];
-  stripeKpis: StripeKpis | null;
-  stripeIssues: StripeIssuesSummary;
   upcomingBirthdays: BirthdayRow[];
   memberTrend: MemberTrendPoint[];
   dueTasksToday: DueTask[];
@@ -176,7 +147,6 @@ async function getGymMetrics(): Promise<DashboardMetrics> {
       totalCoaches: 0,
       totalAdmins: 0,
       totalOwners: 0,
-      totalMrr: 0,
     };
   }
 
@@ -186,15 +156,11 @@ async function getGymMetrics(): Promise<DashboardMetrics> {
   const totalAdmins = rows.filter((row) => row.role === "admin").length;
   const totalOwners = rows.filter((row) => row.role === "owner").length;
 
-  const estimatedArpu = 150;
-  const totalMrr = totalMembers * estimatedArpu;
-
   return {
     totalMembers,
     totalCoaches,
     totalAdmins,
     totalOwners,
-    totalMrr,
   };
 }
 
@@ -205,20 +171,12 @@ async function getDashboardData(members: GymMemberRow[]): Promise<DashboardData>
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowYmd = toYmd(tomorrow);
   const todayAbbr = JS_DAY_TO_ABBR[now.getDay()];
-  const thirtyDaysAgoIso = new Date(now.getTime() - 30 * 86_400_000).toISOString();
-
-  const [classesResult, tracksResult, stripeMetrics, stripeTxResult] = await Promise.all([
+  const [classesResult, tracksResult] = await Promise.all([
     supabaseAdmin
       .from("schedule_classes")
       .select("id, name, class_time, duration_minutes, class_days, start_date, end_date, track_id, default_coach_user_id, size_limit")
       .order("class_time", { ascending: true }),
     supabaseAdmin.from("programming_tracks").select("id, name"),
-    getOrganizationBillingMetrics(),
-    supabaseAdmin
-      .from("stripe_transactions")
-      .select("id, type, amount, currency, status, description, created_at")
-      .order("created_at", { ascending: false })
-      .limit(120),
   ]);
 
   const coachIds = Array.from(
@@ -308,44 +266,6 @@ async function getDashboardData(members: GymMemberRow[]): Promise<DashboardData>
     trackName: row.track_id ? trackNameById.get(row.track_id) ?? null : null,
     blockCount: blockCountByDay.get(row.id) ?? 0,
   }));
-
-  let stripeKpis: StripeKpis | null = null;
-  if (stripeMetrics) {
-    stripeKpis = {
-      mrr: Number(stripeMetrics.mrr ?? 0),
-      arr: Number(stripeMetrics.arr ?? 0),
-      activeSubscriptions: Number(stripeMetrics.active_subscriptions ?? 0),
-      totalCustomers: Number(stripeMetrics.total_customers ?? 0),
-      totalRevenue: Number(stripeMetrics.total_revenue ?? 0),
-    };
-  }
-
-  const allTransactions = (stripeTxResult.data ?? []) as any[];
-  const issueRows = allTransactions.filter((row) => {
-    if (row.type === "refund") return true;
-    if (row.type === "payment" && row.status && row.status !== "succeeded") return true;
-    return false;
-  });
-
-  const issuesLast30d = issueRows.filter((row) => {
-    const created = typeof row.created_at === "string" ? row.created_at : "";
-    return created >= thirtyDaysAgoIso;
-  });
-
-  const stripeIssues: StripeIssuesSummary = {
-    refunds30d: issuesLast30d.filter((row) => row.type === "refund").length,
-    failedPayments30d: issuesLast30d.filter((row) => row.type === "payment").length,
-    issues: issueRows.slice(0, 6).map((row) => ({
-      id: row.id,
-      kind: row.type === "refund" ? "refund" : "failed_payment",
-      amount: Number(row.amount ?? 0),
-      currency: String(row.currency ?? "usd").toUpperCase(),
-      status: String(row.status ?? "unknown"),
-      description: String(row.description ?? (row.type === "refund" ? "Refund" : "Failed payment")),
-      createdAt: String(row.created_at ?? new Date().toISOString()),
-    })),
-    disputesSupported: false,
-  };
 
   const upcomingBirthdays: BirthdayRow[] = members
     .map((row) => {
@@ -459,8 +379,6 @@ async function getDashboardData(members: GymMemberRow[]): Promise<DashboardData>
   return {
     todayClasses,
     todayWorkouts,
-    stripeKpis,
-    stripeIssues,
     upcomingBirthdays,
     memberTrend,
     dueTasksToday: dueTasks.filter((row) => row.dueDate === todayYmd),

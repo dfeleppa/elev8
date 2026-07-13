@@ -332,7 +332,7 @@ class _ClassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = scheduleClass;
-    final stripe = _hexToColor(c.calendarColor);
+    final calendarColor = _hexToColor(c.calendarColor);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: GlassCard(
@@ -345,7 +345,7 @@ class _ClassCard extends StatelessWidget {
               Container(
                 width: 5,
                 decoration: BoxDecoration(
-                  color: stripe,
+                  color: calendarColor,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     bottomLeft: Radius.circular(24),
@@ -374,7 +374,7 @@ class _ClassCard extends StatelessWidget {
                           if ((c.track?.name ?? '').isNotEmpty)
                             _Tag(
                               label: c.track!.name!,
-                              color: stripe,
+                              color: calendarColor,
                             ),
                           if (c.defaultCoach != null)
                             _Tag(
@@ -504,7 +504,7 @@ class _ClassDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = scheduleClass;
-    final stripe = _hexToColor(c.calendarColor);
+    final calendarColor = _hexToColor(c.calendarColor);
     final daysFmt = c.classDays
         .map((d) => _dayLong[d] ?? d)
         .join(', ');
@@ -540,7 +540,7 @@ class _ClassDetailSheet extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: stripe,
+                    color: calendarColor,
                   ),
                 ),
                 const SizedBox(width: 10),

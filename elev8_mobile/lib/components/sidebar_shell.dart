@@ -151,12 +151,6 @@ const NavSection ownerSection = NavSection(
       minRole: UserRole.owner,
     ),
     NavEntry(
-      label: 'Billing',
-      href: '/owner/billing',
-      icon: Icons.receipt_long_outlined,
-      minRole: UserRole.owner,
-    ),
-    NavEntry(
       label: 'Tracks & Memberships',
       href: '/owner/tracks-memberships',
       icon: Icons.verified_user_outlined,

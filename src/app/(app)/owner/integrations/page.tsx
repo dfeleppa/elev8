@@ -17,16 +17,10 @@ export default async function OwnerIntegrationsPage() {
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Owner</p>
           <h1 className="text-3xl font-semibold text-slate-100">Integrations</h1>
           <p className="mt-3 text-sm text-slate-400">
-            Connect billing, scheduling, and performance systems so your operating data moves through one workflow.
+            Connect scheduling and performance systems so your operating data moves through one workflow.
           </p>
         </header>
         <div className="mt-8 flex gap-4 flex-wrap">
-          <a
-            href="/owner/billing"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/10"
-          >
-            Open Billing
-          </a>
           <a
             href="/owner/staff"
             className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/10"

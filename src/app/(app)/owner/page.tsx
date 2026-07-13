@@ -18,7 +18,6 @@ export default async function OrganizationOwnerPage() {
         links={[
           { label: "Open Staff", href: "/owner/staff" },
           { label: "Open Schedule", href: "/owner/schedule" },
-          { label: "Open Billing", href: "/owner/billing" },
         ]}
       />
     </div>
