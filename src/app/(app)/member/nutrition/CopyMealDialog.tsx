@@ -57,7 +57,7 @@ export default function CopyMealDialog({
       role="dialog"
       aria-modal="true"
       aria-label="Copy meal"
-      onClick={(event) => {
+      onPointerDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 outline-none"

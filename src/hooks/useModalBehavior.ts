@@ -9,7 +9,9 @@ const FOCUSABLE_SELECTOR =
  * Shared behavior for overlay dialogs: lock body scroll while open, close on
  * Escape, and — when a container ref is provided — move focus into the
  * dialog, trap Tab inside it, and restore focus on close. Pair with
- * role="dialog" + aria-modal on the overlay and a backdrop click handler.
+ * role="dialog" + aria-modal on the overlay and a backdrop pointer-down handler.
+ * Using pointer-down prevents a selection drag that starts in the dialog and
+ * ends on the backdrop from being mistaken for an outside click.
  */
 export function useModalBehavior(
   open: boolean,

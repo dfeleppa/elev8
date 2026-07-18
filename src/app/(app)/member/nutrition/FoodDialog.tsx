@@ -492,7 +492,7 @@ export default function FoodDialog({
       role="dialog"
       aria-modal="true"
       aria-label="Search foods"
-      onClick={(event) => {
+      onPointerDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-4 outline-none sm:items-center sm:py-6"
