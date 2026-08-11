@@ -18,7 +18,7 @@ export function isFullyPublic(pathname: string) {
   return false;
 }
 
-function isAuthPage(pathname: string) {
+export function isAuthPage(pathname: string) {
   return pathname === "/login" || pathname === "/register";
 }
 
@@ -29,20 +29,17 @@ export function hasDevAuthBypass() {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (isFullyPublic(pathname)) {
+  // Authentication pages must always remain reachable. A stale or otherwise
+  // unusable session cookie can still be decoded by getToken(), while the app
+  // cannot resolve it into a valid user context. Redirecting /login to / in
+  // that state creates an endless /login <-> / loop.
+  if (isFullyPublic(pathname) || isAuthPage(pathname)) {
     return NextResponse.next();
   }
 
   const devAuthBypass = hasDevAuthBypass();
 
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-
-  if (isAuthPage(pathname)) {
-    if (token || devAuthBypass) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-    return NextResponse.next();
-  }
 
   if (!token && !devAuthBypass) {
     const loginUrl = new URL("/login", request.url);
