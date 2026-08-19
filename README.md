@@ -28,6 +28,33 @@ Nutrition data is stored in Supabase and is tied to the authenticated user accou
 - API routes under `src/app/api/nutrition-*` resolve the logged-in user context before reading or writing records.
 - File-based JSON nutrition storage is not used in this app.
 
+### ChatGPT Nutrition MCP
+
+The production MCP endpoint is `https://app.daneff.com/api/mcp/nutrition`. It uses MCP Streamable HTTP and OAuth 2.1 authorization-code flow with PKCE.
+
+Required production environment variables:
+
+```dotenv
+MCP_PUBLIC_ORIGIN=https://app.daneff.com
+MCP_OAUTH_SECRET=<dedicated-random-secret>
+MCP_OAUTH_ALLOWED_REDIRECT_URIS=<exact-callback-url-shown-by-ChatGPT>
+```
+
+- Keep `MCP_PUBLIC_ORIGIN` canonical so discovery, authorization codes, access tokens, refresh tokens, and request verification all use the same issuer and resource identifier.
+- Copy the exact redirect URI from ChatGPT's app-management page. Current callbacks are either callback-specific (`https://chatgpt.com/connector/oauth/{callback_id}`) or the stable redirect (`https://chatgpt.com/connector_platform_oauth_redirect`) when issuer identification is supported.
+- `MCP_OAUTH_ALLOWED_REDIRECT_ORIGINS` remains available for controlled local development, but production should use the exact URI allowlist.
+- Request `offline_access` to receive a rotating refresh token. Read tools require `nutrition:read`; `manage_nutrition` requires `nutrition:read nutrition:write`.
+- The legacy `AGENT_NUTRITION_TOKEN` bearer header remains available for trusted Codex/local clients. Query-string tokens are rejected.
+
+To validate before deployment:
+
+1. Run `npm test -- src/lib/mcp-oauth.test.ts src/app/api/mcp/nutrition/route.test.ts src/lib/nutrition-mcp.test.ts`.
+2. Run `npx @modelcontextprotocol/inspector`, select Streamable HTTP, and connect to the local `/api/mcp/nutrition` endpoint using OAuth.
+3. Confirm initialization, tool metadata, read-only calls, insufficient-scope reauthorization, preview-before-execute behavior, refresh rotation, and rejection of a token bound to another resource.
+4. In ChatGPT web Developer Mode, create or refresh the app and scan the tools again after metadata changes.
+
+Custom MCP apps are currently supported on ChatGPT web, not in the native ChatGPT iOS app.
+
 ### Project Structure
 - `src/app/page.tsx` hosts the entire dashboard layout with typed data models.
 - `src/app/layout.tsx` wires up fonts and metadata.

@@ -4,9 +4,8 @@ const ACCESS_TOKEN_TTL_SECONDS = 60 * 60;
 const AUTHORIZATION_CODE_TTL_SECONDS = 5 * 60;
 const CLIENT_TTL_SECONDS = 365 * 24 * 60 * 60;
 const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
-const OAUTH_SCOPES = ["nutrition:read", "nutrition:write"];
-const consumedAuthorizationCodes = new Map<string, number>();
-const consumedRefreshTokens = new Map<string, number>();
+const DEFAULT_OAUTH_SCOPE = "nutrition:read offline_access";
+const OAUTH_SCOPES = ["nutrition:read", "nutrition:write", "offline_access"];
 
 type SignedEnvelope<T extends Record<string, unknown>> = T & {
   exp: number;
@@ -37,13 +36,17 @@ type ClientPayload = {
 type AuthorizationCodePayload = {
   clientId: string;
   codeChallenge: string;
+  issuer: string;
   memberId: string;
   redirectUri: string;
+  resource: string;
   scope?: string;
 };
 
 type AccessTokenPayload = {
+  aud: string;
   clientId: string;
+  iss: string;
   memberId: string;
   scope: string;
 };
@@ -99,12 +102,23 @@ function verifyEnvelope<T extends Record<string, unknown>>(value: string, type: 
     return null;
   }
 
-  const parsed = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8")) as SignedEnvelope<T>;
-  if (parsed.typ !== type || typeof parsed.exp !== "number" || parsed.exp < nowSeconds()) {
+  try {
+    const parsed = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8")) as SignedEnvelope<T>;
+    const now = nowSeconds();
+    if (
+      parsed.typ !== type ||
+      typeof parsed.exp !== "number" ||
+      typeof parsed.iat !== "number" ||
+      parsed.exp < now ||
+      parsed.iat > now + 60
+    ) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
     return null;
   }
-
-  return parsed;
 }
 
 function isHttpsUrl(value: string) {
@@ -113,15 +127,6 @@ function isHttpsUrl(value: string) {
     return url.protocol === "https:";
   } catch {
     return false;
-  }
-}
-
-function cleanupConsumedTokens(store: Map<string, number>) {
-  const now = nowSeconds();
-  for (const [token, expiresAt] of store) {
-    if (expiresAt < now) {
-      store.delete(token);
-    }
   }
 }
 
@@ -144,18 +149,21 @@ function isAllowedRedirectUri(value: string) {
   }
 
   const url = new URL(value);
-  return uris.includes(value) || origins.includes(url.origin);
+  if (uris.includes(value)) {
+    return true;
+  }
+  return process.env.NODE_ENV !== "production" && origins.includes(url.origin);
 }
 
 export function normalizeMcpScope(scope: string | null | undefined) {
-  const requested = (scope ?? "nutrition:read")
+  const requested = (scope ?? DEFAULT_OAUTH_SCOPE)
     .split(/\s+/)
     .map((value) => value.trim())
     .filter(Boolean);
   const unique = Array.from(new Set(requested));
 
   if (unique.length === 0) {
-    return "nutrition:read";
+    return DEFAULT_OAUTH_SCOPE;
   }
 
   if (unique.some((value) => !OAUTH_SCOPES.includes(value))) {
@@ -177,8 +185,37 @@ export function hashMcpToken(token: string) {
 }
 
 export function getOriginFromRequest(request: Request) {
+  const configuredOrigin = process.env.MCP_PUBLIC_ORIGIN?.trim();
+  if (configuredOrigin) {
+    const configuredUrl = new URL(configuredOrigin);
+    if (configuredUrl.protocol !== "https:" && configuredUrl.hostname !== "localhost") {
+      throw new Error("MCP_PUBLIC_ORIGIN must use HTTPS outside localhost.");
+    }
+    return configuredUrl.origin;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("MCP_PUBLIC_ORIGIN is required in production.");
+  }
+
   const url = new URL(request.url);
   return `${url.protocol}//${url.host}`;
+}
+
+export function getMcpResource(origin: string) {
+  return `${origin}/api/mcp/nutrition`;
+}
+
+export function getMcpResourceMetadataUrl(origin: string) {
+  return `${origin}/.well-known/oauth-protected-resource/api/mcp/nutrition`;
+}
+
+export function normalizeMcpResource(resource: string | null | undefined, expectedResource: string) {
+  const requestedResource = resource?.trim() || expectedResource;
+  if (requestedResource !== expectedResource) {
+    throw new Error("OAuth resource does not match the Elev8 Nutrition MCP.");
+  }
+  return requestedResource;
 }
 
 export function getMcpOAuthMetadata(origin: string) {
@@ -188,6 +225,7 @@ export function getMcpOAuthMetadata(origin: string) {
     token_endpoint: `${origin}/api/oauth/mcp/token`,
     registration_endpoint: `${origin}/api/oauth/mcp/register`,
     scopes_supported: OAUTH_SCOPES,
+    authorization_response_iss_parameter_supported: true,
     response_types_supported: ["code"],
     grant_types_supported: ["authorization_code", "refresh_token"],
     token_endpoint_auth_methods_supported: ["none", "client_secret_basic", "client_secret_post"],
@@ -197,7 +235,7 @@ export function getMcpOAuthMetadata(origin: string) {
 
 export function getMcpProtectedResourceMetadata(origin: string) {
   return {
-    resource: `${origin}/api/mcp/nutrition`,
+    resource: getMcpResource(origin),
     authorization_servers: [origin],
     scopes_supported: OAUTH_SCOPES,
     bearer_methods_supported: ["header"],
@@ -285,21 +323,6 @@ export function verifyMcpAuthorizationCode(code: string) {
   return verifyEnvelope<AuthorizationCodePayload>(code, "mcp_code");
 }
 
-export function consumeMcpAuthorizationCode(code: string) {
-  cleanupConsumedTokens(consumedAuthorizationCodes);
-  if (consumedAuthorizationCodes.has(code)) {
-    return null;
-  }
-
-  const payload = verifyMcpAuthorizationCode(code);
-  if (!payload) {
-    return null;
-  }
-
-  consumedAuthorizationCodes.set(code, payload.exp);
-  return payload;
-}
-
 export function createMcpAccessToken(payload: AccessTokenPayload) {
   return signEnvelope("mcp_at", payload, ACCESS_TOKEN_TTL_SECONDS);
 }
@@ -312,23 +335,18 @@ export function verifyMcpRefreshToken(refreshToken: string) {
   return verifyEnvelope<RefreshTokenPayload>(refreshToken, "mcp_rt");
 }
 
-export function consumeMcpRefreshToken(refreshToken: string) {
-  cleanupConsumedTokens(consumedRefreshTokens);
-  if (consumedRefreshTokens.has(refreshToken)) {
-    return null;
-  }
-
-  const payload = verifyMcpRefreshToken(refreshToken);
+export function verifyMcpAccessToken(
+  accessToken: string,
+  expected?: { issuer: string; resource: string }
+) {
+  const payload = verifyEnvelope<AccessTokenPayload>(accessToken, "mcp_at");
   if (!payload) {
     return null;
   }
-
-  consumedRefreshTokens.set(refreshToken, payload.exp);
+  if (expected && (payload.iss !== expected.issuer || payload.aud !== expected.resource)) {
+    return null;
+  }
   return payload;
-}
-
-export function verifyMcpAccessToken(accessToken: string) {
-  return verifyEnvelope<AccessTokenPayload>(accessToken, "mcp_at");
 }
 
 export function createS256CodeChallenge(codeVerifier: string) {

@@ -152,7 +152,6 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
   const nutritionAiUrl = baseUrl ? `${baseUrl}/api/agent/nutrition-ai` : "/api/agent/nutrition-ai";
   const mcpUrl = baseUrl ? `${baseUrl}/api/mcp/nutrition` : "/api/mcp/nutrition";
   const bearerPreview = generatedToken || "YOUR_AGENT_NUTRITION_TOKEN";
-  const chatGptMcpUrl = `${mcpUrl}?agentToken=${encodeURIComponent(bearerPreview)}`;
   const codexConfigSnippet = `{
   "mcpServers": {
     "elev8-nutrition": {
@@ -417,25 +416,7 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
             </label>
 
             <label className="block space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">ChatGPT Connector URL</span>
-              <div className="flex gap-2">
-                <input
-                  readOnly
-                  value={chatGptMcpUrl}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200"
-                />
-                <button
-                  type="button"
-                  onClick={() => void copyValue(chatGptMcpUrl, "chatgpt-mcp")}
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200"
-                >
-                  {copiedValue === "chatgpt-mcp" ? "Copied" : "Copy"}
-                </button>
-              </div>
-            </label>
-
-            <label className="block space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">ChatGPT OAuth MCP URL</span>
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500">ChatGPT MCP URL</span>
               <div className="flex gap-2">
                 <input
                   readOnly
@@ -468,8 +449,9 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
             </div>
 
             <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
-              For ChatGPT developer-mode connectors, choose <span className="text-slate-100">OAuth</span> and use the OAuth MCP URL above.
-              The older no-auth connector URL still works for quick local testing, but it contains the nutrition agent token.
+              In ChatGPT web Developer Mode, create an OAuth app with the MCP URL above. Copy the exact callback URL ChatGPT shows
+              into <span className="text-slate-100">MCP_OAUTH_ALLOWED_REDIRECT_URIS</span>. Custom MCP apps are not currently available
+              in the native ChatGPT iOS app.
             </p>
 
             <label className="block space-y-1">

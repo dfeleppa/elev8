@@ -42,9 +42,11 @@ describe("nutrition MCP route", () => {
   it("accepts OAuth bearer access tokens", async () => {
     const { createMcpAccessToken } = await import("../../../../lib/mcp-oauth");
     const token = createMcpAccessToken({
+      aud: "http://localhost/api/mcp/nutrition",
       clientId: "client-1",
+      iss: "http://localhost",
       memberId: "oauth-member-1",
-      scope: "nutrition:read nutrition:write",
+      scope: "nutrition:read nutrition:write offline_access",
     });
     const { GET } = await import("./route");
     const request = new Request("http://localhost/api/mcp/nutrition", {
@@ -56,5 +58,25 @@ describe("nutrition MCP route", () => {
 
     expect(response.status).toBe(405);
     expect(payload.error.message).toBe("Method not allowed.");
+  });
+
+  it("rejects a signed token issued for a different MCP resource", async () => {
+    const { createMcpAccessToken } = await import("../../../../lib/mcp-oauth");
+    const token = createMcpAccessToken({
+      aud: "http://localhost/api/mcp/other",
+      clientId: "client-1",
+      iss: "http://localhost",
+      memberId: "oauth-member-1",
+      scope: "nutrition:read",
+    });
+    const { GET } = await import("./route");
+    const request = new Request("http://localhost/api/mcp/nutrition", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const response = await GET(request);
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get("WWW-Authenticate")).toContain('scope="nutrition:read"');
   });
 });

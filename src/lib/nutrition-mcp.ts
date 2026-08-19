@@ -180,17 +180,29 @@ export async function loadNutritionDaySnapshot(memberId: string, date: string, m
   };
 }
 
-export function createNutritionMcpServer(memberId: string, options: { canWrite?: boolean } = {}) {
-  const server = new McpServer({
-    name: "elev8-nutrition",
-    version: "1.0.0",
-  });
+export function createNutritionMcpServer(
+  memberId: string,
+  options: { canWrite?: boolean; resourceMetadataUrl?: string } = {}
+) {
+  const server = new McpServer(
+    {
+      name: "elev8-nutrition",
+      version: "1.1.0",
+    },
+    {
+      instructions:
+        "Read nutrition data before proposing changes. Preview manage_nutrition operations first, and execute only after the user confirms.",
+    }
+  );
 
   server.registerTool(
     "get_daily_nutrition",
     {
       title: "Get Daily Nutrition",
-      description: "Get nutrition entries, totals, and targets for a day in the Elev8 app.",
+      description: "Use this when the user wants to review nutrition entries, totals, or targets for a specific day.",
+      _meta: {
+        securitySchemes: [{ type: "oauth2", scopes: ["nutrition:read"] }],
+      },
       inputSchema: {
         date: z.string().describe("Date in YYYY-MM-DD format."),
         mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]).optional(),
@@ -230,6 +242,8 @@ export function createNutritionMcpServer(memberId: string, options: { canWrite?:
       },
       annotations: {
         readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
       },
     },
     async ({ date, mealType }) => {
@@ -268,7 +282,10 @@ export function createNutritionMcpServer(memberId: string, options: { canWrite?:
     {
       title: "Search Nutrition Foods",
       description:
-        "Search the member's saved foods, recent foods, and USDA matches to find nutrition information before logging a meal.",
+        "Use this when the user wants to search saved, recent, or USDA foods before logging a meal.",
+      _meta: {
+        securitySchemes: [{ type: "oauth2", scopes: ["nutrition:read"] }],
+      },
       inputSchema: {
         query: z.string().describe("Food or meal name to search for."),
       },
@@ -290,6 +307,8 @@ export function createNutritionMcpServer(memberId: string, options: { canWrite?:
       },
       annotations: {
         readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: true,
       },
     },
     async ({ query }) => {
@@ -326,7 +345,10 @@ export function createNutritionMcpServer(memberId: string, options: { canWrite?:
     {
       title: "Manage Nutrition",
       description:
-        "Interpret a natural-language nutrition command. Use preview first for write actions, then execute only after the user confirms.",
+        "Use this when the user wants to preview or execute a nutrition change. Preview first, then execute only after confirmation.",
+      _meta: {
+        securitySchemes: [{ type: "oauth2", scopes: ["nutrition:read", "nutrition:write"] }],
+      },
       inputSchema: {
         command: z.string().describe("Natural-language command such as 'copy my dinner from yesterday to today'."),
         selectedDate: z.string().describe("Reference date in YYYY-MM-DD format."),
@@ -396,11 +418,23 @@ export function createNutritionMcpServer(memberId: string, options: { canWrite?:
       },
       annotations: {
         readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
       },
     },
     async ({ command, selectedDate, mode, candidateName }) => {
       if (!options.canWrite) {
-        throw new Error("nutrition:write scope is required.");
+        const resourceMetadataUrl = options.resourceMetadataUrl ?? "/.well-known/oauth-protected-resource";
+        return {
+          content: [{ type: "text", text: "Authorization with nutrition:write scope is required." }],
+          isError: true,
+          _meta: {
+            "mcp/www_authenticate": [
+              `Bearer resource_metadata="${resourceMetadataUrl}", error="insufficient_scope", error_description="nutrition:write scope is required", scope="nutrition:read nutrition:write"`,
+            ],
+          },
+        };
       }
 
       if (!isValidDate(selectedDate)) {

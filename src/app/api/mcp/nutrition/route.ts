@@ -5,6 +5,8 @@ import {
   isAuthorizedAgentRequest,
 } from "@/lib/agent-auth";
 import {
+  getMcpResource,
+  getMcpResourceMetadataUrl,
   getOriginFromRequest,
   hasMcpScope,
   verifyMcpAccessToken,
@@ -41,11 +43,14 @@ function getOAuthAccess(request: Request) {
   const [scheme, token] = authorization.split(/\s+/, 2);
   if (scheme?.toLowerCase() === "bearer" && token) {
     try {
-      const oauthAccess = verifyMcpAccessToken(token);
-      if (oauthAccess?.memberId) {
+      const issuer = getOriginFromRequest(request);
+      const resource = getMcpResource(issuer);
+      const oauthAccess = verifyMcpAccessToken(token, { issuer, resource });
+      if (oauthAccess?.memberId && hasMcpScope(oauthAccess.scope, "nutrition:read")) {
         return {
           memberId: oauthAccess.memberId,
           canWrite: hasMcpScope(oauthAccess.scope, "nutrition:write"),
+          resourceMetadataUrl: getMcpResourceMetadataUrl(issuer),
         };
       }
     } catch {
@@ -67,17 +72,20 @@ function getAuthorizedAccess(request: Request) {
     return null;
   }
 
-  return isAuthorized(request, token) ? { memberId, canWrite: true } : null;
+  const issuer = getOriginFromRequest(request);
+  return isAuthorized(request, token)
+    ? { memberId, canWrite: true, resourceMetadataUrl: getMcpResourceMetadataUrl(issuer) }
+    : null;
 }
 
 function unauthorizedResponse(request: Request) {
-  const resourceMetadataUrl = `${getOriginFromRequest(request)}/.well-known/oauth-protected-resource/api/mcp/nutrition`;
+  const resourceMetadataUrl = getMcpResourceMetadataUrl(getOriginFromRequest(request));
   return withCorsHeaders(
     new Response(JSON.stringify({ error: "Unauthorized." }), {
       status: 401,
       headers: {
         "Content-Type": "application/json",
-        "WWW-Authenticate": `Bearer resource_metadata="${resourceMetadataUrl}"`,
+        "WWW-Authenticate": `Bearer resource_metadata="${resourceMetadataUrl}", scope="nutrition:read"`,
       },
     })
   );
@@ -93,7 +101,10 @@ async function handleMcpRequest(request: Request) {
     enableJsonResponse: true,
     sessionIdGenerator: undefined,
   });
-  const server = createNutritionMcpServer(authorized.memberId, { canWrite: authorized.canWrite });
+  const server = createNutritionMcpServer(authorized.memberId, {
+    canWrite: authorized.canWrite,
+    resourceMetadataUrl: authorized.resourceMetadataUrl,
+  });
   await server.connect(transport);
 
   try {
