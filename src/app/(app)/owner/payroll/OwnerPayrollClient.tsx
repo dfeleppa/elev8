@@ -425,6 +425,106 @@ export default function OwnerPayrollClient() {
             </tr>
           </thead>
           <tbody>
+            {/* Blank input row */}
+            <tr ref={newRowRef}>
+              <td className="rounded-l-2xl px-3 pb-3 pt-2">
+                <input
+                  type="date"
+                  value={newDraft.weekEndingDate}
+                  onChange={(e) => updateNewDraft({ weekEndingDate: e.target.value })}
+                  onClick={openPicker}
+                  className={cellInputClass}
+                />
+              </td>
+              <td className="px-3 pb-3 pt-2">
+                <select
+                  value={newDraft.staffUserId}
+                  onChange={(e) => updateNewDraft({ staffUserId: e.target.value })}
+                  className={cellSelectClass}
+                >
+                  <option value="">Select staff...</option>
+                  {staffList.map((s) => (
+                    <option key={s.userId} value={s.userId}>{s.name}</option>
+                  ))}
+                </select>
+              </td>
+              <td className="px-3 pb-3 pt-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={newDraft.coachingHours}
+                  onChange={(e) => updateNewDraft({ coachingHours: e.target.value })}
+                  placeholder="0"
+                  className={cellInputClass}
+                />
+              </td>
+              <td className="px-3 pb-3 pt-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={newDraft.officeHours}
+                  onChange={(e) => updateNewDraft({ officeHours: e.target.value })}
+                  placeholder="0"
+                  className={cellInputClass}
+                />
+              </td>
+              <td className="px-3 pb-3 pt-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={newDraft.totalPay}
+                  onChange={(e) => updateNewDraft({ totalPay: e.target.value })}
+                  placeholder="Auto"
+                  className={cellPayClass}
+                />
+              </td>
+              <td className="px-3 pb-3 pt-2">
+                <input
+                  type="date"
+                  value={newDraft.payDate}
+                  onChange={(e) => updateNewDraft({ payDate: e.target.value })}
+                  onClick={openPicker}
+                  className={cellInputClass}
+                />
+              </td>
+              <td className="px-3 pb-3 pt-2">
+                <input
+                  type="text"
+                  value={newDraft.notes}
+                  onChange={(e) => updateNewDraft({ notes: e.target.value })}
+                  placeholder="Notes..."
+                  className={cellInputClass}
+                />
+              </td>
+              <td className="rounded-r-2xl px-3 pb-3 pt-2">
+                <button
+                  type="button"
+                  onClick={saveNew}
+                  disabled={savingNew || !newDraft.weekEndingDate || !newDraft.staffUserId}
+                  className={ownerIconButtonSuccessClass}
+                  title="Save new entry"
+                >
+                  <Check size={14} />
+                </button>
+              </td>
+            </tr>
+
+            {/* Divider */}
+            <tr>
+              <td colSpan={8} className="px-3 pb-1 pt-1">
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-[var(--line)]" />
+                  <span className="text-xs font-medium uppercase tracking-widest text-[var(--text-soft)]">
+                    Payroll Entries
+                  </span>
+                  <div className="h-px flex-1 bg-[var(--line)]" />
+                </div>
+              </td>
+            </tr>
+
             {loading ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-sm text-[var(--text-soft)]">
@@ -434,7 +534,7 @@ export default function OwnerPayrollClient() {
             ) : entries.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-sm text-[var(--text-soft)]">
-                  No payroll entries yet. Use the row below to add the first one.
+                  No payroll entries yet. Use the row above to add the first one.
                 </td>
               </tr>
             ) : (
@@ -613,105 +713,6 @@ export default function OwnerPayrollClient() {
               })
             )}
 
-            {/* Divider */}
-            <tr>
-              <td colSpan={8} className="px-3 pb-1 pt-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-px flex-1 bg-[var(--line)]" />
-                  <span className="text-xs font-medium uppercase tracking-widest text-[var(--text-soft)]">
-                    New Entry
-                  </span>
-                  <div className="h-px flex-1 bg-[var(--line)]" />
-                </div>
-              </td>
-            </tr>
-
-            {/* Blank input row */}
-            <tr ref={newRowRef}>
-              <td className="rounded-l-2xl px-3 pb-3 pt-2">
-                <input
-                  type="date"
-                  value={newDraft.weekEndingDate}
-                  onChange={(e) => updateNewDraft({ weekEndingDate: e.target.value })}
-                  onClick={openPicker}
-                  className={cellInputClass}
-                />
-              </td>
-              <td className="px-3 pb-3 pt-2">
-                <select
-                  value={newDraft.staffUserId}
-                  onChange={(e) => updateNewDraft({ staffUserId: e.target.value })}
-                  className={cellSelectClass}
-                >
-                  <option value="">Select staff...</option>
-                  {staffList.map((s) => (
-                    <option key={s.userId} value={s.userId}>{s.name}</option>
-                  ))}
-                </select>
-              </td>
-              <td className="px-3 pb-3 pt-2">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={newDraft.coachingHours}
-                  onChange={(e) => updateNewDraft({ coachingHours: e.target.value })}
-                  placeholder="0"
-                  className={cellInputClass}
-                />
-              </td>
-              <td className="px-3 pb-3 pt-2">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={newDraft.officeHours}
-                  onChange={(e) => updateNewDraft({ officeHours: e.target.value })}
-                  placeholder="0"
-                  className={cellInputClass}
-                />
-              </td>
-              <td className="px-3 pb-3 pt-2">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={newDraft.totalPay}
-                  onChange={(e) => updateNewDraft({ totalPay: e.target.value })}
-                  placeholder="Auto"
-                  className={cellPayClass}
-                />
-              </td>
-              <td className="px-3 pb-3 pt-2">
-                <input
-                  type="date"
-                  value={newDraft.payDate}
-                  onChange={(e) => updateNewDraft({ payDate: e.target.value })}
-                  onClick={openPicker}
-                  className={cellInputClass}
-                />
-              </td>
-              <td className="px-3 pb-3 pt-2">
-                <input
-                  type="text"
-                  value={newDraft.notes}
-                  onChange={(e) => updateNewDraft({ notes: e.target.value })}
-                  placeholder="Notes..."
-                  className={cellInputClass}
-                />
-              </td>
-              <td className="rounded-r-2xl px-3 pb-3 pt-2">
-                <button
-                  type="button"
-                  onClick={saveNew}
-                  disabled={savingNew || !newDraft.weekEndingDate || !newDraft.staffUserId}
-                  className={ownerIconButtonSuccessClass}
-                  title="Save new entry"
-                >
-                  <Check size={14} />
-                </button>
-              </td>
-            </tr>
           </tbody>
         </OwnerDataTable>
       </OwnerSectionCard>
