@@ -134,7 +134,7 @@ export default function OwnerPayrollClient() {
 
   type SortColumn = "weekEndingDate" | "staffName" | "coachingHours" | "officeHours" | "totalPay" | "payDate";
   const [sortColumn, setSortColumn] = useState<SortColumn>("weekEndingDate");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   // Initialize drafts for newly loaded entries
   useEffect(() => {
