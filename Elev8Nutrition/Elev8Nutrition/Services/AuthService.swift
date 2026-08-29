@@ -10,16 +10,21 @@ final class AuthService: ObservableObject {
 
     let client: SupabaseClient
     private var listenTask: Task<Void, Never>?
+    private var restoreTask: Task<Void, Never>?
 
     init(client: SupabaseClient) {
         self.client = client
         listenTask = Task { [weak self] in
             await self?.listenForAuthChanges()
         }
+        restoreTask = Task { [weak self] in
+            await self?.restorePersistedSession()
+        }
     }
 
     deinit {
         listenTask?.cancel()
+        restoreTask?.cancel()
     }
 
     var userId: UUID? { session?.user.id }
@@ -63,12 +68,29 @@ final class AuthService: ObservableObject {
     private func listenForAuthChanges() async {
         for await (event, session) in client.auth.authStateChanges {
             switch event {
-            case .initialSession, .signedIn, .signedOut, .tokenRefreshed, .userUpdated:
+            case .initialSession:
+                if let session {
+                    self.session = session
+                }
+                finishRestoring()
+            case .signedOut:
+                self.session = nil
+                finishRestoring()
+            case .signedIn, .tokenRefreshed, .userUpdated:
                 self.session = session
                 finishRestoring()
             default:
                 break
             }
+        }
+    }
+
+    private func restorePersistedSession() async {
+        do {
+            session = try await client.auth.session
+        } catch {
+            // No persisted session is the normal signed-out state. The auth
+            // stream remains active for email and OAuth sign-ins.
         }
     }
 
