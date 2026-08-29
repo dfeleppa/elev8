@@ -9,16 +9,23 @@ final class AuthService: ObservableObject {
 
     let client: SupabaseClient
     private var listenTask: Task<Void, Never>?
+    private var restoreTimeoutTask: Task<Void, Never>?
 
     init(client: SupabaseClient) {
         self.client = client
         listenTask = Task { [weak self] in
             await self?.listenForAuthChanges()
         }
+        restoreTimeoutTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            self?.finishRestoring()
+        }
     }
 
     deinit {
         listenTask?.cancel()
+        restoreTimeoutTask?.cancel()
     }
 
     var userId: UUID? { session?.user.id }
@@ -55,10 +62,16 @@ final class AuthService: ObservableObject {
             switch event {
             case .initialSession, .signedIn, .signedOut, .tokenRefreshed, .userUpdated:
                 self.session = session
-                isRestoring = false
+                finishRestoring()
             default:
                 break
             }
         }
+    }
+
+    private func finishRestoring() {
+        isRestoring = false
+        restoreTimeoutTask?.cancel()
+        restoreTimeoutTask = nil
     }
 }
