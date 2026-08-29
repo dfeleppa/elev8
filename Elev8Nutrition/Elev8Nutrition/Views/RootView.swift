@@ -8,21 +8,30 @@ struct RootView: View {
             if let message = session.configurationError {
                 ConfigMissingView(message: message)
             } else if let auth = session.auth, let store = session.store {
-                Group {
-                    if auth.isRestoring {
-                        ProgressView("Restoring session…")
-                            .tint(AppTheme.cyan)
-                    } else if auth.isSignedIn {
-                        MainTabView()
-                            .environmentObject(auth)
-                            .environmentObject(store)
-                    } else {
-                        AuthView()
-                            .environmentObject(auth)
-                    }
-                }
+                AuthenticatedRootView(auth: auth, store: store)
             } else {
                 ProgressView()
+            }
+        }
+    }
+}
+
+private struct AuthenticatedRootView: View {
+    @ObservedObject var auth: AuthService
+    let store: NutritionStore
+
+    var body: some View {
+        Group {
+            if auth.isRestoring {
+                ProgressView("Restoring session…")
+                    .tint(AppTheme.cyan)
+            } else if auth.isSignedIn {
+                MainTabView()
+                    .environmentObject(auth)
+                    .environmentObject(store)
+            } else {
+                AuthView()
+                    .environmentObject(auth)
             }
         }
     }
