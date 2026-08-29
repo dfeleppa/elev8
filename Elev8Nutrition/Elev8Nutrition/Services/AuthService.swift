@@ -1,4 +1,5 @@
 import Foundation
+import AuthenticationServices
 import Supabase
 
 @MainActor
@@ -28,6 +29,15 @@ final class AuthService: ObservableObject {
     func signIn(email: String, password: String) async throws {
         lastError = nil
         let session = try await client.auth.signIn(email: email, password: password)
+        self.session = session
+    }
+
+    func signInWithGoogle() async throws {
+        lastError = nil
+        let session = try await client.auth.signInWithOAuth(
+            provider: .google,
+            redirectTo: AppEnvironment.oauthRedirectURL
+        )
         self.session = session
     }
 

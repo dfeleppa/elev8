@@ -2,6 +2,8 @@ import Foundation
 import Supabase
 
 enum AppEnvironment {
+    static let oauthRedirectURL = URL(string: "elev8nutrition://auth-callback")!
+
     static var supabaseURLString: String {
         (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -29,7 +31,10 @@ enum AppEnvironment {
             supabaseURL: url,
             supabaseKey: supabaseAnonKey,
             options: SupabaseClientOptions(
-                auth: .init(emitLocalSessionAsInitialSession: true)
+                auth: .init(
+                    redirectToURL: oauthRedirectURL,
+                    emitLocalSessionAsInitialSession: true
+                )
             )
         )
     }

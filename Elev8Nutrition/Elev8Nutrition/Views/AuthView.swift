@@ -25,6 +25,28 @@ struct AuthView: View {
                     }
 
                     VStack(spacing: 14) {
+                        Button(action: signInWithGoogle) {
+                            HStack(spacing: 10) {
+                                Image(systemName: "g.circle.fill")
+                                    .font(.title3)
+                                Text("Continue with Google")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.primary)
+                        .disabled(isWorking)
+
+                        HStack(spacing: 12) {
+                            Divider()
+                            Text("or")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            Divider()
+                        }
+
                         TextField("Email", text: $email)
                             .textContentType(.username)
                             .keyboardType(.emailAddress)
@@ -89,6 +111,20 @@ struct AuthView: View {
                 } else {
                     try await auth.signIn(email: email.trimmingCharacters(in: .whitespacesAndNewlines), password: password)
                 }
+            } catch {
+                message = error.localizedDescription
+            }
+        }
+    }
+
+    private func signInWithGoogle() {
+        isWorking = true
+        message = nil
+        needsConfirmation = false
+        Task {
+            defer { isWorking = false }
+            do {
+                try await auth.signInWithGoogle()
             } catch {
                 message = error.localizedDescription
             }

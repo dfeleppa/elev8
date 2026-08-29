@@ -7,6 +7,7 @@ The client uses **Supabase Auth (email)** plus the **anon key**. Row Level Secur
 ## Screens
 
 - **Sign in / Sign up** — email + password against Supabase Auth
+- **Google sign-in** — Supabase Google OAuth with a PKCE system-browser flow
 - **Today** — date navigation, large calorie totals vs targets, remaining macros, meals (breakfast / lunch / dinner / snack), add / edit / delete entries
 - **Fast log** — search custom foods, tap one, pick a meal, log it onto the selected day
 - **Foods** — search and add custom foods (`nutrition_custom_foods`)
@@ -41,6 +42,9 @@ Do **not** put `SUPABASE_SERVICE_ROLE_KEY` anywhere in this target.
 1. Open `Elev8Nutrition.xcodeproj`.
 2. Wait for SPM to resolve `supabase-swift`.
 3. Select an iPhone simulator or device and run.
+
+For Google sign-in, enable Google under Supabase Auth providers and add
+`elev8nutrition://auth-callback` to the Supabase redirect URL allow list.
 
 If the first launch shows “Supabase not configured”, the placeholders in `Config.xcconfig` are still in place.
 
