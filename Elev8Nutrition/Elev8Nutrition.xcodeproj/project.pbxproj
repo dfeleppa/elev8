@@ -1,0 +1,390 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E80100000000000000000002 /* Elev8NutritionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000001 /* Elev8NutritionApp.swift */; };
+		E80100000000000000000004 /* NutritionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000003 /* NutritionModels.swift */; };
+		E80100000000000000000006 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000005 /* AppEnvironment.swift */; };
+		E80100000000000000000008 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000007 /* AuthService.swift */; };
+		E8010000000000000000000A /* NutritionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000009 /* NutritionStore.swift */; };
+		E8010000000000000000000C /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8010000000000000000000B /* AppTheme.swift */; };
+		E8010000000000000000000E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8010000000000000000000D /* RootView.swift */; };
+		E80100000000000000000010 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8010000000000000000000F /* AuthView.swift */; };
+		E80100000000000000000012 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000011 /* TodayView.swift */; };
+		E80100000000000000000014 /* EntryEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000013 /* EntryEditorView.swift */; };
+		E80100000000000000000016 /* FoodsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000015 /* FoodsView.swift */; };
+		E80100000000000000000018 /* FastLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000017 /* FastLogView.swift */; };
+		E8010000000000000000001A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000019 /* SettingsView.swift */; };
+		E8010000000000000000001C /* MacroViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8010000000000000000001B /* MacroViews.swift */; };
+		E8010000000000000000001E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E8010000000000000000001D /* Assets.xcassets */; };
+		E80100000000000000000037 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E80100000000000000000036 /* Supabase */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		E80100000000000000000001 /* Elev8NutritionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Elev8NutritionApp.swift; sourceTree = "<group>"; };
+		E80100000000000000000003 /* NutritionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionModels.swift; sourceTree = "<group>"; };
+		E80100000000000000000005 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		E80100000000000000000007 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		E80100000000000000000009 /* NutritionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionStore.swift; sourceTree = "<group>"; };
+		E8010000000000000000000B /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		E8010000000000000000000D /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		E8010000000000000000000F /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		E80100000000000000000011 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		E80100000000000000000013 /* EntryEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEditorView.swift; sourceTree = "<group>"; };
+		E80100000000000000000015 /* FoodsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodsView.swift; sourceTree = "<group>"; };
+		E80100000000000000000017 /* FastLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastLogView.swift; sourceTree = "<group>"; };
+		E80100000000000000000019 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E8010000000000000000001B /* MacroViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacroViews.swift; sourceTree = "<group>"; };
+		E8010000000000000000001D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E8010000000000000000001F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E80100000000000000000020 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		E80100000000000000000021 /* Elev8Nutrition.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Elev8Nutrition.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E8010000000000000000002B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E80100000000000000000037 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E80100000000000000000022 = {
+			isa = PBXGroup;
+			children = (
+				E80100000000000000000024 /* Elev8Nutrition */,
+				E80100000000000000000023 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E80100000000000000000023 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E80100000000000000000021 /* Elev8Nutrition.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E80100000000000000000024 /* Elev8Nutrition */ = {
+			isa = PBXGroup;
+			children = (
+				E80100000000000000000001 /* Elev8NutritionApp.swift */,
+				E80100000000000000000025 /* Models */,
+				E80100000000000000000026 /* Services */,
+				E80100000000000000000027 /* Theme */,
+				E80100000000000000000028 /* Views */,
+				E8010000000000000000001D /* Assets.xcassets */,
+				E8010000000000000000001F /* Info.plist */,
+				E80100000000000000000020 /* Config.xcconfig */,
+			);
+			path = Elev8Nutrition;
+			sourceTree = "<group>";
+		};
+		E80100000000000000000025 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E80100000000000000000003 /* NutritionModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E80100000000000000000026 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E80100000000000000000005 /* AppEnvironment.swift */,
+				E80100000000000000000007 /* AuthService.swift */,
+				E80100000000000000000009 /* NutritionStore.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E80100000000000000000027 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				E8010000000000000000000B /* AppTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		E80100000000000000000028 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E8010000000000000000000D /* RootView.swift */,
+				E8010000000000000000000F /* AuthView.swift */,
+				E80100000000000000000011 /* TodayView.swift */,
+				E80100000000000000000013 /* EntryEditorView.swift */,
+				E80100000000000000000015 /* FoodsView.swift */,
+				E80100000000000000000017 /* FastLogView.swift */,
+				E80100000000000000000019 /* SettingsView.swift */,
+				E80100000000000000000029 /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E80100000000000000000029 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				E8010000000000000000001B /* MacroViews.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E8010000000000000000002D /* Elev8Nutrition */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E80100000000000000000034 /* Build configuration list for PBXNativeTarget "Elev8Nutrition" */;
+			buildPhases = (
+				E8010000000000000000002A /* Sources */,
+				E8010000000000000000002B /* Frameworks */,
+				E8010000000000000000002C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Elev8Nutrition;
+			packageProductDependencies = (
+				E80100000000000000000036 /* Supabase */,
+			);
+			productName = Elev8Nutrition;
+			productReference = E80100000000000000000021 /* Elev8Nutrition.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E8010000000000000000002E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					E8010000000000000000002D = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = E80100000000000000000033 /* Build configuration list for PBXProject "Elev8Nutrition" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E80100000000000000000022;
+			packageReferences = (
+				E80100000000000000000035 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
+			productRefGroup = E80100000000000000000023 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E8010000000000000000002D /* Elev8Nutrition */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E8010000000000000000002C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8010000000000000000001E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E8010000000000000000002A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E80100000000000000000002 /* Elev8NutritionApp.swift in Sources */,
+				E80100000000000000000004 /* NutritionModels.swift in Sources */,
+				E80100000000000000000006 /* AppEnvironment.swift in Sources */,
+				E80100000000000000000008 /* AuthService.swift in Sources */,
+				E8010000000000000000000A /* NutritionStore.swift in Sources */,
+				E8010000000000000000000C /* AppTheme.swift in Sources */,
+				E8010000000000000000000E /* RootView.swift in Sources */,
+				E80100000000000000000010 /* AuthView.swift in Sources */,
+				E80100000000000000000012 /* TodayView.swift in Sources */,
+				E80100000000000000000014 /* EntryEditorView.swift in Sources */,
+				E80100000000000000000016 /* FoodsView.swift in Sources */,
+				E80100000000000000000018 /* FastLogView.swift in Sources */,
+				E8010000000000000000001A /* SettingsView.swift in Sources */,
+				E8010000000000000000001C /* MacroViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E8010000000000000000002F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E80100000000000000000020 /* Config.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E80100000000000000000030 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E80100000000000000000020 /* Config.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E80100000000000000000031 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Elev8Nutrition/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Elev8;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.elev8.nutrition;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		E80100000000000000000032 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Elev8Nutrition/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Elev8;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.elev8.nutrition;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E80100000000000000000033 /* Build configuration list for PBXProject "Elev8Nutrition" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E8010000000000000000002F /* Debug */,
+				E80100000000000000000030 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E80100000000000000000034 /* Build configuration list for PBXNativeTarget "Elev8Nutrition" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E80100000000000000000031 /* Debug */,
+				E80100000000000000000032 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E80100000000000000000035 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E80100000000000000000036 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E80100000000000000000035 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E8010000000000000000002E /* Project object */;
+}

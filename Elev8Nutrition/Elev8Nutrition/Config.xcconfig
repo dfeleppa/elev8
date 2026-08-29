@@ -1,0 +1,14 @@
+// Elev8 iOS nutrition client — public Supabase config only.
+// Never put SUPABASE_SERVICE_ROLE_KEY in this app.
+//
+// Match the web app variables:
+//   NEXT_PUBLIC_SUPABASE_URL       -> SUPABASE_URL
+//   NEXT_PUBLIC_SUPABASE_ANON_KEY  -> SUPABASE_ANON_KEY
+// SUPABASE_URL is also accepted by the server as a non-public alias.
+//
+// xcconfig treats // as a comment, so $() is used to emit a real URL.
+
+SUPABASE_URL = https:/$()/YOUR-PROJECT.supabase.co
+SUPABASE_ANON_KEY = YOUR_SUPABASE_ANON_KEY
+
+#include? "Config.local.xcconfig"

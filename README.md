@@ -61,3 +61,7 @@ Custom MCP apps are currently supported on ChatGPT web, not in the native ChatGP
 - `src/app/globals.css` defines the gradient background, glass panels, and motion helpers.
 
 Feel free to adjust the mock data in `page.tsx` to connect live sources or expand the UI with additional sections.
+
+### Native iOS nutrition (SwiftUI)
+
+`Elev8Nutrition/` is a native SwiftUI iPhone app that signs into the same Supabase project as this web app and reads/writes `nutrition_days`, `nutrition_entries`, and `nutrition_custom_foods`. Open `Elev8Nutrition/Elev8Nutrition.xcodeproj`, copy `Config.local.xcconfig.example` to `Config.local.xcconfig`, and set `SUPABASE_URL` / `SUPABASE_ANON_KEY` (same values as `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
