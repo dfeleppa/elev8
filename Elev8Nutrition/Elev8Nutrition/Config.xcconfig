@@ -8,7 +8,12 @@
 //
 // xcconfig treats // as a comment, so $() is used to emit a real URL.
 
-SUPABASE_URL = https:/$()/YOUR-PROJECT.supabase.co
-SUPABASE_ANON_KEY = YOUR_SUPABASE_ANON_KEY
+NEXT_PUBLIC_SUPABASE_URL = https:/$()/YOUR-PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY = YOUR_SUPABASE_ANON_KEY
 
 #include? "Config.local.xcconfig"
+
+// Keep configuration names aligned with Vercel, then expose the names used
+// by Info.plist and AppEnvironment.
+SUPABASE_URL = $(NEXT_PUBLIC_SUPABASE_URL)
+SUPABASE_ANON_KEY = $(NEXT_PUBLIC_SUPABASE_ANON_KEY)

@@ -22,14 +22,14 @@ The client uses **Supabase Auth (email)** plus the **anon key**. Row Level Secur
 ## Configure Supabase
 
 1. Copy values from the web app env (`.env.local`):
-   - `NEXT_PUBLIC_SUPABASE_URL` → `SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` → `SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 2. Either edit `Elev8Nutrition/Config.xcconfig` or copy `Elev8Nutrition/Config.local.xcconfig.example` to `Elev8Nutrition/Config.local.xcconfig` (gitignored).
 3. xcconfig treats `//` as a comment. Keep the `$()` split in the URL:
 
 ```
-SUPABASE_URL = https:/$()/YOUR-PROJECT.supabase.co
-SUPABASE_ANON_KEY = eyJ...
+NEXT_PUBLIC_SUPABASE_URL = https:/$()/YOUR-PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJ...
 ```
 
 Those build settings are expanded into `Info.plist` as `SUPABASE_URL` and `SUPABASE_ANON_KEY`. `AppEnvironment` reads them at runtime.
