@@ -17,7 +17,7 @@ struct SettingsView: View {
             Form {
                 Section("Account") {
                     LabeledContent("Email", value: auth.email ?? "—")
-                    if let id = auth.userId {
+                    if let id = auth.memberId {
                         LabeledContent("Member id") {
                             Text(id.uuidString.lowercased())
                                 .font(.caption.monospaced())
@@ -46,7 +46,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Daily targets")
                 } footer: {
-                    Text("Writes calorie_target, protein_target, carbs_target, and fat_target on nutrition_days for the date selected in Today. RLS keeps rows scoped to auth.uid().")
+                    Text("Writes calorie_target, protein_target, carbs_target, and fat_target on nutrition_days for the date selected in Today. RLS keeps rows scoped to your linked Elev8 member account.")
                 }
 
                 if let message {

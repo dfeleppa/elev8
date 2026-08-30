@@ -54,7 +54,7 @@ struct MainTabView: View {
         .task {
             await store.refreshAll()
         }
-        .onChange(of: auth.userId) { _, _ in
+        .onChange(of: auth.memberId) { _, _ in
             Task { await store.refreshAll() }
         }
     }

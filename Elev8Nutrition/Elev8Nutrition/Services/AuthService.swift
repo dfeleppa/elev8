@@ -5,6 +5,7 @@ import Supabase
 @MainActor
 final class AuthService: ObservableObject {
     @Published private(set) var session: Session?
+    @Published private(set) var memberId: UUID?
     @Published private(set) var isRestoring = false
     @Published var lastError: String?
 
@@ -34,7 +35,7 @@ final class AuthService: ObservableObject {
     func signIn(email: String, password: String) async throws {
         lastError = nil
         let session = try await client.auth.signIn(email: email, password: password)
-        self.session = session
+        await applySession(session)
     }
 
     func signInWithGoogle() async throws {
@@ -43,7 +44,7 @@ final class AuthService: ObservableObject {
             provider: .google,
             redirectTo: AppEnvironment.oauthRedirectURL
         )
-        self.session = session
+        await applySession(session)
     }
 
     /// Returns `true` when a session exists immediately. `false` means email confirmation is required.
@@ -51,7 +52,7 @@ final class AuthService: ObservableObject {
     func signUp(email: String, password: String) async throws -> Bool {
         lastError = nil
         let response = try await client.auth.signUp(email: email, password: password)
-        session = response.session
+        await applySession(response.session)
         return response.session != nil
     }
 
@@ -63,6 +64,7 @@ final class AuthService: ObservableObject {
             lastError = error.localizedDescription
         }
         session = nil
+        memberId = nil
     }
 
     private func listenForAuthChanges() async {
@@ -70,14 +72,15 @@ final class AuthService: ObservableObject {
             switch event {
             case .initialSession:
                 if let session {
-                    self.session = session
+                    await applySession(session)
                 }
                 finishRestoring()
             case .signedOut:
                 self.session = nil
+                memberId = nil
                 finishRestoring()
             case .signedIn, .tokenRefreshed, .userUpdated:
-                self.session = session
+                await applySession(session)
                 finishRestoring()
             default:
                 break
@@ -87,10 +90,30 @@ final class AuthService: ObservableObject {
 
     private func restorePersistedSession() async {
         do {
-            session = try await client.auth.session
+            await applySession(try await client.auth.session)
         } catch {
             // No persisted session is the normal signed-out state. The auth
             // stream remains active for email and OAuth sign-ins.
+        }
+    }
+
+    private func applySession(_ session: Session?) async {
+        self.session = session
+        guard session != nil else {
+            memberId = nil
+            return
+        }
+
+        do {
+            let resolvedMemberId: UUID = try await client
+                .rpc("mobile_app_user_id")
+                .execute()
+                .value
+            memberId = resolvedMemberId
+            lastError = nil
+        } catch {
+            memberId = nil
+            lastError = "Your signed-in account is not linked to an Elev8 member profile."
         }
     }
 

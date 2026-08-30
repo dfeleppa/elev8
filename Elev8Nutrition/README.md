@@ -2,7 +2,7 @@
 
 Native SwiftUI iPhone app that talks to Daniel Feleppa's existing Elev8 Supabase project. It reuses `nutrition_days`, `nutrition_entries`, and `nutrition_custom_foods` from `supabase.sql`. No new tables.
 
-The client uses **Supabase Auth (email)** plus the **anon key**. Row Level Security is `member_id = auth.uid()`. The service-role key must never ship in this app.
+The client uses **Supabase Auth** plus the **anon key**. It resolves `auth.uid()` to the existing `app_users.id` through `mobile_app_user_id()`, and Row Level Security scopes nutrition rows to that linked member ID. The service-role key must never ship in this app.
 
 ## Screens
 

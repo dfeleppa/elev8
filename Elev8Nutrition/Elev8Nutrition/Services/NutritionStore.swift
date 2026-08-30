@@ -54,7 +54,7 @@ final class NutritionStore: ObservableObject {
     }
 
     func refreshDay() async {
-        guard let memberId = auth.userId else { return }
+        guard let memberId = auth.memberId else { return }
         isLoadingDay = true
         errorMessage = nil
         defer { isLoadingDay = false }
@@ -90,7 +90,7 @@ final class NutritionStore: ObservableObject {
     }
 
     func refreshFoods() async {
-        guard let memberId = auth.userId else { return }
+        guard let memberId = auth.memberId else { return }
         isLoadingFoods = true
         defer { isLoadingFoods = false }
 
@@ -117,7 +117,7 @@ final class NutritionStore: ObservableObject {
     @discardableResult
     func ensureDay() async throws -> NutritionDay {
         if let day { return day }
-        guard let memberId = auth.userId else { throw NutritionError.notSignedIn }
+        guard let memberId = auth.memberId else { throw NutritionError.notSignedIn }
 
         let inserted: NutritionDay = try await client
             .from("nutrition_days")
@@ -142,7 +142,7 @@ final class NutritionStore: ObservableObject {
     }
 
     func saveTargets(calories: Double?, protein: Double?, carbs: Double?, fat: Double?) async throws {
-        guard let memberId = auth.userId else { throw NutritionError.notSignedIn }
+        guard let memberId = auth.memberId else { throw NutritionError.notSignedIn }
 
         let updated: NutritionDay = try await client
             .from("nutrition_days")
@@ -174,7 +174,7 @@ final class NutritionStore: ObservableObject {
         carbs: Double?,
         fat: Double?
     ) async throws {
-        guard let memberId = auth.userId else { throw NutritionError.notSignedIn }
+        guard let memberId = auth.memberId else { throw NutritionError.notSignedIn }
         let day = try await ensureDay()
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw NutritionError.message("Food name is required.") }
@@ -229,7 +229,7 @@ final class NutritionStore: ObservableObject {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw NutritionError.message("Food name is required.") }
 
-        guard let memberId = auth.userId else { throw NutritionError.notSignedIn }
+        guard let memberId = auth.memberId else { throw NutritionError.notSignedIn }
         let updated: NutritionEntry = try await client
             .from("nutrition_entries")
             .update(
@@ -256,7 +256,7 @@ final class NutritionStore: ObservableObject {
     }
 
     func deleteEntry(_ entry: NutritionEntry) async throws {
-        guard let memberId = auth.userId else { throw NutritionError.notSignedIn }
+        guard let memberId = auth.memberId else { throw NutritionError.notSignedIn }
         try await client
             .from("nutrition_entries")
             .delete()
@@ -267,7 +267,7 @@ final class NutritionStore: ObservableObject {
     }
 
     func addFood(name: String, calories: Double?, protein: Double?, carbs: Double?, fat: Double?) async throws {
-        guard let memberId = auth.userId else { throw NutritionError.notSignedIn }
+        guard let memberId = auth.memberId else { throw NutritionError.notSignedIn }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw NutritionError.message("Food name is required.") }
 
@@ -292,7 +292,7 @@ final class NutritionStore: ObservableObject {
     }
 
     func deleteFood(_ food: CustomFood) async throws {
-        guard let memberId = auth.userId else { throw NutritionError.notSignedIn }
+        guard let memberId = auth.memberId else { throw NutritionError.notSignedIn }
         try await client
             .from("nutrition_custom_foods")
             .delete()
