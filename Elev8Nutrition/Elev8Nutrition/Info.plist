@@ -17,6 +17,8 @@
 	<string>$(SUPABASE_URL)</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Elev8 reads your active and resting energy, body weight, and body fat to sync your health dashboard and estimate daily metabolism.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

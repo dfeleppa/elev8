@@ -12,6 +12,7 @@ The client uses **Supabase Auth** plus the **anon key**. It resolves `auth.uid()
 - **Fast log** — search custom foods, tap one, pick a meal, log it onto the selected day
 - **Foods** — search and add custom foods (`nutrition_custom_foods`)
 - **Settings** — write calorie / protein / carbs / fat targets onto `nutrition_days` for the date selected in Today, plus sign out
+- **Apple Health** — read and sync active/resting calories, body weight, and body fat; compare today’s burn with Elev8’s learned maintenance estimate
 
 ## Requirements
 

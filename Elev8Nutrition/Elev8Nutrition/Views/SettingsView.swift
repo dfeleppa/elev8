@@ -30,6 +30,28 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    LabeledContent("Learned maintenance", value: calorieText(store.maintenanceCalories))
+                    LabeledContent("Apple resting today", value: calorieText(store.healthSnapshot.restingCalories))
+                    LabeledContent("Apple active today", value: calorieText(store.healthSnapshot.activeCalories))
+                    LabeledContent("Estimated burn today", value: calorieText(store.healthSnapshot.estimatedBurn))
+                    LabeledContent("Latest body weight", value: measurementText(store.healthSnapshot.weightLbs, unit: "lb"))
+                    LabeledContent("Latest body fat", value: measurementText(store.healthSnapshot.bodyFatPercent, unit: "%"))
+                    Button {
+                        Task { await store.syncAppleHealth() }
+                    } label: {
+                        HStack {
+                            if store.isSyncingHealth { ProgressView() }
+                            Label("Sync Apple Health", systemImage: "heart.fill")
+                        }
+                    }
+                    .disabled(store.isSyncingHealth)
+                } header: {
+                    Text("Metabolism & Apple Health")
+                } footer: {
+                    Text("Estimated burn is today’s resting plus active energy from Apple Health. Learned maintenance is Elev8’s longer-term metabolism estimate from nutrition and weight trends.")
+                }
+
+                Section {
                     MacroField(title: "Calories", unit: "kcal", text: $calories)
                     MacroField(title: "Protein", unit: "g", text: $protein)
                     MacroField(title: "Carbs", unit: "g", text: $carbs)
@@ -97,5 +119,13 @@ struct SettingsView: View {
             messageIsError = true
             message = error.localizedDescription
         }
+    }
+
+    private func calorieText(_ value: Double?) -> String {
+        value.map { "\(Int($0.rounded())) kcal" } ?? "—"
+    }
+
+    private func measurementText(_ value: Double?, unit: String) -> String {
+        value.map { "\(String(format: "%.1f", $0)) \(unit)" } ?? "—"
     }
 }

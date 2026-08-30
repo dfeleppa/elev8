@@ -1,4 +1,5 @@
 import Foundation
+import HealthKit
 import Supabase
 
 @MainActor
@@ -10,6 +11,10 @@ final class NutritionStore: ObservableObject {
     @Published var isLoadingDay = false
     @Published var isLoadingFoods = false
     @Published var errorMessage: String?
+    @Published var healthSnapshot = HealthSnapshot()
+    @Published var maintenanceCalories: Double?
+    @Published var metabolismSource: String?
+    @Published var isSyncingHealth = false
 
     private let client: SupabaseClient
     private let auth: AuthService
@@ -50,6 +55,77 @@ final class NutritionStore: ObservableObject {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.refreshDay() }
             group.addTask { await self.refreshFoods() }
+            group.addTask { await self.refreshMetabolism() }
+        }
+    }
+
+    func refreshMetabolism() async {
+        guard let memberId = auth.memberId else { return }
+        do {
+            let plans: [CoachPlanMetabolism] = try await client
+                .from("coach_nutrition_plans")
+                .select("maintenance_calories, maintenance_calories_source, maintenance_calories_estimated_at, effective_date")
+                .eq("member_id", value: memberId)
+                .order("effective_date", ascending: false)
+                .limit(1)
+                .execute()
+                .value
+            maintenanceCalories = plans.first?.maintenanceCalories
+            metabolismSource = plans.first?.maintenanceCaloriesSource
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func syncAppleHealth() async {
+        guard let memberId = auth.memberId else { return }
+        isSyncingHealth = true
+        errorMessage = nil
+        defer { isSyncingHealth = false }
+
+        do {
+            let snapshot = try await HealthKitReader.shared.readTodayAndLatestBodyComposition()
+            healthSnapshot = snapshot
+            var samples: [HealthStatWrite] = []
+            if let value = snapshot.activeCalories {
+                samples.append(.init(memberId: memberId, statKey: "active_calories", value: value, unit: "kcal", entryDate: snapshot.day))
+            }
+            if let value = snapshot.restingCalories {
+                samples.append(.init(memberId: memberId, statKey: "resting_calories", value: value, unit: "kcal", entryDate: snapshot.day))
+            }
+            if let value = snapshot.weightLbs, let date = snapshot.weightDate {
+                samples.append(.init(memberId: memberId, statKey: "body_weight", value: value, unit: "lb", entryDate: date))
+            }
+            if let value = snapshot.bodyFatPercent, let date = snapshot.bodyFatDate {
+                samples.append(.init(memberId: memberId, statKey: "body_fat", value: value, unit: "%", entryDate: date))
+            }
+            for sample in samples {
+                try await saveHealthStat(sample)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func saveHealthStat(_ sample: HealthStatWrite) async throws {
+        let existing: [HealthStatIdentity] = try await client
+            .from("health_stat_entries")
+            .select("id")
+            .eq("member_id", value: sample.memberId)
+            .eq("stat_key", value: sample.statKey)
+            .eq("entry_date", value: sample.entryDate)
+            .limit(1)
+            .execute()
+            .value
+
+        if let id = existing.first?.id {
+            try await client
+                .from("health_stat_entries")
+                .update(HealthStatValueUpdate(value: sample.value, unit: sample.unit))
+                .eq("id", value: id)
+                .execute()
+        } else {
+            try await client.from("health_stat_entries").insert(sample).execute()
         }
     }
 
@@ -300,5 +376,112 @@ final class NutritionStore: ObservableObject {
             .eq("member_id", value: memberId)
             .execute()
         foods.removeAll { $0.id == food.id }
+    }
+}
+
+struct HealthSnapshot {
+    var day = DayFormat.isoDay(from: Date())
+    var activeCalories: Double?
+    var restingCalories: Double?
+    var weightLbs: Double?
+    var weightDate: String?
+    var bodyFatPercent: Double?
+    var bodyFatDate: String?
+
+    var estimatedBurn: Double? {
+        guard let activeCalories, let restingCalories else { return nil }
+        return activeCalories + restingCalories
+    }
+}
+
+private struct CoachPlanMetabolism: Decodable {
+    let maintenanceCalories: Double
+    let maintenanceCaloriesSource: String
+
+    enum CodingKeys: String, CodingKey {
+        case maintenanceCalories = "maintenance_calories"
+        case maintenanceCaloriesSource = "maintenance_calories_source"
+    }
+}
+
+private struct HealthStatIdentity: Decodable { let id: UUID }
+
+private struct HealthStatWrite: Encodable {
+    let memberId: UUID
+    let statKey: String
+    let value: Double
+    let unit: String
+    let entryDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case memberId = "member_id"
+        case statKey = "stat_key"
+        case value, unit
+        case entryDate = "entry_date"
+    }
+}
+
+private struct HealthStatValueUpdate: Encodable {
+    let value: Double
+    let unit: String
+}
+
+private final class HealthKitReader: @unchecked Sendable {
+    static let shared = HealthKitReader()
+    private let store = HKHealthStore()
+
+    func readTodayAndLatestBodyComposition() async throws -> HealthSnapshot {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            throw NutritionError.message("Apple Health is not available on this device.")
+        }
+        let active = HKQuantityType(.activeEnergyBurned)
+        let resting = HKQuantityType(.basalEnergyBurned)
+        let weight = HKQuantityType(.bodyMass)
+        let bodyFat = HKQuantityType(.bodyFatPercentage)
+        try await store.requestAuthorization(toShare: [], read: [active, resting, weight, bodyFat])
+
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: Date())
+        let end = calendar.date(byAdding: .day, value: 1, to: start)!
+        async let activeValue = cumulativeSum(type: active, unit: .kilocalorie(), start: start, end: end)
+        async let restingValue = cumulativeSum(type: resting, unit: .kilocalorie(), start: start, end: end)
+        async let weightValue = latest(type: weight, unit: .pound())
+        async let bodyFatValue = latest(type: bodyFat, unit: .percent(), multiplier: 100)
+        let (activeResult, restingResult, weightResult, bodyFatResult) = try await (activeValue, restingValue, weightValue, bodyFatValue)
+
+        return HealthSnapshot(
+            day: DayFormat.isoDay(from: start),
+            activeCalories: activeResult,
+            restingCalories: restingResult,
+            weightLbs: weightResult?.value,
+            weightDate: weightResult.map { DayFormat.isoDay(from: $0.date) },
+            bodyFatPercent: bodyFatResult?.value,
+            bodyFatDate: bodyFatResult.map { DayFormat.isoDay(from: $0.date) }
+        )
+    }
+
+    private func cumulativeSum(type: HKQuantityType, unit: HKUnit, start: Date, end: Date) async throws -> Double? {
+        try await withCheckedThrowingContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+            let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, result, error in
+                if let error { continuation.resume(throwing: error); return }
+                continuation.resume(returning: result?.sumQuantity()?.doubleValue(for: unit))
+            }
+            store.execute(query)
+        }
+    }
+
+    private func latest(type: HKQuantityType, unit: HKUnit, multiplier: Double = 1) async throws -> (value: Double, date: Date)? {
+        try await withCheckedThrowingContinuation { continuation in
+            let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+            let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { _, samples, error in
+                if let error { continuation.resume(throwing: error); return }
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    continuation.resume(returning: nil); return
+                }
+                continuation.resume(returning: (sample.quantity.doubleValue(for: unit) * multiplier, sample.endDate))
+            }
+            store.execute(query)
+        }
     }
 }

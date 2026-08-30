@@ -11,6 +11,7 @@ struct TodayView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     dateNav
+                    healthSummary
                     calorieHero
                     remainingRow
                     macroBars
@@ -19,7 +20,7 @@ struct TodayView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 32)
             }
-            .refreshable { await store.refreshDay() }
+            .refreshable { await store.refreshAll() }
             .navigationTitle("Today")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -112,6 +113,72 @@ struct TodayView: View {
         .padding(.vertical, 8)
     }
 
+    private var healthSummary: some View {
+        VStack(spacing: 10) {
+            HStack(alignment: .center) {
+                Label("Health", systemImage: "heart.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppTheme.pink)
+                Spacer()
+                Button {
+                    Task { await store.syncAppleHealth() }
+                } label: {
+                    if store.isSyncingHealth {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Sync Apple Health")
+                .disabled(store.isSyncingHealth)
+            }
+
+            HStack(spacing: 0) {
+                HealthSummaryMetric(
+                    label: "Metabolism",
+                    value: healthCalories(store.maintenanceCalories),
+                    detail: store.metabolismSource?.capitalized
+                )
+                Divider().frame(height: 34)
+                HealthSummaryMetric(
+                    label: "Weight",
+                    value: healthMeasurement(store.healthSnapshot.weightLbs, unit: "lb")
+                )
+                Divider().frame(height: 34)
+                HealthSummaryMetric(
+                    label: "Body fat",
+                    value: healthMeasurement(store.healthSnapshot.bodyFatPercent, unit: "%")
+                )
+            }
+
+            HStack(spacing: 12) {
+                healthEnergyLabel("Rest", store.healthSnapshot.restingCalories)
+                healthEnergyLabel("Active", store.healthSnapshot.activeCalories)
+                Spacer(minLength: 0)
+                healthEnergyLabel("Burn", store.healthSnapshot.estimatedBurn, emphasized: true)
+            }
+            .font(.caption2.monospacedDigit())
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func healthCalories(_ value: Double?) -> String {
+        value.map { "\($0.wholeString) kcal" } ?? "—"
+    }
+
+    private func healthMeasurement(_ value: Double?, unit: String) -> String {
+        value.map { "\($0.macroString) \(unit)" } ?? "—"
+    }
+
+    private func healthEnergyLabel(_ label: String, _ value: Double?, emphasized: Bool = false) -> some View {
+        Text("\(label) \(value.map { $0.wholeString } ?? "—")")
+            .foregroundStyle(emphasized ? AppTheme.cyan : .secondary)
+    }
+
     private var remainingRow: some View {
         HStack(spacing: 10) {
             RemainingChip(label: "Protein", remaining: store.remaining.protein, hasTarget: store.day?.proteinTarget != nil, unit: "g")
@@ -168,6 +235,31 @@ struct TodayView: View {
                     .foregroundStyle(AppTheme.pink)
             }
         }
+    }
+}
+
+private struct HealthSummaryMetric: View {
+    let label: String
+    let value: String
+    var detail: String? = nil
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.subheadline.weight(.semibold).monospacedDigit())
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            if let detail {
+                Text(detail)
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
