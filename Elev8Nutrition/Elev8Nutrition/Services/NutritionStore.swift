@@ -17,6 +17,8 @@ final class NutritionStore: ObservableObject {
     @Published var isSyncingHealth = false
     @Published var healthAccessStatus: HealthAccessStatus = .checking
     @Published var lastHealthSyncAt: Date?
+    @Published var healthHistory: [HealthTrendPoint] = []
+    @Published var metabolismHistory: [MetabolismEstimate] = []
 
     private let client: SupabaseClient
     private let auth: AuthService
@@ -77,14 +79,15 @@ final class NutritionStore: ObservableObject {
     func refreshMetabolism() async {
         guard let memberId = auth.memberId else { return }
         do {
-            let plans: [CoachPlanMetabolism] = try await client
+            let plans: [MetabolismEstimate] = try await client
                 .from("coach_nutrition_plans")
                 .select("maintenance_calories, maintenance_calories_source, maintenance_calories_estimated_at, effective_date")
                 .eq("member_id", value: memberId)
                 .order("effective_date", ascending: false)
-                .limit(1)
+                .limit(24)
                 .execute()
                 .value
+            metabolismHistory = plans
             maintenanceCalories = plans.first?.maintenanceCalories
             metabolismSource = plans.first?.maintenanceCaloriesSource
         } catch {
@@ -137,20 +140,29 @@ final class NutritionStore: ObservableObject {
     func loadPersistedHealth() async {
         guard let memberId = auth.memberId else { return }
         do {
-            let rows: [HealthStatRow] = try await client
+            let cutoff = Calendar.current.date(byAdding: .year, value: -1, to: Date()) ?? Date()
+            let rows: [HealthTrendPoint] = try await client
                 .from("health_stat_entries")
-                .select("stat_key, value, unit, entry_date, updated_at")
+                .select("id, stat_key, value, unit, entry_date, updated_at")
                 .eq("member_id", value: memberId)
-                .order("entry_date", ascending: false)
-                .limit(100)
+                .gte("entry_date", value: DayFormat.isoDay(from: cutoff))
+                .order("entry_date", ascending: true)
+                .limit(1000)
                 .execute()
                 .value
 
+            let orderedRows = rows.sorted {
+                if $0.entryDate == $1.entryDate {
+                    return ($0.updatedAt ?? .distantPast) < ($1.updatedAt ?? .distantPast)
+                }
+                return $0.entryDate < $1.entryDate
+            }
+            healthHistory = orderedRows
             let today = DayFormat.isoDay(from: Date())
-            let active = rows.first { $0.statKey == "active_calories" && $0.entryDate == today }
-            let resting = rows.first { $0.statKey == "resting_calories" && $0.entryDate == today }
-            let weight = rows.first { $0.statKey == "body_weight" }
-            let bodyFat = rows.first { $0.statKey == "body_fat" }
+            let active = orderedRows.last { $0.statKey == "active_calories" && $0.entryDate == today }
+            let resting = orderedRows.last { $0.statKey == "resting_calories" && $0.entryDate == today }
+            let weight = orderedRows.last { $0.statKey == "body_weight" }
+            let bodyFat = orderedRows.last { $0.statKey == "body_fat" }
             healthSnapshot = HealthSnapshot(
                 day: today,
                 activeCalories: active?.value,
@@ -160,7 +172,7 @@ final class NutritionStore: ObservableObject {
                 bodyFatPercent: bodyFat?.value,
                 bodyFatDate: bodyFat?.entryDate
             )
-            lastHealthSyncAt = rows.compactMap(\.updatedAt).max()
+            lastHealthSyncAt = orderedRows.compactMap(\.updatedAt).max()
         } catch {
             healthAccessStatus = .failed("Saved health data could not be loaded: \(error.localizedDescription)")
         }
@@ -505,19 +517,34 @@ enum HealthAccessStatus: Equatable {
     }
 }
 
-private struct CoachPlanMetabolism: Decodable {
+struct MetabolismEstimate: Decodable, Identifiable {
     let maintenanceCalories: Double
     let maintenanceCaloriesSource: String
+    let estimatedAt: Date?
+    let effectiveDate: String
+
+    var id: String { effectiveDate }
 
     enum CodingKeys: String, CodingKey {
         case maintenanceCalories = "maintenance_calories"
         case maintenanceCaloriesSource = "maintenance_calories_source"
+        case estimatedAt = "maintenance_calories_estimated_at"
+        case effectiveDate = "effective_date"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        maintenanceCalories = try container.decode(Double.self, forKey: .maintenanceCalories)
+        maintenanceCaloriesSource = try container.decode(String.self, forKey: .maintenanceCaloriesSource)
+        estimatedAt = container.decodeFlexibleDate(forKey: .estimatedAt)
+        effectiveDate = try container.decode(String.self, forKey: .effectiveDate)
     }
 }
 
 private struct HealthStatIdentity: Decodable { let id: UUID }
 
-private struct HealthStatRow: Decodable {
+struct HealthTrendPoint: Decodable, Identifiable {
+    let id: UUID
     let statKey: String
     let value: Double
     let unit: String
@@ -525,6 +552,7 @@ private struct HealthStatRow: Decodable {
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
+        case id
         case statKey = "stat_key"
         case value, unit
         case entryDate = "entry_date"
@@ -533,6 +561,7 @@ private struct HealthStatRow: Decodable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
         statKey = try container.decode(String.self, forKey: .statKey)
         value = try container.decode(Double.self, forKey: .value)
         unit = try container.decode(String.self, forKey: .unit)

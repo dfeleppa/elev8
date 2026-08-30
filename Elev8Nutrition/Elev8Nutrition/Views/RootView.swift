@@ -48,6 +48,8 @@ struct MainTabView: View {
                 .tabItem { Label("Today", systemImage: "flame.fill") }
             FoodsView()
                 .tabItem { Label("Foods", systemImage: "carrot.fill") }
+            TrendsView()
+                .tabItem { Label("Trends", systemImage: "chart.xyaxis.line") }
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }

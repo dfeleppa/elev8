@@ -20,6 +20,7 @@
 		E80100000000000000000016 /* FoodsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000015 /* FoodsView.swift */; };
 		E80100000000000000000018 /* FastLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000017 /* FastLogView.swift */; };
 		E8010000000000000000001A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000019 /* SettingsView.swift */; };
+		E80100000000000000000039 /* TrendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80100000000000000000038 /* TrendsView.swift */; };
 		E8010000000000000000001C /* MacroViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8010000000000000000001B /* MacroViews.swift */; };
 		E8010000000000000000001E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E8010000000000000000001D /* Assets.xcassets */; };
 		E80100000000000000000037 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E80100000000000000000036 /* Supabase */; };
@@ -43,6 +44,7 @@
 		E8010000000000000000001D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E8010000000000000000001F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E80100000000000000000020 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		E80100000000000000000038 /* TrendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendsView.swift; sourceTree = "<group>"; };
 		E80100000000000000000021 /* Elev8Nutrition.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Elev8Nutrition.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -125,6 +127,7 @@
 				E80100000000000000000015 /* FoodsView.swift */,
 				E80100000000000000000017 /* FastLogView.swift */,
 				E80100000000000000000019 /* SettingsView.swift */,
+				E80100000000000000000038 /* TrendsView.swift */,
 				E80100000000000000000029 /* Components */,
 			);
 			path = Views;
@@ -226,6 +229,7 @@
 				E80100000000000000000016 /* FoodsView.swift in Sources */,
 				E80100000000000000000018 /* FastLogView.swift in Sources */,
 				E8010000000000000000001A /* SettingsView.swift in Sources */,
+				E80100000000000000000039 /* TrendsView.swift in Sources */,
 				E8010000000000000000001C /* MacroViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
