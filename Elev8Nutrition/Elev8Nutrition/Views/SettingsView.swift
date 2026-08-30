@@ -36,6 +36,17 @@ struct SettingsView: View {
                     LabeledContent("Estimated burn today", value: calorieText(store.healthSnapshot.estimatedBurn))
                     LabeledContent("Latest body weight", value: measurementText(store.healthSnapshot.weightLbs, unit: "lb"))
                     LabeledContent("Latest body fat", value: measurementText(store.healthSnapshot.bodyFatPercent, unit: "%"))
+                    LabeledContent("Health access") {
+                        Label(store.healthAccessStatus.message, systemImage: store.healthAccessStatus.symbol)
+                            .font(.caption)
+                            .foregroundStyle(store.healthAccessStatus == .ready ? AppTheme.cyan : .secondary)
+                    }
+                    if let syncedAt = store.lastHealthSyncAt {
+                        LabeledContent("Last synced") {
+                            Text(syncedAt.formatted(date: .abbreviated, time: .shortened))
+                                .font(.caption.monospacedDigit())
+                        }
+                    }
                     Button {
                         Task { await store.syncAppleHealth() }
                     } label: {

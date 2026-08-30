@@ -38,6 +38,7 @@ private struct AuthenticatedRootView: View {
 }
 
 struct MainTabView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var auth: AuthService
     @EnvironmentObject private var store: NutritionStore
 
@@ -53,9 +54,14 @@ struct MainTabView: View {
         .tint(AppTheme.cyan)
         .task {
             await store.refreshAll()
+            await store.autoSyncHealthIfAuthorized()
         }
         .onChange(of: auth.memberId) { _, _ in
             Task { await store.refreshAll() }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active else { return }
+            Task { await store.refreshFromForeground() }
         }
     }
 }

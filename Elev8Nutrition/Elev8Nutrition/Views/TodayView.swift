@@ -160,6 +160,19 @@ struct TodayView: View {
                 healthEnergyLabel("Burn", store.healthSnapshot.estimatedBurn, emphasized: true)
             }
             .font(.caption2.monospacedDigit())
+
+            HStack(spacing: 5) {
+                Image(systemName: store.healthAccessStatus.symbol)
+                Text(store.healthAccessStatus.message)
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                if let syncedAt = store.lastHealthSyncAt {
+                    Text(syncedAt, style: .relative)
+                        .lineLimit(1)
+                }
+            }
+            .font(.caption2)
+            .foregroundStyle(healthStatusColor)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
@@ -177,6 +190,15 @@ struct TodayView: View {
     private func healthEnergyLabel(_ label: String, _ value: Double?, emphasized: Bool = false) -> some View {
         Text("\(label) \(value.map { $0.wholeString } ?? "—")")
             .foregroundStyle(emphasized ? AppTheme.cyan : .secondary)
+    }
+
+    private var healthStatusColor: Color {
+        switch store.healthAccessStatus {
+        case .ready: AppTheme.cyan
+        case .checking: .secondary
+        case .needsPermission: AppTheme.pink
+        case .unavailable, .failed: .orange
+        }
     }
 
     private var remainingRow: some View {

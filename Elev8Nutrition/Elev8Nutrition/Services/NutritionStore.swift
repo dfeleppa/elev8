@@ -15,6 +15,8 @@ final class NutritionStore: ObservableObject {
     @Published var maintenanceCalories: Double?
     @Published var metabolismSource: String?
     @Published var isSyncingHealth = false
+    @Published var healthAccessStatus: HealthAccessStatus = .checking
+    @Published var lastHealthSyncAt: Date?
 
     private let client: SupabaseClient
     private let auth: AuthService
@@ -56,7 +58,20 @@ final class NutritionStore: ObservableObject {
             group.addTask { await self.refreshDay() }
             group.addTask { await self.refreshFoods() }
             group.addTask { await self.refreshMetabolism() }
+            group.addTask { await self.loadPersistedHealth() }
+            group.addTask { await self.refreshHealthAccessStatus() }
         }
+    }
+
+    func refreshFromForeground() async {
+        await loadPersistedHealth()
+        await refreshHealthAccessStatus()
+        await autoSyncHealthIfAuthorized()
+    }
+
+    func autoSyncHealthIfAuthorized() async {
+        guard healthAccessStatus == .ready else { return }
+        await syncAppleHealth(requestAuthorization: false)
     }
 
     func refreshMetabolism() async {
@@ -77,15 +92,23 @@ final class NutritionStore: ObservableObject {
         }
     }
 
-    func syncAppleHealth() async {
+    func syncAppleHealth(requestAuthorization: Bool = true) async {
         guard let memberId = auth.memberId else { return }
+        guard !isSyncingHealth else { return }
         isSyncingHealth = true
         errorMessage = nil
         defer { isSyncingHealth = false }
 
         do {
+            if requestAuthorization {
+                try await HealthKitReader.shared.requestAuthorization()
+            } else if try await HealthKitReader.shared.authorizationRequestStatus() == .shouldRequest {
+                healthAccessStatus = .needsPermission
+                return
+            }
+
             let snapshot = try await HealthKitReader.shared.readTodayAndLatestBodyComposition()
-            healthSnapshot = snapshot
+            healthSnapshot = healthSnapshot.merging(snapshot)
             var samples: [HealthStatWrite] = []
             if let value = snapshot.activeCalories {
                 samples.append(.init(memberId: memberId, statKey: "active_calories", value: value, unit: "kcal", entryDate: snapshot.day))
@@ -102,8 +125,57 @@ final class NutritionStore: ObservableObject {
             for sample in samples {
                 try await saveHealthStat(sample)
             }
+            if !samples.isEmpty {
+                lastHealthSyncAt = Date()
+            }
+            healthAccessStatus = .ready
         } catch {
-            errorMessage = error.localizedDescription
+            healthAccessStatus = .failed(error.localizedDescription)
+        }
+    }
+
+    func loadPersistedHealth() async {
+        guard let memberId = auth.memberId else { return }
+        do {
+            let rows: [HealthStatRow] = try await client
+                .from("health_stat_entries")
+                .select("stat_key, value, unit, entry_date, updated_at")
+                .eq("member_id", value: memberId)
+                .order("entry_date", ascending: false)
+                .limit(100)
+                .execute()
+                .value
+
+            let today = DayFormat.isoDay(from: Date())
+            let active = rows.first { $0.statKey == "active_calories" && $0.entryDate == today }
+            let resting = rows.first { $0.statKey == "resting_calories" && $0.entryDate == today }
+            let weight = rows.first { $0.statKey == "body_weight" }
+            let bodyFat = rows.first { $0.statKey == "body_fat" }
+            healthSnapshot = HealthSnapshot(
+                day: today,
+                activeCalories: active?.value,
+                restingCalories: resting?.value,
+                weightLbs: weight?.value,
+                weightDate: weight?.entryDate,
+                bodyFatPercent: bodyFat?.value,
+                bodyFatDate: bodyFat?.entryDate
+            )
+            lastHealthSyncAt = rows.compactMap(\.updatedAt).max()
+        } catch {
+            healthAccessStatus = .failed("Saved health data could not be loaded: \(error.localizedDescription)")
+        }
+    }
+
+    func refreshHealthAccessStatus() async {
+        guard HealthKitReader.isAvailable else {
+            healthAccessStatus = .unavailable
+            return
+        }
+        do {
+            let requestStatus = try await HealthKitReader.shared.authorizationRequestStatus()
+            healthAccessStatus = requestStatus == .shouldRequest ? .needsPermission : .ready
+        } catch {
+            healthAccessStatus = .failed(error.localizedDescription)
         }
     }
 
@@ -392,6 +464,45 @@ struct HealthSnapshot {
         guard let activeCalories, let restingCalories else { return nil }
         return activeCalories + restingCalories
     }
+
+    func merging(_ newer: HealthSnapshot) -> HealthSnapshot {
+        HealthSnapshot(
+            day: newer.day,
+            activeCalories: newer.activeCalories ?? activeCalories,
+            restingCalories: newer.restingCalories ?? restingCalories,
+            weightLbs: newer.weightLbs ?? weightLbs,
+            weightDate: newer.weightDate ?? weightDate,
+            bodyFatPercent: newer.bodyFatPercent ?? bodyFatPercent,
+            bodyFatDate: newer.bodyFatDate ?? bodyFatDate
+        )
+    }
+}
+
+enum HealthAccessStatus: Equatable {
+    case checking
+    case needsPermission
+    case ready
+    case unavailable
+    case failed(String)
+
+    var message: String {
+        switch self {
+        case .checking: "Checking Apple Health…"
+        case .needsPermission: "Tap sync to allow Apple Health access"
+        case .ready: "Apple Health ready"
+        case .unavailable: "Apple Health is unavailable on this device"
+        case .failed(let message): "Sync error: \(message)"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .checking: "clock"
+        case .needsPermission: "hand.raised.fill"
+        case .ready: "checkmark.circle.fill"
+        case .unavailable, .failed: "exclamationmark.triangle.fill"
+        }
+    }
 }
 
 private struct CoachPlanMetabolism: Decodable {
@@ -405,6 +516,30 @@ private struct CoachPlanMetabolism: Decodable {
 }
 
 private struct HealthStatIdentity: Decodable { let id: UUID }
+
+private struct HealthStatRow: Decodable {
+    let statKey: String
+    let value: Double
+    let unit: String
+    let entryDate: String
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case statKey = "stat_key"
+        case value, unit
+        case entryDate = "entry_date"
+        case updatedAt = "updated_at"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        statKey = try container.decode(String.self, forKey: .statKey)
+        value = try container.decode(Double.self, forKey: .value)
+        unit = try container.decode(String.self, forKey: .unit)
+        entryDate = try container.decode(String.self, forKey: .entryDate)
+        updatedAt = container.decodeFlexibleDate(forKey: .updatedAt)
+    }
+}
 
 private struct HealthStatWrite: Encodable {
     let memberId: UUID
@@ -428,17 +563,46 @@ private struct HealthStatValueUpdate: Encodable {
 
 private final class HealthKitReader: @unchecked Sendable {
     static let shared = HealthKitReader()
+    static var isAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
     private let store = HKHealthStore()
 
+    private var readTypes: Set<HKObjectType> {
+        [
+            HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.basalEnergyBurned),
+            HKQuantityType(.bodyMass),
+            HKQuantityType(.bodyFatPercentage)
+        ]
+    }
+
+    func requestAuthorization() async throws {
+        guard Self.isAvailable else {
+            throw NutritionError.message("Apple Health is not available on this device.")
+        }
+        try await store.requestAuthorization(toShare: [], read: readTypes)
+    }
+
+    func authorizationRequestStatus() async throws -> HKAuthorizationRequestStatus {
+        guard Self.isAvailable else { return .unknown }
+        return try await withCheckedThrowingContinuation { continuation in
+            store.getRequestStatusForAuthorization(toShare: [], read: readTypes) { status, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: status)
+                }
+            }
+        }
+    }
+
     func readTodayAndLatestBodyComposition() async throws -> HealthSnapshot {
-        guard HKHealthStore.isHealthDataAvailable() else {
+        guard Self.isAvailable else {
             throw NutritionError.message("Apple Health is not available on this device.")
         }
         let active = HKQuantityType(.activeEnergyBurned)
         let resting = HKQuantityType(.basalEnergyBurned)
         let weight = HKQuantityType(.bodyMass)
         let bodyFat = HKQuantityType(.bodyFatPercentage)
-        try await store.requestAuthorization(toShare: [], read: [active, resting, weight, bodyFat])
 
         let calendar = Calendar.current
         let start = calendar.startOfDay(for: Date())
