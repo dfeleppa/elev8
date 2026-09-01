@@ -383,7 +383,7 @@ private struct AddFoodView: View {
     }
 }
 
-private struct WeeklyAnalysis {
+private struct WeeklyAnalysis: Codable {
     let averageConsumed: Int
     let estimatedMetabolism: Int
     let averageActiveBurn: Int
@@ -406,6 +406,11 @@ private struct WeeklyAnalysis {
         if calorieDelta < 0 { return "Reduce 100 calories and reassess next week" }
         return "Keep calorie and macro targets steady"
     }
+}
+
+private struct CachedWeeklyAnalysis: Codable {
+    let day: String
+    let analysis: WeeklyAnalysis
 }
 
 private struct WeeklyCheckInView: View {
@@ -434,6 +439,8 @@ private struct WeeklyCheckInView: View {
                         }
                         .frame(maxWidth: .infinity).padding(.vertical, 44)
                     } else if let analysis {
+                        Label("Calculated today", systemImage: "checkmark.circle.fill")
+                            .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                         factorCard("Calories consumed", value: analysis.averageConsumed, detail: "Daily average · \(analysis.loggedDays) of 7 days logged", color: .indigo, icon: "fork.knife")
                         factorCard("Estimated metabolism", value: analysis.estimatedMetabolism, detail: "Estimated resting needs from weight and body fat", color: .orange, icon: "flame.fill")
                         factorCard("Exercise & activity", value: analysis.averageActiveBurn, detail: "Daily active-energy average from Apple Health", color: .mint, icon: "figure.run")
@@ -500,6 +507,14 @@ private struct WeeklyCheckInView: View {
 
     private func loadAnalysis() async {
         await MainActor.run { loading = true; errorMessage = nil }
+        if let cached = cachedAnalysisForToday() {
+            await MainActor.run {
+                analysis = cached
+                if weight.isEmpty, let value = cached.weightLb { weight = String(format: "%.1f", value) }
+                loading = false
+            }
+            return
+        }
         do {
             var consumed: [Int] = []
             var health: [HealthSummary] = []
@@ -528,6 +543,7 @@ private struct WeeklyCheckInView: View {
                 weightLb: latest?.weightKg.map { $0 / 0.45359237 },
                 bodyFat: latest?.bodyFatPercent
             )
+            saveAnalysisForToday(result)
             await MainActor.run {
                 analysis = result
                 if weight.isEmpty, let value = result.weightLb { weight = String(format: "%.1f", value) }
@@ -536,6 +552,28 @@ private struct WeeklyCheckInView: View {
         } catch {
             await MainActor.run { loading = false; errorMessage = "Check Fuelwise cloud sync and Apple Health permissions, then try again." }
         }
+    }
+
+    private func cachedAnalysisForToday() -> WeeklyAnalysis? {
+        guard let data = UserDefaults.standard.data(forKey: "fuelwise.weeklyAnalysis"),
+              let cached = try? JSONDecoder().decode(CachedWeeklyAnalysis.self, from: data),
+              cached.day == todayKey else { return nil }
+        return cached.analysis
+    }
+
+    private func saveAnalysisForToday(_ analysis: WeeklyAnalysis) {
+        let cached = CachedWeeklyAnalysis(day: todayKey, analysis: analysis)
+        if let data = try? JSONEncoder().encode(cached) {
+            UserDefaults.standard.set(data, forKey: "fuelwise.weeklyAnalysis")
+        }
+    }
+
+    private var todayKey: String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar.current
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
     }
 
     private func complete(_ analysis: WeeklyAnalysis) {
