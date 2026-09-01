@@ -1,0 +1,4 @@
+// Copy this file to Config.local.xcconfig and fill in local development values.
+// Never commit Config.local.xcconfig.
+FUELWISE_MOBILE_SYNC_TOKEN = replace_with_mobile_sync_token
+FUELWISE_SITES_ACCESS_TOKEN = replace_with_private_sites_access_token

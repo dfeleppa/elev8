@@ -65,3 +65,7 @@ Feel free to adjust the mock data in `page.tsx` to connect live sources or expan
 ### Native iOS nutrition (SwiftUI)
 
 `Elev8Nutrition/` is a native SwiftUI iPhone app that signs into the same Supabase project as this web app and reads/writes `nutrition_days`, `nutrition_entries`, and `nutrition_custom_foods`. Open `Elev8Nutrition/Elev8Nutrition.xcodeproj`, copy `Config.local.xcconfig.example` to `Config.local.xcconfig`, and set `SUPABASE_URL` / `SUPABASE_ANON_KEY` (same values as `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+
+### Fuelwise adaptive coach
+
+`fuelwise/` contains the native SwiftUI Fuelwise app and its Sites backend as one product boundary. The iOS app reads nutrition history from the hosted API, syncs Apple Health energy/body metrics, groups foods by meal, and performs seven-day check-in analysis. See `fuelwise/README.md` for local credential and build setup.

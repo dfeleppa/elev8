@@ -86,3 +86,6 @@ Vercel-native. Cron job defined in `vercel.json`: `/api/cron/instagram-publish` 
 
 ### Mobile
 `/elev8_mobile/` is a separate Flutter/Dart project — not part of the Next.js build.
+
+### Fuelwise
+`/fuelwise/` is a separate product boundary inside this monorepo. Its native SwiftUI app lives in `/fuelwise/ios/`; its Sites backend and D1 migrations live in `/fuelwise/site-web/`. Do not fold either into the root Next.js build. Never commit `fuelwise/ios/App/App/Config.local.xcconfig` or embed mobile/Sites credentials in Swift source.

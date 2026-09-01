@@ -1,0 +1,9 @@
+{
+  "appId": "com.daneff.fuelwise",
+  "appName": "Fuelwise",
+  "webDir": "www",
+  "server": {
+    "url": "https://fuelwise-adaptive-coach.daneff.chatgpt.site/",
+    "cleartext": false
+  }
+}
