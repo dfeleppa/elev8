@@ -4,11 +4,15 @@ import Supabase
 enum FuelwiseError: LocalizedError {
     case notConfigured
     case accountNotLinked
+    case noMealToCopy
+    case sameMealDestination
 
     var errorDescription: String? {
         switch self {
         case .notConfigured: return "Fuelwise needs its Supabase URL and publishable key."
         case .accountNotLinked: return "Your signed-in account is not linked to an Elev8 member profile."
+        case .noMealToCopy: return "That meal has no foods to copy."
+        case .sameMealDestination: return "Choose a different day or destination meal."
         }
     }
 }

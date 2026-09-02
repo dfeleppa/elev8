@@ -77,21 +77,7 @@ final class FuelwiseAPI {
         return FuelwiseCloudDashboard(
             user: .init(displayName: profiles.first?.fullName ?? auth.displayName),
             goal: plan?.goalType ?? "",
-            foods: foods.map { row in
-                FuelwiseCloudFood(
-                    id: row.id,
-                    name: row.entryName,
-                    mealType: row.mealType == "snack" ? "snacks" : row.mealType,
-                    detail: row.quantity == 1 ? "1 serving" : "\(row.quantity.formatted()) servings",
-                    calories: Int((row.calories ?? 0).rounded()),
-                    proteinG: row.protein ?? 0,
-                    carbsG: row.carbs ?? 0,
-                    fatG: row.fat ?? 0,
-                    saturatedFatG: row.saturatedFat ?? 0,
-                    sugarG: row.sugar ?? 0,
-                    fiberG: row.fiber ?? 0
-                )
-            },
+            foods: foods.map(cloudFood(from:)),
             target: target(for: day, fallback: plan)
         )
     }
@@ -116,6 +102,53 @@ final class FuelwiseAPI {
                 fiber: Double(meal.fiber)
             ))
             .execute()
+    }
+
+    func meal(date: Date, mealType: String) async throws -> [FuelwiseCloudFood] {
+        let memberId = try linkedMemberId()
+        guard let day = try await nutritionDay(memberId: memberId, date: date) else { return [] }
+        let rows = try await nutritionEntries(memberId: memberId, dayId: day.id, mealType: mealType)
+        return rows.map(cloudFood(from:))
+    }
+
+    @discardableResult
+    func copyMeal(
+        from sourceDate: Date,
+        sourceMealType: String,
+        to destinationDate: Date,
+        destinationMealType: String
+    ) async throws -> Int {
+        let sourceDay = FuelwiseDayFormatter.isoDay(from: sourceDate)
+        let destinationDay = FuelwiseDayFormatter.isoDay(from: destinationDate)
+        guard sourceDay != destinationDay || normalizedMealType(sourceMealType) != normalizedMealType(destinationMealType) else {
+            throw FuelwiseError.sameMealDestination
+        }
+
+        let memberId = try linkedMemberId()
+        guard let source = try await nutritionDay(memberId: memberId, date: sourceDate) else {
+            throw FuelwiseError.noMealToCopy
+        }
+        let sourceRows = try await nutritionEntries(memberId: memberId, dayId: source.id, mealType: sourceMealType)
+        guard !sourceRows.isEmpty else { throw FuelwiseError.noMealToCopy }
+        let destination = try await ensureNutritionDay(memberId: memberId, date: destinationDate)
+        let writes = sourceRows.map { row in
+            NutritionEntryWrite(
+                dayId: destination.id,
+                memberId: memberId,
+                mealType: normalizedMealType(destinationMealType),
+                entryName: row.entryName,
+                quantity: row.quantity,
+                calories: row.calories ?? 0,
+                protein: row.protein ?? 0,
+                carbs: row.carbs ?? 0,
+                fat: row.fat ?? 0,
+                saturatedFat: row.saturatedFat ?? 0,
+                sugar: row.sugar ?? 0,
+                fiber: row.fiber ?? 0
+            )
+        }
+        try await client.from("nutrition_entries").insert(writes).execute()
+        return writes.count
     }
 
     func saveCheckIn(
@@ -182,6 +215,38 @@ final class FuelwiseAPI {
             .execute()
             .value
         return rows.first
+    }
+
+    private func nutritionEntries(memberId: UUID, dayId: UUID, mealType: String) async throws -> [NutritionEntryRow] {
+        try await client
+            .from("nutrition_entries")
+            .select("id, meal_type, entry_name, quantity, calories, protein, carbs, fat, saturated_fat, sugar, fiber")
+            .eq("member_id", value: memberId)
+            .eq("day_id", value: dayId)
+            .eq("meal_type", value: normalizedMealType(mealType))
+            .order("created_at", ascending: true)
+            .execute()
+            .value
+    }
+
+    private func normalizedMealType(_ mealType: String) -> String {
+        mealType == "snacks" ? "snack" : mealType
+    }
+
+    private func cloudFood(from row: NutritionEntryRow) -> FuelwiseCloudFood {
+        FuelwiseCloudFood(
+            id: row.id,
+            name: row.entryName,
+            mealType: row.mealType == "snack" ? "snacks" : row.mealType,
+            detail: row.quantity == 1 ? "1 serving" : "\(row.quantity.formatted()) servings",
+            calories: Int((row.calories ?? 0).rounded()),
+            proteinG: row.protein ?? 0,
+            carbsG: row.carbs ?? 0,
+            fatG: row.fat ?? 0,
+            saturatedFatG: row.saturatedFat ?? 0,
+            sugarG: row.sugar ?? 0,
+            fiberG: row.fiber ?? 0
+        )
     }
 
     private func ensureNutritionDay(memberId: UUID, date: Date) async throws -> NutritionDayRow {

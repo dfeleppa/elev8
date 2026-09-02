@@ -23,6 +23,14 @@ struct Meal: Identifiable {
     let fiber: Int
 }
 
+private struct CopyMealDestination: Identifiable {
+    let id = UUID()
+    let date: Date
+    let mealType: String
+    let title: String
+    let existingItemCount: Int
+}
+
 struct FuelwiseHomeView: View {
     @EnvironmentObject private var session: FuelwiseSession
     @AppStorage("fuelwise.firstName") private var firstName = "Daniel"
@@ -31,6 +39,7 @@ struct FuelwiseHomeView: View {
     @State private var showAddFood = false
     @State private var selectedMealType = "snacks"
     @State private var showCheckIn = false
+    @State private var copyMealDestination: CopyMealDestination?
     @State private var coachingVisible = true
     @State private var cloudStatus = "Syncing…"
     @State private var selectedDate = Calendar.current.startOfDay(for: Date())
@@ -96,6 +105,11 @@ struct FuelwiseHomeView: View {
         }
         .sheet(isPresented: $showCheckIn) {
             WeeklyCheckInView(calorieTarget: calorieTarget, proteinTarget: savedProteinTarget, onSave: saveWeeklyCheckIn)
+        }
+        .sheet(item: $copyMealDestination) { destination in
+            CopyMealView(destination: destination) {
+                await loadSelectedDay()
+            }
         }
         .task { await loadSelectedDay() }
         .onChange(of: selectedDate) { _, _ in Task { await loadSelectedDay() } }
@@ -302,6 +316,19 @@ struct FuelwiseHomeView: View {
                 Spacer()
                 Text("\(entries.reduce(0) { $0 + $1.calories }) kcal").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 Button {
+                    copyMealDestination = CopyMealDestination(
+                        date: selectedDate,
+                        mealType: type,
+                        title: title,
+                        existingItemCount: entries.count
+                    )
+                } label: {
+                    Image(systemName: "doc.on.doc").font(.subheadline).frame(width: 30, height: 30)
+                }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.circle)
+                .accessibilityLabel("Copy a meal into \(title)")
+                Button {
                     selectedMealType = type
                     showAddFood = true
                 } label: {
@@ -384,6 +411,159 @@ private struct AddFoodView: View {
                         dismiss()
                     }.disabled(name.isEmpty)
                 }
+            }
+        }
+    }
+}
+
+private struct CopyMealView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var session: FuelwiseSession
+    @State private var sourceDate: Date
+    @State private var sourceMealType: String
+    @State private var preview: [FuelwiseCloudFood] = []
+    @State private var isLoading = true
+    @State private var isCopying = false
+    @State private var showExistingMealConfirmation = false
+    @State private var errorMessage: String?
+
+    let destination: CopyMealDestination
+    let onCopied: () async -> Void
+
+    private let mealTypes = ["breakfast", "lunch", "dinner", "snacks"]
+
+    init(destination: CopyMealDestination, onCopied: @escaping () async -> Void) {
+        self.destination = destination
+        self.onCopied = onCopied
+        let priorDay = Calendar.current.date(byAdding: .day, value: -1, to: destination.date) ?? destination.date
+        _sourceDate = State(initialValue: priorDay)
+        _sourceMealType = State(initialValue: destination.mealType)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Copy from") {
+                    DatePicker("Date", selection: $sourceDate, in: ...Date(), displayedComponents: .date)
+                    Picker("Meal", selection: $sourceMealType) {
+                        ForEach(mealTypes, id: \.self) { value in
+                            Text(value.capitalized).tag(value)
+                        }
+                    }
+                }
+
+                Section("Copy into") {
+                    LabeledContent("Date", value: destination.date.formatted(date: .abbreviated, time: .omitted))
+                    LabeledContent("Meal", value: destination.title)
+                }
+
+                Section("Preview") {
+                    if isLoading {
+                        HStack { Spacer(); ProgressView(); Spacer() }
+                    } else if preview.isEmpty {
+                        ContentUnavailableView("No foods in this meal", systemImage: "fork.knife")
+                    } else {
+                        ForEach(preview) { food in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(food.name)
+                                    Text(food.detail).font(.caption).foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Text("\(food.calories) kcal").font(.subheadline.weight(.semibold))
+                            }
+                        }
+                        LabeledContent("Total", value: "\(preview.reduce(0) { $0 + $1.calories }) kcal")
+                            .fontWeight(.semibold)
+                    }
+                }
+
+                if destination.existingItemCount > 0 {
+                    Section {
+                        Label("\(destination.title) already has \(destination.existingItemCount) item\(destination.existingItemCount == 1 ? "" : "s"). Copied foods will be added to them.", systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.orange)
+                    }
+                }
+
+                if sameSourceAndDestination {
+                    Section {
+                        Text("Choose a different date or meal so Fuelwise doesn’t copy a meal onto itself.")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if let errorMessage {
+                    Section { Text(errorMessage).foregroundStyle(.red) }
+                }
+            }
+            .navigationTitle("Copy meal")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(isCopying ? "Copying…" : "Copy") {
+                        if destination.existingItemCount > 0 {
+                            showExistingMealConfirmation = true
+                        } else {
+                            copyMeal()
+                        }
+                    }
+                    .disabled(isCopying || isLoading || preview.isEmpty || sameSourceAndDestination)
+                }
+            }
+            .confirmationDialog(
+                "Add to existing \(destination.title.lowercased())?",
+                isPresented: $showExistingMealConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Copy \(preview.count) food\(preview.count == 1 ? "" : "s")") { copyMeal() }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This keeps the foods already logged and adds the copied meal.")
+            }
+            .task(id: previewKey) { await loadPreview() }
+        }
+    }
+
+    private var previewKey: String {
+        "\(FuelwiseDayFormatter.isoDay(from: sourceDate))-\(sourceMealType)"
+    }
+
+    private var sameSourceAndDestination: Bool {
+        FuelwiseDayFormatter.isoDay(from: sourceDate) == FuelwiseDayFormatter.isoDay(from: destination.date)
+            && sourceMealType == destination.mealType
+    }
+
+    private func loadPreview() async {
+        await MainActor.run {
+            isLoading = true
+            errorMessage = nil
+        }
+        do {
+            guard let api = session.api else { throw FuelwiseError.notConfigured }
+            let foods = try await api.meal(date: sourceDate, mealType: sourceMealType)
+            await MainActor.run { preview = foods; isLoading = false }
+        } catch {
+            await MainActor.run { preview = []; isLoading = false; errorMessage = error.localizedDescription }
+        }
+    }
+
+    private func copyMeal() {
+        isCopying = true
+        errorMessage = nil
+        Task {
+            do {
+                guard let api = session.api else { throw FuelwiseError.notConfigured }
+                try await api.copyMeal(
+                    from: sourceDate,
+                    sourceMealType: sourceMealType,
+                    to: destination.date,
+                    destinationMealType: destination.mealType
+                )
+                await onCopied()
+                await MainActor.run { isCopying = false; dismiss() }
+            } catch {
+                await MainActor.run { isCopying = false; errorMessage = error.localizedDescription }
             }
         }
     }
