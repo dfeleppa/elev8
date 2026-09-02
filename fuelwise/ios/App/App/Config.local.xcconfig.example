@@ -1,4 +1,5 @@
 // Copy this file to Config.local.xcconfig and fill in local development values.
+// The publishable key is safe for a client app; RLS protects member data.
 // Never commit Config.local.xcconfig.
-FUELWISE_MOBILE_SYNC_TOKEN = replace_with_mobile_sync_token
-FUELWISE_SITES_ACCESS_TOKEN = replace_with_private_sites_access_token
+SUPABASE_URL = https:/$()/YOUR-PROJECT.supabase.co
+SUPABASE_ANON_KEY = YOUR_SUPABASE_ANON_KEY

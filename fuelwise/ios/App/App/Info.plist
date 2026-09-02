@@ -20,10 +20,21 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>FuelwiseMobileSyncToken</key>
-	<string>$(FUELWISE_MOBILE_SYNC_TOKEN)</string>
-	<key>FuelwiseSitesAccessToken</key>
-	<string>$(FUELWISE_SITES_ACCESS_TOKEN)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.daneff.fuelwise.oauth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fuelwise</string>
+			</array>
+		</dict>
+	</array>
+	<key>SUPABASE_URL</key>
+	<string>$(SUPABASE_URL)</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSHealthShareUsageDescription</key>

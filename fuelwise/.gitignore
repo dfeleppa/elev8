@@ -7,6 +7,7 @@ site-web/dist/
 ios/App/Pods/
 ios/App/build/
 ios/App/DerivedData/
+ios/App/DerivedData*/
 ios/App/App/Config.local.xcconfig
 *.xcuserstate
 xcuserdata/

@@ -1,1 +1,0 @@
-ALTER TABLE `food_entries` ADD `meal_type` text DEFAULT 'snacks' NOT NULL;

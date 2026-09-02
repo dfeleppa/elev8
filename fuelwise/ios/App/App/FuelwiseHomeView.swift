@@ -24,6 +24,7 @@ struct Meal: Identifiable {
 }
 
 struct FuelwiseHomeView: View {
+    @EnvironmentObject private var session: FuelwiseSession
     @AppStorage("fuelwise.firstName") private var firstName = "Daniel"
     @AppStorage("fuelwise.calorieTarget") private var savedCalorieTarget = 2250
     @AppStorage("fuelwise.proteinTarget") private var savedProteinTarget = 175
@@ -85,8 +86,8 @@ struct FuelwiseHomeView: View {
                 cloudStatus = "Saving…"
                 Task {
                     do {
-                        try await FuelwiseAPI.addFood(meal, date: selectedDate)
-                        await MainActor.run { cloudStatus = "Cloud synced" }
+                        try await session.api?.addFood(meal, date: selectedDate)
+                        await MainActor.run { cloudStatus = "Supabase synced" }
                     } catch {
                         await MainActor.run { cloudStatus = "Sync issue" }
                     }
@@ -102,8 +103,9 @@ struct FuelwiseHomeView: View {
 
     private func saveWeeklyCheckIn(weight: Double, bodyFat: Double?, recommendation: String, calorieDelta: Int) async throws {
         await MainActor.run { cloudStatus = "Saving…" }
-        try await FuelwiseAPI.saveCheckIn(weightLb: weight, bodyFat: bodyFat, calorieTarget: calorieTarget, proteinTarget: savedProteinTarget, recommendation: recommendation, calorieDelta: calorieDelta)
-        await MainActor.run { cloudStatus = "Cloud synced" }
+        guard let api = session.api else { throw FuelwiseError.notConfigured }
+        try await api.saveCheckIn(weightLb: weight, bodyFat: bodyFat, calorieTarget: calorieTarget, proteinTarget: savedProteinTarget, recommendation: recommendation, calorieDelta: calorieDelta)
+        await MainActor.run { cloudStatus = "Supabase synced" }
     }
 
     private var header: some View {
@@ -116,7 +118,7 @@ struct FuelwiseHomeView: View {
                 Spacer()
                 Button("Check-in") { showCheckIn = true }.font(.subheadline.weight(.semibold))
             }
-            Label(cloudStatus, systemImage: cloudStatus == "Cloud synced" ? "checkmark.icloud.fill" : "icloud")
+            Label(cloudStatus, systemImage: cloudStatus == "Supabase synced" ? "checkmark.icloud.fill" : "icloud")
                 .font(.caption.weight(.medium))
                 .foregroundStyle(cloudStatus == "Sync issue" ? .red : .secondary)
         }
@@ -148,7 +150,11 @@ struct FuelwiseHomeView: View {
 
     private func loadSelectedDay() async {
         await MainActor.run { cloudStatus = "Syncing…"; healthStatus = "Reading Apple Health…" }
-        async let cloud = FuelwiseAPI.load(date: selectedDate)
+        guard let api = session.api else {
+            await MainActor.run { cloudStatus = "Sync issue" }
+            return
+        }
+        async let cloud = api.load(date: selectedDate)
         async let health = HealthEnergyService.summary(for: selectedDate)
         do {
             let dashboard = try await cloud
@@ -161,14 +167,14 @@ struct FuelwiseHomeView: View {
                 meals = dashboard.foods.map {
                     Meal(icon: "fork.knife", mealType: $0.mealType, name: $0.name, detail: $0.detail, calories: $0.calories, protein: Int($0.proteinG), carbs: Int($0.carbsG), fat: Int($0.fatG), saturatedFat: Int($0.saturatedFatG), sugar: Int($0.sugarG), fiber: Int($0.fiberG))
                 }
-                cloudStatus = "Cloud synced"
+                cloudStatus = "Supabase synced"
             }
         } catch {
             await MainActor.run { cloudStatus = "Sync issue" }
         }
         do {
             let summary = try await health
-            try await FuelwiseAPI.syncAppleHealth(summary, date: selectedDate)
+            try await api.syncAppleHealth(summary, date: selectedDate)
             await MainActor.run { healthSummary = summary; healthStatus = summary.total > 0 ? "Synced from Apple Health" : "Health synced · no energy for this day" }
         } catch {
             await MainActor.run { healthSummary = nil; healthStatus = "Allow Health access to sync your metrics" }
@@ -415,6 +421,7 @@ private struct CachedWeeklyAnalysis: Codable {
 
 private struct WeeklyCheckInView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var session: FuelwiseSession
     @State private var weight = ""
     @State private var saving = false
     @State private var errorMessage: String?
@@ -520,7 +527,8 @@ private struct WeeklyCheckInView: View {
             var health: [HealthSummary] = []
             for offset in 0..<7 {
                 let date = Calendar.current.date(byAdding: .day, value: -offset, to: Date())!
-                async let dashboard = FuelwiseAPI.load(date: date)
+                guard let api = session.api else { throw FuelwiseError.notConfigured }
+                async let dashboard = api.load(date: date)
                 async let healthDay = HealthEnergyService.summary(for: date)
                 let day = try await dashboard
                 let summary = try await healthDay
@@ -550,7 +558,7 @@ private struct WeeklyCheckInView: View {
                 loading = false
             }
         } catch {
-            await MainActor.run { loading = false; errorMessage = "Check Fuelwise cloud sync and Apple Health permissions, then try again." }
+            await MainActor.run { loading = false; errorMessage = "Check Fuelwise sync and Apple Health permissions, then try again." }
         }
     }
 

@@ -1,16 +1,39 @@
 import SwiftUI
 
 struct FuelwiseRootView: View {
+    @EnvironmentObject private var session: FuelwiseSession
+
+    var body: some View {
+        Group {
+            if let error = session.configurationError {
+                ContentUnavailableView("Fuelwise isn’t configured", systemImage: "exclamationmark.triangle", description: Text(error))
+            } else if let auth = session.auth {
+                FuelwiseAuthGate(auth: auth)
+            } else {
+                ProgressView("Starting Fuelwise…")
+            }
+        }
+    }
+}
+
+private struct FuelwiseAuthGate: View {
+    @ObservedObject var auth: FuelwiseAuthService
     @AppStorage("fuelwise.onboardingComplete") private var onboardingComplete = false
 
     var body: some View {
         Group {
-            if onboardingComplete {
-                FuelwiseHomeView()
-            } else {
-                FuelwiseOnboardingView {
-                    withAnimation(.easeInOut) { onboardingComplete = true }
+            if auth.isRestoring {
+                ProgressView("Restoring your session…")
+            } else if auth.isSignedIn, auth.memberId != nil {
+                if onboardingComplete {
+                    FuelwiseHomeView()
+                } else {
+                    FuelwiseOnboardingView {
+                        withAnimation(.easeInOut) { onboardingComplete = true }
+                    }
                 }
+            } else {
+                FuelwiseAuthView(auth: auth)
             }
         }
     }
