@@ -44,6 +44,7 @@ yarn-error.log*
 next-env.d.ts
 
 # claude code worktrees (transient working copies; should never be tracked)
+.claude/plans/
 .claude/worktrees/
 .claude/settings.local.json
 

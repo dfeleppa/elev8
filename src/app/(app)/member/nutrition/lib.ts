@@ -65,6 +65,25 @@ export type LabelScanResult = {
   identifiedFoodName?: string | null;
 };
 
+export type MealDescriptionItem = {
+  name: string;
+  quantity: number;
+  servingSize: number | null;
+  servingUnit: string | null;
+  calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
+  sugar: number | null;
+  fiber: number | null;
+  saturatedFat: number | null;
+  confidence: "low" | "medium" | "high";
+};
+
+export type MealDescriptionResult = {
+  items: MealDescriptionItem[];
+};
+
 export type CoachPlanSummary = {
   goalType?: string | null;
   startWeight?: number | null;
