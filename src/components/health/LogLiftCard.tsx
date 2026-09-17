@@ -1,281 +1,327 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Minus, Plus, Search, X } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { validateLiftSets } from "@/lib/lift-log";
 
 type Movement = { id: string; name: string };
-type LiftSet = { id: string; reps: string; weight: string };
-
-let nextSetId = 0;
-function newSet(): LiftSet {
-  nextSetId += 1;
-  return { id: `s-${nextSetId}`, reps: "", weight: "" };
-}
-
+type LiftSet = { id: number; reps: string; weight: string };
+type Props = { initialDate?: string; lockDate?: boolean; onSaved?: () => void };
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-type Props = {
-  onSaved?: () => void;
-};
-
-export default function LogLiftCard({ onSaved }: Props) {
+export default function LogLiftCard({
+  initialDate,
+  lockDate = false,
+  onSaved,
+}: Props) {
+  const fieldId = useId();
+  const nextSetId = useRef(1);
+  const submitting = useRef(false);
   const [movements, setMovements] = useState<Movement[]>([]);
-  const [movementsLoading, setMovementsLoading] = useState(true);
-
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [retry, setRetry] = useState(0);
   const [query, setQuery] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [selected, setSelected] = useState<Movement | null>(null);
-
-  const [date, setDate] = useState(todayKey);
-  const [sets, setSets] = useState<LiftSet[]>(() => [newSet()]);
+  const [movementId, setMovementId] = useState("");
+  const [date, setDate] = useState(() => initialDate ?? todayKey());
+  const [sets, setSets] = useState<LiftSet[]>([
+    { id: 0, reps: "", weight: "" },
+  ]);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`/api/athlete/movements`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => setMovements(d.movements ?? []))
-      .catch((err) => {
-        console.error("Failed to load movements:", err);
+    const controller = new AbortController();
+    setLoading(true);
+    setLoadError("");
+    fetch("/api/athlete/movements", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok)
+          throw new Error(payload.error ?? "Unable to load movements.");
+        setMovements(payload.movements ?? []);
       })
-      .finally(() => setMovementsLoading(false));
-  }, []);
+      .catch((failure) => {
+        if (!controller.signal.aborted)
+          setLoadError(
+            failure instanceof Error
+              ? failure.message
+              : "Unable to load movements.",
+          );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [retry]);
 
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const filtered = movements.filter((m) =>
-    m.name.toLowerCase().includes(query.toLowerCase())
+  const filtered = movements.filter(
+    (movement) =>
+      movement.name.toLowerCase().includes(query.trim().toLowerCase()) ||
+      movement.id === movementId,
   );
-
-  function selectMovement(m: Movement) {
-    setSelected(m);
-    setQuery(m.name);
-    setDropdownOpen(false);
+  const selected = movements.find((movement) => movement.id === movementId);
+  function updateSet(id: number, field: "reps" | "weight", value: string) {
+    setSets((current) =>
+      current.map((set) => (set.id === id ? { ...set, [field]: value } : set)),
+    );
+    setSuccess("");
   }
 
-  function clearMovement() {
-    setSelected(null);
-    setQuery("");
-    setDropdownOpen(false);
-  }
-
-  function addSet() {
-    setSets((prev) => [...prev, newSet()]);
-  }
-
-  function removeSet(id: string) {
-    setSets((prev) => prev.filter((s) => s.id !== id));
-  }
-
-  function updateSet(id: string, field: "reps" | "weight", value: string) {
-    setSets((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selected) return;
-
-    const parsedSets = sets
-      .map((s) => ({ reps: parseInt(s.reps, 10), weight: parseFloat(s.weight) }))
-      .filter((s) => Number.isFinite(s.reps) && s.reps > 0 && Number.isFinite(s.weight) && s.weight > 0);
-
-    if (parsedSets.length === 0) {
-      setError("Add at least one valid set with reps and weight.");
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (submitting.current) return;
+    if (!selected) {
+      setError("Choose a movement to log.");
       return;
     }
-
+    const parsed = sets.map((set) => ({
+      reps: Number(set.reps),
+      weight: Number(set.weight),
+    }));
+    if (!validateLiftSets(parsed)) {
+      setError(
+        "Complete every set with whole-number reps and a positive weight.",
+      );
+      return;
+    }
+    submitting.current = true;
     setSaving(true);
-    setError(null);
+    setError("");
+    setSuccess("");
     try {
-      const res = await fetch("/api/athlete/lift-log", {
+      const response = await fetch("/api/athlete/lift-log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           movementId: selected.id,
           dayDate: date,
-          sets: parsedSets,
+          sets: parsed,
           notes: notes.trim() || null,
         }),
       });
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload?.error ?? "Failed to save.");
-      setSuccess(true);
-      setSets([newSet()]);
+      const payload = await response.json();
+      if (!response.ok)
+        throw new Error(payload.error ?? "Unable to save lift.");
+      setSuccess(`${selected.name} saved for ${date}.`);
+      setSets([{ id: nextSetId.current++, reps: "", weight: "" }]);
       setNotes("");
       onSaved?.();
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save.");
+    } catch (failure) {
+      setError(
+        failure instanceof Error ? failure.message : "Unable to save lift.",
+      );
     } finally {
+      submitting.current = false;
       setSaving(false);
     }
   }
 
+  const inputClass =
+    "w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 disabled:bg-slate-100";
   return (
-    <div className="glass-panel rounded-3xl border border-white/10 p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Log Lift</p>
-      <p className="mt-1 text-sm text-slate-500">Record a standalone lift outside of programming</p>
-
-      <form onSubmit={handleSubmit} className="mt-5 space-y-5">
-        {/* Movement search */}
-        <div ref={containerRef} className="relative">
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-slate-500">
-            Movement
-          </label>
-          <div className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 focus-within:border-white/30">
-            <Search className="h-4 w-4 shrink-0 text-slate-500" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setDropdownOpen(true);
-                if (selected && e.target.value !== selected.name) setSelected(null);
-              }}
-              onFocus={() => setDropdownOpen(true)}
-              placeholder={movementsLoading ? "Loading movements..." : "Search movements..."}
-              disabled={movementsLoading}
-              className="flex-1 bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none"
-            />
-            {query && (
-              <button type="button" onClick={clearMovement} className="shrink-0 text-slate-500 transition hover:text-slate-300">
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-          {dropdownOpen && query && filtered.length > 0 && (
-            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-y-auto rounded-xl border border-white/10 bg-[#0f172a] shadow-xl">
-              {filtered.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => selectMovement(m)}
-                  className={`block w-full px-4 py-2.5 text-left text-sm transition hover:bg-white/5 ${
-                    selected?.id === m.id ? "text-sky-300" : "text-slate-200"
-                  }`}
-                >
-                  {m.name}
-                </button>
-              ))}
-            </div>
-          )}
-          {dropdownOpen && query && filtered.length === 0 && !movementsLoading && (
-            <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-xl border border-white/10 bg-[#0f172a] px-4 py-3 shadow-xl">
-              <p className="text-sm text-slate-500">No movements found.</p>
-            </div>
-          )}
-        </div>
-
-        {/* Date */}
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-slate-500">
-            Date
-          </label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none focus:border-white/30"
-          />
-        </div>
-
-        {/* Sets */}
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label className="text-xs font-semibold uppercase tracking-widest text-slate-500">Sets</label>
-            <button
-              type="button"
-              onClick={addSet}
-              className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300 transition hover:border-white/20 hover:text-white"
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 text-slate-900">
+      <h3 className="text-lg font-bold">Log Lift</h3>
+      <p className="mt-1 text-sm text-slate-600">
+        Choose a movement and record your sets. A scheduled workout is not
+        required.
+      </p>
+      <form onSubmit={submit} className="mt-5 space-y-4">
+        <fieldset disabled={saving} className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label
+              className="block space-y-1 text-sm font-medium"
+              htmlFor={`${fieldId}-search`}
             >
-              <Plus className="h-3 w-3" />
-              Add Set
-            </button>
+              Find a movement
+              <input
+                id={`${fieldId}-search`}
+                className={inputClass}
+                type="search"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  const exact = movements.find(
+                    (m) =>
+                      m.name.toLowerCase() ===
+                      e.target.value.trim().toLowerCase(),
+                  );
+                  setMovementId(exact?.id ?? "");
+                  setSuccess("");
+                }}
+                placeholder="Search, e.g. Deadlift"
+              />
+            </label>
+            <label
+              className="block space-y-1 text-sm font-medium"
+              htmlFor={`${fieldId}-movement`}
+            >
+              Movement
+              <select
+                id={`${fieldId}-movement`}
+                required
+                disabled={loading || !!loadError}
+                className={inputClass}
+                value={movementId}
+                onChange={(e) => {
+                  setMovementId(e.target.value);
+                  setSuccess("");
+                }}
+              >
+                <option value="">
+                  {loading ? "Loading movements…" : "Choose a movement"}
+                </option>
+                {filtered.map((movement) => (
+                  <option key={movement.id} value={movement.id}>
+                    {movement.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-          <div className="space-y-2">
-            {sets.map((s, i) => (
-              <div key={s.id} className="flex items-center gap-2">
-                <span className="w-5 shrink-0 text-center text-xs text-slate-500">{i + 1}</span>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min="1"
-                  placeholder="Reps"
-                  value={s.reps}
-                  onChange={(e) => updateSet(s.id, "reps", e.target.value)}
-                  className="w-20 rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-white/30"
-                />
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="2.5"
-                  min="0"
-                  placeholder="Weight (lb)"
-                  value={s.weight}
-                  onChange={(e) => updateSet(s.id, "weight", e.target.value)}
-                  className="flex-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-white/30"
-                />
-                {sets.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeSet(s.id)}
-                    className="text-slate-600 transition hover:text-rose-400"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                )}
+          {loadError && (
+            <p role="alert" className="text-sm text-red-700">
+              {loadError}{" "}
+              <button
+                type="button"
+                onClick={() => setRetry((value) => value + 1)}
+                className="underline"
+              >
+                Retry
+              </button>
+            </p>
+          )}
+          {!loading && !loadError && !filtered.length && (
+            <p className="text-sm text-slate-600">
+              No matching movements. Try a different search.
+            </p>
+          )}
+          <label
+            className="block max-w-xs space-y-1 text-sm font-medium"
+            htmlFor={`${fieldId}-date`}
+          >
+            Date
+            <input
+              id={`${fieldId}-date`}
+              type="date"
+              required
+              readOnly={lockDate}
+              value={date}
+              onChange={(e) => {
+                setDate(e.target.value);
+                setSuccess("");
+              }}
+              className={inputClass}
+            />
+          </label>
+          <div className="space-y-3">
+            <p className="text-sm font-semibold">
+              Sets · weight in pounds (lb)
+            </p>
+            {sets.map((set, index) => (
+              <div
+                key={set.id}
+                className="grid grid-cols-[24px_1fr_1fr_auto] items-end gap-2"
+              >
+                <span className="pb-3 text-sm text-slate-500">{index + 1}</span>
+                <label className="space-y-1 text-xs">
+                  Reps
+                  <input
+                    aria-label={`Set ${index + 1} reps`}
+                    type="number"
+                    required
+                    min="1"
+                    step="1"
+                    inputMode="numeric"
+                    value={set.reps}
+                    onChange={(e) => updateSet(set.id, "reps", e.target.value)}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="space-y-1 text-xs">
+                  Weight (lb)
+                  <input
+                    aria-label={`Set ${index + 1} weight (lb)`}
+                    type="number"
+                    required
+                    min="0.01"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={set.weight}
+                    onChange={(e) =>
+                      updateSet(set.id, "weight", e.target.value)
+                    }
+                    className={inputClass}
+                  />
+                </label>
+                <button
+                  aria-label={`Remove set ${index + 1}`}
+                  type="button"
+                  disabled={sets.length === 1}
+                  className="rounded-lg px-2 py-3 text-sm disabled:opacity-30"
+                  onClick={() =>
+                    setSets((current) =>
+                      current.filter((item) => item.id !== set.id),
+                    )
+                  }
+                >
+                  ×
+                </button>
               </div>
             ))}
+            <button
+              type="button"
+              disabled={sets.length >= 100}
+              className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium"
+              onClick={() => {
+                const id = nextSetId.current++;
+                setSets((current) => [
+                  ...current,
+                  { id, reps: "", weight: "" },
+                ]);
+              }}
+            >
+              + Add Set
+            </button>
           </div>
-        </div>
-
-        {/* Notes */}
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-slate-500">
-            Notes
-          </label>
-          <input
-            type="text"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optional notes..."
-            className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-white/30"
-          />
-        </div>
-
-        {error && <p className="text-sm text-rose-300">{error}</p>}
-
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={saving || !selected}
-            className="rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-[0_4px_20px_rgba(255,177,196,0.2)] transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+          <label
+            className="block space-y-1 text-sm font-medium"
+            htmlFor={`${fieldId}-notes`}
           >
-            {saving ? "Saving..." : "Save Lift"}
-          </button>
-          {success && (
-            <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-400">
-              <CheckCircle2 className="h-4 w-4" />
-              Saved!
-            </span>
-          )}
-        </div>
+            Notes
+            <input
+              id={`${fieldId}-notes`}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className={inputClass}
+              placeholder="Optional notes"
+            />
+          </label>
+        </fieldset>
+        {error && (
+          <p role="alert" className="text-sm text-red-700">
+            {error}
+          </p>
+        )}
+        {success && (
+          <p role="status" className="text-sm font-semibold text-emerald-700">
+            {success}
+          </p>
+        )}
+        <button
+          type="submit"
+          disabled={saving || loading || !!loadError || !selected}
+          className="rounded-xl bg-[#14D2DC] px-5 py-3 text-sm font-bold text-[#071317] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saving ? "Saving…" : "Save Lift"}
+        </button>
       </form>
     </div>
   );

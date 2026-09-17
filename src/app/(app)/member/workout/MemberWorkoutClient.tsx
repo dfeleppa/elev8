@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import DailyLiftLog from "@/components/health/DailyLiftLog";
 import {
   Calendar,
   Clock,
@@ -437,6 +438,8 @@ export default function MemberWorkoutClient() {
           </div>
         </section>
 
+        <DailyLiftLog key={selectedDay} dayDate={selectedDay} />
+
         {weekLoading && <span className="text-xs font-semibold text-[#667085]">Loading workout...</span>}
 
         <section className="grid w-full gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.65fr)]">
@@ -456,9 +459,9 @@ export default function MemberWorkoutClient() {
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[rgba(20,210,220,0.18)] bg-[rgba(20,210,220,0.08)] text-[#0D98A1]">
                   <Calendar className="h-6 w-6" />
                 </div>
-                <h3 className="mt-5 text-xl font-bold text-[#17141F]">Rest day</h3>
+                <h3 className="mt-5 text-xl font-bold text-[#17141F]">No scheduled workout</h3>
                 <p className="mt-2 max-w-md text-sm font-medium leading-6 text-[#667085]">
-                  No programming is scheduled for this selected day.
+                  No programming is scheduled for this date. You can still record your own lifts using Log Lift above.
                 </p>
               </div>
             ) : (
@@ -486,7 +489,7 @@ export default function MemberWorkoutClient() {
             <div className="premium-glass-card p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Workout Summary</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#667085]">Scheduled Workout Summary</p>
                   <h2 className="mt-1 text-[22px] font-bold leading-tight text-[#17141F]">Training focus</h2>
                 </div>
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(20,210,220,0.11)] text-[#0D98A1]">
@@ -501,7 +504,7 @@ export default function MemberWorkoutClient() {
                   ["Score Type", scoreTypeLabel],
                   ["Time Domain", primaryBlock?.score_type === "time" ? "Long" : "Variable"],
                   ["Equipment", equipmentSummary],
-                  ["Record Status", recordStatus],
+                  ["Scheduled Score", recordStatus],
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-center justify-between gap-4 rounded-[18px] border border-[rgba(16,24,40,0.08)] bg-white/66 px-4 py-3">
                     <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#667085]">{label}</span>

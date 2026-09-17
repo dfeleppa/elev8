@@ -31,7 +31,10 @@ type ResultRow = {
 
 type MovementBlockJoin = {
   movement_id: string | null;
-  movement_library: { id: string; name: string } | Array<{ id: string; name: string }> | null;
+  movement_library:
+    | { id: string; name: string }
+    | Array<{ id: string; name: string }>
+    | null;
 };
 
 type MovementRow = {
@@ -45,7 +48,10 @@ function resolveBlock(raw: BlockJoin | BlockJoin[] | null): BlockJoin | null {
 export async function GET(request: Request) {
   const { error, userId } = await requireRequestUserContext(request);
   if (error || !userId) {
-    return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: error ?? "Unauthorized" },
+      { status: 401 },
+    );
   }
 
   const { searchParams } = new URL(request.url);
@@ -56,27 +62,36 @@ export async function GET(request: Request) {
       supabaseAdmin
         .from("workout_results")
         .select(
-          "id, day_date, score_type, score_text, score_value, total_reps, notes, workout_blocks!inner(title, block_type, movement_id), workout_result_lift_sets(set_order, reps, weight)"
+          "id, day_date, score_type, score_text, score_value, total_reps, notes, workout_blocks!inner(title, block_type, movement_id), workout_result_lift_sets(set_order, reps, weight)",
         )
         .eq("member_id", userId)
         .eq("workout_blocks.movement_id", movementId)
         .order("day_date", { ascending: false }),
       supabaseAdmin
         .from("athlete_lift_logs")
-        .select("id, day_date, notes, athlete_lift_log_sets(set_order, reps, weight)")
+        .select(
+          "id, day_date, notes, athlete_lift_log_sets(set_order, reps, weight)",
+        )
         .eq("member_id", userId)
         .eq("movement_id", movementId)
         .order("day_date", { ascending: false }),
     ]);
 
-    if (workoutRes.error) {
-      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    if (workoutRes.error || liftLogRes.error) {
+      return NextResponse.json(
+        { error: "Internal server error." },
+        { status: 500 },
+      );
     }
 
     const workoutResults = (workoutRes.data ?? []).map((row) => {
       const r = row as unknown as ResultRow;
       const block = resolveBlock(r.workout_blocks);
-      const sets = (Array.isArray(r.workout_result_lift_sets) ? r.workout_result_lift_sets : [])
+      const sets = (
+        Array.isArray(r.workout_result_lift_sets)
+          ? r.workout_result_lift_sets
+          : []
+      )
         .filter((s) => s.weight !== null || s.reps !== null)
         .sort((a, b) => (a.set_order ?? 0) - (b.set_order ?? 0));
       return {
@@ -97,12 +112,20 @@ export async function GET(request: Request) {
       id: string;
       day_date: string | null;
       notes: string | null;
-      athlete_lift_log_sets: { set_order: number | null; reps: number | null; weight: number | null }[] | null;
+      athlete_lift_log_sets:
+        | {
+            set_order: number | null;
+            reps: number | null;
+            weight: number | null;
+          }[]
+        | null;
     };
 
     const liftLogResults = (liftLogRes.data ?? []).map((row) => {
       const r = row as unknown as LiftLogRow;
-      const sets = (Array.isArray(r.athlete_lift_log_sets) ? r.athlete_lift_log_sets : [])
+      const sets = (
+        Array.isArray(r.athlete_lift_log_sets) ? r.athlete_lift_log_sets : []
+      )
         .filter((s) => s.weight !== null || s.reps !== null)
         .sort((a, b) => (a.set_order ?? 0) - (b.set_order ?? 0));
       return {
@@ -129,16 +152,34 @@ export async function GET(request: Request) {
   }
 
   // Return all movements that have results for this user
-  const { data, error: queryError } = await supabaseAdmin
-    .from("workout_results")
-    .select("workout_blocks!inner(movement_id, movement_library!inner(id, name))")
-    .eq("member_id", userId);
+  const [workouts, manual] = await Promise.all([
+    supabaseAdmin
+      .from("workout_results")
+      .select(
+        "workout_blocks!inner(movement_id, movement_library!inner(id, name))",
+      )
+      .eq("member_id", userId),
+    supabaseAdmin
+      .from("athlete_lift_logs")
+      .select("movement_id, movement_library!inner(id, name)")
+      .eq("member_id", userId),
+  ]);
+  const { data, error: queryError } = workouts;
 
-  if (queryError) {
-    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+  if (queryError || manual.error) {
+    return NextResponse.json(
+      { error: "Internal server error." },
+      { status: 500 },
+    );
   }
 
   const movementMap = new Map<string, string>();
+  for (const row of manual.data ?? []) {
+    const movement = Array.isArray(row.movement_library)
+      ? row.movement_library[0]
+      : row.movement_library;
+    if (movement?.name) movementMap.set(row.movement_id, movement.name);
+  }
 
   for (const row of (data ?? []) as unknown as MovementRow[]) {
     const block = Array.isArray(row.workout_blocks)

@@ -78,6 +78,7 @@ type Props = {
 export default function AthleteDashboardClient({ initialTab, totalWorkoutsLogged }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>(resolveTab(initialTab));
+  const [liftRevision, setLiftRevision] = useState(0);
 
   const [workoutsPage, setWorkoutsPage] = useState(1);
   const [workoutsData, setWorkoutsData] = useState<WorkoutsResponse | null>(null);
@@ -256,8 +257,8 @@ export default function AthleteDashboardClient({ initialTab, totalWorkoutsLogged
       {/* Movements tab */}
       {activeTab === "movements" && (
         <div className="space-y-6">
-          <MovementResultsSearch />
-          <LogLiftCard />
+          <MovementResultsSearch key={liftRevision} />
+          <LogLiftCard onSaved={() => setLiftRevision((value) => value + 1)} />
         </div>
       )}
 

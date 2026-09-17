@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
-import type { ChangeEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Micro } from "@/components/ui";
 import { useDismissable } from "@/hooks/useDismissable";
@@ -265,9 +265,6 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [comingSoon, setComingSoon] = useState<string | null>(null);
-  const [isImportingResults, setIsImportingResults] = useState(false);
-  const [topBarNotice, setTopBarNotice] = useState<string | null>(null);
-  const importInputRef = useRef<HTMLInputElement | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const desktopMenuRef = useRef<HTMLDivElement | null>(null);
   const comingSoonRef = useRef<HTMLDivElement | null>(null);
@@ -416,55 +413,6 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
 
   const canViewRole = (requiredRole?: UserRole) => {
     return roleRank[userRole] >= roleRank[requiredRole ?? "member"];
-  };
-
-  const handleImportSelection = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    try {
-      setIsImportingResults(true);
-      setTopBarNotice(null);
-      const csvText = await file.text();
-
-      const response = await fetch("/api/programming/results/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ csvText }),
-      });
-      const payload = (await response.json()) as {
-        error?: string;
-        inserted?: number;
-        totalRows?: number;
-        failures?: number;
-        trackName?: string;
-      };
-
-      if (!response.ok) {
-        setTopBarNotice(payload.error ?? "Import failed.");
-        return;
-      }
-
-      if (payload.trackName) {
-        setCurrentTrack(payload.trackName);
-      }
-
-      const inserted = payload.inserted ?? 0;
-      const totalRows = payload.totalRows ?? 0;
-      const failures = payload.failures ?? 0;
-      setTopBarNotice(
-        failures > 0
-          ? `Imported ${inserted}/${totalRows} results (${failures} failed).`
-          : `Imported ${inserted}/${totalRows} workout results.`
-      );
-    } catch {
-      setTopBarNotice("Import failed.");
-    } finally {
-      setIsImportingResults(false);
-      event.target.value = "";
-    }
   };
 
   function handleTrackChange(id: string) {
@@ -1108,12 +1056,11 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
                       type="button"
                       onClick={() => {
                         setMenuOpen(false);
-                        importInputRef.current?.click();
+                        router.push("/member/workout/import");
                       }}
-                      disabled={isImportingResults}
                       className="w-full rounded-lg px-3 py-2 text-left text-sm text-[var(--text)] transition hover:bg-[var(--panel)] disabled:opacity-60"
                     >
-                      {isImportingResults ? "Importing workout results..." : "Import Workout Results (CSV)"}
+                      Preview Chalk It Pro Results
                     </button>
                   ) : null}
                   <button
@@ -1130,19 +1077,7 @@ export default function SidebarShell({ children, mainClassName }: SidebarShellPr
           </div>
         </>
 
-        <input
-          ref={importInputRef}
-          type="file"
-          accept=".csv,text/csv"
-          onChange={handleImportSelection}
-          className="hidden"
-        />
 
-        {topBarNotice ? (
-          <div className="hidden border-b border-[var(--pink)]/30 bg-[var(--panel)] px-5 py-2 text-sm text-[var(--pink-soft)] lg:block">
-            {topBarNotice}
-          </div>
-        ) : null}
 
         <main
           className={`${mainClasses} ${showMobileMemberNav || showMobileGymNav ? "pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-0" : ""} ${
