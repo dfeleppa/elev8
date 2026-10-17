@@ -29,6 +29,10 @@ export function hasDevAuthBypass() {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Versioned client APIs authenticate web cookies or verified mobile bearer
+  // tokens themselves and return JSON 401/403 instead of login-page redirects.
+  if (pathname.startsWith("/api/v1/")) return NextResponse.next();
+
   // Authentication pages must always remain reachable. A stale or otherwise
   // unusable session cookie can still be decoded by getToken(), while the app
   // cannot resolve it into a valid user context. Redirecting /login to / in

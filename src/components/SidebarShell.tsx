@@ -104,6 +104,7 @@ const navItems: NavItem[] = [
         minRole: "admin",
         children: [
           { label: "Management", href: "/management", minRole: "admin" },
+          { label: "CRM Contacts", href: "/admin/crm", minRole: "admin" },
           { label: "Content", href: "/admin/content", minRole: "admin" },
           { label: "Business Analytics", href: "/admin/analytics", minRole: "admin" },
           { label: "Programming", href: "/admin/programming", minRole: "admin" },
