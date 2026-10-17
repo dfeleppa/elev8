@@ -1,0 +1,44 @@
+name: CRM and iOS foundation
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: build-only-placeholder
+          GOOGLE_CLIENT_ID: build-only-placeholder
+          GOOGLE_CLIENT_SECRET: build-only-placeholder
+          NEXTAUTH_SECRET: build-only-placeholder-not-for-deployment
+          NEXTAUTH_URL: https://example.invalid
+  ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: apps/ios/Elev8
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Build simulator application and tests
+        run: xcodebuild build-for-testing -project Elev8.xcodeproj -scheme Elev8 -destination 'generic/platform=iOS Simulator' -derivedDataPath .build/DerivedData CODE_SIGNING_ALLOWED=NO
+      - name: Run shared contract tests
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(v["udid"] for group in d["devices"].values() for v in group if "iPhone" in v["name"]))')
+          xcodebuild test-without-building -project Elev8.xcodeproj -scheme Elev8 -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath .build/DerivedData CODE_SIGNING_ALLOWED=NO

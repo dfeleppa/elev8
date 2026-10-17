@@ -1,0 +1,5 @@
+// Public client configuration only. Never add service-role or Twilio secrets.
+ELEV8_API_URL = https:/$()/YOUR_STAGING_HOST
+SUPABASE_URL = https:/$()/YOUR_PROJECT.supabase.co
+SUPABASE_PUBLIC_KEY = YOUR_PUBLIC_KEY
+DEVELOPMENT_TEAM = YOUR_APPLE_TEAM

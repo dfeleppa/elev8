@@ -1,0 +1,411 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Elev8 client API",
+    "version": "0.1.0",
+    "description": "Foundation: session and admin/owner contacts. Bearer identity must already be linked by supabase_auth_uid. Browser mutations also require matching Origin. Additional CRM and member features are planned separately."
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    },
+    {
+      "webSession": []
+    }
+  ],
+  "paths": {
+    "/api/v1/session": {
+      "get": {
+        "operationId": "getClientSession",
+        "responses": {
+          "200": {
+            "description": "Verified account and capabilities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication or identity link missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/crm/contacts": {
+      "get": {
+        "operationId": "listContacts",
+        "description": "Admins and owners only. Stable ascending UUID ordering, up to 50 records per page. Refresh from the first page to see newly added contacts.",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contact page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions or invalid browser Origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createContact",
+        "description": "Admins and owners only. Caller generates an operation UUID and reuses it on retries. A repeated ID yields 409; refresh the directory. Does not create or link login accounts.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewContact"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions or invalid browser Origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation ID already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Supabase access token"
+      },
+      "webSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Secure-next-auth.session-token",
+        "description": "Existing NextAuth cookie. Development uses next-auth.session-token."
+      }
+    },
+    "schemas": {
+      "ClientSession": {
+        "type": "object",
+        "required": [
+          "userId",
+          "role",
+          "capabilities"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "member",
+              "coach",
+              "admin",
+              "owner"
+            ]
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/Capabilities"
+          }
+        }
+      },
+      "Capabilities": {
+        "type": "object",
+        "required": [
+          "member",
+          "coaching",
+          "crm"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "member": {
+            "type": "boolean"
+          },
+          "coaching": {
+            "type": "boolean"
+          },
+          "crm": {
+            "type": "boolean"
+          }
+        }
+      },
+      "NewContact": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "full_name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "full_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "Trimmed before validation."
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email",
+                "maxLength": 254
+              },
+              {
+                "const": ""
+              }
+            ]
+          },
+          "phone": {
+            "type": "string",
+            "pattern": "^(\\+[1-9][0-9]{6,14})?$"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "referral",
+              "website",
+              "import"
+            ],
+            "default": "manual"
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "email"
+            ],
+            "properties": {
+              "email": {
+                "minLength": 1
+              }
+            }
+          },
+          {
+            "required": [
+              "phone"
+            ],
+            "properties": {
+              "phone": {
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      },
+      "Contact": {
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "email",
+          "phone",
+          "source",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "referral",
+              "website",
+              "import"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ContactPage": {
+        "type": "object",
+        "required": [
+          "contacts",
+          "nextCursor"
+        ],
+        "properties": {
+          "contacts": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/Contact"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "ContactResult": {
+        "type": "object",
+        "required": [
+          "contact"
+        ],
+        "properties": {
+          "contact": {
+            "$ref": "#/components/schemas/Contact"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
