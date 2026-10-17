@@ -52,6 +52,8 @@ On replay, `reservationId` describes the historical operation result; `session.r
 
 ## Verification
 
+Local validation: 207 unit/SQL tests pass; TypeScript and production build pass; lint has only four existing warnings. The initial [disposable integration run](https://github.com/dfeleppa/elev8/actions/runs/39079869935) passed 15 authenticated tests, CLI migration/grant assertions and SQL lint, then destroyed the stack. Latest commit-specific checks and additional integration coverage are recorded on [PR #88](https://github.com/dfeleppa/elev8/pull/88).
+
 The dedicated workflow creates synthetic Auth accounts without sending email, explicitly links returned Auth UIDs to different app IDs, applies the actual migration through the CLI, and runs real cookie/bearer requests against PostgreSQL. No credentials, storage state, screenshots or traces are uploaded.
 
 The fixture reuses the bounded identity bootstrap and adds inspected booking table columns. It does not prove historical migration replay or hosted schema parity.

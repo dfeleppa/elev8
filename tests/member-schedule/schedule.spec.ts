@@ -62,6 +62,14 @@ test("signed out and malformed bearer requests return uncached JSON", async ({ r
   }
 });
 
+test("empty days, invalid dates and missing class occurrences have explicit responses", async ({ request }) => {
+  const empty = await request.get(endpoint + "?date=1000-01-01", { headers: bearer() });
+  expect(empty.status()).toBe(200);
+  expect((await empty.json()).sessions).toEqual([]);
+  expect((await request.get(endpoint + "?date=2026-02-30", { headers: bearer() })).status()).toBe(400);
+  expect((await request.get(endpoint + "/classes/" + randomUUID() + "?date=" + date, { headers: bearer() })).status()).toBe(404);
+});
+
 for (const role of roles) {
   test(role + ": real cookie and bearer use canonical ownership and support booking/cancellation", async ({ request }) => {
     const user = users[role], classId = await newClass();
@@ -190,7 +198,10 @@ test("checks the cutoff after waiting on a real PostgreSQL row lock", async ({ r
     child.stdout.on("data", chunk => { if (String(chunk).includes("BOOKING_LOCK_READY")) { clearTimeout(timeout); resolve(); } });
     child.on("error", reject);
   });
-  const result = await book(request, classId, "member", randomUUID(), today);
+  const pending = book(request, classId, "member", randomUUID(), today);
+  await expect.poll(() => Number(dbQuery("select count(*) from pg_stat_activity where wait_event_type='Lock' and query like '%member_schedule_mutate%'")),
+    { timeout: 2500, intervals: [100,200,300] }).toBeGreaterThan(0);
+  const result = await pending;
   await finished;
   expect(result.status()).toBe(409);
   expect((await result.json()).code).toBe("closed");
@@ -198,12 +209,17 @@ test("checks the cutoff after waiting on a real PostgreSQL row lock", async ({ r
 });
 
 test("direct client REST and booking RPC access are denied even to staff tokens", async () => {
+  const classId = await newClass();
   for (const role of ["anon", ...roles]) {
     const headers = { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, ...(role === "anon" ? {} : bearer(role)) };
     for (const table of ["schedule_classes","class_reservations","member_booking_operations"]) {
       const result = await fetch(api + "/rest/v1/" + table + "?select=*", { headers });
       expect([401,403]).toContain(result.status);
     }
+    const insert = await fetch(api + "/rest/v1/class_reservations", { method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ class_id: classId, class_date: date, member_id: users.owner.appId }) });
+    expect([401,403]).toContain(insert.status);
     const rpc = await fetch(api + "/rest/v1/rpc/member_schedule_mutate", { method: "POST", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ p_member_id: users.owner.appId, p_operation_id: randomUUID(), p_action: "book" }) });
     expect([401,403]).toContain(rpc.status);
   }

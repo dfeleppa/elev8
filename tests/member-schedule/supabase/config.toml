@@ -39,4 +39,3 @@ enable_refresh_token_rotation = true
 # Global auth.enable_signup above still blocks public account creation.
 enable_signup = true
 enable_confirmations = false
-
