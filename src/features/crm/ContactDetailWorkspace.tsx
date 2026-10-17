@@ -115,25 +115,25 @@ export default function ContactDetailWorkspace({ id }: { id: string }) {
     {!draft || !saved ? !loading ? <button type="button" onClick={() => void load(false)} className="rounded-lg border border-white/20 px-4 py-2">Retry loading details</button> : null : <>
       <form onSubmit={save} aria-label="Edit contact" className="glass-panel space-y-5 rounded-2xl p-6">
         <fieldset disabled={saving || loading} className="grid gap-4 sm:grid-cols-2">
-          {(["full_name", "email", "phone"] as const).map(key => <label key={key} className="space-y-2">
-            {labels[key]}
-            <input name={key} value={draft[key]} type={key === "email" ? "email" : key === "phone" ? "tel" : "text"}
+          {(["full_name", "email", "phone"] as const).map(key => <div key={key} className="space-y-2">
+            <label htmlFor={`contact-${key}`}>{labels[key]}</label>
+            <input id={`contact-${key}`} name={key} value={draft[key]} type={key === "email" ? "email" : key === "phone" ? "tel" : "text"}
               required={key === "full_name"} maxLength={key === "full_name" ? 160 : key === "email" ? 254 : 16}
               pattern={key === "phone" ? "\\+[1-9][0-9]{6,14}" : undefined}
               autoComplete={key === "full_name" ? "name" : key === "phone" ? "tel" : "email"}
               aria-invalid={Boolean(fieldErrors[key])} aria-describedby={fieldErrors[key] ? `${key}-error` : key === "phone" ? "phone-help" : undefined}
               onChange={event => setDraft({ ...draft, [key]: event.target.value })} className={inputStyle} />
             {fieldErrors[key] ? <span id={`${key}-error`} className="text-sm text-red-200">{fieldErrors[key]}</span> : null}
-          </label>)}
-          <label className="space-y-2">Source
-            <select name="source" value={draft.source} onChange={event => setDraft({ ...draft, source: event.target.value })}
+          </div>)}
+          <div className="space-y-2"><label htmlFor="contact-source">Source</label>
+            <select id="contact-source" name="source" value={draft.source} onChange={event => setDraft({ ...draft, source: event.target.value })}
               aria-invalid={Boolean(fieldErrors.source)} aria-describedby={fieldErrors.source ? "source-error" : undefined}
               className={inputStyle}>
               <option value="manual">Manual entry</option><option value="referral">Referral</option>
               <option value="website">Website</option><option value="import">Import</option>
             </select>
             {fieldErrors.source ? <span id="source-error" className="text-sm text-red-200">{fieldErrors.source}</span> : null}
-          </label>
+          </div>
         </fieldset>
         <p id="phone-help" className="text-sm text-slate-400">Keep an email address or phone number. Phone numbers include the country code, without spaces.</p>
         <div className="flex flex-wrap gap-3">

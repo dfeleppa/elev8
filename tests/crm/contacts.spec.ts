@@ -209,15 +209,20 @@ test("browser origin, duplicate IDs and caller-supplied identity are enforced", 
 });
 
 test("direct REST access is denied even to signed-in staff, while the server grant stays narrow", async () => {
+  const contact = freshContact();
+  expect((await admin.from("crm_contacts").insert(contact)).error).toBeNull();
   for (const token of [publicKey, identities.member.token, identities.coach.token, identities.admin.token, identities.owner.token]) {
     for (const method of ["GET", "POST", "PATCH", "DELETE"]) {
-      const response = await fetch(`${api}/rest/v1/crm_contacts?select=id`, {
+      const response = await fetch(`${api}/rest/v1/crm_contacts?select=id&id=eq.${contact.id}`, {
         method, headers: { apikey: publicKey, authorization: `Bearer ${token}`, "content-type": "application/json" },
         ...(method === "POST" ? { body: JSON.stringify(freshContact()) } : method === "PATCH" ? { body: JSON.stringify({ full_name: "Denied" }) } : {}),
       });
-      expect([401, 403]).toContain(response.status);
+      const denial = await response.json();
+      expect([401, 403], JSON.stringify({ method, status: response.status, code: denial.code })).toContain(response.status);
     }
   }
+  expect((await admin.from("crm_contacts").select("full_name, revision").eq("id", contact.id).single()).data)
+    .toEqual({ full_name: contact.full_name, revision: 1 });
   const id = randomUUID();
   expect((await admin.from("crm_contacts").delete().eq("id", id)).error?.code).toBe("42501");
   expect((await admin.from("crm_contacts").update({ revision: 99 }).eq("id", id)).error?.code).toBe("42501");
