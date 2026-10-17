@@ -25,7 +25,7 @@ Local HTTP checks confirm JSON 401 responses for both versioned routes without a
 
 Read-only Supabase inspection reports Elev8 as `ACTIVE_HEALTHY`. The user table has 12 records, 3 linked Auth identities (all staff), and no duplicate non-null links. Nine records need identity review before native member rollout. The new contact table is absent from the live database. No production database mutation or phone-routing change was performed.
 
-Native code and XcodeGen configuration are prepared but have not been compiled on macOS. Simulator tests, signing, and physical-device behavior remain unverified. GitHub Actions has not been run remotely.
+GitHub Actions [run 39030675413](https://github.com/dfeleppa/elev8/actions/runs/39030675413) passed both web and iOS jobs. The Swift application and test target compiled on macOS, and shared contract tests passed in the iOS simulator. Signing, physical-device behavior, and authenticated staging integration remain unverified. Review the increment in [draft PR #85](https://github.com/dfeleppa/elev8/pull/85).
 
 ## Run and deploy the increment
 
@@ -37,4 +37,4 @@ Native code and XcodeGen configuration are prepared but have not been compiled o
 
 ## Next build steps
 
-Finish staging identity validation and native compilation, then add contact detail/edit, member linking with an explicit verified process, opportunity pipelines, assignments, and follow-up tasks. Connect the member schedule and booking flow in the same native app alongside CRM work. Messaging follows the durable outbox and webhook foundation; Twilio credentials, sending, and number routing are not implemented in this increment.
+Finish staging identity validation and authenticated end-to-end testing, then add contact detail/edit, member linking with an explicit verified process, opportunity pipelines, assignments, and follow-up tasks. Connect the member schedule and booking flow in the same native app alongside CRM work. Messaging follows the durable outbox and webhook foundation; Twilio credentials, sending, and number routing are not implemented in this increment.
