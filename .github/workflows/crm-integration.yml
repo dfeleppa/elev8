@@ -28,6 +28,7 @@ jobs:
           psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/crm/bootstrap.sql
           mkdir -p tests/crm/supabase/migrations
           cp supabase/migrations/20261017114730_crm_contacts_foundation.sql tests/crm/supabase/migrations/
+          cp supabase/migrations/20261017232622_crm_contact_edit.sql tests/crm/supabase/migrations/
           npx supabase db push --local --workdir tests/crm
           psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/crm/assert-schema.sql
       - name: Configure loopback services without logging credentials

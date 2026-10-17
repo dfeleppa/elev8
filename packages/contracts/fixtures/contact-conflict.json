@@ -1,0 +1,4 @@
+{
+  "error": "This contact changed. Load the latest details before saving again.",
+  "code": "revision_conflict"
+}
