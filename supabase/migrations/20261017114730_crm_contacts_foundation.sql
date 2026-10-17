@@ -16,5 +16,6 @@ create index crm_contacts_phone_idx on public.crm_contacts(phone) where phone is
 -- API-only access. Server routes must independently require CRM capabilities.
 -- Shared family phone/email addresses are deliberately not unique identities.
 alter table public.crm_contacts enable row level security;
-revoke all on public.crm_contacts from public, anon, authenticated;
+-- Supabase default privileges can grant ALL to service_role at table creation.
+revoke all on public.crm_contacts from public, anon, authenticated, service_role;
 grant select, insert on public.crm_contacts to service_role;

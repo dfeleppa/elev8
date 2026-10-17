@@ -12,7 +12,7 @@
 import type { User } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 
-import { supabaseAdmin } from "./supabase-admin";
+import { createPasswordAuthClient, supabaseAdmin } from "./supabase-admin";
 
 function normalizeEmail(value: string | null | undefined): string {
   return value?.trim().toLowerCase() ?? "";
@@ -190,6 +190,7 @@ export async function registerWithEmailPassword(
 export interface LoginResult {
   ok: true;
   userId: string;
+  supabaseAuthUid: string;
   email: string;
   fullName: string | null;
 }
@@ -214,7 +215,7 @@ export async function loginWithEmailPassword(
   }
 
   const { data: signInData, error: signInError } =
-    await supabaseAdmin.auth.signInWithPassword({
+    await createPasswordAuthClient().auth.signInWithPassword({
       email: normalizedEmail,
       password,
     });
@@ -224,6 +225,7 @@ export async function loginWithEmailPassword(
     return {
       ok: true,
       userId: user.id,
+      supabaseAuthUid: user.id,
       email: user.email ?? normalizedEmail,
       fullName: user.user_metadata?.full_name ?? null,
     };
@@ -261,6 +263,7 @@ export async function loginWithEmailPassword(
       return {
         ok: true,
         userId: appUser.id,
+        supabaseAuthUid: migratedUser.user.id,
         email: appUser.email ?? normalizedEmail,
         fullName: appUser.full_name ?? null,
       };

@@ -10,5 +10,13 @@ if (!supabaseUrl || !supabaseServiceKey) {
 }
 
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false },
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
+
+// Password authentication must never replace the shared admin client's session:
+// PostgREST would then run subsequent requests as the last signed-in user.
+export function createPasswordAuthClient() {
+  return createClient(supabaseUrl!, supabaseServiceKey!, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+}

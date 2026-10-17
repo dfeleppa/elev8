@@ -2,14 +2,14 @@
 
 October 17, 2026
 
-Branch: `codex/crm-ios-foundation`. The existing web application remains at the monorepo root; the unified native target lives at `apps/ios/Elev8`.
+Foundation [PR #85](https://github.com/dfeleppa/elev8/pull/85) merged into `main` as `f00b8a144e36bed6c74dfc0a1198835cdb8c2a44`. Staging verification continues on `codex/crm-staging-verification`. The existing web application remains at the monorepo root; the unified native target lives at `apps/ios/Elev8`.
 
 ## Implemented
 
 - `/admin/crm`: admin/owner contact directory, bounded pagination, create form, validation, loading/error/empty states, and stable creation IDs for retries. Accessible through the Admin sidebar.
 - `/api/v1/session`: canonical application user ID, role, and member/coaching/CRM capabilities.
 - `/api/v1/crm/contacts`: list and create contacts, with server-side admin/owner authorization, input validation, browser Origin checks, and no-store responses. Coaches have no implicit CRM access.
-- New mobile APIs verify Supabase bearer tokens and require exactly one existing `supabase_auth_uid` link. They never auto-link by email, create accounts, or trust a client-supplied role.
+- Versioned APIs require exactly one existing `supabase_auth_uid` link: mobile uses verified bearer tokens and web uses a fresh password session's verified Auth UID. They never auto-link by email, create accounts, or trust a client-supplied role. CRM access for email-only/OAuth sessions remains gated on trusted subject mapping.
 - Proxy handling lets versioned APIs return JSON authentication errors instead of redirecting mobile clients to HTML login pages. Existing web-page protection remains.
 - `crm_contacts` migration keeps prospects separate from login accounts. Direct anon/authenticated access is revoked, RLS is enabled, and the server role is limited to select/insert on the new table.
 - SwiftUI app: existing email/password account login, restore/sign-out, member/staff navigation, and native contact list/create for authorized admins and owners. The member home is a foundation shell; training, bookings, nutrition, chat, and coaching screens are not yet connected.
@@ -17,15 +17,25 @@ Branch: `codex/crm-ios-foundation`. The existing web application remains at the 
 
 ## Verification
 
-The original 119 tests passed before new tests were added. The expanded suite passes 156 tests across 30 files, including authorization, identity linking rejection, duplicate operations, cursor pagination, and actual PostgreSQL migration/RLS checks using PGlite. PGlite validates this migration in isolation against a minimal user table; it does not prove the entire historical migration chain against production.
+The original 119 tests passed before new tests were added. The foundation expanded this to 156; the staging follow-up now passes 161 tests across 32 files, including authorization, session claim integrity, identity linking rejection, duplicate operations, cursor pagination, and actual PostgreSQL migration/RLS checks using PGlite. PGlite validates this migration in isolation against a minimal user table; it does not prove the entire historical migration chain against production.
 
-TypeScript checks and the Next.js production build pass. Build-time configuration uses explicit nonfunctional placeholders; this proves compilation, not connectivity to production services. Lint has no errors and four pre-existing warnings.
+TypeScript checks and the Next.js production build pass. The foundation build used explicit nonfunctional placeholders; the integration follow-up also builds against the real disposable Supabase stack. Neither proves connectivity to production services. Lint has no errors and four pre-existing warnings.
 
-Local HTTP checks confirm JSON 401 responses for both versioned routes without authentication and for malformed authorization. The full authenticated browser-to-database flow remains unverified because local staging credentials and an applied staging migration are not configured.
+Authenticated [integration run 39077107248](https://github.com/dfeleppa/elev8/actions/runs/39077107248) passed all 11 end-to-end tests at `d51f2d1`. A disposable Supabase stack applied the contact migration through the CLI, checked RLS/grants, and ran real browser → NextAuth cookie/API → PostgreSQL create/list checks plus mobile bearer authorization. Hosted staging verification remains open; the test fixture is not a production schema clone.
 
 Read-only Supabase inspection reports Elev8 as `ACTIVE_HEALTHY`. The user table has 12 records, 3 linked Auth identities (all staff), and no duplicate non-null links. Nine records need identity review before native member rollout. The new contact table is absent from the live database. No production database mutation or phone-routing change was performed.
 
-GitHub Actions [run 39030675413](https://github.com/dfeleppa/elev8/actions/runs/39030675413) passed both web and iOS jobs. The Swift application and test target compiled on macOS, and shared contract tests passed in the iOS simulator. Signing, physical-device behavior, and authenticated staging integration remain unverified. Review the increment in [draft PR #85](https://github.com/dfeleppa/elev8/pull/85).
+GitHub Actions [run 39077107327](https://github.com/dfeleppa/elev8/actions/runs/39077107327) passed both web and iOS jobs at `d51f2d1`, repeating the earlier foundation [run 39030675413](https://github.com/dfeleppa/elev8/actions/runs/39030675413). The Swift application and test target compiled on macOS, and three shared contract tests passed in the iOS simulator. Signing, physical-device behavior, and authenticated hosted staging integration remain unverified. PR #85 is merged; follow-up [PR #86](https://github.com/dfeleppa/elev8/pull/86) remains draft. Subsequent status-only documentation changes do not alter the tested code.
+
+## Staging follow-up — October 17
+
+See [staging runbook and evidence](crm-staging-verification.md). Production inspection remains read-only: 12 app users, 3 linked owners, 6 unlinked members and 3 unlinked coaches, no duplicate or orphan links, and no `crm_contacts` table. Vercel reports the merged foundation deployment READY in project `daneff`.
+
+No hosted staging project was discovered. Supabase branch creation was rejected because branching requires Pro; Vercel environment metadata returned 403 and the explicitly scoped CLI fallback also denied access. No branch was created, no production migration or identity change was made, and no messaging/routing action was taken.
+
+The disposable integration job passed: member/coach denials, admin/owner access and browser contact persistence, canonical app IDs across both auth paths, missing/ambiguous links, legacy session rejection, bearer precedence over cookies, direct REST denials, origin checks, payload validation, duplicate IDs, refresh, live role changes, web sign-out, and cursor pagination. SQL assertions confirmed the recorded migration, RLS, denied direct client privileges and SELECT/INSERT-only server grants. Cleanup passed and destroyed the test stack. This proves the bounded contacts flow; it does not close the hosted staging or native UI/device gates.
+
+Identity hardening: new versioned web APIs and `/admin/crm` now require a verified Auth UID from a fresh password session, resolved to exactly one existing app user, just like mobile. Old email-only sessions and OAuth sessions without a trusted subject mapping are denied. Other legacy web routes retain their current auth behavior and require a separate identity audit. Password sign-in uses a separate client so it cannot replace the shared service-role client's identity. The not-yet-deployed contact migration explicitly removes inherited service-role grants before granting SELECT/INSERT.
 
 ## Run and deploy the increment
 

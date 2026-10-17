@@ -8,6 +8,7 @@ const contactId = "00000000-0000-4000-8000-000000000003";
 beforeAll(async () => {
   await db.exec(`
     create role anon; create role authenticated; create role service_role bypassrls;
+    alter default privileges in schema public grant all on tables to service_role;
     create table public.app_users (id uuid primary key);
     insert into public.app_users values ('00000000-0000-4000-8000-000000000001');
   `);

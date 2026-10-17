@@ -2,22 +2,29 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ web: vi.fn(), getUser: vi.fn(), from: vi.fn(), eq: vi.fn(), limit: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/member", () => ({ requireUserContext: mocks.web }));
+vi.mock("next-auth", () => ({ getServerSession: mocks.web }));
+vi.mock("@/lib/auth", () => ({ authOptions: {} }));
 vi.mock("@/lib/supabase-admin", () => ({ supabaseAdmin: { auth: { getUser: mocks.getUser }, from: mocks.from } }));
 import { requireClientContext, allowsMutationOrigin } from "./context";
 
 describe("client identity boundary", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mocks.web.mockResolvedValue({ userId: "web-user", role: "member", error: null });
+    mocks.web.mockResolvedValue({ verifiedAuthUid: "web-auth-uid", user: { email: "owner@example.com" } });
     mocks.getUser.mockResolvedValue({ data: { user: { id: "verified-uid", email: "owner@example.com" } }, error: null });
     mocks.limit.mockResolvedValue({ data: [{ id: "app-user", role: "admin" }], error: null });
     mocks.eq.mockReturnValue({ limit: mocks.limit });
     mocks.from.mockReturnValue({ select: () => ({ eq: mocks.eq }) });
   });
   it("uses existing web sessions only when no authorization header is supplied", async () => {
-    expect((await requireClientContext(new Request("https://app.test"))).userId).toBe("web-user");
+    expect((await requireClientContext(new Request("https://app.test"))).userId).toBe("app-user");
+    expect(mocks.eq).toHaveBeenCalledExactlyOnceWith("supabase_auth_uid", "web-auth-uid");
     expect(mocks.getUser).not.toHaveBeenCalled();
+  });
+  it("rejects email-only web sessions without looking up or provisioning an account", async () => {
+    mocks.web.mockResolvedValue({ user: { email: "owner@example.com" } });
+    expect((await requireClientContext(new Request("https://app.test"))).userId).toBeNull();
+    expect(mocks.from).not.toHaveBeenCalled();
   });
   it.each(["Basic abc", "Bearer", "Bearer bad token"])("rejects malformed %s without falling back to cookies", async header => {
     expect((await requireClientContext(new Request("https://app.test", { headers: { authorization: header } }))).error).toBe("Unauthorized");

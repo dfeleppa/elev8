@@ -244,4 +244,4 @@ Budget for hosting/database, queue execution, monitoring, number rental, SMS seg
 
 ### Foundation build progress
 
-The first increment is implemented on `codex/crm-ios-foundation`: protected session/contact APIs, a web contacts workspace, an additive contact migration, shared API contracts, and a native SwiftUI login and role-based shell with contacts. See [foundation build status](crm-foundation-status.md) for validation and remaining work. This does not complete the combined staff/member release or the first texting demonstration.
+The first increment merged in [PR #85](https://github.com/dfeleppa/elev8/pull/85) as `f00b8a144e36bed6c74dfc0a1198835cdb8c2a44`: protected session/contact APIs, a web contacts workspace, an additive contact migration, shared API contracts, and a native SwiftUI login and role-based shell with contacts. Staging and identity verification continues on `codex/crm-staging-verification`; see [foundation build status](crm-foundation-status.md) and the [staging runbook](crm-staging-verification.md). This does not complete the combined staff/member release or the first texting demonstration.
