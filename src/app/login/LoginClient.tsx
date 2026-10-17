@@ -40,7 +40,9 @@ export default function LoginClient() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const externalError =
-    authError === "reserved_email"
+    authError === "crm_identity"
+      ? "Contacts requires a linked Elev8 account signed in with email and password. Ask an administrator if your account needs to be linked."
+      : authError === "reserved_email"
       ? "This email already exists in an organization's member roster and cannot be used to create an app account."
       : authError === "invite_required"
         ? "Create an account with your invitation code before signing in with Google."

@@ -1,0 +1,47 @@
+name: CRM authenticated integration
+on:
+  push:
+    branches: ['codex/crm-staging-verification']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: crm-integration-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  contacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Start disposable Supabase (no hosted project, no production secrets)
+        run: npx supabase start --workdir tests/crm -x realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Bootstrap bounded fixture and apply the actual contact migration through CLI
+        run: |
+          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/crm/bootstrap.sql
+          mkdir -p tests/crm/supabase/migrations
+          cp supabase/migrations/20261017114730_crm_contacts_foundation.sql tests/crm/supabase/migrations/
+          npx supabase db push --local --workdir tests/crm
+          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/crm/assert-schema.sql
+      - name: Configure loopback services without logging credentials
+        run: |
+          npx supabase status --workdir tests/crm --output json > .codex-crm-status.json
+          node tests/crm/configure.mjs
+      - name: Compile the real application against the isolated stack
+        run: node --env-file=.codex-crm.env node_modules/next/dist/bin/next build
+      - name: Browser, cookie, bearer, role and database verification
+        run: npx playwright test --config playwright.crm.config.ts
+      - name: Destroy disposable data and credentials
+        if: always()
+        run: |
+          npx supabase stop --workdir tests/crm --no-backup
+          rm -f .codex-crm-status.json .codex-crm.env

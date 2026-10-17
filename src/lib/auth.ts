@@ -1,5 +1,4 @@
 import type { NextAuthOptions } from "next-auth";
-import type { JWT } from "next-auth/jwt";
 import { cookies } from "next/headers";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -53,7 +52,7 @@ const providers: NextAuthOptions["providers"] = [
       const result = await loginWithEmailPassword(email, credentials.password);
 
       if (!result.ok) return null;
-      return { id: result.userId, email: result.email, name: result.fullName };
+      return { id: result.userId, email: result.email, name: result.fullName, verifiedAuthUid: result.supabaseAuthUid };
     },
   }),
 ];
@@ -96,11 +95,18 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
 
-    async jwt({ token }: { token: JWT; trigger?: string }) {
+    async jwt({ token, user, account }) {
+      // Only a password proof currently supplies a verified Supabase subject.
+      // OAuth provider subjects need an explicit mapping before CRM access;
+      // neither email matching nor client-triggered session updates can add it.
+      if (user) {
+        token.verifiedAuthUid = account?.provider === "credentials" ? user.verifiedAuthUid : undefined;
+      }
       return token;
     },
 
     async session({ session, token }) {
+      session.verifiedAuthUid = typeof token.verifiedAuthUid === "string" ? token.verifiedAuthUid : undefined;
       if (token.email) {
         session.user = session.user ?? {};
         session.user.email = token.email;

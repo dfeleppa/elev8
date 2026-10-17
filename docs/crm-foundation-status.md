@@ -2,7 +2,7 @@
 
 October 17, 2026
 
-Branch: `codex/crm-ios-foundation`. The existing web application remains at the monorepo root; the unified native target lives at `apps/ios/Elev8`.
+Foundation [PR #85](https://github.com/dfeleppa/elev8/pull/85) merged into `main` as `f00b8a144e36bed6c74dfc0a1198835cdb8c2a44`. Staging verification continues on `codex/crm-staging-verification`. The existing web application remains at the monorepo root; the unified native target lives at `apps/ios/Elev8`.
 
 ## Implemented
 
@@ -25,7 +25,17 @@ Local HTTP checks confirm JSON 401 responses for both versioned routes without a
 
 Read-only Supabase inspection reports Elev8 as `ACTIVE_HEALTHY`. The user table has 12 records, 3 linked Auth identities (all staff), and no duplicate non-null links. Nine records need identity review before native member rollout. The new contact table is absent from the live database. No production database mutation or phone-routing change was performed.
 
-GitHub Actions [run 39030675413](https://github.com/dfeleppa/elev8/actions/runs/39030675413) passed both web and iOS jobs. The Swift application and test target compiled on macOS, and shared contract tests passed in the iOS simulator. Signing, physical-device behavior, and authenticated staging integration remain unverified. Review the increment in [draft PR #85](https://github.com/dfeleppa/elev8/pull/85).
+GitHub Actions [run 39030675413](https://github.com/dfeleppa/elev8/actions/runs/39030675413) passed both web and iOS jobs. The Swift application and test target compiled on macOS, and three shared contract tests passed in the iOS simulator. Signing, physical-device behavior, and authenticated hosted staging integration remain unverified. PR #85 is merged.
+
+## Staging follow-up — October 17
+
+See [staging runbook and evidence](crm-staging-verification.md). Production inspection remains read-only: 12 app users, 3 linked owners, 6 unlinked members and 3 unlinked coaches, no duplicate or orphan links, and no `crm_contacts` table. Vercel reports the merged foundation deployment READY in project `daneff`.
+
+No hosted staging project was discovered. Supabase branch creation was rejected because branching requires Pro; Vercel environment metadata returned 403 and the explicitly scoped CLI fallback also denied access. No branch was created, no production migration or identity change was made, and no messaging/routing action was taken.
+
+This follow-up adds a disposable local Supabase integration job using real Auth, PostgREST, PostgreSQL, NextAuth cookies and Chromium. Its bounded fixture is **not** a production schema clone. It applies the actual contact migration through the CLI. Execution evidence is pending the first CI run.
+
+Identity hardening: new versioned web APIs and `/admin/crm` now require a verified Auth UID from a fresh password session, resolved to exactly one existing app user, just like mobile. Old email-only sessions and OAuth sessions without a trusted subject mapping are denied. Other legacy web routes retain their current auth behavior and require a separate identity audit. Password sign-in uses a separate client so it cannot replace the shared service-role client's identity. The not-yet-deployed contact migration explicitly removes inherited service-role grants before granting SELECT/INSERT.
 
 ## Run and deploy the increment
 
