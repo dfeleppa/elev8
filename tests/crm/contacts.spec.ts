@@ -359,7 +359,7 @@ test("two browser editors preserve drafts, review conflicts and recover an accep
     await page.getByRole("button", { name: "Save changes", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("Contact updated.");
     await second.getByRole("button", { name: "Save changes", exact: true }).click();
-    await expect(second.getByRole("alert")).toContainText("This contact changed.");
+    await expect(second.getByRole("alert").filter({ hasText: "This contact changed." })).toBeVisible();
     await expect(second.getByLabel("Name", { exact: true })).toHaveValue("Preserved draft");
     await expect(second.getByRole("button", { name: "Save changes", exact: true })).toBeDisabled();
     await second.getByRole("button", { name: "Load latest details", exact: true }).click();
@@ -379,7 +379,7 @@ test("two browser editors preserve drafts, review conflicts and recover an accep
     });
     await second.getByLabel("Name", { exact: true }).fill("Accepted but unconfirmed");
     await second.getByRole("button", { name: "Save changes", exact: true }).click();
-    await expect(second.getByRole("alert")).toContainText("The save could not be confirmed.");
+    await expect(second.getByRole("alert").filter({ hasText: "The save could not be confirmed." })).toBeVisible();
     await expect(second.getByLabel("Name", { exact: true })).toHaveValue("Accepted but unconfirmed");
     await second.getByRole("button", { name: "Load latest details", exact: true }).click();
     await expect(second.getByLabel("Review latest contact")).toContainText("Accepted but unconfirmed");
