@@ -16,6 +16,8 @@ October 17, 2026. Foundation PR #85 is merged as `f00b8a1`. This follow-up does 
 
 The production migration ledger is not a clean match to the repository: several May migrations have different applied timestamps; a September `harden_mobile_app_user_access` entry has no corresponding local migration; some later local migrations are absent from the ledger. Replaying the entire historical chain against a new database is not established. Do not repair production history to make a staging command pass.
 
+A second read-only prerequisite check confirmed `app_users.id` is a UUID primary key, `supabase_auth_uid` is nullable UUID, and email/name/role/password hash are text. Production role and updated-at fields are nullable, unlike parts of the bounded fixture; unknown/null roles fail closed in the new resolver. Both `crm_contacts` and migration version `20261017114730` were still absent. This is a compatibility prerequisite check, not schema-parity evidence.
+
 ## Isolated integration environment
 
 `.github/workflows/crm-integration.yml` starts a disposable Supabase stack with a distinct project ID, real Auth, PostgREST and PostgreSQL 17. It bootstraps `tests/crm/bootstrap.sql`, then uses `supabase db push --local --workdir tests/crm` to apply an exact copy of the production contact migration. The fixture models only identity and sidebar dependencies; this does **not** prove historical migration replay, production schema parity, hosted TLS or OAuth configuration.
@@ -57,12 +59,16 @@ Password login previously used the shared service-role client, which can retain 
 | Check | Current evidence |
 | --- | --- |
 | Web/backend unit and SQL tests | 161 tests pass locally; TypeScript passes; lint has no errors and four existing warnings |
-| Previous Swift build | Foundation CI run 39030675413: application/test compilation and three simulator contract tests passed |
-| Real cookie + bearer role matrix, browser create/list, REST denials, refresh, role change, pagination | Added executable integration suite; awaiting first CI execution |
+| Web and Swift CI | [Run 39077107327](https://github.com/dfeleppa/elev8/actions/runs/39077107327), code `d51f2d1`: 161 web/unit tests, type check, lint and build; Swift application/test compilation and three simulator contract tests passed |
+| Real cookie + bearer role matrix, browser create/list, REST denials, refresh, role change, web sign-out, pagination | **11/11 passed**, [run 39077107248](https://github.com/dfeleppa/elev8/actions/runs/39077107248), code `d51f2d1`; CLI migration and SQL assertions passed; production build passed; stack cleanup passed |
 | Hosted staging migration and schema compatibility | Blocked on an isolated project and reconciled schema baseline |
 | Hosted browser login and protected-preview connectivity | Blocked on staging configuration access and deployment |
 | Native authenticated UI, session restore/foreground, sign-out, role switching | Requires Mac/simulator against hosted staging; HTTP bearer tests do not prove Swift UI behavior |
 | Physical iPhone | Signing team/bundle/profile, device, reachable staging URL; prove Keychain persistence, background/foreground and network recovery |
+
+The passing run created all fixture identities via real Auth and proved that their canonical app IDs differ from their Auth UIDs while matching across web/mobile paths. Both admin and owner created contacts through Chromium and saw them after reload; database checks confirmed actor IDs and unchanged app-user counts. Members/coaches failed direct reads/writes and CRM page access. Missing/ambiguous links remained unchanged. Editable metadata did not confer a role. An invalid or lower-privilege bearer header did not inherit a privileged cookie. Contact REST reads/inserts failed for anon/member/admin/owner tokens, and even the server role could not update/delete. Browser Origin, forged actor IDs, duplicate creation IDs, refresh, current database roles and cursor pagination all passed.
+
+Early runs exposed test infrastructure issues (Node worker `--env-file` propagation and the CLI email-provider toggle); both were fixed and the full suite rerun successfully. No skipped check is counted as a pass. Unit/SQL tests also model inherited Supabase default privileges so the grant regression is covered outside the end-to-end suite.
 
 ## Hosted staging procedure and remaining gates
 
