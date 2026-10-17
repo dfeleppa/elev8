@@ -1,11 +1,9 @@
 import type { NextAuthOptions } from "next-auth";
-import { cookies } from "next/headers";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
-import { INVITATION_TICKET_COOKIE, verifyInvitationTicket } from "./invitation-code";
 import { getClientIpFromHeaders, rateLimitByKey } from "./rate-limit";
-import { loginWithEmailPassword, upsertSupabaseAuthOAuthUser } from "./supabase-auth-admin";
+import { loginWithEmailPassword } from "./supabase-auth-admin";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -75,24 +73,10 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "credentials") return true;
-
-      const email = user.email;
-      if (!email) return false;
-
-      const cookieStore = await cookies();
-      const hasInvitationTicket = verifyInvitationTicket(
-        cookieStore.get(INVITATION_TICKET_COOKIE)?.value
-      );
-
-      const result = await upsertSupabaseAuthOAuthUser(
-        email,
-        user.name ?? null,
-        hasInvitationTicket
-      );
-      if (!result.ok) return result.redirect;
-      return true;
+    async signIn({ account }) {
+      // Invitation tickets and email matches are not identity ownership proof.
+      // Keep OAuth gated until explicit provider-subject mapping is proven.
+      return account?.provider === "credentials" ? true : "/login?error=identity_link_required";
     },
 
     async jwt({ token, user, account }) {

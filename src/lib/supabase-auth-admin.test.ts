@@ -21,3 +21,15 @@ it("isolates password sessions from the shared service client and returns the ve
   expect(mocks.sharedSignIn).not.toHaveBeenCalled();
   expect(mocks.from).not.toHaveBeenCalled();
 });
+
+it("failed password login never looks up, migrates, creates, or links a legacy account", async () => {
+  mocks.signIn.mockResolvedValue({ data: { user: null }, error: { message: "Invalid credentials" } });
+  expect(await loginWithEmailPassword("owner@example.invalid", "wrong")).toEqual({ ok: false, code: "invalid_credentials" });
+  expect(mocks.from).not.toHaveBeenCalled();
+  expect(mocks.sharedSignIn).not.toHaveBeenCalled();
+});
+
+it("empty credentials do not reach Auth", async () => {
+  expect((await loginWithEmailPassword(" ", "password")).ok).toBe(false);
+  expect(mocks.factory).not.toHaveBeenCalled();
+});

@@ -7,11 +7,30 @@ create table public.app_users (
   role text not null default 'member' check (role in ('member','coach','admin','owner')),
   full_name text,
   password_hash text,
+  sex text, birth_date date, height_cm numeric, current_weight_kg numeric,
+  body_fat_percent numeric, created_at timestamptz default now(),
   updated_at timestamptz not null default now()
 );
+-- Keep duplicate links possible only in this bounded fixture so the API and
+-- SQL resolvers face a corrupted-data case. The PGlite identity fixture also
+-- verifies the unique constraint that exists in production.
 alter table public.app_users enable row level security;
 revoke all on public.app_users from public, anon, authenticated;
 grant all on public.app_users to service_role;
+grant update (supabase_auth_uid, role) on public.app_users to authenticated;
+create policy unsafe_fixture_claim on public.app_users for update to authenticated
+  using (true) with check (true);
+create function public.sync_supabase_auth_uid() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  update public.app_users set supabase_auth_uid = new.id
+  where lower(email) = lower(new.email)
+    and (supabase_auth_uid is null or supabase_auth_uid <> new.id);
+  return new;
+end;
+$$;
+create trigger on_auth_user_login after insert or update on auth.users
+  for each row execute function public.sync_supabase_auth_uid();
 -- Reproduce Supabase's default table grants, which the CRM migration must narrow.
 alter default privileges for role postgres in schema public grant all on tables to service_role;
 

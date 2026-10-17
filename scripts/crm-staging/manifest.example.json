@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "environment": "staging",
+  "projectRef": "REPLACE_WITH_APPROVED_STAGING_REF",
+  "vercelProjectId": "REPLACE_WITH_DISTINCT_STAGING_PROJECT",
+  "appOrigin": "https://REPLACE_WITH_STAGING_ORIGIN",
+  "reviewedBy": "",
+  "reviewedAt": "",
+  "credentialSha256": {
+    "SUPABASE_SERVICE_ROLE_KEY": "",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "",
+    "NEXTAUTH_SECRET": ""
+  },
+  "baseline": {
+    "sourceRef": "scghaxpgsibpffbukyws",
+    "file": ".codex-crm-schema/baseline.sql",
+    "sha256": "",
+    "reviewedSchemaOnly": false
+  },
+  "migrations": [
+    { "file": "20261017114730_crm_contacts_foundation.sql", "sha256": "" },
+    { "file": "20261017233030_trusted_identity_boundary.sql", "sha256": "" }
+  ]
+}

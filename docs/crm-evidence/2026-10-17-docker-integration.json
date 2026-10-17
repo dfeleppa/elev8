@@ -1,0 +1,135 @@
+{
+  "formatVersion": 1,
+  "recordedAtUtc": "2026-10-17T23:56:33.2323324Z",
+  "sourceBaseCommit": "64f7f25921028d9105dadde9bfb42aa0e752c57b",
+  "sourceBranch": "codex/crm-foundation-gate",
+  "execution": "Local disposable WSL2 distribution; independent Docker engine; copied worktree source; no GitHub push or hosted resource",
+  "runtime": {
+    "os": "Ubuntu 24.04.5 LTS",
+    "wsl": "2.5.7.0",
+    "docker": "29.1.3",
+    "node": "22.23.3",
+    "npm": "10.9.9",
+    "supabaseCli": "2.98.2",
+    "playwright": "1.64.1",
+    "psql": "16.15"
+  },
+  "images": [
+    "public.ecr.aws/supabase/postgres:17.6.1.106",
+    "public.ecr.aws/supabase/gotrue:v2.188.1",
+    "public.ecr.aws/supabase/postgrest:v14.10",
+    "public.ecr.aws/supabase/mailpit:v1.22.3",
+    "public.ecr.aws/supabase/kong:2.8.1"
+  ],
+  "targets": {
+    "supabase": "http://127.0.0.1:54321",
+    "postgres": "127.0.0.1:54322",
+    "nextjs": "http://127.0.0.1:3100",
+    "projectId": "elev8-crm-integration",
+    "productionCliCacheCopied": false,
+    "realEnvironmentFilesCopied": false
+  },
+  "results": {
+    "cliMigrations": [
+      "20261017114730",
+      "20261017233030"
+    ],
+    "schemaAssertions": "passed",
+    "localSecurityAdvisors": "No issues found at warn/error levels; --local --type security --level warn --fail-on error",
+    "productionBuild": "passed against disposable stack",
+    "typescript": "passed: npx tsc --noEmit",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 4
+    },
+    "integration": {
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "reportedDurationSeconds": 6.4,
+      "command": "npx playwright test --config playwright.crm.config.ts"
+    },
+    "unitAndSql": {
+      "passed": 233,
+      "files": 35,
+      "failed": 0,
+      "command": "npm test"
+    },
+    "setupCorrection": "Initial Linux source copy omitted packages/contracts, causing one unit suite import failure. Copied the shared contract fixtures and reran all 233 tests successfully. No application defect found."
+  },
+  "verifiedFlows": [
+    "Signed-out and malformed clients receive uncached JSON denials",
+    "Member and coach cookie/bearer identities match and CRM access is denied",
+    "Admin and owner cookie/bearer identities match; browser contact create/list persists with canonical actor IDs",
+    "Unlinked and duplicate links are denied without email linking",
+    "Email-only legacy cookie denied; invalid bearer never inherits a cookie",
+    "Origin validation, duplicate contact IDs and caller-forged identity",
+    "Contact REST access denied to direct clients; service role SELECT/INSERT only",
+    "Profile RLS exposes one exact linked row, denies private columns and role/identity writes",
+    "Auth metadata updates do not claim an unlinked app user",
+    "Password bearer refresh, live role changes, web sign-out",
+    "Cursor pagination returns all contacts once"
+  ],
+  "cleanup": {
+    "stackStopExitCode": 0,
+    "remainingContainers": 0,
+    "remainingVolumes": 0,
+    "generatedCredentialFilesRemoved": true,
+    "temporaryWslDistributionRemoved": false,
+    "temporaryWslDistributionStopped": true,
+    "retainedRuntimeDirectory": ".codex-crm-runtime/",
+    "cleanupLimitation": "Automatic approval review rejected combined WSL unregister and runtime-directory removal: blocked by policy; no more specific reason supplied. Distro terminated and verified Stopped instead."
+  },
+  "sourceFiles": [
+    {
+      "file": "src/lib/identity-context.ts",
+      "workspaceBytesSha256": "8f94c0b314e31abd075efefea9c4a5cb2e70a41907544c735c5f202f3cf37c65",
+      "utf8LfSha256": "8f94c0b314e31abd075efefea9c4a5cb2e70a41907544c735c5f202f3cf37c65"
+    },
+    {
+      "file": "src/lib/auth.ts",
+      "workspaceBytesSha256": "029acdd1b7a4254c17d9ee7f7e5b106b8a28466801e19519460b1b352b6581b9",
+      "utf8LfSha256": "f2fc4503fde206682dd8b433550ae3379ff07b2102e515deab1391347afbff30"
+    },
+    {
+      "file": "src/lib/member.ts",
+      "workspaceBytesSha256": "9468a9c2438939b51b67bf35b37bf90b3523fe274fc7b13bf96f7f5493eed8fa",
+      "utf8LfSha256": "8422ac570be18e2c748f50901d702e40d58436edd45fa2fdd9e6096ccd54c378"
+    },
+    {
+      "file": "src/lib/supabase-auth-admin.ts",
+      "workspaceBytesSha256": "1a37e75131ce29ca2cfe9989c7fa2231eb6a6cc0db986c8391a968146473f857",
+      "utf8LfSha256": "1a37e75131ce29ca2cfe9989c7fa2231eb6a6cc0db986c8391a968146473f857"
+    },
+    {
+      "file": "tests/crm/contacts.spec.ts",
+      "workspaceBytesSha256": "b2be87fc1f313cda3cb5546c9834fb50dd47b30e2693a9d968233a3203f630c9",
+      "utf8LfSha256": "62dceabf1dc3f44f776138c172fcf92e1f2092d861e71a0014dad613e17568da"
+    },
+    {
+      "file": "tests/crm/bootstrap.sql",
+      "workspaceBytesSha256": "05b9d0f81547b9cb75138bc1d066fecc02f2d6cff8cd0595a4e81880eae3dfa4",
+      "utf8LfSha256": "8792695db3c22437bcb3a841b0a45a44b4a93baa0f30d9c5b7f4185e3f71ed58"
+    },
+    {
+      "file": "tests/crm/assert-schema.sql",
+      "workspaceBytesSha256": "25fcd1482ff5dbb5a9f0ed24f233b3c2db59a84d47e7987de73f417e082436e6",
+      "utf8LfSha256": "ce1dcbfe4c446cc889ea44d9c5ac32986a61ddc1b4afd1a2d5fe1929d2b563a8"
+    },
+    {
+      "file": "supabase/migrations/20261017114730_crm_contacts_foundation.sql",
+      "workspaceBytesSha256": "7d1a06a27cd20f59565890670a20d8c869b5fc0232b3ef5e24769210b0ba3d7c",
+      "utf8LfSha256": "0deef185f3ea24f95eb2c1f722c6583079b0f4a3689b6f66f511ac61afaed113"
+    },
+    {
+      "file": "supabase/migrations/20261017233030_trusted_identity_boundary.sql",
+      "workspaceBytesSha256": "a455306a94a721ae6eff260847749b87961e38f07e703bcd8fd208d1c67abed3",
+      "utf8LfSha256": "a455306a94a721ae6eff260847749b87961e38f07e703bcd8fd208d1c67abed3"
+    }
+  ],
+  "limits": [
+    "Synthetic bounded fixture, not a full production schema baseline",
+    "No hosted staging, production, provider OAuth, real MFA, native UI or physical-device verification",
+    "No paid provisioning, pushes, production mutations or real outbound messaging"
+  ]
+}

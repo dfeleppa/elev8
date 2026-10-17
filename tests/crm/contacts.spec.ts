@@ -182,6 +182,33 @@ test("direct REST access is denied even to signed-in staff, while the server gra
   expect((await admin.from("crm_contacts").update({ full_name: "Denied" }).eq("id", id)).error?.code).toBe("42501");
 });
 
+test("direct profile RLS requires one exact link and denies identity or role writes", async () => {
+  for (const kind of [...roles, "unlinked", "ambiguous"]) {
+    const identity = identities[kind];
+    const headers = { apikey: publicKey, authorization: `Bearer ${identity.token}`, "content-type": "application/json" };
+    const profile = await fetch(`${api}/rest/v1/app_users?select=id,role`, { headers });
+    expect(profile.status).toBe(200);
+    expect(await profile.json()).toEqual(roles.includes(kind as typeof roles[number])
+      ? [{ id: identity.appId, role: kind }] : []);
+    const privateColumn = await fetch(`${api}/rest/v1/app_users?select=password_hash`, { headers });
+    expect(privateColumn.status).toBe(403);
+    const change = await fetch(`${api}/rest/v1/app_users?id=eq.${identity.appId}`, {
+      method: "PATCH", headers, body: JSON.stringify({ role: "owner", supabase_auth_uid: identity.authUid }),
+    });
+    expect(change.status).toBe(403);
+  }
+});
+
+test("Auth updates never claim an unlinked application user by matching email", async () => {
+  const identity = identities.unlinked;
+  // An ordinary metadata update used to fire the dangerous email-link trigger.
+  const updated = await admin.auth.admin.updateUserById(identity.authUid, { user_metadata: { probe: "identity-regression" } });
+  expect(updated.error).toBeNull();
+  const row = await admin.from("app_users").select("supabase_auth_uid").eq("id", identity.appId).single();
+  expect(row.error).toBeNull();
+  expect(row.data?.supabase_auth_uid).toBeNull();
+});
+
 test("bearer refresh preserves identity and role changes take effect without a new token", async ({ request }) => {
   const identity = identities.owner;
   await cookieLogin(request, identity);

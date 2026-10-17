@@ -1,0 +1,811 @@
+{
+  "remoteCount": 59,
+  "localCount": 65,
+  "sameVersion": [
+    {
+      "version": "20260314005655",
+      "name": "nutrition_user_ownership_hardening",
+      "sha256": "e35a25af6dd679a255713e051060288c4a6724c85c214bbdcd5d0a434874e177",
+      "remote": {
+        "name": "nutrition_user_ownership_hardening",
+        "version": "20260314005655",
+        "statementCount": 9,
+        "statementsSha256": "4b52dba4cd7d9b06663afbfc48b2f07d81b3c0e22e5203b640265467af92a39d"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260314010028",
+      "name": "nutrition_entry_quantity",
+      "sha256": "011e130f63413f73c6b5a2956d80e23d8453e34053133038eae203f86ce9643e",
+      "remote": {
+        "name": "nutrition_entry_quantity",
+        "version": "20260314010028",
+        "statementCount": 1,
+        "statementsSha256": "cf2f81ed0115e2c8673481bd9c20e392708d397b1c74c398a97d9e05e117214a"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260314010403",
+      "name": "nutrition_custom_food_library",
+      "sha256": "a3d14b56c5ae0f4d519b8ba6ef8824e09bddc5aca6c99383ef5f084fd9f309d6",
+      "remote": {
+        "name": "nutrition_custom_food_library",
+        "version": "20260314010403",
+        "statementCount": 5,
+        "statementsSha256": "3d5eafb584015c1284ae3ffc41b3151fefa02eb5f506e9d1d1f274b32452d80c"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260314012403",
+      "name": "nutrition_decimal_precision",
+      "sha256": "94237b0d4e1a8ade24da102ed7bafb5b90e95b85bea5d9c390ed2b63123beb2f",
+      "remote": {
+        "name": "nutrition_decimal_precision",
+        "version": "20260314012403",
+        "statementCount": 3,
+        "statementsSha256": "f0e459387fe1f7b41d1f34215caf6a8cb404526d4d215fa8c9bcebe52be0af67"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260314142000",
+      "name": "owner_schedule_classes",
+      "sha256": "e05752f27c92029d6169ea8b9ae94d80a1893856b0386c52289ff1b292d2d860",
+      "remote": {
+        "name": "owner_schedule_classes",
+        "version": "20260314142000",
+        "statementCount": 7,
+        "statementsSha256": "5f61635ca94d9cd2b8e71a3bb254c6037b03c0a32dd5c3b0e4f969c7336a004c"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260314151500",
+      "name": "schedule_and_tracks_enhancements",
+      "sha256": "00a4da123ae9cda0e9c8784f9f5d1332bbf5829db88b5c002089b72cd1850659",
+      "remote": {
+        "name": "schedule_and_tracks_enhancements",
+        "version": "20260314151500",
+        "statementCount": 9,
+        "statementsSha256": "fba97e8d5660e2706cb806dcfbdac8cc8392f8c4678c30bcd6a0a80f3b5ed0b1"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260315103000",
+      "name": "programming_tracks_number_of_levels",
+      "sha256": "e2ad4fc2854eaa35ff9538aa5b1fca0260bd7fba256e02254d6431975bdd66d8",
+      "remote": {
+        "name": "programming_tracks_number_of_levels",
+        "version": "20260315103000",
+        "statementCount": 2,
+        "statementsSha256": "e6a3aad89cff921a78dd45e247aeeca866220652a832687a2a7c8f8d0a7ba5fa"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260315111000",
+      "name": "programming_tracks_schema_backfill",
+      "sha256": "a0bb2a8a0493316a1905372e4a259d408fb86709e6af1b719860ebe5c63c03fb",
+      "remote": {
+        "name": "programming_tracks_schema_backfill",
+        "version": "20260315111000",
+        "statementCount": 5,
+        "statementsSha256": "f825b51a0c179badb9c39d59231daf172e59685625e7933d9d2c6a01e33063cb"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260315124500",
+      "name": "schedule_classes_columns_backfill",
+      "sha256": "a3f86eca2dcfadfe7bbb73102748196a2e1e8103616bfa5a58a65f3d631981c9",
+      "remote": {
+        "name": "schedule_classes_columns_backfill",
+        "version": "20260315124500",
+        "statementCount": 5,
+        "statementsSha256": "374d322edb3a3fb258afa2d8f68e8d7ab088331b3a70a2f58655c7e3c8a3f8eb"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260315173000",
+      "name": "coach_nutrition_setup",
+      "sha256": "c49d59799e661c0897a93319bcef92da0efe4eda1a5551000ab326b09d081b45",
+      "remote": {
+        "name": "coach_nutrition_setup",
+        "version": "20260315173000",
+        "statementCount": 6,
+        "statementsSha256": "2d01936b2473436c0d65e31d1fb8b2fcfd228aec15adc70692eec8b1eeccbb29"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260322000000",
+      "name": "organization_members_expanded_fields",
+      "sha256": "21f611063d3abeee05dc0ebfa7af807d8ef3df228fecccff6ea4f8086432ffd8",
+      "remote": {
+        "name": "organization_members_expanded_fields",
+        "version": "20260322000000",
+        "statementCount": 4,
+        "statementsSha256": "f484c3a2023526e0016185e5d5d31b1c76005cbc03a9df9f5776ca141a5e416d"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260322000001",
+      "name": "coach_nutrition_plans_weight_lbs",
+      "sha256": "8a0e8c5b1b21f0667e80c2a7fbc898c5b597c45b7bca11340a114e54d975c7cb",
+      "remote": {
+        "name": "coach_nutrition_plans_weight_lbs",
+        "version": "20260322000001",
+        "statementCount": 3,
+        "statementsSha256": "f4b59b74546032e72f5eb7a4298b1e54aaab46002f0fc23e3396f099fa211f58"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260325000000",
+      "name": "payroll_entries",
+      "sha256": "c00b3b4144e7472b79b92b854676a938376a6b6c35ddf7e4fe16e7d604e91bfc",
+      "remote": {
+        "name": "payroll_entries",
+        "version": "20260325000000",
+        "statementCount": 3,
+        "statementsSha256": "7e96f0c20e7da24693e6b1e3e85b43f37fe8e8346ed719d1051d0158dd9e33be"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260325100000",
+      "name": "auth_and_org_settings",
+      "sha256": "3b613262388eb56ecd1f1d0e94d810bc1237bdef6a0091a623cf1edcc8ba2cdb",
+      "remote": {
+        "name": "auth_and_org_settings",
+        "version": "20260325100000",
+        "statementCount": 7,
+        "statementsSha256": "40fe866c7567a2dc14f6a7ce5dd47be0524766674b7c931e080d4f6b6d4b2c42"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260327000000",
+      "name": "store_and_preorders",
+      "sha256": "5443fd6c745de848b387b9ea9313bc2b47a004fa40bedb1f4b91dc1cb2de92d8",
+      "remote": {
+        "name": "store_and_preorders",
+        "version": "20260327000000",
+        "statementCount": 10,
+        "statementsSha256": "0a8ed974fdfb6a289949d6e4020c00b782c4665ad6d50135c85e3312257ccf25"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260327000001",
+      "name": "rls_payroll_and_coach_nutrition",
+      "sha256": "7b3d54cf655869ffa1ccca6dc4254364b5a71b11ca0afa1c56b5af9beb3e360c",
+      "remote": {
+        "name": "rls_payroll_and_coach_nutrition",
+        "version": "20260327000001",
+        "statementCount": 8,
+        "statementsSha256": "e3d0a94e8257af23a1b289ad3cd03907f2ccaa9c78d99ba35bf507bfe3f371d4"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260327000002",
+      "name": "program_builder",
+      "sha256": "bdca874da916a2377df15f73614348faf397d94063f8ed2e216760b38608df3c",
+      "remote": {
+        "name": "program_builder",
+        "version": "20260327000002",
+        "statementCount": 39,
+        "statementsSha256": "612856d55cb7c844d64523c35c07cdc7a8960f0ff2c01756c4e77021b0165ed4"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260328000000",
+      "name": "track_progressions",
+      "sha256": "48bc288a4504aaa21658a3c17d3f2c8f9f3f1cd56efefa69a2d5f0585a22cd80",
+      "remote": {
+        "name": "track_progressions",
+        "version": "20260328000000",
+        "statementCount": 10,
+        "statementsSha256": "94f1af3f7456b2b844de75d61cc663db99ca4184abb7ca1c340733e783a0786c"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260329000000",
+      "name": "athlete_lift_logs",
+      "sha256": "4b3d37443c6a5a21c272b9880a172d7ced406791d27e4cc11386c8f3f771a25b",
+      "remote": {
+        "name": "athlete_lift_logs",
+        "version": "20260329000000",
+        "statementCount": 10,
+        "statementsSha256": "2de65a3e0b93aa3a01a4d563e26d9975d6f0bdc6cc1a5e77543298c40b3d5e19"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260402000000",
+      "name": "stripe_billing",
+      "sha256": "9e7b189a69bd2c353e694d53811dac53a00c6eeeaf486b228c40859c0e2957e6",
+      "remote": {
+        "name": "stripe_billing",
+        "version": "20260402000000",
+        "statementCount": 9,
+        "statementsSha256": "259a94fa700e655da2795e3d1db308a11c34676af44fbc22b8241a1f75ff91ac"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260404091500",
+      "name": "stripe_webhook_idempotency",
+      "sha256": "9a8ba8eac9be241ea1b43d7239cbcaf22df8ba95fde92eb61a18b2c961b0d04b",
+      "remote": {
+        "name": "stripe_webhook_idempotency",
+        "version": "20260404091500",
+        "statementCount": 2,
+        "statementsSha256": "320ea52348d0c251d2995974b0cd45e089e87d5e1230e3ea835535acf64da3c3"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260405113000",
+      "name": "instagram_content_manager",
+      "sha256": "7f59613cfa142197a42bfd1345651dd77266a708984600c2709b4dd62a37360a",
+      "remote": {
+        "name": "instagram_content_manager",
+        "version": "20260405113000",
+        "statementCount": 16,
+        "statementsSha256": "735af4599ae89dff352368d2e2c4dc19beb63ce373c71d2e4fa08a416407e4d3"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260405130000",
+      "name": "remove_youtube_stack",
+      "sha256": "f80e2692900d498ea8bd257120122b3fab9ea77317758efa03352b57715b69a5",
+      "remote": {
+        "name": "remove_youtube_stack",
+        "version": "20260405130000",
+        "statementCount": 5,
+        "statementsSha256": "417eb0bf0e24c359a07b1b956c05929e07df19d5ccb080d5bdc8c58f02cf1dc2"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260405153000",
+      "name": "social_os_foundation",
+      "sha256": "76589aca16bdfc12a58e1974255772279f9a035b88b8feef4ce5bd52c2390f63",
+      "remote": {
+        "name": "social_os_foundation",
+        "version": "20260405153000",
+        "statementCount": 70,
+        "statementsSha256": "a5079f7a08913bd9bfd9259944d30a2b65addd69d2aabf178590f9ac90c76be5"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260406110000",
+      "name": "class_schedule_reservations",
+      "sha256": "cc5623f6eb7ff4d0adb0c1d27f0f13328c7f520bb10a19d89b6262863abb81ab",
+      "remote": {
+        "name": "class_schedule_reservations",
+        "version": "20260406110000",
+        "statementCount": 4,
+        "statementsSha256": "f491283b81377da1d10d0e9b2743a0c0cb466c3f569a4924adbfb4e067f0c85c"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260408120000",
+      "name": "auth_email_and_invitation_code_hardening",
+      "sha256": "4834a007fb952f835f12a5528efdf011089d4c517a5cf3aed95f5d2491497a5a",
+      "remote": {
+        "name": "auth_email_and_invitation_code_hardening",
+        "version": "20260408120000",
+        "statementCount": 5,
+        "statementsSha256": "aa2976caa7321b557d4ae99f84ccc69e78d58764cf7afaf08e3f1f12712d2fb4"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260408153000",
+      "name": "organization_invitation_code_normalization",
+      "sha256": "c44fe6ae4550033d091cad1206c5130f5fa20203aede75e5d11e67c6d8ce6e9a",
+      "remote": {
+        "name": "organization_invitation_code_normalization",
+        "version": "20260408153000",
+        "statementCount": 4,
+        "statementsSha256": "eb88a04a78cc975c1997c19be8da05558164aa8c85d2dec9ba8c13dad33d10e1"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260408170000",
+      "name": "enable_rls_on_class_reservations",
+      "sha256": "10e8486e456fa4ad971218568e4e48bcd04376d8da2a7dc23511981e7c307fba",
+      "remote": {
+        "name": "enable_rls_on_class_reservations",
+        "version": "20260408170000",
+        "statementCount": 1,
+        "statementsSha256": "1692c866c645502bd41649a3e18bc9408f548543d93272a47d252aa2d6637d2d"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260408173000",
+      "name": "security_linter_followups",
+      "sha256": "8b7299f59f800b5a7178d41354274b7a6b3540c24a8acb59fd2410bfd3aa4777",
+      "remote": {
+        "name": "security_linter_followups",
+        "version": "20260408173000",
+        "statementCount": 3,
+        "statementsSha256": "a1b38a43bf242b5019c053a2531303dc0d0c52a657cc409b4f2548b59ca41aef"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260409103000",
+      "name": "organization_members_org_email_unique",
+      "sha256": "9436161ba7525f010c6234432ef74174e06d1cf209b138089a6a89b920e82ad3",
+      "remote": {
+        "name": "organization_members_org_email_unique",
+        "version": "20260409103000",
+        "statementCount": 3,
+        "statementsSha256": "128e0f7740946847b4fdfb8e3125a2276f736708cec988bf28a5472db592c88f"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260409112000",
+      "name": "organization_members_org_email_index_fix",
+      "sha256": "108e8a655d3bce05a886e690964d9a2073bfedf230e9152226dc4ee9b2fbb32e",
+      "remote": {
+        "name": "organization_members_org_email_index_fix",
+        "version": "20260409112000",
+        "statementCount": 2,
+        "statementsSha256": "1c2a7691d9466c3abe612b652aac5431bf274721e6861b0b5f8b5be3fbcdf43f"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260412000000",
+      "name": "mobile_identity_bridge",
+      "sha256": "6a107bc2ab7f8f9a82d33053dbe8f1d3907afb061d24ee07241c1689705145d0",
+      "remote": {
+        "name": "mobile_identity_bridge",
+        "version": "20260412000000",
+        "statementCount": 57,
+        "statementsSha256": "11d0cd49006b6c5cf8e13f93772e6e5bc99436153788f94fe52b9ce34df0641e"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260412100000",
+      "name": "app_users_mobile_auth_claim",
+      "sha256": "353dbf04c78a8a8d5f29c155a80fa8607bde755d3c029fea332c1ffed8769f82",
+      "remote": {
+        "name": "app_users_mobile_auth_claim",
+        "version": "20260412100000",
+        "statementCount": 5,
+        "statementsSha256": "ba053078dc65990ae13324a21b46b36abcbe203de39616b908e46bb8e928e9bb"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260419000000",
+      "name": "single_tenant_lyfe_fitness",
+      "sha256": "6566f4b66da4258530b8ac265cf8b095aaaa59d12617c7ef36e74ad85aa4abe1",
+      "remote": {
+        "name": "single_tenant_lyfe_fitness",
+        "version": "20260419000000",
+        "statementCount": 125,
+        "statementsSha256": "bc13a2635779d67076f0921c8be11b494622e87fc80c1723a59d88f024bedb35"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260419110000",
+      "name": "app_users_payrate_columns",
+      "sha256": "a1c8e061783f0de9e0b46c60f05d9b2df77f8abfb5e479d7eb8574d60695db68",
+      "remote": {
+        "name": "app_users_payrate_columns",
+        "version": "20260419110000",
+        "statementCount": 1,
+        "statementsSha256": "f3de209ebee475338a636fd88653054fb9d1b3102c345bbac85184b8c1a29b48"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260426002001",
+      "name": "programming_corpus_chalkitpro_archive",
+      "sha256": "a38daa2f6aa05a1aed3ec58b81c40697857501800cfbb7e76ec7b4accb673535",
+      "remote": {
+        "name": "programming_corpus_chalkitpro_archive",
+        "version": "20260426002001",
+        "statementCount": 1,
+        "statementsSha256": "c8490a9516f3d39633ed1d3747febe1f5a285d536e65ffa7b6bd02dfaf3d0bfc"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260426120000",
+      "name": "perf_indexes",
+      "sha256": "cb7823cf71f4f9310c108d5eb7f009323331be10acfd27fd6b8da9968edfd30b",
+      "remote": {
+        "name": "perf_indexes",
+        "version": "20260426120000",
+        "statementCount": 1,
+        "statementsSha256": "84b1abef050f6385a7cca73b2c3be55452175dbadc34af2f24ed9002c5f62d34"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260426130000",
+      "name": "stripe_webhook_event_log",
+      "sha256": "af88e54a0a7fad50c404e4b1bf25b5925b37aaa6e30e58a7855ce604570aea12",
+      "remote": {
+        "name": "stripe_webhook_event_log",
+        "version": "20260426130000",
+        "statementCount": 1,
+        "statementsSha256": "7176186b92709e3a1eb994720fbb25614315838ff2beddf8a2377147e759601a"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260429000000",
+      "name": "app_users_mobile_self_read_by_email",
+      "sha256": "0c5106742edf6c736738e988b90b7a33dc4604579373acd278f47d6c1e47619d",
+      "remote": {
+        "name": "app_users_mobile_self_read_by_email",
+        "version": "20260429000000",
+        "statementCount": 2,
+        "statementsSha256": "c385cc89d1d24a025cdfe86f80edab755f9a851a36e008935b7deb959b21d9b8"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260429000001",
+      "name": "enable_rls_gym_settings_stripe_webhooks",
+      "sha256": "e94bb9ee57b2a4de4f82be37a4aec63fbb337580ea91725ca0ce089d90cb0b63",
+      "remote": {
+        "name": "enable_rls_gym_settings_stripe_webhooks",
+        "version": "20260429000001",
+        "statementCount": 2,
+        "statementsSha256": "3f1ada1808a19aecaeb9fd8093701de601b1a098215649b89ab454a66adbf8bf"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260429010000",
+      "name": "security_advisor_fixes",
+      "sha256": "dc53cad1d3a21083e21080b9f79872aae1fa243f59cee0a3e036c21f766866d8",
+      "remote": {
+        "name": "security_advisor_fixes",
+        "version": "20260429010000",
+        "statementCount": 7,
+        "statementsSha256": "2e13c415b4ffb2f65945471f85ba17059ce44f306ca931349b380dc5a0ba92ef"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260430090000",
+      "name": "nutrition_extended_nutrients",
+      "sha256": "44545d83e04d497df9f9fa68f2f8bf3279d59eb268dbf080ff417b6e029f1a9d",
+      "remote": {
+        "name": "nutrition_extended_nutrients",
+        "version": "20260430090000",
+        "statementCount": 2,
+        "statementsSha256": "54abb666bd1d777d144a3b4bb353fb5a56fbe909cae5d9933b18f7f5d651caf9"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260430120000",
+      "name": "nutrition_adherence_and_fiber",
+      "sha256": "183a7cf6ec031f5bc8e471c3d75b2352f40206c2bd1f04a9797c5dbf69198f20",
+      "remote": {
+        "name": "nutrition_adherence_and_fiber",
+        "version": "20260430120000",
+        "statementCount": 4,
+        "statementsSha256": "aae34a150ce620da270e283debe9b97dd61cbbe019b4f8d77d165b4525bc7b4c"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260430130000",
+      "name": "nutrition_check_ins",
+      "sha256": "165eabf0113481b2a844500e47483021af4b4b2f797035e88fa268462dbb9e8d",
+      "remote": {
+        "name": "nutrition_check_ins",
+        "version": "20260430130000",
+        "statementCount": 4,
+        "statementsSha256": "7f8fc41515a45924841bfb56f9d17db2d237f20fb622dd38607621d195422b49"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260430140000",
+      "name": "backfill_fiber_targets",
+      "sha256": "cf756938a0aaee751e2e7555520ebbc09b58599f97380c98d55e9826b14e9e5e",
+      "remote": {
+        "name": "backfill_fiber_targets",
+        "version": "20260430140000",
+        "statementCount": 3,
+        "statementsSha256": "b3c4f0b7113b1ab2b8bd05df73a7c569b6f59edaa3f09237e6797dd0accd5ff2"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260506000000",
+      "name": "nutrition_custom_food_serving",
+      "sha256": "221016b0817662f7d7eb953daf4a1413d413918363e949880b14a3e34706273e",
+      "remote": {
+        "name": "nutrition_custom_food_serving",
+        "version": "20260506000000",
+        "statementCount": 1,
+        "statementsSha256": "f95ec35fcedf11720309fd20fa8566603bd4aec28ff7ec9a8f695a22d48fa0ea"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260506120000",
+      "name": "unify_members_into_app_users",
+      "sha256": "557ffe5021a061b932b76a0e3ccc3c5e35cbe3dd2a2cac9a75633a52697440f8",
+      "remote": {
+        "name": "unify_members_into_app_users",
+        "version": "20260506120000",
+        "statementCount": 2,
+        "statementsSha256": "4b95875a73eeea2d06344e40e179cee8b12d382594d9c7f107bd1d975b8d8731"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260506130000",
+      "name": "drop_legacy_members_table",
+      "sha256": "06b5e9d8c3a417fdb248e5bab007585502bf1aaa8471edf7392f7834a59a831d",
+      "remote": {
+        "name": "drop_legacy_members_table",
+        "version": "20260506130000",
+        "statementCount": 1,
+        "statementsSha256": "8232bab515f97bd0d921872d71cd773e0395ec25de1e4b9ec70f634137445bdf"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260506200101",
+      "name": "nutrition_check_ins_rls",
+      "sha256": "1d7e9bf6000e21e1d5a6b4b86f5b58a545ca1326f2ead6127705b63d5bbb9c8d",
+      "remote": {
+        "name": "nutrition_check_ins_rls",
+        "version": "20260506200101",
+        "statementCount": 1,
+        "statementsSha256": "7dc90c72bdf83f496967767b4e892cb997222d57e8bfd5e92d97afeea342f98d"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260506200313",
+      "name": "backfill_missing_members_into_app_users",
+      "sha256": "52e010bafe0bc16092d106b53a30409e3862e1e549be48f09f52ad0770347767",
+      "remote": {
+        "name": "backfill_missing_members_into_app_users",
+        "version": "20260506200313",
+        "statementCount": 1,
+        "statementsSha256": "972c281a3410f9eed3d336b830f5ee29b77477faa4fc9a8e08b9c071c5082bae"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260508120000",
+      "name": "metabolism_estimate",
+      "sha256": "310e6a9e3e8fd9f1bfc2d65168fa2712879a9fcd77cf117bca6027b721b8d6fe",
+      "remote": {
+        "name": "metabolism_estimate",
+        "version": "20260508120000",
+        "statementCount": 3,
+        "statementsSha256": "ca840966455fd6e5a6d84f2f153dedd8cd7468104914e72f9da55488cf9526d6"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260510090000",
+      "name": "harden_security_advisor_findings",
+      "sha256": "e7625c6f3603d3117cb331a15362c1e83cb5fdffa02ee73691e9603b99a1bec6",
+      "remote": {
+        "name": "harden_security_advisor_findings",
+        "version": "20260510090000",
+        "statementCount": 7,
+        "statementsSha256": "32b36e87eaa79be64de2b6b036e0988d113613154c960178f54f0d21a857a5a0"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260510090001",
+      "name": "security_linter_remediation",
+      "sha256": "17e342e88c7b000f79555fa628f5faa695e47e0c375c10ed3bbf0bfb15c5a8b1",
+      "remote": {
+        "name": "security_linter_remediation",
+        "version": "20260510090001",
+        "statementCount": 3,
+        "statementsSha256": "e5b4c77f712e1bf842fa0002955b8da3b138f416cb74244a207c97a0a63d0978"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    },
+    {
+      "version": "20260510103000",
+      "name": "mobile_app_user_id_security_invoker",
+      "sha256": "417940ece644c58b130ebbc688ec8346747983c7ed1f684e5a43de83930e8034",
+      "remote": {
+        "name": "mobile_app_user_id_security_invoker",
+        "version": "20260510103000",
+        "statementCount": 1,
+        "statementsSha256": "e311895dea0b169078d335d3df8995b9f5f726a7a5fef07fabc6493a5fbf7be7"
+      },
+      "byteMatch": false,
+      "disposition": "ledger-present; compare SQL and live objects before declaring parity"
+    }
+  ],
+  "renamedCandidates": [
+    {
+      "local": {
+        "version": "20260529000000",
+        "name": "drop_orphaned_organization_tables",
+        "sha256": "22d99d2ad657684191efac505ccf6e154885e32378d487b32595a1ebb2d9344d"
+      },
+      "remote": {
+        "name": "drop_orphaned_organization_tables",
+        "version": "20260529085711",
+        "statementCount": 1,
+        "statementsSha256": "5f43584896ba7130df7a12379df133ae45c6fc6fe49950dba43d868bbf2721ef"
+      },
+      "disposition": "review-required"
+    },
+    {
+      "local": {
+        "version": "20260529010000",
+        "name": "payroll_entries_staff_user_fk",
+        "sha256": "facaa95932272c4256d9cc59ac8b85aed3ba5f6332be9e05b27f7f26708bbe5e"
+      },
+      "remote": {
+        "name": "payroll_entries_staff_user_fk",
+        "version": "20260529090402",
+        "statementCount": 1,
+        "statementsSha256": "e5ffe6e5a17fef74c38a120daabc2d4c9f897baca13f25cdb0ac9577d132c45c"
+      },
+      "disposition": "review-required"
+    },
+    {
+      "local": {
+        "version": "20260529120000",
+        "name": "nutrition_check_in_history",
+        "sha256": "9765d3e9aaf6eb8b7f57e9c22ebdd091bcb42537f3bd7f9d980c67cd663ca510"
+      },
+      "remote": {
+        "name": "nutrition_check_in_history",
+        "version": "20260529111336",
+        "statementCount": 1,
+        "statementsSha256": "458f8724fa6de2ac66890b8cc23332d37b822454427baaa93830221461cf0550"
+      },
+      "disposition": "review-required"
+    },
+    {
+      "local": {
+        "version": "20260604061000",
+        "name": "mcp_oauth_used_tokens",
+        "sha256": "91b06a4c3a5ced20bc17cc7666284d87101db1bd9a3178785b1bd85fe279bb4f"
+      },
+      "remote": {
+        "name": "mcp_oauth_used_tokens",
+        "version": "20260819013312",
+        "statementCount": 1,
+        "statementsSha256": "edbf9d2e0073f5b754e329320a0d3909826734ba954259e1393ac6b650aeae79"
+      },
+      "disposition": "review-required"
+    }
+  ],
+  "localOnly": [
+    {
+      "version": "20260514120000",
+      "name": "recompose_current_nutrition_macros",
+      "sha256": "27ae0c1abe06d82a9f8f5c67ae1fdf87b648da6552098cd8e0e99042daac866d"
+    },
+    {
+      "version": "20260527004140",
+      "name": "web_chat_threads_v1",
+      "sha256": "6128412fb5ab81cb96b1f7eaf0f62e7cf2a996f4427930029dcfa35674ab5e36"
+    },
+    {
+      "version": "20260530120000",
+      "name": "update_fiber_goal_per_72_kcal",
+      "sha256": "d35c680cff2d6b8b4654fa0eb3a060f2e136b8b44581d6b9f3efc48797020ed3"
+    },
+    {
+      "version": "20260608190000",
+      "name": "member_metabolism_learning",
+      "sha256": "58d5ff899e86477789571c4bfb15c98046891555f378471b1168c50ba0248a66"
+    },
+    {
+      "version": "20260713133813",
+      "name": "remove_stripe_billing",
+      "sha256": "ac6db536efb97ac01ddb8142b0f6c63a9a4472dfddc92389a70659b8bec1e416"
+    },
+    {
+      "version": "20261017114730",
+      "name": "crm_contacts_foundation",
+      "sha256": "7d1a06a27cd20f59565890670a20d8c869b5fc0232b3ef5e24769210b0ba3d7c"
+    },
+    {
+      "version": "20261017233030",
+      "name": "trusted_identity_boundary",
+      "sha256": "a455306a94a721ae6eff260847749b87961e38f07e703bcd8fd208d1c67abed3"
+    }
+  ],
+  "remoteOnly": [
+    {
+      "name": "harden_mobile_app_user_access",
+      "version": "20260902010824",
+      "statementCount": 1,
+      "statementsSha256": "f049df41cc82c96a83c1dad80ef8f2472054a4e407aea359bca07d91320e42ad"
+    }
+  ]
+}
