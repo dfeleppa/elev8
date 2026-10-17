@@ -35,5 +35,7 @@ enable_signup = false
 enable_anonymous_sign_ins = false
 enable_refresh_token_rotation = true
 [auth.email]
-enable_signup = false
+# The CLI uses this to enable the email provider, including password sign-in.
+# Global auth.enable_signup above still blocks public account creation.
+enable_signup = true
 enable_confirmations = false
