@@ -37,7 +37,7 @@ npx supabase db push --local --workdir tests/crm
 psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/crm/assert-schema.sql
 npx supabase status --workdir tests/crm --output json > .codex-crm-status.json
 node tests/crm/configure.mjs
-node --env-file=.codex-crm.env node_modules/next/dist/bin/next build
+node tests/crm/build.mjs
 npx playwright test --config playwright.crm.config.ts
 npx supabase stop --workdir tests/crm --no-backup
 ```
@@ -56,7 +56,7 @@ Password login previously used the shared service-role client, which can retain 
 
 | Check | Current evidence |
 | --- | --- |
-| Web/backend unit and SQL tests | 158 tests pass locally; TypeScript passes; lint has no errors and four existing warnings |
+| Web/backend unit and SQL tests | 161 tests pass locally; TypeScript passes; lint has no errors and four existing warnings |
 | Previous Swift build | Foundation CI run 39030675413: application/test compilation and three simulator contract tests passed |
 | Real cookie + bearer role matrix, browser create/list, REST denials, refresh, role change, pagination | Added executable integration suite; awaiting first CI execution |
 | Hosted staging migration and schema compatibility | Blocked on an isolated project and reconciled schema baseline |

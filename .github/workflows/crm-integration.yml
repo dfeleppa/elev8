@@ -1,7 +1,5 @@
 name: CRM authenticated integration
 on:
-  push:
-    branches: ['codex/crm-staging-verification']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -37,7 +35,7 @@ jobs:
           npx supabase status --workdir tests/crm --output json > .codex-crm-status.json
           node tests/crm/configure.mjs
       - name: Compile the real application against the isolated stack
-        run: node --env-file=.codex-crm.env node_modules/next/dist/bin/next build
+        run: node tests/crm/build.mjs
       - name: Browser, cookie, bearer, role and database verification
         run: npx playwright test --config playwright.crm.config.ts
       - name: Destroy disposable data and credentials

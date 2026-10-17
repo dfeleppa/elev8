@@ -148,6 +148,10 @@ test("an email-only legacy cookie cannot grant versioned CRM access", async ({ c
   // Invalid bearer headers may not fall back to a valid browser session either.
   await cookieLogin(request, identities.owner);
   expect((await request.get("/api/v1/session", { headers: { authorization: "Bearer invalid" } })).status()).toBe(401);
+  const memberHeaders = { authorization: `Bearer ${identities.member.token}` };
+  const memberSession = await request.get("/api/v1/session", { headers: memberHeaders });
+  expect((await memberSession.json()).userId).toBe(identities.member.appId);
+  expect((await request.get("/api/v1/crm/contacts", { headers: memberHeaders })).status()).toBe(403);
 });
 
 test("browser origin, duplicate IDs and caller-supplied identity are enforced", async ({ request }) => {
@@ -180,6 +184,7 @@ test("direct REST access is denied even to signed-in staff, while the server gra
 
 test("bearer refresh preserves identity and role changes take effect without a new token", async ({ request }) => {
   const identity = identities.owner;
+  await cookieLogin(request, identity);
   const auth = createClient(api, publicKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const refreshed = await auth.auth.refreshSession({ refresh_token: identity.refreshToken });
   expect(refreshed.error).toBeNull();
@@ -189,9 +194,13 @@ test("bearer refresh preserves identity and role changes take effect without a n
   try {
     expect((await request.get("/api/v1/crm/contacts", { headers })).status()).toBe(403);
     expect((await request.post("/api/v1/crm/contacts", { headers, data: freshContact() })).status()).toBe(403);
+    expect((await request.get("/api/v1/crm/contacts")).status()).toBe(403);
   } finally {
     expect((await admin.from("app_users").update({ role: "owner" }).eq("id", identity.appId)).error).toBeNull();
   }
+  const csrf = (await (await request.get("/api/auth/csrf")).json()).csrfToken;
+  await request.post("/api/auth/signout", { form: { csrfToken: csrf, json: "true", callbackUrl: `${app}/login` } });
+  expect((await request.get("/api/v1/session")).status()).toBe(401);
 });
 
 test("pagination reads every persisted contact once", async ({ request }) => {
