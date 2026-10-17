@@ -1,0 +1,44 @@
+name: Member booking authenticated integration
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: member-booking-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  booking:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Start isolated Supabase without production or provider credentials
+        run: npx supabase start --workdir tests/member-schedule -x realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Apply booking migration and assert schema
+        run: |
+          psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/member-schedule/bootstrap.sql
+          mkdir -p tests/member-schedule/supabase/migrations
+          cp supabase/migrations/20261017232829_member_schedule_booking.sql tests/member-schedule/supabase/migrations/
+          npx supabase db push --local --workdir tests/member-schedule
+          psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/member-schedule/assert-schema.sql
+          npx supabase db lint --local --schema public --fail-on error --workdir tests/member-schedule
+      - name: Configure disposable environment
+        run: |
+          npx supabase status --workdir tests/member-schedule --output json > .codex-booking-status.json
+          node tests/member-schedule/configure.mjs
+      - run: node tests/member-schedule/build.mjs
+      - name: Authenticated API and concurrency checks
+        run: npx playwright test --config playwright.member-schedule.config.ts
+      - name: Destroy disposable data and credentials
+        if: always()
+        run: |
+          npx supabase stop --workdir tests/member-schedule --no-backup
+          rm -f .codex-booking-status.json .codex-booking.env
