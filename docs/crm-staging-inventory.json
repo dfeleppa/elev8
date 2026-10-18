@@ -1,0 +1,332 @@
+{
+  "columns": [
+    {
+      "nullable": false,
+      "data_type": "uuid",
+      "table_name": "app_users",
+      "column_name": "id"
+    },
+    {
+      "nullable": false,
+      "data_type": "text",
+      "table_name": "app_users",
+      "column_name": "email"
+    },
+    {
+      "nullable": true,
+      "data_type": "text",
+      "table_name": "app_users",
+      "column_name": "full_name"
+    },
+    {
+      "nullable": true,
+      "data_type": "text",
+      "table_name": "app_users",
+      "column_name": "role"
+    },
+    {
+      "nullable": true,
+      "data_type": "timestamp with time zone",
+      "table_name": "app_users",
+      "column_name": "updated_at"
+    },
+    {
+      "nullable": true,
+      "data_type": "text",
+      "table_name": "app_users",
+      "column_name": "password_hash"
+    },
+    {
+      "nullable": true,
+      "data_type": "uuid",
+      "table_name": "app_users",
+      "column_name": "supabase_auth_uid"
+    }
+  ],
+  "identity": {
+    "linked": 3,
+    "unlinked": 9,
+    "app_users": 12,
+    "null_roles": 0,
+    "unknown_roles": 0
+  },
+  "migrations": [
+    {
+      "name": "nutrition_user_ownership_hardening",
+      "version": "20260314005655"
+    },
+    {
+      "name": "nutrition_entry_quantity",
+      "version": "20260314010028"
+    },
+    {
+      "name": "nutrition_custom_food_library",
+      "version": "20260314010403"
+    },
+    {
+      "name": "nutrition_decimal_precision",
+      "version": "20260314012403"
+    },
+    {
+      "name": "owner_schedule_classes",
+      "version": "20260314142000"
+    },
+    {
+      "name": "schedule_and_tracks_enhancements",
+      "version": "20260314151500"
+    },
+    {
+      "name": "programming_tracks_number_of_levels",
+      "version": "20260315103000"
+    },
+    {
+      "name": "programming_tracks_schema_backfill",
+      "version": "20260315111000"
+    },
+    {
+      "name": "schedule_classes_columns_backfill",
+      "version": "20260315124500"
+    },
+    {
+      "name": "coach_nutrition_setup",
+      "version": "20260315173000"
+    },
+    {
+      "name": "organization_members_expanded_fields",
+      "version": "20260322000000"
+    },
+    {
+      "name": "coach_nutrition_plans_weight_lbs",
+      "version": "20260322000001"
+    },
+    {
+      "name": "payroll_entries",
+      "version": "20260325000000"
+    },
+    {
+      "name": "auth_and_org_settings",
+      "version": "20260325100000"
+    },
+    {
+      "name": "store_and_preorders",
+      "version": "20260327000000"
+    },
+    {
+      "name": "rls_payroll_and_coach_nutrition",
+      "version": "20260327000001"
+    },
+    {
+      "name": "program_builder",
+      "version": "20260327000002"
+    },
+    {
+      "name": "track_progressions",
+      "version": "20260328000000"
+    },
+    {
+      "name": "athlete_lift_logs",
+      "version": "20260329000000"
+    },
+    {
+      "name": "stripe_billing",
+      "version": "20260402000000"
+    },
+    {
+      "name": "stripe_webhook_idempotency",
+      "version": "20260404091500"
+    },
+    {
+      "name": "instagram_content_manager",
+      "version": "20260405113000"
+    },
+    {
+      "name": "remove_youtube_stack",
+      "version": "20260405130000"
+    },
+    {
+      "name": "social_os_foundation",
+      "version": "20260405153000"
+    },
+    {
+      "name": "class_schedule_reservations",
+      "version": "20260406110000"
+    },
+    {
+      "name": "auth_email_and_invitation_code_hardening",
+      "version": "20260408120000"
+    },
+    {
+      "name": "organization_invitation_code_normalization",
+      "version": "20260408153000"
+    },
+    {
+      "name": "enable_rls_on_class_reservations",
+      "version": "20260408170000"
+    },
+    {
+      "name": "security_linter_followups",
+      "version": "20260408173000"
+    },
+    {
+      "name": "organization_members_org_email_unique",
+      "version": "20260409103000"
+    },
+    {
+      "name": "organization_members_org_email_index_fix",
+      "version": "20260409112000"
+    },
+    {
+      "name": "mobile_identity_bridge",
+      "version": "20260412000000"
+    },
+    {
+      "name": "app_users_mobile_auth_claim",
+      "version": "20260412100000"
+    },
+    {
+      "name": "single_tenant_lyfe_fitness",
+      "version": "20260419000000"
+    },
+    {
+      "name": "app_users_payrate_columns",
+      "version": "20260419110000"
+    },
+    {
+      "name": "programming_corpus_chalkitpro_archive",
+      "version": "20260426002001"
+    },
+    {
+      "name": "perf_indexes",
+      "version": "20260426120000"
+    },
+    {
+      "name": "stripe_webhook_event_log",
+      "version": "20260426130000"
+    },
+    {
+      "name": "app_users_mobile_self_read_by_email",
+      "version": "20260429000000"
+    },
+    {
+      "name": "enable_rls_gym_settings_stripe_webhooks",
+      "version": "20260429000001"
+    },
+    {
+      "name": "security_advisor_fixes",
+      "version": "20260429010000"
+    },
+    {
+      "name": "nutrition_extended_nutrients",
+      "version": "20260430090000"
+    },
+    {
+      "name": "nutrition_adherence_and_fiber",
+      "version": "20260430120000"
+    },
+    {
+      "name": "nutrition_check_ins",
+      "version": "20260430130000"
+    },
+    {
+      "name": "backfill_fiber_targets",
+      "version": "20260430140000"
+    },
+    {
+      "name": "nutrition_custom_food_serving",
+      "version": "20260506000000"
+    },
+    {
+      "name": "unify_members_into_app_users",
+      "version": "20260506120000"
+    },
+    {
+      "name": "drop_legacy_members_table",
+      "version": "20260506130000"
+    },
+    {
+      "name": "nutrition_check_ins_rls",
+      "version": "20260506200101"
+    },
+    {
+      "name": "backfill_missing_members_into_app_users",
+      "version": "20260506200313"
+    },
+    {
+      "name": "metabolism_estimate",
+      "version": "20260508120000"
+    },
+    {
+      "name": "harden_security_advisor_findings",
+      "version": "20260510090000"
+    },
+    {
+      "name": "security_linter_remediation",
+      "version": "20260510090001"
+    },
+    {
+      "name": "mobile_app_user_id_security_invoker",
+      "version": "20260510103000"
+    },
+    {
+      "name": "drop_orphaned_organization_tables",
+      "version": "20260529085711"
+    },
+    {
+      "name": "payroll_entries_staff_user_fk",
+      "version": "20260529090402"
+    },
+    {
+      "name": "nutrition_check_in_history",
+      "version": "20260529111336"
+    },
+    {
+      "name": "mcp_oauth_used_tokens",
+      "version": "20260819013312"
+    },
+    {
+      "name": "harden_mobile_app_user_access",
+      "version": "20260902010824"
+    }
+  ],
+  "captured_at": "2026-10-18T00:11:29.92129+00:00",
+  "constraints": [
+    {
+      "type": "u",
+      "definition": "UNIQUE (email)",
+      "table_name": "app_users"
+    },
+    {
+      "type": "p",
+      "definition": "PRIMARY KEY (id)",
+      "table_name": "app_users"
+    },
+    {
+      "type": "c",
+      "definition": "CHECK ((role = ANY (ARRAY['member'::text, 'coach'::text, 'admin'::text, 'owner'::text])))",
+      "table_name": "app_users"
+    },
+    {
+      "type": "c",
+      "definition": "CHECK (((sex = ANY (ARRAY['male'::text, 'female'::text])) OR (sex IS NULL)))",
+      "table_name": "app_users"
+    },
+    {
+      "type": "u",
+      "definition": "UNIQUE (supabase_auth_uid)",
+      "table_name": "app_users"
+    }
+  ],
+  "orphan_links": 0,
+  "auth_providers": [
+    {
+      "provider": "email",
+      "identities": 3
+    },
+    {
+      "provider": "google",
+      "identities": 1
+    }
+  ],
+  "duplicate_links": 0,
+  "project_ref": "scghaxpgsibpffbukyws"
+}

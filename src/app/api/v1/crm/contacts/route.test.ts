@@ -16,6 +16,7 @@ describe("CRM contacts API", () => {
     mocks.result = { data: [], error: null };
     const query = {
       select: () => query, order: () => query, limit: () => query,
+      or: () => query,
       gt: mocks.gt.mockImplementation(() => query),
       insert: mocks.insert.mockImplementation(() => query),
       single: () => Promise.resolve(mocks.result),
@@ -66,6 +67,10 @@ describe("CRM contacts API", () => {
   });
   it("rejects malicious cursor expressions", async () => {
     expect((await GET(new Request("https://app.test?cursor=x,role.eq.owner"))).status).toBe(400);
+    expect(mocks.from).not.toHaveBeenCalled();
+  });
+  it("rejects search filter injection", async () => {
+    expect((await GET(new Request("https://app.test?q=x,role.eq.owner"))).status).toBe(400);
     expect(mocks.from).not.toHaveBeenCalled();
   });
   it("uses bounded cursor pagination and disables caching", async () => {

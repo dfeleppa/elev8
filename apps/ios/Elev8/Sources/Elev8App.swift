@@ -75,13 +75,17 @@ struct ExperienceView: View {
                         Toggle("Staff experience", isOn: $staffMode)
                     }
                     Section("Foundation preview") {
-                        Text(staffMode ? "Contacts are available for authorized admins and owners. Coaching, inbox, calling, and pipelines are the next milestones." : "Your account is connected. Schedule, training, nutrition, and gym chat will be connected in the next member milestones.")
+                        Text(staffMode ? "Contacts are available for authorized admins and owners. Coaching, inbox, and calling are upcoming milestones." : "Use Schedule to book your next class and Profile to update your name. Training, nutrition, and gym chat are upcoming milestones.")
                     }
                     Button("Sign out", role: .destructive) { Task { await session.signOut() } }.disabled(session.busy)
                 }.navigationTitle(staffMode ? "Staff" : "Today")
             }.tabItem { Label("Home", systemImage: "house") }
             if staffMode && profile.capabilities.crm {
                 NavigationStack { ContactsView() }.tabItem { Label("Contacts", systemImage: "person.2") }
+            }
+            if !staffMode && profile.capabilities.member {
+                NavigationStack { MemberScheduleView() }.tabItem { Label("Schedule", systemImage: "calendar") }
+                NavigationStack { MemberProfileView() }.tabItem { Label("Profile", systemImage: "person.crop.circle") }
             }
         }
         .onChange(of: profile.hasStaffExperience) { _, allowed in if !allowed { staffMode = false } }

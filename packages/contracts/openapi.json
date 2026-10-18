@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Elev8 client API",
-    "version": "0.1.0",
-    "description": "Foundation: session and admin/owner contacts. Bearer identity must already be linked by supabase_auth_uid. Browser mutations also require matching Origin. Additional CRM and member features are planned separately."
+    "version": "0.2.0",
+    "description": "Shared strict-identity session and CRM API. CRM is admin/owner only; browser mutations require matching Origin. All responses are private/no-store. Workflow is API-only with no direct client table access."
   },
   "security": [
     {
@@ -52,6 +52,15 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Trimmed case-insensitive name/email/phone substring. Letters, digits, spaces and @.+_- only. No wildcard operators.",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
             }
           }
         ],
@@ -174,6 +183,280 @@
           },
           "503": {
             "description": "Database unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/crm/contacts/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getContactDetail",
+        "description": "Admin/owner team access. Up to 100 rows per section, ordered by creation or due date. truncated is true if any section omits rows.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload or assignment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden role or Origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contact not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate creation ID or stale version: refresh before retrying",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "editContact",
+        "description": "Full contact replacement, optimistic expected_version. No member identity linking. Owner must be linked admin/owner or null.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Saved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload or assignment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden role or Origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contact not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate creation ID or stale version: refresh before retrying",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/crm/contacts/{id}/workflow": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "saveContactWorkflow",
+        "description": "Strict action union. Creation uses caller UUID for retry deduplication; 409 means refresh to verify. Stage and task status edits require expected_version. Task opportunity must belong to this contact. Notes are staff-only. Currency is USD, exact integer cents. Stage transitions record history in the same transaction.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Saved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload or assignment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden role or Origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contact not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate creation ID or stale version: refresh before retrying",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable",
             "content": {
               "application/json": {
                 "schema": {
@@ -405,6 +688,600 @@
             "type": "string"
           }
         }
+      },
+      "CRMStaff": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "CRMContact": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Contact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "owner_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "owner_id",
+              "version"
+            ]
+          }
+        ]
+      },
+      "CRMNote": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "body",
+          "created_at",
+          "created_by"
+        ]
+      },
+      "CRMOpportunity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "new",
+              "contacted",
+              "consultation",
+              "trial",
+              "won",
+              "lost"
+            ]
+          },
+          "owner_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "value_cents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "currency": {
+            "type": "string",
+            "const": "USD"
+          },
+          "next_action": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "stage",
+          "owner_id",
+          "value_cents",
+          "currency",
+          "next_action",
+          "version"
+        ]
+      },
+      "CRMTask": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "assignee_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "opportunity_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "assignee_id",
+          "opportunity_id",
+          "due_at",
+          "completed",
+          "version"
+        ]
+      },
+      "CRMStageEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "opportunity_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "from_stage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "to_stage": {
+            "type": "string",
+            "enum": [
+              "new",
+              "contacted",
+              "consultation",
+              "trial",
+              "won",
+              "lost"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "opportunity_id",
+          "from_stage",
+          "to_stage",
+          "created_at",
+          "created_by"
+        ]
+      },
+      "ContactDetail": {
+        "type": "object",
+        "properties": {
+          "contact": {
+            "$ref": "#/components/schemas/CRMContact"
+          },
+          "staff": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/CRMStaff"
+            }
+          },
+          "notes": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/CRMNote"
+            }
+          },
+          "opportunities": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/CRMOpportunity"
+            }
+          },
+          "tasks": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/CRMTask"
+            }
+          },
+          "stage_events": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/CRMStageEvent"
+            }
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "contact",
+          "staff",
+          "notes",
+          "opportunities",
+          "tasks",
+          "stage_events",
+          "truncated"
+        ]
+      },
+      "Saved": {
+        "type": "object",
+        "properties": {
+          "saved": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "saved"
+        ]
+      },
+      "ContactEdit": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "full_name",
+          "owner_id",
+          "expected_version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "full_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "Trimmed before validation."
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email",
+                "maxLength": 254
+              },
+              {
+                "const": ""
+              }
+            ]
+          },
+          "phone": {
+            "type": "string",
+            "pattern": "^(\\+[1-9][0-9]{6,14})?$"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "referral",
+              "website",
+              "import"
+            ],
+            "default": "manual"
+          },
+          "owner_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "email"
+            ],
+            "properties": {
+              "email": {
+                "minLength": 1
+              }
+            }
+          },
+          {
+            "required": [
+              "phone"
+            ],
+            "properties": {
+              "phone": {
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      },
+      "WorkflowInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "note"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 5000
+              }
+            },
+            "required": [
+              "action",
+              "id",
+              "body"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "opportunity"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "owner_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "value_cents": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000000
+              },
+              "next_action": {
+                "type": "string",
+                "maxLength": 500
+              }
+            },
+            "required": [
+              "action",
+              "id",
+              "title",
+              "owner_id",
+              "value_cents",
+              "next_action"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "stage"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "stage": {
+                "type": "string",
+                "enum": [
+                  "new",
+                  "contacted",
+                  "consultation",
+                  "trial",
+                  "won",
+                  "lost"
+                ]
+              },
+              "expected_version": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "action",
+              "id",
+              "stage",
+              "expected_version"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "opportunity_edit"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "owner_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "value_cents": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000000
+              },
+              "next_action": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "expected_version": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "action",
+              "id",
+              "owner_id",
+              "value_cents",
+              "next_action",
+              "expected_version"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "task"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 240
+              },
+              "assignee_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "opportunity_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "due_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "action",
+              "id",
+              "title",
+              "assignee_id",
+              "opportunity_id",
+              "due_at"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "task_status"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "completed": {
+                "type": "boolean"
+              },
+              "expected_version": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "action",
+              "id",
+              "completed",
+              "expected_version"
+            ],
+            "additionalProperties": false
+          }
+        ]
       }
     }
   }

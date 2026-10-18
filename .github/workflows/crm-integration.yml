@@ -20,6 +20,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Check read-only migration and identity audit behavior
+        run: node --test scripts/crm-staging-audit.test.mjs
       - run: npx playwright install --with-deps chromium
       - name: Start disposable Supabase (no hosted project, no production secrets)
         run: npx supabase start --workdir tests/crm -x realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor

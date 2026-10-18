@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { Contact, ContactPage } from "./contracts";
+import ContactWorkflow from "./ContactWorkflow";
 
 export default function ContactsWorkspace() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -10,6 +11,8 @@ export default function ContactsWorkspace() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
   const pendingId = useRef<string | null>(null);
   const savingRef = useRef(false);
   const loadSequence = useRef(0);
@@ -18,7 +21,9 @@ export default function ContactsWorkspace() {
     const sequence = ++loadSequence.current;
     setLoading(true); setError(null);
     try {
-      const response = await fetch(`/api/v1/crm/contacts${after ? `?cursor=${after}` : ""}`, { signal, cache: "no-store" });
+      const params = new URLSearchParams({ q: search });
+      if (after) params.set("cursor", after);
+      const response = await fetch(`/api/v1/crm/contacts?${params}`, { signal, cache: "no-store" });
       const body = await response.json();
       if (sequence !== loadSequence.current || signal?.aborted) return;
       if (!response.ok) throw new Error(body.error || "Could not load contacts.");
@@ -31,7 +36,7 @@ export default function ContactsWorkspace() {
         setError(e instanceof Error ? e.message : "Could not load contacts.");
       }
     } finally { if (!signal?.aborted && sequence === loadSequence.current) setLoading(false); }
-  }, []);
+  }, [search]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -68,6 +73,7 @@ export default function ContactsWorkspace() {
     </header>
     {error ? <div role="alert" className="rounded-xl border border-red-400/30 bg-red-400/10 p-4">{error} <button type="button" className="underline" disabled={loading} onClick={() => void load()}>Refresh contacts</button></div> : null}
     {notice ? <p role="status" className="text-emerald-300">{notice}</p> : null}
+    {selected && <ContactWorkflow key={selected} id={selected} close={() => { setSelected(null); void load(); }}/>}
     <form onSubmit={create} className="glass-panel space-y-4 rounded-2xl p-6">
       <h2 className="text-lg font-semibold">Add a contact</h2>
       <fieldset disabled={saving} className="grid gap-4 sm:grid-cols-2">
@@ -80,9 +86,10 @@ export default function ContactsWorkspace() {
       <button disabled={saving} className="rounded-xl bg-cyan-200 px-5 py-3 font-semibold text-slate-950 disabled:opacity-50">{saving ? "Saving…" : "Save contact"}</button>
     </form>
     <section aria-label="Contact directory" aria-busy={loading} className="glass-panel overflow-hidden rounded-2xl">
+      <label className="block p-5">Search contacts<input type="search" value={search} maxLength={100} onChange={e => setSearch(e.target.value)} placeholder="Name, email or phone" className="mt-2 block w-full rounded border border-white/20 bg-slate-900 p-3"/></label>
       <div className="flex items-center justify-between border-b border-white/10 p-5"><h2 className="font-semibold">Directory</h2><span className="text-sm text-slate-400">{contacts.length} loaded</span></div>
       {contacts.length === 0 ? <p className="p-8 text-slate-400">{loading ? "Loading contacts…" : error ? "The directory could not be loaded." : "Your first relationship starts here. Add a contact above."}</p> :
-        <ul className="divide-y divide-white/10">{contacts.map(contact => <li key={contact.id} className="grid gap-2 p-5 sm:grid-cols-3"><strong>{contact.full_name}</strong><div className="min-w-0 break-words text-sm text-slate-300"><p>{contact.email}</p><p>{contact.phone}</p></div><span className="text-sm capitalize text-slate-400">{contact.source}</span></li>)}</ul>}
+        <ul className="divide-y divide-white/10">{contacts.map(contact => <li key={contact.id} className="grid gap-2 p-5 sm:grid-cols-3"><button type="button" className="text-left font-semibold underline" onClick={() => setSelected(contact.id)}>{contact.full_name}</button><div className="min-w-0 break-words text-sm text-slate-300"><p>{contact.email}</p><p>{contact.phone}</p></div><span className="text-sm capitalize text-slate-400">{contact.source}</span></li>)}</ul>}
       {cursor ? <button type="button" disabled={loading} onClick={() => void load(cursor)} className="m-5 rounded-lg border border-white/20 px-4 py-2">{loading ? "Loading…" : "Load more"}</button> : null}
     </section>
   </div>;

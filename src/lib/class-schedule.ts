@@ -94,20 +94,34 @@ export function classOccursOnDate(scheduleClass: ScheduleClassRow, dateKey: stri
   return scheduleClass.class_days.includes(dayAbbr);
 }
 
-export function getReservationCutoffAt(scheduleClass: ScheduleClassRow, dateKey: string): string | null {
-  const sessionStart = getScheduleDateTime(dateKey, scheduleClass.class_time);
+export function getReservationCutoffAt(scheduleClass: ScheduleClassRow, dateKey: string, timeZone?: string): string | null {
+  let sessionStart = getScheduleDateTime(dateKey, scheduleClass.class_time);
+  if (timeZone) {
+    // Interpret the class's wall clock in the gym's zone, independent of the server's zone.
+    const wall = new Date(`${dateKey}T${scheduleClass.class_time.slice(0, 8).padEnd(8, ':00')}Z`).getTime();
+    let instant = wall;
+    const formatter = new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'longOffset' });
+    for (let pass = 0; pass < 3; pass++) {
+      const offset = formatter.formatToParts(new Date(instant)).find(part => part.type === 'timeZoneName')?.value ?? 'GMT';
+      const match = /GMT([+-])(\d{2}):(\d{2})/.exec(offset);
+      const minutes = match ? (Number(match[2]) * 60 + Number(match[3])) * (match[1] === '+' ? 1 : -1) : 0;
+      instant = wall - minutes * 60_000;
+    }
+    sessionStart = new Date(instant);
+  }
 
   if (scheduleClass.reservation_cutoff_hours <= 0) {
     return sessionStart.toISOString();
   }
 
   const cutoff = new Date(sessionStart);
-  cutoff.setHours(cutoff.getHours() - scheduleClass.reservation_cutoff_hours);
+  if (timeZone) cutoff.setTime(sessionStart.getTime() - scheduleClass.reservation_cutoff_hours * 3_600_000);
+  else cutoff.setHours(cutoff.getHours() - scheduleClass.reservation_cutoff_hours);
   return cutoff.toISOString();
 }
 
-export function isReservationClosed(scheduleClass: ScheduleClassRow, dateKey: string, now = new Date()): boolean {
-  const cutoffAt = getReservationCutoffAt(scheduleClass, dateKey);
+export function isReservationClosed(scheduleClass: ScheduleClassRow, dateKey: string, now = new Date(), timeZone?: string): boolean {
+  const cutoffAt = getReservationCutoffAt(scheduleClass, dateKey, timeZone);
   if (!cutoffAt) {
     return false;
   }
@@ -122,6 +136,7 @@ export function buildDailyScheduleSession(params: {
   currentUserId: string;
   memberNameMap: Map<string, string>;
   now?: Date;
+  timeZone?: string;
 }): DailyScheduleSession {
   const { scheduleClass, dateKey, reservations, currentUserId, memberNameMap, now } = params;
   const reservedMembers = reservations
@@ -148,8 +163,8 @@ export function buildDailyScheduleSession(params: {
     reservedCount,
     capacityRemaining,
     isReservedByCurrentUser: reservations.some((reservation) => reservation.member_id === currentUserId),
-    isReservationClosed: isReservationClosed(scheduleClass, dateKey, now),
-    reservationCutoffAt: getReservationCutoffAt(scheduleClass, dateKey),
+    isReservationClosed: isReservationClosed(scheduleClass, dateKey, now, params.timeZone),
+    reservationCutoffAt: getReservationCutoffAt(scheduleClass, dateKey, params.timeZone),
     reservedMembers,
   };
 }

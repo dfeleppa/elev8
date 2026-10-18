@@ -15,6 +15,8 @@ export function isFullyPublic(pathname: string) {
   if (pathname.startsWith("/api/mcp")) return true;
   if (pathname.startsWith("/api/oauth")) return true;
   if (pathname.startsWith("/api/cron")) return true;
+  // Provider authentication is enforced by the default-disabled SMS handler.
+  if (pathname === "/api/webhooks/twilio/sms") return true;
   return false;
 }
 

@@ -7,6 +7,7 @@ struct ContactsView: View {
     @State private var loading = false
     @State private var errorMessage: String?
     @State private var adding = false
+    @State private var search = ""
 
     var body: some View {
         List {
@@ -18,16 +19,20 @@ struct ContactsView: View {
                 ContentUnavailableView("No contacts yet", systemImage: "person.crop.circle.badge.plus", description: Text("Add your first prospect or customer."))
             }
             ForEach(contacts) { contact in
+                NavigationLink { ContactDetailView(id: contact.id) } label: {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(contact.full_name).font(.headline)
                     if let email = contact.email { Text(email).foregroundStyle(.secondary) }
                     if let phone = contact.phone { Text(phone).foregroundStyle(.secondary) }
                     Text(contact.source.capitalized).font(.caption)
                 }
+                }
             }
             if let cursor { Button("Load more") { Task { await load(after: cursor) } }.disabled(loading) }
         }
         .navigationTitle("Contacts")
+        .searchable(text: $search, prompt: "Name, email or phone")
+        .onSubmit(of: .search) { Task { await load() } }
         .toolbar { Button("Add contact", systemImage: "plus") { adding = true } }
         .task { await load() }
         .refreshable { await load() }
@@ -39,7 +44,10 @@ struct ContactsView: View {
         loading = true; errorMessage = nil
         defer { loading = false }
         do {
-            let page: ContactPage = try await session.request("api/v1/crm/contacts" + (after.map { "?cursor=\($0)" } ?? ""))
+            var query = URLComponents()
+            query.queryItems = [URLQueryItem(name: "q", value: search)]
+            if let after { query.queryItems?.append(URLQueryItem(name: "cursor", value: after)) }
+            let page: ContactPage = try await session.request("api/v1/crm/contacts?" + (query.percentEncodedQuery ?? ""))
             if after == nil { contacts = page.contacts }
             else { contacts += page.contacts.filter { contact in !contacts.contains(where: { $0.id == contact.id }) } }
             cursor = page.nextCursor

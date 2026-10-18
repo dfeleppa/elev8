@@ -1,0 +1,13 @@
+{
+  "synthetic": true,
+  "location_id": "synthetic-lyfe-location",
+  "contacts": [
+    { "source_id": "c-1", "full_name": "Synthetic One", "email": "ONE@example.invalid", "phone": "+12025550101", "dnd": true },
+    { "source_id": "c-1", "full_name": "Synthetic One", "email": "ONE@example.invalid", "phone": "+12025550101", "dnd": true },
+    { "source_id": "c-2", "full_name": "Synthetic Two", "email": "two@example.invalid", "phone": "+12025550102" },
+    { "source_id": "c-3", "full_name": "Synthetic Household A", "phone": "+12025550103" },
+    { "source_id": "c-4", "full_name": "Synthetic Household B", "phone": "+12025550103" },
+    { "source_id": "c-5", "full_name": "Synthetic Invalid Phone", "phone": "202-555-0105" },
+    { "source_id": "c-6", "full_name": "" }
+  ]
+}

@@ -1,5 +1,24 @@
 # Contacts staging verification
 
+**Current direction:** the user subsequently chose the main Supabase database. The four new migrations were applied and verified there; see [main rollout evidence](crm-main-rollout.md). Staging requirements and absent-table observations below are historical, not the current deployment status.
+
+## Current staging unblock checklist
+
+**Latest provisioning result:** see [separate staging setup](crm-staging-setup.md). Vercel `elev8-staging` now exists, scoped CLI environment access works, and independent auth-secret/disabled-SMS settings are configured. Supabase creation was attempted in the user-selected organization and rejected by the two-active-free-project limit. The Vercel-access blocker described below is historical and has been resolved through the CLI.
+
+The October 17 follow-up rechecked the connected project and branch inventory: only production Elev8 and the unrelated Planet Pooch project are available; Elev8 still has only its default `main` branch (`MIGRATIONS_FAILED`). Production health is not proof of an isolated test environment. Vercel configuration access has not been rechecked; its previously recorded denial remains unresolved.
+
+Required access and setup, in dependency order:
+
+1. **Isolated Supabase target:** provide a dedicated staging project accessible through the connected account, or explicitly approve a paid branching option. Record a distinct project reference and securely provision its CLI/database credentials. Do not use the production-linked root CLI directory for staging writes.
+2. **Vercel configuration access:** restore access to project `daneff` in its owning team, including environment configuration and deployment access, or provide an isolated staging project. Set staging-only database credentials, a separate NextAuth secret, and a reachable HTTPS application URL. Keep production provider/cron credentials out. Credentials belong in the platform's secure configuration, not chat or committed files.
+3. **Reviewed schema baseline:** resolve the four timestamp/name discrepancies and recovered September access-policy migration described below. Build a schema-only baseline without historical user data/seeding, then apply the intended CRM, booking-capacity and SMS migrations to staging. Do not blindly replay local-only historical migrations or repair production's ledger.
+4. **Synthetic identities:** create member, coach, admin and owner test accounts with explicitly linked Auth UIDs and distinct app IDs. The nine real unlinked accounts need separate trusted review before member rollout; fixing production accounts is not a prerequisite for synthetic staging tests. Password-based verification can proceed while trusted OAuth mapping remains a separate gate.
+5. **Expanded verification:** the current disposable integration workflow still installs only the contacts foundation and asserts SELECT/INSERT-only contact grants. Extend its schema and assertions for sales-workflow UPDATE permission, member bookings and SMS before claiming coverage of those increments. Prove last-spot booking races and worker recovery using separate PostgreSQL connections. Repeat the cookie/bearer access matrix against the hosted staging URL.
+6. **Native validation:** run the updated Swift build/tests on macOS, then authenticated simulator tests against staging. A signing team, bundle/profile and physical iPhone are additionally needed for device validation. Twilio credentials, test number and approved recipients are needed later for actual messaging; they do not block the initial CRM/member staging setup.
+
+No infrastructure, credentials, identities, migrations or routing were changed by this checklist.
+
 October 17, 2026. Foundation PR #85 is merged as `f00b8a1`. This follow-up does not authorize or perform a production migration, identity repair, Twilio routing change, or real message send.
 
 ## Discovered resources and blockers
@@ -81,3 +100,37 @@ Early runs exposed test infrastructure issues (Node worker `--env-file` propagat
 7. Only after this gate: contact detail/edit and opportunities; native schedule/booking progresses alongside CRM in the same Swift app. Twilio remains the provider, with no LC Phone migration. Real messaging and number routing belong to a later explicit milestone.
 
 References: [Supabase environment and migration process](https://supabase.com/docs/guides/deployment/managing-environments), [Supabase CI testing](https://supabase.com/docs/guides/deployment/ci/testing), [Playwright CI setup](https://playwright.dev/docs/ci-intro). Current Supabase changelog reviewed; the announced November TLS cipher retirement is a device compatibility check, not a reason to alter identity or database settings here.
+
+## Read-only prerequisite refresh — October 17, 2026, 8:11 p.m. Eastern
+
+The connected Supabase inventory still exposes only production Elev8 and the unrelated Planet Pooch project. Elev8's only branch is default `main`, still `MIGRATIONS_FAILED`. No isolated hosted test target is available through this connection. No branch creation, plan upgrade, migration, account mutation, deployment, or message send was attempted during this refresh. The earlier Vercel access failure was not retested and remains an unresolved prerequisite.
+
+The exact sanitized database inventory is committed as `docs/crm-staging-inventory.json`, captured at `2026-10-18T00:11:29.92129Z`. It contains schema/ledger metadata and aggregate counts, with no user rows, account IDs, emails, hashes, provider subjects, keys or tokens. A reusable read-only query lives at `scripts/crm-staging-inventory.sql`. Run it against the explicitly selected project through an authenticated SQL console/MCP, extract the returned `inventory` object, and add the actual `project_ref` from that selected target; do not infer a target from an environment filename.
+
+```sh
+node scripts/crm-staging-audit.mjs docs/crm-staging-inventory.json
+node --test scripts/crm-staging-audit.test.mjs
+```
+
+The audit reads local SQL filenames and the supplied JSON only. It makes no network requests or database changes. Exit `2` means unresolved prerequisites, `1` means invalid input. Even an inventory without reported issues cannot establish isolation, applied SQL parity, trusted OAuth ownership, deployed browser access, or native/device behavior. The four audit regression tests also run in the disposable CRM integration workflow.
+
+The production ledger contains 59 entries. Against the current checkout, 54 version/name pairs match; matching names do not establish SQL equivalence. Four apparent timestamp changes require individual review:
+
+| Migration name | Local version | Applied version | Recorded statement evidence |
+| --- | --- | --- | --- |
+| `drop_orphaned_organization_tables` | `20260529000000` | `20260529085711` | Text differs after line-ending/outer-whitespace normalization |
+| `payroll_entries_staff_user_fk` | `20260529010000` | `20260529090402` | Text differs; includes historical data seeding, so do not replay it into synthetic staging |
+| `nutrition_check_in_history` | `20260529120000` | `20260529111336` | Text differs after line-ending/outer-whitespace normalization |
+| `mcp_oauth_used_tokens` | `20260604061000` | `20260819013312` | Recorded text matches local after line-ending/outer-whitespace normalization |
+
+Text differences do not by themselves establish semantic differences. They do rule out treating the four names as interchangeable history entries without review.
+
+Six local migration files have no applied version or unique same-name ledger counterpart: `20260514120000_recompose_current_nutrition_macros`, `20260527004140_web_chat_threads_v1`, `20260530120000_update_fiber_goal_per_72_kcal`, `20260608190000_member_metabolism_learning`, `20260713133813_remove_stripe_billing`, and `20261017114730_crm_contacts_foundation`. The concurrently developed `20261018000955_crm_sales_workflow` is also local-only when present. These are an inventory, not an approved pending set. In particular, do not replay historical nutrition changes, seed data, or billing removal merely to make stage match a filename list.
+
+Applied `20260902010824_harden_mobile_app_user_access` has no local migration counterpart. Its recorded SQL was recovered read-only to `docs/evidence/20260902010824_harden_mobile_app_user_access.sql.txt`, outside the migration directory. It records private security-definer identity/role helpers, public invoker wrappers, replacement of old self-update/claim policies, and a restricted column grant. The recorded identity helper still allows a confirmed-email fallback. This evidence is a recovered ledger entry, not verification of current function definitions or authorization to reapply it. A fresh baseline that omits it would miss a material permission change. Review its email fallback with the broader legacy identity rollout before approving a baseline.
+
+Identity aggregates remain 12 app users, three linked and nine unlinked, with zero duplicate links, orphan links, null roles or unknown roles. Production has a UUID app-user primary key and a unique nullable `supabase_auth_uid`; role and updated-at remain nullable. Auth records three email identities and one Google identity. These are authentication methods, not four distinct users and not evidence of ownership of a particular app account. No Apple identity is present. `crm_contacts` remains absent. The new versioned resolver's strict UID link remains necessary; this audit grants no access.
+
+Trusted OAuth validation is still open. NextAuth's current JWT callback deliberately withholds a verified Auth UID from Google/Apple callbacks, and its existing tests reject stale OAuth subjects and forged session-update claims. Do not populate a new registry, infer a subject from email, or use the legacy OAuth helper's returned ID as proof to bypass the gate. Once staging is available, prove the actual provider subject and existing Supabase identity association in a supported OAuth flow; then verify that both web and iPhone resolve exactly one existing app-user ID. Preserve negative tests for missing, conflicting and revoked associations. No OAuth or native sign-in was exercised with production identities here.
+
+Validation of this increment: four audit tests passed locally; targeted ESLint passed. The SQL inventory executed successfully against production using read-only SELECTs. Historical statement retrieval was also read-only. Hosted browser, Mac simulator and physical iPhone checks remain unperformed, and the earlier passing 11-test disposable integration run remains the latest full auth-flow evidence.

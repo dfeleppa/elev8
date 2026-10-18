@@ -1,5 +1,7 @@
 # Elev8 CRM Foundation Build Status
 
+**Latest database rollout:** the user directed work on main Supabase. Contacts, sales workflow, booking-capacity and SMS-outbox migrations are now applied and transactionally smoke-tested there. See [main rollout evidence](crm-main-rollout.md). Earlier absent-table/staging-only statements below describe previous checkpoints; the web/native application changes have not been deployed by this database rollout.
+
 October 17, 2026
 
 Foundation [PR #85](https://github.com/dfeleppa/elev8/pull/85) merged into `main` as `f00b8a144e36bed6c74dfc0a1198835cdb8c2a44`. Staging verification continues on `codex/crm-staging-verification`. The existing web application remains at the monorepo root; the unified native target lives at `apps/ios/Elev8`.

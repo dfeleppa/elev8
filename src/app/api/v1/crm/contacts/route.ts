@@ -20,12 +20,18 @@ export async function GET(request: Request) {
   if (ctx instanceof NextResponse) return ctx;
   const params = new URL(request.url).searchParams;
   const cursor = params.get("cursor");
+  const search = params.get("q")?.trim() ?? "";
+  if (search.length > 100 || /[^\p{L}\p{N}\s@.+_\-]/u.test(search)) return NextResponse.json({ error: "Use a name, email or phone to search (up to 100 characters)." }, { status: 400, headers });
   if (cursor && !z.string().uuid().safeParse(cursor).success) {
     return NextResponse.json({ error: "Invalid cursor." }, { status: 400, headers });
   }
   // UUID ordering is stable even when new contacts are inserted between pages.
   let query = supabaseAdmin.from("crm_contacts").select(fields).order("id").limit(51);
   if (cursor) query = query.gt("id", cursor);
+  if (search) {
+    const pattern = `%${search.replace(/_/g, "\\_")}%`;
+    query = query.or(`full_name.ilike.${pattern},email.ilike.${pattern},phone.ilike.${pattern}`);
+  }
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: "Contacts are unavailable. Please try again later." }, { status: 503, headers });
   const contacts = (data ?? []).slice(0, 50);

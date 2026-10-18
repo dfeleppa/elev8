@@ -1,0 +1,123 @@
+-- READ-ONLY HISTORICAL EVIDENCE. Not a local migration; do not execute.
+-- Retrieved from Elev8 production supabase_migrations.schema_migrations on
+-- 2026-10-18 UTC (October 17 America/New_York). No history was changed.
+-- Recorded version: 20260902010824; name: harden_mobile_app_user_access.
+
+-- Harden the mobile identity bridge.
+--
+-- app_users contains authorization and payroll fields. RLS can restrict rows,
+-- but it cannot restrict columns, so authenticated mobile clients must never
+-- receive table-level INSERT/UPDATE/DELETE privileges on this table.
+
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to authenticated, service_role;
+
+create or replace function private.resolve_mobile_app_user_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select candidate.id
+  from auth.users auth_user
+  join lateral (
+    select app_user.id
+    from public.app_users app_user
+    where app_user.supabase_auth_uid = auth_user.id
+       or (
+         auth_user.email_confirmed_at is not null
+         and auth_user.email is not null
+         and lower(app_user.email) = lower(auth_user.email)
+       )
+    order by
+      (app_user.supabase_auth_uid = auth_user.id) desc,
+      app_user.created_at asc
+    limit 1
+  ) candidate on true
+  where auth_user.id = (select auth.uid())
+  limit 1;
+$$;
+
+revoke execute on function private.resolve_mobile_app_user_id() from public, anon, authenticated;
+grant execute on function private.resolve_mobile_app_user_id() to authenticated, service_role;
+
+create or replace function private.resolve_mobile_app_user_role()
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select app_user.role
+  from public.app_users app_user
+  where app_user.id = private.resolve_mobile_app_user_id()
+  limit 1;
+$$;
+
+revoke execute on function private.resolve_mobile_app_user_role() from public, anon, authenticated;
+grant execute on function private.resolve_mobile_app_user_role() to authenticated, service_role;
+
+-- Public wrappers remain security-invoker RPCs. The privileged lookup is kept
+-- in the unexposed private schema and always derives identity from auth.uid().
+create or replace function public.mobile_app_user_id()
+returns uuid
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select private.resolve_mobile_app_user_id();
+$$;
+
+revoke execute on function public.mobile_app_user_id() from public, anon;
+grant execute on function public.mobile_app_user_id() to authenticated, service_role;
+
+create or replace function public.mobile_app_user_role()
+returns text
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select private.resolve_mobile_app_user_role();
+$$;
+
+revoke execute on function public.mobile_app_user_role() from public, anon;
+grant execute on function public.mobile_app_user_role() to authenticated, service_role;
+
+alter table public.app_users enable row level security;
+
+drop policy if exists app_users_mobile_auth_claim on public.app_users;
+drop policy if exists app_users_self_insert on public.app_users;
+drop policy if exists app_users_self_update on public.app_users;
+drop policy if exists app_users_mobile_self_read on public.app_users;
+drop policy if exists app_users_self_read on public.app_users;
+drop policy if exists app_users_self_select on public.app_users;
+
+create policy app_users_mobile_self_read
+  on public.app_users
+  for select
+  to authenticated
+  using (id = public.mobile_app_user_id());
+
+revoke all privileges on table public.app_users from anon;
+revoke all privileges on table public.app_users from authenticated;
+
+-- Mobile clients need only their non-sensitive profile fields. Server code uses
+-- service_role and is unaffected by these column-level grants.
+grant select (
+  id,
+  email,
+  full_name,
+  role,
+  sex,
+  birth_date,
+  height_cm,
+  current_weight_kg,
+  body_fat_percent,
+  supabase_auth_uid,
+  created_at
+) on table public.app_users to authenticated;
+

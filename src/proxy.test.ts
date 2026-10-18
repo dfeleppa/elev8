@@ -50,3 +50,10 @@ it("continues protecting web pages and similar-looking paths", async () => {
     expect(response.headers.get("location")).toContain("/login");
   }
 });
+it("lets only the exact signed SMS webhook bypass browser sessions", async () => {
+  const allowed=await proxy(new NextRequest("https://app.test/api/webhooks/twilio/sms"));
+  expect(allowed.headers.get("x-middleware-next")).toBe("1");
+  expect(getToken).not.toHaveBeenCalled();
+  const denied=await proxy(new NextRequest("https://app.test/api/webhooks/twilio/sms/private"));
+  expect(denied.status).toBe(307);
+});

@@ -1,0 +1,402 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Elev8 member workflow",
+    "version": "1.0.0",
+    "description": "Canonical verified Supabase UID linking shared with /api/v1/session. Booking requires the reviewed capacity guard migration. All class dates and times are gym-local in America/New_York; date is explicit. The server derives member identity. Browser mutations require same Origin. Errors use {error:string}. Booking conflicts must be refreshed before retry. No roster identities are exposed."
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    },
+    {
+      "webSession": []
+    }
+  ],
+  "paths": {
+    "/api/v1/member/profile": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing or invalid canonical identity"
+          },
+          "403": {
+            "description": "Invalid mutation Origin"
+          },
+          "409": {
+            "description": "Booking closed, full, or already reserved"
+          },
+          "500": {
+            "description": "Service unavailable"
+          }
+        }
+      },
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing or invalid canonical identity"
+          },
+          "403": {
+            "description": "Invalid mutation Origin"
+          },
+          "409": {
+            "description": "Booking closed, full, or already reserved"
+          },
+          "500": {
+            "description": "Service unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "fullName"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 150
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/member/schedule": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberSchedule"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing or invalid canonical identity"
+          },
+          "403": {
+            "description": "Invalid mutation Origin"
+          },
+          "409": {
+            "description": "Booking closed, full, or already reserved"
+          },
+          "500": {
+            "description": "Service unavailable"
+          }
+        },
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/member/schedule/reservations": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "session"
+                  ],
+                  "properties": {
+                    "session": {
+                      "$ref": "#/components/schemas/MemberClass"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing or invalid canonical identity"
+          },
+          "403": {
+            "description": "Invalid mutation Origin"
+          },
+          "409": {
+            "description": "Booking closed, full, or already reserved"
+          },
+          "500": {
+            "description": "Service unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationInput"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "session"
+                  ],
+                  "properties": {
+                    "session": {
+                      "$ref": "#/components/schemas/MemberClass"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing or invalid canonical identity"
+          },
+          "403": {
+            "description": "Invalid mutation Origin"
+          },
+          "409": {
+            "description": "Booking closed, full, or already reserved"
+          },
+          "500": {
+            "description": "Service unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationInput"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "webSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Secure-next-auth.session-token"
+      }
+    },
+    "schemas": {
+      "MemberProfile": {
+        "type": "object",
+        "required": [
+          "fullName",
+          "email",
+          "createdAt"
+        ],
+        "properties": {
+          "fullName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "MemberClass": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "classDate",
+          "classTime",
+          "durationMinutes",
+          "reservedCount",
+          "capacityRemaining",
+          "isReserved",
+          "isClosed"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "classDate": {
+            "type": "string"
+          },
+          "classTime": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "integer"
+          },
+          "reservedCount": {
+            "type": "integer"
+          },
+          "capacityRemaining": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "isReserved": {
+            "type": "boolean"
+          },
+          "isClosed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReservationInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "classId",
+          "date"
+        ],
+        "properties": {
+          "classId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "MemberSchedule": {
+        "type": "object",
+        "required": [
+          "date",
+          "timeZone",
+          "sessions"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "timeZone": {
+            "const": "America/New_York"
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberClass"
+            }
+          }
+        }
+      }
+    }
+  }
+}
