@@ -38,7 +38,7 @@ for (const type of ["recovery", "invite"] as const) {
       await page.getByLabel("New password", { exact: true }).fill(password);
       await page.getByLabel("Confirm password", { exact: true }).fill(password + "wrong");
       await page.getByRole("button", { name: "Save password", exact: true }).click();
-      await expect(page.getByRole("alert")).toHaveText("The passwords do not match.");
+      await expect(page.getByRole("region", { name: "Set your password" }).getByRole("alert")).toHaveText("The passwords do not match.");
       await page.getByLabel("Confirm password", { exact: true }).fill(password);
       await page.getByRole("button", { name: "Save password", exact: true }).click();
       await expect(page.getByRole("status")).toContainText("Password saved.");
@@ -55,7 +55,7 @@ for (const type of ["recovery", "invite"] as const) {
       await auth.auth.signOut({ scope: "local" });
       await page.goto(`/account-recovery#${fragment}`);
       await page.getByRole("button", { name: "Verify link", exact: true }).click();
-      await expect(page.getByRole("alert")).toContainText("missing, expired, or already used");
+      await expect(page.getByRole("region", { name: "Set your password" }).getByRole("alert")).toContainText("missing, expired, or already used");
     } finally {
       expect((await admin.from("app_users").delete().eq("id", appId)).error).toBeNull();
       if (authUid) expect((await admin.auth.admin.deleteUser(authUid)).error).toBeNull();
@@ -70,7 +70,7 @@ test("missing or unsupported recovery proof cannot open the password form", asyn
   for (const fragment of ["", "#type=magiclink&token_hash=" + "a".repeat(64), "#type=recovery&token_hash=invalid"]) {
     await page.goto("/account-recovery" + fragment);
     await page.getByRole("button", { name: "Verify link", exact: true }).click();
-    await expect(page.getByRole("alert")).toContainText("missing, expired, or already used");
+    await expect(page.getByRole("region", { name: "Set your password" }).getByRole("alert")).toContainText("missing, expired, or already used");
     await expect(page.getByLabel("New password", { exact: true })).toHaveCount(0);
   }
 });
