@@ -6,12 +6,9 @@ vi.mock("@/lib/supabase-admin", () => ({ supabaseAdmin: { from: mocks.from } }))
 // A legacy resolver must never run in the new adapters.
 vi.mock("@/lib/member", () => ({ hasRole: () => true, requireRequestUserContext: () => { throw new Error("Legacy identity resolver used"); } }));
 import { GET as profileGET, PUT } from "@/app/api/v1/member/profile/route";
-import { GET as scheduleGET } from "@/app/api/v1/member/schedule/route";
-import { POST, DELETE } from "@/app/api/v1/member/schedule/reservations/route";
 
 const member = "00000000-0000-4000-8000-000000000001";
 const other = "00000000-0000-4000-8000-000000000002";
-const classId = "00000000-0000-4000-8000-000000000003";
 let rows: Record<string, Record<string, unknown>[]>;
 let writes: Array<{ table: string; action: string; values?: unknown; filters: Record<string, unknown> }>;
 
@@ -54,14 +51,13 @@ beforeEach(() => {
   mocks.from.mockImplementation(query);
   rows = {
     app_users: [{ id: member, full_name: "Self", email: "self@example.invalid" }, { id: other, full_name: "Private peer", email: "private@example.invalid" }],
-    schedule_classes: [{ id: classId, name: "Strength", class_time: "09:00:00", duration_minutes: 60, class_days: ["Mo"], start_date: "2026-01-01", end_date: null, size_limit: 5, reservation_cutoff_hours: 1, track_id: null, default_coach_user_id: null }],
-    class_reservations: [{ class_id: classId, class_date: "2099-04-06", member_id: other }],
+
   };
   writes = [];
 });
 
 describe("canonical member adapters", () => {
-  it.each([profileGET, PUT, scheduleGET, POST, DELETE])("denies unlinked/unauthenticated identities before querying member data", async handler => {
+  it.each([profileGET, PUT])("denies unlinked/unauthenticated identities before querying member data", async handler => {
     mocks.context.mockResolvedValue({ userId: null, role: "member", error: "Unauthorized" });
     expect((await handler(request("profile"))).status).toBe(401);
     expect(mocks.from).not.toHaveBeenCalled();
@@ -85,34 +81,4 @@ describe("canonical member adapters", () => {
     expect(writes).toEqual([]);
   });
 
-  it("returns availability and own status without peer identities or emails", async () => {
-    const response = await scheduleGET(request("schedule?date=2099-04-06"));
-    const payload = await response.json();
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
-    expect(payload.timeZone).toBe("America/New_York");
-    expect(payload.sessions[0]).toMatchObject({ id: classId, reservedCount: 1, isReserved: false });
-    expect(JSON.stringify(payload)).not.toMatch(/Private peer|private@|reservedMembers|member_id/);
-  });
-
-  it("rejects malformed dates and reservation values without writes", async () => {
-    for (const date of ["", "2026-02-30", "bad"]) expect((await scheduleGET(request(`schedule?date=${date}`))).status).toBe(400);
-    for (const body of [{ classId: 1, date: "2099-04-06" }, { classId, date: "2099-04-06", memberId: other }, { classId, date: "bad" }]) {
-      expect((await POST(request("schedule/reservations", "POST", body))).status).toBe(400);
-    }
-    expect(writes).toEqual([]);
-  });
-
-  it("books canonical self, rejects duplicate taps, and cancels only self", async () => {
-    const body = { classId, date: "2099-04-06" };
-    const created = await POST(request("schedule/reservations", "POST", body));
-    expect(created.status).toBe(200);
-    expect(await created.json()).toMatchObject({ session: { isReserved: true } });
-    expect(writes[0]).toMatchObject({ action: "insert", values: { member_id: member } });
-    expect((await POST(request("schedule/reservations", "POST", body))).status).toBe(409);
-    const cancelled = await DELETE(request("schedule/reservations", "DELETE", body));
-    expect(cancelled.status).toBe(200);
-    expect(writes[1]).toMatchObject({ action: "delete", filters: { member_id: member, class_id: classId, class_date: body.date } });
-    expect(rows.class_reservations).toHaveLength(1);
-    expect(rows.class_reservations[0].member_id).toBe(other);
-  });
 });

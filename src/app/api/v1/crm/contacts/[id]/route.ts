@@ -1,39 +1,77 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { supabaseAdmin } from "@/lib/supabase-admin";
-import { contactEditInput } from "@/features/crm/workflow-contracts";
-import { reply, validStaff, workflowGate } from "@/features/crm/workflow-server";
+import { allowsMutationOrigin, requireClientContext } from "@/features/crm/context";
+import { capabilitiesForRole, contactETag, contactPatch, parseContactETag, type ContactFieldErrors } from "@/features/crm/contracts";
+import { editContact, readContact, readPatchBody } from "@/features/crm/contact-detail";
 
 export const dynamic = "force-dynamic";
-type Context = { params: Promise<{ id: string }> };
-export async function GET(request: Request, context: Context) {
-  const ctx = await workflowGate(request);
-  if (ctx instanceof NextResponse) return ctx;
-  const { id } = await context.params;
-  if (!z.string().uuid().safeParse(id).success) return reply({ error: "Invalid contact ID." }, 400);
-  const contact = await supabaseAdmin.from("crm_contacts").select("id, full_name, email, phone, source, created_at, owner_id, version").eq("id", id).maybeSingle();
-  if (contact.error) return reply({ error: "Contact unavailable." }, 503);
-  if (!contact.data) return reply({ error: "Contact not found." }, 404);
-  const [notes, opportunities, tasks, events, staff] = await Promise.all([
-    supabaseAdmin.from("crm_notes").select("id, body, created_at, created_by").eq("contact_id", id).order("created_at", { ascending: false }).order("id").limit(101),
-    supabaseAdmin.from("crm_opportunities").select("id, title, stage, owner_id, value_cents, currency, next_action, version").eq("contact_id", id).order("created_at", { ascending: false }).order("id").limit(101),
-    supabaseAdmin.from("crm_tasks").select("id, title, assignee_id, due_at, opportunity_id, completed, version").eq("contact_id", id).order("completed").order("due_at").order("id").limit(101),
-    supabaseAdmin.from("crm_stage_events").select("id, opportunity_id, from_stage, to_stage, created_at, created_by").eq("contact_id", id).order("created_at", { ascending: false }).order("id").limit(101),
-    supabaseAdmin.from("app_users").select("id, name").in("role", ["admin", "owner"]).not("supabase_auth_uid", "is", null).order("id").limit(101),
-  ]);
-  if ([notes, opportunities, tasks, events, staff].some(r => r.error)) return reply({ error: "Contact workflow unavailable." }, 503);
-  return reply({ contact: contact.data, notes: notes.data?.slice(0, 100), opportunities: opportunities.data?.slice(0, 100), tasks: tasks.data?.slice(0, 100), stage_events: events.data?.slice(0, 100), staff: staff.data?.slice(0, 100), truncated: [notes, opportunities, tasks, events, staff].some(r => (r.data?.length ?? 0) > 100) });
+type RouteContext = { params: Promise<{ id: string }> };
+const headers = { "Cache-Control": "private, no-store" };
+const fail = (status: number, code: string, error: string, fieldErrors?: ContactFieldErrors) =>
+  NextResponse.json({ error, code, ...(fieldErrors ? { fieldErrors } : {}) }, { status, headers });
+const unavailable = () => fail(503, "unavailable", "Contact details are unavailable. Please try again later.");
+const conflict = () => fail(412, "revision_conflict", "This contact changed. Load the latest details before saving again.");
+
+async function gate(request: Request) {
+  const ctx = await requireClientContext(request);
+  if (ctx.error || !ctx.userId) return fail(401, "unauthorized", "Unauthorized");
+  if (!capabilitiesForRole(ctx.role).crm) return fail(403, "forbidden", "Forbidden");
+  return ctx;
 }
-export async function PATCH(request: Request, context: Context) {
-  const ctx = await workflowGate(request, true);
+
+export async function GET(request: Request, context: RouteContext) {
+  const ctx = await gate(request);
   if (ctx instanceof NextResponse) return ctx;
   const { id } = await context.params;
-  const parsed = contactEditInput.safeParse(await request.json().catch(() => null));
-  if (!z.string().uuid().safeParse(id).success || !parsed.success || parsed.data.id !== id) return reply({ error: "Invalid contact details." }, 400);
-  const { expected_version, ...values } = parsed.data;
-  if (!await validStaff(values.owner_id)) return reply({ error: "Choose an authorized CRM staff member." }, 400);
-  const { data, error } = await supabaseAdmin.from("crm_contacts").update({ ...values, email: values.email || null, phone: values.phone || null }).eq("id", id).eq("version", expected_version).select("id").maybeSingle();
-  if (error) return reply({ error: "Could not update contact." }, 503);
-  if (!data) return reply({ error: "Contact changed or is unavailable. Refresh before saving." }, 409);
-  return reply({ saved: true });
+  if (!z.string().uuid().safeParse(id).success) return fail(400, "invalid_id", "Invalid contact ID.");
+  const { contact, error } = await readContact(id);
+  if (error) return unavailable();
+  if (!contact) return fail(404, "not_found", "Contact not found.");
+  return NextResponse.json({ contact }, { headers: { ...headers, ETag: contactETag(contact) } });
+}
+
+export async function PATCH(request: Request, context: RouteContext) {
+  const ctx = await gate(request);
+  if (ctx instanceof NextResponse) return ctx;
+  if (!allowsMutationOrigin(request)) return fail(403, "invalid_origin", "Invalid request origin.");
+  const { id } = await context.params;
+  if (!z.string().uuid().safeParse(id).success) return fail(400, "invalid_id", "Invalid contact ID.");
+  const condition = request.headers.get("if-match");
+  if (condition === null) return fail(428, "precondition_required", "Load the contact before saving changes.");
+  const expected = parseContactETag(condition);
+  if (!expected) return fail(400, "invalid_precondition", "Supply one contact ETag in If-Match.");
+  if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") {
+    return fail(415, "unsupported_media_type", "Send changes as application/json.");
+  }
+  const payload = await readPatchBody(request);
+  if (payload.tooLarge) return fail(413, "payload_too_large", "Contact changes must be at most 16 KiB.");
+  const parsed = contactPatch.safeParse(payload.body);
+  if (!parsed.success) {
+    const messages: Required<ContactFieldErrors> = {
+      full_name: "Enter a name between 1 and 160 characters.",
+      email: "Enter a valid email address or clear the field.",
+      phone: "Use an international number, such as +15551234567.",
+      source: "Choose a supported source.",
+    };
+    const fieldErrors: ContactFieldErrors = {};
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0] as keyof ContactFieldErrors;
+      if (Object.hasOwn(messages, key)) fieldErrors[key] = messages[key];
+    }
+    return fail(400, "invalid_patch", "Supply only valid contact fields and at least one change.", fieldErrors);
+  }
+  const current = await readContact(id);
+  if (current.error) return unavailable();
+  if (!current.contact) return fail(404, "not_found", "Contact not found.");
+  if (expected.id !== current.contact.id || expected.revision !== current.contact.revision) return conflict();
+  const merged = { ...current.contact, ...parsed.data };
+  if (!merged.email && !merged.phone) {
+    return fail(400, "channel_required", "Keep an email address or phone number.", {
+      email: "Keep an email address or phone number.", phone: "Keep an email address or phone number.",
+    });
+  }
+  const saved = await editContact(id, expected.revision, parsed.data, ctx.userId!);
+  if (saved.error) return unavailable();
+  if (!saved.contact) return conflict();
+  return NextResponse.json({ contact: saved.contact }, { headers: { ...headers, ETag: contactETag(saved.contact) } });
 }

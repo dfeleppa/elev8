@@ -11,7 +11,7 @@ export default function ContactWorkflow({ id, close }: { id: string; close: () =
   const lock = useRef(false);
   const pending = useRef(new CreationAttempts());
   async function load() {
-    const response = await fetch(`/api/v1/crm/contacts/${id}`, { cache: "no-store" });
+    const response = await fetch(`/api/v1/crm/contacts/${id}/workflow`, { cache: "no-store" });
     const body = await response.json();
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) setDetail(null);
@@ -22,7 +22,7 @@ export default function ContactWorkflow({ id, close }: { id: string; close: () =
   }
   useEffect(() => {
     let active = true;
-    fetch(`/api/v1/crm/contacts/${id}`, { cache: "no-store" }).then(async response => {
+    fetch(`/api/v1/crm/contacts/${id}/workflow`, { cache: "no-store" }).then(async response => {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
       if (active) setDetail(body);
@@ -34,7 +34,7 @@ export default function ContactWorkflow({ id, close }: { id: string; close: () =
     lock.current = true; setBusy(true); setError(null);
     const action = String(values.action || "edit");
     try {
-      const send = (payload: Record<string, unknown>) => fetch(`/api/v1/crm/contacts/${id}${edit ? "" : "/workflow"}`, { method: edit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const send = (payload: Record<string, unknown>) => fetch(`/api/v1/crm/contacts/${id}/workflow`, { method: edit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       if (["note", "opportunity", "task"].includes(action)) {
         const result = await saveCreation(pending.current, values, send, load);
         form?.reset();

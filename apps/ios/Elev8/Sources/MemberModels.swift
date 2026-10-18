@@ -13,27 +13,47 @@ struct MemberSchedule: Decodable {
 }
 
 struct MemberClass: Decodable, Identifiable {
-    let id: String
+    let classId: String
+    var id: String { classId }
     let name: String
-    let classDate: String
-    let classTime: String
+    let date: String
+    let timeZone: String
+    let startsAt: String?
     let durationMinutes: Int
     let reservedCount: Int
-    let capacityRemaining: Int?
-    let isReserved: Bool
-    let isClosed: Bool
+    let remaining: Int?
+    let reservationId: String?
+    let availability: String
+    let canBook: Bool
+    let canCancel: Bool
 
-    var canBook: Bool { !isReserved && !isClosed && capacityRemaining != 0 }
-    var availability: String {
+    var isReserved: Bool { reservationId != nil }
+    var classTime: String {
+        guard let startsAt else { return "Time unavailable" }
+        let parser = ISO8601DateFormatter()
+        parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let fractional = parser.date(from: startsAt)
+        parser.formatOptions = [.withInternetDateTime]
+        guard let instant = fractional ?? parser.date(from: startsAt) else { return "Time unavailable" }
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(identifier: timeZone) ?? MemberDate.gymTimeZone
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter.string(from: instant)
+    }
+    var availabilityLabel: String {
         if isReserved { return "You're booked" }
-        if isClosed { return "Booking closed" }
-        if let remaining = capacityRemaining { return remaining == 0 ? "Class full" : "\(remaining) spots available" }
+        if availability == "invalid_time" { return "Class time needs correction" }
+        if availability == "closed" { return "Booking closed" }
+        if availability == "full" { return "Class full" }
+        if let remaining { return remaining == 0 ? "Class full" : "\(remaining) spots available" }
         return "Spaces available"
     }
 }
 
-struct MemberReservationResponse: Decodable { let session: MemberClass }
-struct MemberReservationInput: Encodable { let classId: String; let date: String }
+struct MemberReservationResponse: Decodable { let code: String; let session: MemberClass? }
+struct MemberReservationInput: Encodable { let classId: String; let date: String; let operationId: UUID }
+struct MemberCancellationInput: Encodable { let operationId: UUID }
 struct MemberProfileInput: Encodable { let fullName: String }
 
 enum MemberDate {

@@ -3,7 +3,7 @@ vi.mock("server-only", () => ({}));
 const mocks = vi.hoisted(() => ({ context: vi.fn(), origin: vi.fn(), from: vi.fn(), update: vi.fn(), insert: vi.fn(), eq: vi.fn(), result: { data: {id:"x"} as unknown, error: null as unknown } }));
 vi.mock("@/features/crm/context", () => ({ requireClientContext: mocks.context, allowsMutationOrigin: mocks.origin }));
 vi.mock("@/lib/supabase-admin", () => ({ supabaseAdmin: { from: mocks.from } }));
-import { GET, PATCH } from "@/app/api/v1/crm/contacts/[id]/route";
+import { GET, PATCH } from "@/app/api/v1/crm/contacts/[id]/workflow/route";
 import { POST } from "@/app/api/v1/crm/contacts/[id]/workflow/route";
 const id = "00000000-0000-4000-8000-000000000001";
 const ctx = () => ({params:Promise.resolve({id})});
@@ -34,6 +34,32 @@ describe("CRM workflow permissions and record boundaries", () => {
   expect((await POST(req({action:"stage",id,stage:"won",expected_version:7}),ctx())).status).toBe(200);
   expect(mocks.eq).toHaveBeenCalledWith("contact_id",id); expect(mocks.eq).toHaveBeenCalledWith("version",7);
   expect(mocks.update).toHaveBeenCalledWith({stage:"won",updated_by:id});
+ });
+ it("updates only granted contact columns and records the verified actor",async()=> {
+  expect((await PATCH(req({id,full_name:"Updated",email:"updated@example.invalid",phone:"",source:"manual",owner_id:null,expected_version:3}),ctx())).status).toBe(200);
+  expect(mocks.update).toHaveBeenCalledWith({full_name:"Updated",email:"updated@example.invalid",phone:null,source:"manual",owner_id:null,updated_by:id});
+  expect(mocks.eq).toHaveBeenCalledWith("version",3);
+ });
+ it("projects the real app_users full_name column into the shared staff name field",async()=> {
+  const projections: string[] = [];
+  mocks.from.mockImplementation((table: string) => {
+   let projection = "";
+   const q = {
+    select: (fields: string) => { projection = fields; if (table === "app_users") projections.push(fields); return q; },
+    eq: () => q, in: () => q, not: () => q, order: () => q, limit: () => q,
+    maybeSingle: async () => ({ data: { id }, error: null }),
+    then: (resolve: (value: unknown) => unknown) => Promise.resolve(table === "app_users"
+     ? projection === "id, name:full_name"
+      ? { data: [{ id, name: "Staff Full Name" }], error: null }
+      : { data: null, error: { code: "42703", message: "column app_users.name does not exist" } }
+     : { data: [], error: null }).then(resolve),
+   };
+   return q;
+  });
+  const response = await GET(req(),ctx());
+  expect(response.status).toBe(200);
+  expect(projections).toEqual(["id, name:full_name"]);
+  expect((await response.json()).staff).toEqual([{ id, name: "Staff Full Name" }]);
  });
  it("fails closed when contact does not exist",async()=> {
   mocks.result.data=null;

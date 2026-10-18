@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Elev8 client API",
-    "version": "0.2.0",
-    "description": "Shared strict-identity session and CRM API. CRM is admin/owner only; browser mutations require matching Origin. All responses are private/no-store. Workflow is API-only with no direct client table access."
+    "version": "0.3.0",
+    "description": "Foundation: session and admin/owner contacts. Bearer identity must already be linked by supabase_auth_uid. Browser mutations also require matching Origin. Additional CRM and member features are planned separately. Contact detail/edit adds conditional writes without changing list/create or identity behavior."
   },
   "security": [
     {
@@ -207,75 +207,126 @@
         }
       ],
       "get": {
-        "operationId": "getContactDetail",
-        "description": "Admin/owner team access. Up to 100 rows per section, ordered by creation or due date. truncated is true if any section omits rows.",
+        "operationId": "getContact",
+        "description": "Admins and owners only, through the existing trusted cookie or bearer identity boundary. Direct database access is denied.",
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Contact details and current revision",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              },
+              "ETag": {
+                "description": "Strong contact revision tag; send unchanged in If-Match when editing.",
+                "schema": {
+                  "type": "string",
+                  "example": "\"contact:00000000-0000-4000-8000-000000000001:1\""
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContactDetail"
+                  "$ref": "#/components/schemas/ContactDetailResult"
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid payload or assignment",
+            "description": "Invalid ID, JSON, fields or precondition syntax",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ContactEditError"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Authentication or trusted identity link missing",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ContactEditError"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden role or Origin",
+            "description": "CRM capability required, or invalid browser Origin",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ContactEditError"
                 }
               }
             }
           },
           "404": {
             "description": "Contact not found",
-            "content": {
-              "application/json": {
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string",
+                  "const": "private, no-store"
                 }
               }
-            }
-          },
-          "409": {
-            "description": "Duplicate creation ID or stale version: refresh before retrying",
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ContactEditError"
                 }
               }
             }
           },
           "503": {
-            "description": "Temporarily unavailable",
+            "description": "Contact storage unavailable; no internal database details are exposed",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ContactEditError"
                 }
               }
             }
@@ -284,13 +335,251 @@
       },
       "patch": {
         "operationId": "editContact",
-        "description": "Full contact replacement, optimistic expected_version. No member identity linking. Owner must be linked admin/owner or null.",
+        "description": "Admins and owners only. Cookie writes require matching Origin; bearer authentication takes precedence over cookies. Omitted fields remain unchanged; null clears a channel, and the final record must retain email or phone. A successful PATCH increments revision, including a same-value PATCH. No identity, ownership or membership changes. Stale or uncertain saves require a fresh GET and explicit review, never unconditional retry. Body limit: 16384 UTF-8 bytes.",
+        "parameters": [
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Exactly one strong ETag from GET. Wildcards, weak tags and lists are rejected.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\"contact:[0-9a-f-]{36}:[1-9][0-9]*\"$"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ContactEdit"
+                "$ref": "#/components/schemas/ContactPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved contact and new revision",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              },
+              "ETag": {
+                "description": "Strong contact revision tag; send unchanged in If-Match when editing.",
+                "schema": {
+                  "type": "string",
+                  "example": "\"contact:00000000-0000-4000-8000-000000000001:1\""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactDetailResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID, JSON, fields or precondition syntax",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEditError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication or trusted identity link missing",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEditError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "CRM capability required, or invalid browser Origin",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEditError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contact not found",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEditError"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Contact revision changed or ETag belongs to another contact; no write",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEditError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body exceeds 16 KiB",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEditError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEditError"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is required",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEditError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Contact storage unavailable; no internal database details are exposed",
+            "headers": {
+              "Cache-Control": {
+                "description": "Every response is private and must not be stored.",
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactEditError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/crm/contacts/{id}/workflow": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "saveContactWorkflow",
+        "description": "Strict action union. Creation uses caller UUID for retry deduplication; 409 means refresh to verify. Stage and task status edits require expected_version. Task opportunity must belong to this contact. Notes are staff-only. Currency is USD, exact integer cents. Stage transitions record history in the same transaction.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowInput"
               }
             }
           }
@@ -367,29 +656,92 @@
             }
           }
         }
-      }
-    },
-    "/api/v1/crm/contacts/{id}/workflow": {
-      "parameters": [
-        {
-          "name": "id",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "format": "uuid"
+      },
+      "get": {
+        "operationId": "getContactWorkflow",
+        "description": "Admin/owner team access. Up to 100 rows per section, ordered by creation or due date. truncated is true if any section omits rows.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactWorkflowDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload or assignment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden role or Origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contact not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate creation ID or stale version: refresh before retrying",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
-      ],
-      "post": {
-        "operationId": "saveContactWorkflow",
-        "description": "Strict action union. Creation uses caller UUID for retry deduplication; 409 means refresh to verify. Stage and task status edits require expected_version. Task opportunity must belong to this contact. Notes are staff-only. Currency is USD, exact integer cents. Stage transitions record history in the same transaction.",
+      },
+      "patch": {
+        "operationId": "editContactWorkflow",
+        "description": "Full contact replacement, optimistic expected_version. No member identity linking. Owner must be linked admin/owner or null.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WorkflowInput"
+                "$ref": "#/components/schemas/ContactEdit"
               }
             }
           }
@@ -689,6 +1041,131 @@
           }
         }
       },
+      "ContactPatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "pattern": "\\S",
+            "description": "Trimmed before length validation."
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "maxLength": 254,
+            "description": "Trimmed and lowercased. Null clears; empty strings are invalid."
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\+[1-9][0-9]{6,14}$"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "referral",
+              "website",
+              "import"
+            ]
+          }
+        }
+      },
+      "ContactDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Contact"
+          },
+          {
+            "type": "object",
+            "required": [
+              "revision",
+              "updated_at"
+            ],
+            "properties": {
+              "revision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2147483647
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "ContactDetailResult": {
+        "type": "object",
+        "required": [
+          "contact"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "contact": {
+            "$ref": "#/components/schemas/ContactDetail"
+          }
+        }
+      },
+      "ContactEditError": {
+        "type": "object",
+        "required": [
+          "error",
+          "code"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "unauthorized",
+              "forbidden",
+              "invalid_origin",
+              "invalid_id",
+              "not_found",
+              "invalid_patch",
+              "channel_required",
+              "invalid_precondition",
+              "precondition_required",
+              "revision_conflict",
+              "unsupported_media_type",
+              "payload_too_large",
+              "unavailable"
+            ]
+          },
+          "fieldErrors": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
       "CRMStaff": {
         "type": "object",
         "properties": {
@@ -915,7 +1392,7 @@
           "created_by"
         ]
       },
-      "ContactDetail": {
+      "ContactWorkflowDetail": {
         "type": "object",
         "properties": {
           "contact": {

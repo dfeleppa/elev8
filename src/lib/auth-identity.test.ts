@@ -1,9 +1,7 @@
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-vi.mock("./invitation-code", () => ({ INVITATION_TICKET_COOKIE: "test-invite", verifyInvitationTicket: vi.fn() }));
-vi.mock("next/headers", () => ({ cookies: vi.fn() }));
-vi.mock("./supabase-auth-admin", () => ({ loginWithEmailPassword: vi.fn(), upsertSupabaseAuthOAuthUser: vi.fn() }));
+vi.mock("./supabase-auth-admin", () => ({ loginWithEmailPassword: vi.fn() }));
 let authOptions: typeof import("./auth").authOptions;
 beforeAll(async () => {
   vi.stubEnv("GOOGLE_CLIENT_ID", "test");
@@ -11,6 +9,13 @@ beforeAll(async () => {
   authOptions = (await import("./auth")).authOptions;
 });
 afterAll(() => vi.unstubAllEnvs());
+
+it.each(["google", "apple"])("keeps %s gated even with a matching owner email", async provider => {
+  const callback = authOptions.callbacks!.signIn!;
+  const input = { user: { id: "provider-subject", email: "owner@example.invalid" },
+    account: { provider, providerAccountId: "provider-subject", type: "oauth" } };
+  expect(await callback(input as Parameters<typeof callback>[0])).toBe("/login?error=identity_link_required");
+});
 
 it("records the password provider's verified subject", async () => {
   const token = await authOptions.callbacks!.jwt!({

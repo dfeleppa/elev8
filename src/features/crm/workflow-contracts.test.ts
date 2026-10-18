@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import { contactEditInput, workflowInput, stages } from "./workflow-contracts";
-const fixture=JSON.parse(readFileSync("packages/contracts/fixtures/contact-detail.json","utf8"));
+const fixture=JSON.parse(readFileSync("packages/contracts/fixtures/contact-workflow-detail.json","utf8"));
 const spec=JSON.parse(readFileSync("packages/contracts/openapi.json","utf8"));
 it("keeps shared workflow examples compatible with write validation",()=> {
  const c=fixture.contact;

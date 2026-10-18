@@ -5,51 +5,8 @@
     "email": "prospect@example.invalid",
     "phone": null,
     "source": "referral",
-    "created_at": "2026-10-17T12:00:00Z",
-    "owner_id": null,
-    "version": 2
-  },
-  "staff": [],
-  "notes": [
-    {
-      "id": "00000000-0000-4000-8000-000000000003",
-      "body": "Interested in a trial",
-      "created_at": "2026-10-17T12:00:00Z",
-      "created_by": null
-    }
-  ],
-  "opportunities": [
-    {
-      "id": "00000000-0000-4000-8000-000000000002",
-      "title": "CrossFit trial",
-      "stage": "trial",
-      "owner_id": null,
-      "value_cents": 15000,
-      "currency": "USD",
-      "next_action": "Book intro",
-      "version": 2
-    }
-  ],
-  "tasks": [
-    {
-      "id": "00000000-0000-4000-8000-000000000003",
-      "title": "Call prospect",
-      "assignee_id": null,
-      "opportunity_id": "00000000-0000-4000-8000-000000000002",
-      "due_at": "2026-10-19T14:00:00Z",
-      "completed": false,
-      "version": 1
-    }
-  ],
-  "stage_events": [
-    {
-      "id": "00000000-0000-4000-8000-000000000003",
-      "opportunity_id": "00000000-0000-4000-8000-000000000002",
-      "from_stage": "new",
-      "to_stage": "trial",
-      "created_at": "2026-10-17T12:00:00Z",
-      "created_by": null
-    }
-  ],
-  "truncated": false
+    "created_at": "2026-01-01T00:00:00Z",
+    "updated_at": "2026-10-17T23:30:00Z",
+    "revision": 2
+  }
 }

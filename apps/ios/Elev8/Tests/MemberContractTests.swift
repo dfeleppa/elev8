@@ -13,19 +13,24 @@ final class MemberContractTests: XCTestCase {
         XCTAssertEqual(profile.email, "member@example.invalid")
     }
 
-    func testBookedAndUnlimitedClassesDecode() throws {
-        let schedule = try fixture("member-schedule", as: MemberSchedule.self)
+    func testCanonicalScheduleAndBookingDecode() throws {
+        let schedule = try fixture("schedule-day", as: MemberSchedule.self)
         XCTAssertEqual(schedule.timeZone, "America/New_York")
-        XCTAssertEqual(schedule.sessions[0].availability, "You're booked")
-        XCTAssertFalse(schedule.sessions[0].canBook)
-        XCTAssertNil(schedule.sessions[1].capacityRemaining)
-        XCTAssertTrue(schedule.sessions[1].canBook)
+        XCTAssertTrue(schedule.sessions[0].canBook)
+        XCTAssertNil(schedule.sessions[0].reservationId)
+        let booked = try fixture("schedule-booked", as: MemberClass.self)
+        XCTAssertEqual(booked.availabilityLabel, "You're booked")
+        XCTAssertFalse(booked.canBook)
+        XCTAssertTrue(booked.canCancel)
+        XCTAssertNotNil(booked.reservationId)
+        let unlimited = try fixture("schedule-unlimited", as: MemberClass.self)
+        XCTAssertNil(unlimited.remaining)
+        XCTAssertTrue(unlimited.canBook)
     }
 
     func testClosedAndFullClassesCannotBook() throws {
-        for status in ["\"capacityRemaining\":0,\"isClosed\":false", "\"capacityRemaining\":2,\"isClosed\":true"] {
-            let json = "{\"id\":\"class\",\"name\":\"Strength\",\"classDate\":\"2099-04-06\",\"classTime\":\"09:00:00\",\"durationMinutes\":60,\"reservedCount\":2,\"isReserved\":false,\(status)}"
-            let item = try JSONDecoder().decode(MemberClass.self, from: Data(json.utf8))
+        for name in ["schedule-closed", "schedule-full"] {
+            let item = try fixture(name, as: MemberClass.self)
             XCTAssertFalse(item.canBook)
         }
     }
@@ -36,8 +41,13 @@ final class MemberContractTests: XCTestCase {
     }
 
     func testReservationPayloadNeverIncludesMemberIdentity() throws {
-        let body = try JSONEncoder().encode(MemberReservationInput(classId: "example", date: "2099-04-06"))
+        let operationId = UUID()
+        let body = try JSONEncoder().encode(MemberReservationInput(classId: "example", date: "2099-04-06", operationId: operationId))
         let values = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: String])
-        XCTAssertEqual(Set(values.keys), Set(["classId", "date"]))
+        XCTAssertEqual(Set(values.keys), Set(["classId", "date", "operationId"]))
+        XCTAssertEqual(values["operationId"], operationId.uuidString)
+        let cancellation = try JSONEncoder().encode(MemberCancellationInput(operationId: operationId))
+        let cancellationValues = try XCTUnwrap(JSONSerialization.jsonObject(with: cancellation) as? [String: String])
+        XCTAssertEqual(Set(cancellationValues.keys), Set(["operationId"]))
     }
 }

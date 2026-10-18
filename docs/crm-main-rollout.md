@@ -30,6 +30,12 @@ The smoke check uses sequential operations; it does not establish multi-connecti
 
 ## Advisor output and remaining work
 
+## Combined release preparation
+
+Remote main advanced to `c9048c3` during this work. Its trusted identity boundary, ETag contact editing and atomic booking service were merged rather than overwritten. Main Supabase additionally received `20261017232622_crm_contact_edit`, `20261017232829_member_schedule_booking`, `20261017233030_trusted_identity_boundary` and `20261018004829_crm_contact_workflow_compatibility`. The CLI dry run listed only those four pending files; application and transactionally rolled-back smoke checks passed. No existing identity rows were changed. These migrations are now immutable applied history.
+
+The original contact-detail API keeps ETag/revision semantics; aggregate sales workflow GET/PATCH uses `/api/v1/crm/contacts/{id}/workflow`. Native schedule uses the upstream atomic service and its operation-ID contract. Production booking requires an explicit enabled flag, production environment and exact main Supabase reference. Those production settings were configured on Vercel `daneff`; the deployed Supabase URL was independently checked against `scghaxpgsibpffbukyws`. The SMS webhook is explicitly disabled. Local combined checks pass 409 tests, TypeScript and lint (four existing warnings).
+
 Security advisors reported informational RLS-without-policy notices, including the new API-only tables. Their direct client grants are intentionally revoked. The advisor also reported leaked-password protection disabled; this auth configuration was not changed. Reference: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
 Remaining: commit/release the reviewed application changes, run authenticated web flows and macOS/iPhone validation, prove concurrent booking/worker scenarios, and complete trusted identity mapping before member rollout. Twilio and its worker remain inactive. The separately created `elev8-staging` Vercel project remains unused; no staging Supabase project exists.

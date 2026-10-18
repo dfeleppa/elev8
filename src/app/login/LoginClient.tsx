@@ -40,7 +40,9 @@ export default function LoginClient() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const externalError =
-    authError === "crm_identity"
+    authError === "identity_link_required"
+      ? "Sign in with your linked email and password account. Contact gym staff if you need help accessing your account."
+      : authError === "crm_identity"
       ? "Contacts requires a linked Elev8 account signed in with email and password. Ask an administrator if your account needs to be linked."
       : authError === "reserved_email"
       ? "This email already exists in an organization's member roster and cannot be used to create an app account."

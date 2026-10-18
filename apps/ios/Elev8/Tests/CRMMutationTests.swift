@@ -4,7 +4,7 @@ import XCTest
 @MainActor
 final class CRMMutationTests: XCTestCase {
     private func fixture() throws -> CRMDetail {
-        let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "contact-detail", withExtension: "json"))
+        let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "contact-workflow-detail", withExtension: "json"))
         return try JSONDecoder().decode(CRMDetail.self, from: Data(contentsOf: url))
     }
 

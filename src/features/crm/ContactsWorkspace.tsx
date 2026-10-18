@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import type { Contact, ContactPage } from "./contracts";
 import ContactWorkflow from "./ContactWorkflow";
 
@@ -89,7 +90,7 @@ export default function ContactsWorkspace() {
       <label className="block p-5">Search contacts<input type="search" value={search} maxLength={100} onChange={e => setSearch(e.target.value)} placeholder="Name, email or phone" className="mt-2 block w-full rounded border border-white/20 bg-slate-900 p-3"/></label>
       <div className="flex items-center justify-between border-b border-white/10 p-5"><h2 className="font-semibold">Directory</h2><span className="text-sm text-slate-400">{contacts.length} loaded</span></div>
       {contacts.length === 0 ? <p className="p-8 text-slate-400">{loading ? "Loading contacts…" : error ? "The directory could not be loaded." : "Your first relationship starts here. Add a contact above."}</p> :
-        <ul className="divide-y divide-white/10">{contacts.map(contact => <li key={contact.id} className="grid gap-2 p-5 sm:grid-cols-3"><button type="button" className="text-left font-semibold underline" onClick={() => setSelected(contact.id)}>{contact.full_name}</button><div className="min-w-0 break-words text-sm text-slate-300"><p>{contact.email}</p><p>{contact.phone}</p></div><span className="text-sm capitalize text-slate-400">{contact.source}</span></li>)}</ul>}
+        <ul className="divide-y divide-white/10">{contacts.map(contact => <li key={contact.id} className="grid gap-2 p-5 sm:grid-cols-3"><div className="space-y-2"><Link href={`/admin/crm/contacts/${contact.id}`} className="block font-semibold text-cyan-200 underline">{contact.full_name}</Link><button type="button" className="text-left text-sm underline" onClick={() => setSelected(contact.id)}>Open sales workflow</button></div><div className="min-w-0 break-words text-sm text-slate-300"><p>{contact.email}</p><p>{contact.phone}</p></div><span className="text-sm capitalize text-slate-400">{contact.source}</span></li>)}</ul>}
       {cursor ? <button type="button" disabled={loading} onClick={() => void load(cursor)} className="m-5 rounded-lg border border-white/20 px-4 py-2">{loading ? "Loading…" : "Load more"}</button> : null}
     </section>
   </div>;

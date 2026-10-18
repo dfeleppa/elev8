@@ -1,5 +1,4 @@
-import { memberRequest } from "@/features/member/client-adapter";
-import { reservationsPOST, reservationsDELETE } from "@/features/member/reservations-handlers";
+import { book } from "@/features/member-schedule/handlers";
 export const dynamic = "force-dynamic";
-export function POST(request: Request) { return memberRequest(request, reservationsPOST, "reservation"); }
-export function DELETE(request: Request) { return memberRequest(request, reservationsDELETE, "reservation"); }
+export const runtime = "nodejs";
+export const POST = book;

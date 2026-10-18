@@ -112,7 +112,7 @@ struct ContactDetailView: View {
         }
     }
     private func read() async throws {
-        let result: CRMDetail = try await session.request(path)
+        let result: CRMDetail = try await session.request(path + "/workflow")
         detail = result; name = result.contact.full_name; email = result.contact.email ?? ""
         phone = result.contact.phone ?? ""; owner = result.contact.owner_id?.uuidString ?? ""
     }
@@ -125,7 +125,7 @@ struct ContactDetailView: View {
         guard !busy else { return false }; busy = true; errorMessage = nil
         defer { busy = false }
         let result = await performCRMMutation(send: {
-            let _: CRMSaved = try await session.request(path + (edit ? "" : "/workflow"), method: edit ? "PATCH" : "POST", body: JSONSerialization.data(withJSONObject: values))
+            let _: CRMSaved = try await session.request(path + "/workflow", method: edit ? "PATCH" : "POST", body: JSONSerialization.data(withJSONObject: values))
         }, refresh: {
             try await read()
         }, reconciled: {

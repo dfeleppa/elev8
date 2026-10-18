@@ -1,15 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ web: vi.fn(), getUser: vi.fn(), from: vi.fn(), eq: vi.fn(), limit: vi.fn() }));
+const mocks = vi.hoisted(() => ({ web: vi.fn(), getClaims: vi.fn(), getUser: vi.fn(), from: vi.fn(), eq: vi.fn(), limit: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("next-auth", () => ({ getServerSession: mocks.web }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
-vi.mock("@/lib/supabase-admin", () => ({ supabaseAdmin: { auth: { getUser: mocks.getUser }, from: mocks.from } }));
+vi.mock("@/lib/supabase-admin", () => ({ supabaseAdmin: { auth: { getClaims: mocks.getClaims, getUser: mocks.getUser }, from: mocks.from } }));
 import { requireClientContext, allowsMutationOrigin } from "./context";
 
 describe("client identity boundary", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mocks.getClaims.mockResolvedValue({ data: { claims: { sub: "verified-uid", amr: [{ method: "password" }] } }, error: null });
     mocks.web.mockResolvedValue({ verifiedAuthUid: "web-auth-uid", user: { email: "owner@example.com" } });
     mocks.getUser.mockResolvedValue({ data: { user: { id: "verified-uid", email: "owner@example.com" } }, error: null });
     mocks.limit.mockResolvedValue({ data: [{ id: "app-user", role: "admin" }], error: null });

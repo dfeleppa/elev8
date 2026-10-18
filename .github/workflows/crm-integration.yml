@@ -25,13 +25,16 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Start disposable Supabase (no hosted project, no production secrets)
         run: npx supabase start --workdir tests/crm -x realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
-      - name: Bootstrap bounded fixture and apply the actual contact migration through CLI
+      - name: Bootstrap bounded fixture and apply contact and identity migrations through CLI
         run: |
           psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/crm/bootstrap.sql
           mkdir -p tests/crm/supabase/migrations
           cp supabase/migrations/20261017114730_crm_contacts_foundation.sql tests/crm/supabase/migrations/
+          cp supabase/migrations/20261017233030_trusted_identity_boundary.sql tests/crm/supabase/migrations/
+          cp supabase/migrations/20261017232622_crm_contact_edit.sql tests/crm/supabase/migrations/
           npx supabase db push --local --workdir tests/crm
           psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/crm/assert-schema.sql
+          npx supabase db advisors --local --workdir tests/crm --type security --level warn --fail-on error
       - name: Configure loopback services without logging credentials
         run: |
           npx supabase status --workdir tests/crm --output json > .codex-crm-status.json

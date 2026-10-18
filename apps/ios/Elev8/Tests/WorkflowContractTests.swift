@@ -3,7 +3,7 @@ import XCTest
 
 final class WorkflowContractTests: XCTestCase {
     func testContactWorkflowContractDecodes() throws {
-        let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "contact-detail", withExtension: "json"))
+        let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "contact-workflow-detail", withExtension: "json"))
         let detail = try JSONDecoder().decode(CRMDetail.self, from: Data(contentsOf: url))
         XCTAssertEqual(detail.contact.version, 2)
         XCTAssertNil(detail.contact.owner_id)
