@@ -21,7 +21,7 @@ export function isFullyPublic(pathname: string) {
 }
 
 export function isAuthPage(pathname: string) {
-  return pathname === "/login" || pathname === "/register";
+  return pathname === "/login" || pathname === "/register" || pathname === "/account-recovery";
 }
 
 export function hasDevAuthBypass() {

@@ -17,10 +17,11 @@ describe("proxy public route matching", () => {
   it("keeps authentication pages reachable so stale sessions cannot cause a redirect loop", () => {
     expect(isAuthPage("/login")).toBe(true);
     expect(isAuthPage("/register")).toBe(true);
+    expect(isAuthPage("/account-recovery")).toBe(true);
     expect(isAuthPage("/")).toBe(false);
   });
-  it("does not inspect or redirect a session cookie on the login page", async () => {
-    const response = await proxy(new NextRequest("https://app.daneff.com/login"));
+  it.each(["/login", "/account-recovery"])("does not inspect or redirect a session cookie on %s", async path => {
+    const response = await proxy(new NextRequest(`https://app.daneff.com${path}`));
     expect(response.headers.get("x-middleware-next")).toBe("1");
     expect(getToken).not.toHaveBeenCalled();
   });
@@ -44,7 +45,7 @@ it.each(["/api/v1/session", "/api/v1/crm/contacts"])("lets %s perform its own be
 });
 
 it("continues protecting web pages and similar-looking paths", async () => {
-  for (const path of ["/admin/crm", "/api/v10/private"]) {
+  for (const path of ["/admin/crm", "/api/v10/private", "/account-recovery/private"]) {
     const response = await proxy(new NextRequest(`https://app.test${path}`));
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("/login");

@@ -64,6 +64,9 @@ for (const type of ["recovery", "invite"] as const) {
 }
 
 test("missing or unsupported recovery proof cannot open the password form", async ({ page }) => {
+  const response = await page.request.get("/account-recovery", { maxRedirects: 0 });
+  expect(response.status()).toBe(200);
+  expect(response.headers()["referrer-policy"]).toBe("no-referrer");
   for (const fragment of ["", "#type=magiclink&token_hash=" + "a".repeat(64), "#type=recovery&token_hash=invalid"]) {
     await page.goto("/account-recovery" + fragment);
     await page.getByRole("button", { name: "Verify link", exact: true }).click();
