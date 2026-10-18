@@ -13,6 +13,8 @@ jobs:
     timeout-minutes: 25
     env:
       PGPASSWORD: postgres
+      # Match supabase/setup-cli for the pinned CLI; ECR throttles shared runners.
+      SUPABASE_INTERNAL_IMAGE_REGISTRY: ghcr.io
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
