@@ -2,6 +2,8 @@
 
 October 17, 2026. The user explicitly directed work on the main Supabase database instead of separate staging.
 
+Current checkpoint: the combined application release `b4b9ee0` is deployed at `https://app.daneff.com`; the live verification described in the handoff passed and its fixtures were removed. The release-pending statements below are historical. See [account recovery and integration follow-up](account-access-recovery.md) for the current access blockers and procedure.
+
 Target: Elev8, project `scghaxpgsibpffbukyws`. No Vercel application deployment was performed in this step.
 
 ## Applied

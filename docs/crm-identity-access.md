@@ -1,6 +1,6 @@
 # Trusted identity boundary
 
-Local proposal on `codex/crm-foundation-gate`, October 17, 2026. Not deployed. No production identity rows were changed.
+Historical design checkpoint from `codex/crm-foundation-gate`, October 17, 2026. The identity boundary was subsequently released on main in `b4b9ee0`. No existing production identity rows were changed. See [current account recovery status](account-access-recovery.md); pre-release/staging instructions below describe the original proposal, not the current deployment state.
 
 ## Enforced behavior
 
