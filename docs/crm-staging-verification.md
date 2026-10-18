@@ -27,7 +27,7 @@ The [previous integration run](https://github.com/dfeleppa/elev8/actions/runs/39
 
 ## Disposable integration matrix
 
-`.github/workflows/crm-integration.yml` applies both contact and identity migrations using Supabase CLI to the bounded `tests/crm/bootstrap.sql` fixture, checks local security advisors, then runs 13 tests with real Auth, PostgREST, browser cookies and PostgreSQL. Added checks cover direct profile self-read, private-column/write denial, missing/ambiguous links through SQL RLS, and Auth updates that must not claim an unlinked app user. Existing coverage includes member/coach denial, admin/owner persistence, canonical IDs, metadata forgery, invalid bearer precedence, Origin validation, duplicate IDs, refresh, role change, sign-out and pagination.
+`.github/workflows/crm-integration.yml` applies contact creation, contact editing and identity migrations using Supabase CLI to the bounded `tests/crm/bootstrap.sql` fixture, checks local security advisors, then runs 17 tests with real Auth, PostgREST, browser cookies and PostgreSQL. Added checks cover direct profile self-read, private-column/write denial, missing/ambiguous links through SQL RLS, and Auth updates that must not claim an unlinked app user. Existing coverage includes member/coach denial, admin/owner persistence, canonical IDs, metadata forgery, invalid bearer precedence, Origin validation, duplicate IDs, refresh, role change, sign-out and pagination.
 
 This fixture deliberately permits duplicate UID links to test fail-closed behavior. The separate PGlite fixture models production's unique constraint and nullable role. Neither fixture is a full production schema clone. Test accounts and contacts are synthetic; Auth admin creation does not send email. Credentials stay in disposable local files/memory; traces, videos and screenshots remain disabled.
 
@@ -41,6 +41,7 @@ export PGPASSWORD=postgres
 psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/crm/bootstrap.sql
 mkdir -p tests/crm/supabase/migrations
 cp supabase/migrations/20261017114730_crm_contacts_foundation.sql tests/crm/supabase/migrations/
+cp supabase/migrations/20261017232622_crm_contact_edit.sql tests/crm/supabase/migrations/
 cp supabase/migrations/20261017233030_trusted_identity_boundary.sql tests/crm/supabase/migrations/
 npx supabase db push --local --workdir tests/crm
 psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/crm/assert-schema.sql
@@ -52,7 +53,7 @@ npx playwright test --config playwright.crm.config.ts
 npx supabase stop --workdir tests/crm --no-backup
 ```
 
-The password above is only the disposable loopback database default. Always destroy the stack and generated `.codex-crm.env`/`.codex-crm-status.json`, including on test failure. Before another clean run remove only the two generated migration copies in `tests/crm/supabase/migrations`; the fixture must precede those migrations. The CI cleanup runs even on failure. This command sequence passed in the temporary WSL2 environment; GitHub CI has not run the unpushed branch.
+The password above is only the disposable loopback database default. Always destroy the stack and generated `.codex-crm.env`/`.codex-crm-status.json`, including on test failure. Before another clean run remove only the three generated migration copies in `tests/crm/supabase/migrations`; the fixture must precede those migrations. The CI cleanup runs even on failure. This command sequence passed in the temporary WSL2 environment; GitHub CI has not run the unpushed branch.
 
 ## Guarded hosted preparation, after resource authorization
 
@@ -60,7 +61,7 @@ These tools do not provision resources or deploy the application. No valid stagi
 
 1. Obtain an explicitly approved, separate staging Supabase project and Vercel project. Verify account/project ownership. Use a distinct HTTPS app origin. Keep production and Planet Pooch excluded. Do not inherit the current project's preview variables.
 2. Follow the reviewed schema-only export/bootstrap procedure in [schema reconciliation](crm-schema-reconciliation.md). Keep raw exports and actual staging manifests under ignored `.codex-crm-schema/`. Do not copy root `.temp`, credentials or migration history into the staging bundle.
-3. Fill [manifest.example.json](../scripts/crm-staging/manifest.example.json) with named/dated review, stage project/origin, baseline hash, exact two-migration allowlist and SHA-256 fingerprints of three independently created stage credentials. Fingerprints are not ownership proof; verify their source separately. Never put secret values in the manifest or logs. Hash exact local file bytes; refresh hashes and review if line endings/content change.
+3. Fill [manifest.example.json](../scripts/crm-staging/manifest.example.json) with named/dated review, stage project/origin, baseline hash, exact three-migration CRM allowlist and SHA-256 fingerprints of three independently created stage credentials. Fingerprints are not ownership proof; verify their source separately. Never put secret values in the manifest or logs. Hash exact local file bytes; refresh hashes and review if line endings/content change.
 4. Run local preparation:
 
 ```powershell
@@ -90,7 +91,7 @@ These checks are explicit preflight commands; they are not globally attached to 
 
 ## Remaining release evidence
 
-After authorization of hosted staging, restore the reviewed baseline, inspect the guarded two-migration dry run, apply through the explicitly targeted CLI, and record schema/ledger/grant evidence. Do not seed users or expose the baseline before the identity migration removes the unsafe trigger. Seed only synthetic member/coach/admin/owner accounts and use the returned Auth UID for each explicit app-user link; choose distinct app IDs.
+After authorization of hosted staging, restore the reviewed baseline, inspect the guarded allowlisted migration dry run, apply through the explicitly targeted CLI, and record schema/ledger/grant evidence. Do not seed users or expose the baseline before the identity migration removes the unsafe trigger. Seed only synthetic member/coach/admin/owner accounts and use the returned Auth UID for each explicit app-user link; choose distinct app IDs.
 
 Then repeat the authenticated browser/REST/bearer/refresh matrix on that host, verify deployed server/browser database targets and disabled outbound integrations, and test access through deployment protection. Audit all three existing real links and plan recovery for the nine unlinked users and legacy password record before proposing production rollout. Do not infer ownership from email.
 

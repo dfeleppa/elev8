@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import type { Contact, ContactPage } from "./contracts";
 
 export default function ContactsWorkspace() {
@@ -82,7 +83,7 @@ export default function ContactsWorkspace() {
     <section aria-label="Contact directory" aria-busy={loading} className="glass-panel overflow-hidden rounded-2xl">
       <div className="flex items-center justify-between border-b border-white/10 p-5"><h2 className="font-semibold">Directory</h2><span className="text-sm text-slate-400">{contacts.length} loaded</span></div>
       {contacts.length === 0 ? <p className="p-8 text-slate-400">{loading ? "Loading contacts…" : error ? "The directory could not be loaded." : "Your first relationship starts here. Add a contact above."}</p> :
-        <ul className="divide-y divide-white/10">{contacts.map(contact => <li key={contact.id} className="grid gap-2 p-5 sm:grid-cols-3"><strong>{contact.full_name}</strong><div className="min-w-0 break-words text-sm text-slate-300"><p>{contact.email}</p><p>{contact.phone}</p></div><span className="text-sm capitalize text-slate-400">{contact.source}</span></li>)}</ul>}
+        <ul className="divide-y divide-white/10">{contacts.map(contact => <li key={contact.id} className="grid gap-2 p-5 sm:grid-cols-3"><Link href={`/admin/crm/contacts/${contact.id}`} className="font-semibold text-cyan-200 underline">{contact.full_name}</Link><div className="min-w-0 break-words text-sm text-slate-300"><p>{contact.email}</p><p>{contact.phone}</p></div><span className="text-sm capitalize text-slate-400">{contact.source}</span></li>)}</ul>}
       {cursor ? <button type="button" disabled={loading} onClick={() => void load(cursor)} className="m-5 rounded-lg border border-white/20 px-4 py-2">{loading ? "Loading…" : "Load more"}</button> : null}
     </section>
   </div>;

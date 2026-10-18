@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { memberScheduleEnabled } from "@/features/member-schedule/gate";
+import { legacyBookingState } from "@/features/member-schedule/legacy";
+import { loadScheduleDay } from "@/features/member-schedule/service";
 
 import {
   buildDailyScheduleSession,
@@ -25,7 +28,9 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const dateKey = searchParams.get("date") ?? toLocalDateString(new Date());
+  const dateKey = searchParams.get("date") ?? (memberScheduleEnabled()
+    ? new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())
+    : toLocalDateString(new Date()));
 
   if (!isValidDateKey(dateKey)) {
     return NextResponse.json({ error: "Invalid date. Use YYYY-MM-DD." }, { status: 400 });
@@ -107,6 +112,14 @@ export async function GET(request: Request) {
     })
     .sort((a, b) => a.class_time.localeCompare(b.class_time));
 
+  if (memberScheduleEnabled()) {
+    try {
+      const current = await loadScheduleDay(userId, dateKey);
+      const byId = new Map(current.sessions.map(session => [session.classId, session]));
+      return NextResponse.json({ date: dateKey,
+        sessions: sessions.map(session => legacyBookingState(session, byId.get(session.id) ?? null)) });
+    } catch { return NextResponse.json({ error: "Schedule is temporarily unavailable." }, { status: 503 }); }
+  }
   return NextResponse.json({
     date: dateKey,
     sessions,

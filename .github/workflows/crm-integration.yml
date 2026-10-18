@@ -29,6 +29,7 @@ jobs:
           mkdir -p tests/crm/supabase/migrations
           cp supabase/migrations/20261017114730_crm_contacts_foundation.sql tests/crm/supabase/migrations/
           cp supabase/migrations/20261017233030_trusted_identity_boundary.sql tests/crm/supabase/migrations/
+          cp supabase/migrations/20261017232622_crm_contact_edit.sql tests/crm/supabase/migrations/
           npx supabase db push --local --workdir tests/crm
           psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/crm/assert-schema.sql
           npx supabase db advisors --local --workdir tests/crm --type security --level warn --fail-on error

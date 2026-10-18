@@ -1,5 +1,11 @@
 # Elev8 CRM foundation status
 
+## Main integration follow-up
+
+The user subsequently authorized pushing to main and archiving. Integrated main `440b92b` (contact editing PR #87 and booking PR #88) with the identity changes. Resolved migration/assertion conflicts by retaining both changes, added the identity migration to the booking fixture, and preserved the booking gate's narrowed non-null user ID across its return boundary to fix the merged TypeScript build.
+
+The combined source passes **328 unit/SQL tests, 17 CRM integration tests and 16 booking integration tests** in isolated WSL2/Docker. Both production builds and TypeScript pass; lint retains four existing warnings. CRM security advisors and booking SQL lint pass. Both stacks, volumes and generated credentials were cleaned up. These results supersede the earlier local counts below. The stopped test distro was preserved outside the worktree at `%USERPROFILE%\.codex\runtime-archives\CodexElev8CrmIntegration` so the worktree can be archived without deleting the VM. Hosted database migrations, paid resources and native/device verification remain outside this action.
+
 October 17, 2026. Foundation [PR #85](https://github.com/dfeleppa/elev8/pull/85) and integration [PR #86](https://github.com/dfeleppa/elev8/pull/86) are merged. The inspected `main` revision is `64f7f25921028d9105dadde9bfb42aa0e752c57b`.
 
 The current schema/identity/staging correction is local in isolated worktree `codex/crm-foundation-gate`. It has not been pushed, deployed or applied to a hosted database. No paid resource, production identity change, phone-routing change or message send was performed.

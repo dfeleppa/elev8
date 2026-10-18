@@ -1,0 +1,27 @@
+{
+  "date": "2099-06-01",
+  "timeZone": "America/New_York",
+  "serverNow": "2099-06-01T08:00:00Z",
+  "sessions": [
+    {
+      "classId": "10000000-0000-4000-8000-000000000001",
+      "date": "2099-06-01",
+      "name": "CrossFit",
+      "timeZone": "America/New_York",
+      "startsAt": "2099-06-01T10:00:00Z",
+      "endsAt": "2099-06-01T11:00:00Z",
+      "bookingClosesAt": "2099-06-01T09:00:00Z",
+      "durationMinutes": 60,
+      "track": null,
+      "coach": null,
+      "capacity": 12,
+      "reservedCount": 3,
+      "remaining": 9,
+      "reservationId": null,
+      "availability": "available",
+      "canBook": true,
+      "canCancel": false,
+      "waitlistSupported": false
+    }
+  ]
+}

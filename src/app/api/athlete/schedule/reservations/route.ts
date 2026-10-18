@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
+import { memberScheduleEnabled } from "@/features/member-schedule/gate";
+import { legacyBookingState } from "@/features/member-schedule/legacy";
+import { bookingMessages, loadScheduleOccurrence, mutateBooking } from "@/features/member-schedule/service";
 
 import {
   buildDailyScheduleSession,
@@ -88,7 +92,29 @@ async function loadSessionSummary(params: {
     memberNameMap,
   });
 
+  if (memberScheduleEnabled()) {
+    try {
+      return { error: null, session: legacyBookingState(session,
+        await loadScheduleOccurrence(currentUserId, classRow.id, dateKey)) };
+    } catch { return { error: "Schedule is temporarily unavailable.", session: null }; }
+  }
   return { error: null, session };
+}
+
+// Preserve the old wire contract while every enabled API writer uses the same lock.
+async function atomicLegacyMutation(userId: string, classRow: ScheduleClassRecord, dateKey: string, action: "book" | "legacy_cancel") {
+  try {
+    const result = await mutateBooking(userId, randomUUID(), action, { classId: classRow.id, date: dateKey });
+    if (result.status >= 400 || result.code === "already_booked") {
+      return NextResponse.json({ error: bookingMessages[result.code] ?? "Failed to update reservation." },
+        { status: result.code === "already_booked" ? 409 : result.status });
+    }
+    const summary = await loadSessionSummary({ classRow, dateKey, currentUserId: userId });
+    if (summary.error || !summary.session) return NextResponse.json({ error: summary.error }, { status: 503 });
+    return NextResponse.json({ session: summary.session });
+  } catch {
+    return NextResponse.json({ error: "Schedule is temporarily unavailable. Refresh before retrying." }, { status: 503 });
+  }
 }
 
 async function parseReservationRequest(request: Request) {
@@ -124,6 +150,8 @@ export async function POST(request: Request) {
   if (!classOccursOnDate(classRow, dateKey)) {
     return NextResponse.json({ error: "This class does not occur on the selected date." }, { status: 400 });
   }
+
+  if (memberScheduleEnabled()) return atomicLegacyMutation(userId, classRow, dateKey, "book");
 
   if (isReservationClosed(classRow, dateKey)) {
     return NextResponse.json({ error: "Reservations are closed for this class." }, { status: 409 });
@@ -194,6 +222,8 @@ export async function DELETE(request: Request) {
   if (classResult.error || !classResult.data) {
     return NextResponse.json({ error: "Class not found." }, { status: 404 });
   }
+
+  if (memberScheduleEnabled()) return atomicLegacyMutation(userId, classResult.data as ScheduleClassRecord, dateKey, "legacy_cancel");
 
   const deleteResult = await supabaseAdmin
     .from("class_reservations")

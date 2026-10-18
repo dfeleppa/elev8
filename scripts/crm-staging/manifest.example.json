@@ -19,6 +19,7 @@
   },
   "migrations": [
     { "file": "20261017114730_crm_contacts_foundation.sql", "sha256": "" },
+    { "file": "20261017232622_crm_contact_edit.sql", "sha256": "" },
     { "file": "20261017233030_trusted_identity_boundary.sql", "sha256": "" }
   ]
 }
