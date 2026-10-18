@@ -53,6 +53,9 @@ for (const type of ["recovery", "invite"] as const) {
       expect(session.status()).toBe(type === "recovery" ? 200 : 401);
       if (type === "recovery") expect((await session.json()).userId).toBe(appId);
       await auth.auth.signOut({ scope: "local" });
+      // A fragment-only navigation keeps the mounted form and its memory.
+      // Replay must open a fresh document, as reopening a used email link does.
+      await page.goto("about:blank");
       await page.goto(`/account-recovery#${fragment}`);
       await page.getByRole("button", { name: "Verify link", exact: true }).click();
       await expect(page.getByRole("region", { name: "Set your password" }).getByRole("alert")).toContainText("missing, expired, or already used");
@@ -68,6 +71,7 @@ test("missing or unsupported recovery proof cannot open the password form", asyn
   expect(response.status()).toBe(200);
   expect(response.headers()["referrer-policy"]).toBe("no-referrer");
   for (const fragment of ["", "#type=magiclink&token_hash=" + "a".repeat(64), "#type=recovery&token_hash=invalid"]) {
+    await page.goto("about:blank");
     await page.goto("/account-recovery" + fragment);
     await page.getByRole("button", { name: "Verify link", exact: true }).click();
     await expect(page.getByRole("region", { name: "Set your password" }).getByRole("alert")).toContainText("missing, expired, or already used");
