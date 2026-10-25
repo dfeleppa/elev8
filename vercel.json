@@ -1,5 +1,5 @@
 {
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- . ':!elev8_mobile'",
+  "ignoreCommand": "if git rev-parse --verify HEAD^ >/dev/null 2>&1; then git diff HEAD^ HEAD --quiet -- . ':!elev8_mobile'; else exit 1; fi",
   "crons": [
     {
       "path": "/api/cron/instagram-publish",
