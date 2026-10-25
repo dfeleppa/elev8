@@ -33,7 +33,7 @@ export async function proxy(request: NextRequest) {
 
   // Versioned client APIs authenticate web cookies or verified mobile bearer
   // tokens themselves and return JSON 401/403 instead of login-page redirects.
-  if (pathname.startsWith("/api/v1/")) return NextResponse.next();
+  if (pathname.startsWith("/api/v1/") || pathname === "/api/garmin") return NextResponse.next();
 
   // Authentication pages must always remain reachable. A stale or otherwise
   // unusable session cookie can still be decoded by getToken(), while the app

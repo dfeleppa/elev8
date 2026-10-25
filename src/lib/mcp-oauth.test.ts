@@ -9,6 +9,7 @@ import {
   getMcpResource,
   getOriginFromRequest,
   normalizeMcpResource,
+  normalizeMcpScope,
   verifyMcpAccessToken,
   verifyMcpAuthorizationCode,
   verifyRegisteredMcpClient,
@@ -22,6 +23,14 @@ afterEach(() => {
 });
 
 describe("MCP OAuth helpers", () => {
+  it("supports separate health/performance grants without upgrading nutrition-only tokens", () => {
+    process.env.NEXTAUTH_SECRET = "test-secret";
+    const issuer = "https://app.daneff.com", resource = getMcpResource(issuer);
+    expect(normalizeMcpScope("nutrition:read health:read performance:read")).toBe("nutrition:read health:read performance:read");
+    const token = createMcpAccessToken({ aud: resource, clientId: "old-client", iss: issuer, memberId: "member-1", scope: "nutrition:read" });
+    expect(verifyMcpAccessToken(token, { issuer, resource })?.scope).toBe("nutrition:read");
+    expect(getMcpOAuthMetadata(issuer).scopes_supported).toEqual(expect.arrayContaining(["health:read", "performance:read"]));
+  });
   it("registers a signed public client and verifies it statelessly", () => {
     process.env.NEXTAUTH_SECRET = "test-secret";
     process.env.MCP_OAUTH_ALLOWED_REDIRECT_ORIGINS = "https://chatgpt.com";

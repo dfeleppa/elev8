@@ -307,8 +307,8 @@ export async function aiInterpret(command: string, selectedDate: string): Promis
   return null;
 }
 
-export async function interpretNutritionCommand(command: string, selectedDate: string) {
-  return (await aiInterpret(command, selectedDate)) ?? heuristicInterpret(command, selectedDate);
+export async function interpretNutritionCommand(command: string, selectedDate: string, options: { useAi?: boolean } = {}) {
+  return (options.useAi === false ? null : await aiInterpret(command, selectedDate)) ?? heuristicInterpret(command, selectedDate);
 }
 
 export async function getOrCreateNutritionDay(memberId: string, date: string) {

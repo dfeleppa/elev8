@@ -1,6 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
+vi.mock("server-only", () => ({}));
 
 vi.mock("@/lib/nutrition-command", () => ({
   executeAddFood: vi.fn(),
@@ -14,6 +15,7 @@ vi.mock("@/lib/nutrition-schema", () => ({ runNutritionQueryWithFallbacks: vi.fn
 vi.mock("@/lib/supabase-admin", () => ({ supabaseAdmin: {} }));
 
 import { createNutritionMcpServer } from "./nutrition-mcp";
+import { interpretNutritionCommand, isValidDate } from "./nutrition-command";
 
 const closeCallbacks: Array<() => Promise<void>> = [];
 
@@ -41,6 +43,13 @@ async function connectClient(canWrite: boolean) {
 }
 
 describe("nutrition MCP contract", () => {
+  it("uses local interpretation instead of a paid model for chat nutrition commands", async () => {
+    vi.mocked(isValidDate).mockReturnValue(true);
+    vi.mocked(interpretNutritionCommand).mockResolvedValueOnce({ intent: "unknown", summary: "Use a supported command." });
+    const client = await connectClient(true);
+    await client.callTool({ name: "manage_nutrition", arguments: { command: "hello", selectedDate: "2026-10-25", mode: "preview" } });
+    expect(interpretNutritionCommand).toHaveBeenCalledWith("hello", "2026-10-25", { useAi: false });
+  });
   it("advertises focused tools with OAuth schemes and complete safety annotations", async () => {
     const client = await connectClient(true);
     const { tools } = await client.listTools();
@@ -49,6 +58,11 @@ describe("nutrition MCP contract", () => {
       "get_daily_nutrition",
       "search_nutrition_foods",
       "manage_nutrition",
+      "get_garmin_wellness",
+      "get_garmin_activities",
+      "get_workout_history",
+      "get_health_history",
+      "get_personal_records",
     ]);
 
     const daily = tools.find((tool) => tool.name === "get_daily_nutrition");

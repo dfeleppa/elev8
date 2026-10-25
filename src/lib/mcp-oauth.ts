@@ -5,7 +5,7 @@ const AUTHORIZATION_CODE_TTL_SECONDS = 5 * 60;
 const CLIENT_TTL_SECONDS = 365 * 24 * 60 * 60;
 const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
 const DEFAULT_OAUTH_SCOPE = "nutrition:read offline_access";
-const OAUTH_SCOPES = ["nutrition:read", "nutrition:write", "offline_access"];
+const OAUTH_SCOPES = ["nutrition:read", "nutrition:write", "health:read", "performance:read", "offline_access"];
 
 type SignedEnvelope<T extends Record<string, unknown>> = T & {
   exp: number;
@@ -239,7 +239,7 @@ export function getMcpProtectedResourceMetadata(origin: string) {
     authorization_servers: [origin],
     scopes_supported: OAUTH_SCOPES,
     bearer_methods_supported: ["header"],
-    resource_name: "Elev8 Nutrition MCP",
+    resource_name: "Lyfe Health and Performance",
   };
 }
 

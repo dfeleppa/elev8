@@ -4,6 +4,8 @@ import { hasRole, requireUserContext } from "@/lib/member";
 import { isMemberRouteLocked } from "@/lib/feature-flags";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import AthleteDashboardClient from "./AthleteDashboardClient";
+import Link from "next/link";
+import { garminMemberId } from "@/lib/garmin-personal";
 
 async function getTotalWorkoutsLogged(userId: string) {
   const { count, error } = await supabaseAdmin
@@ -41,6 +43,7 @@ export default async function MemberAthleteDashboardPage({
 
   return (
     <div className="w-full pb-10 lg:pb-16">
+      {userId === garminMemberId() ? <div className="px-5 pt-5"><Link href="/member/garmin" className="text-sm text-cyan-200">Open Garmin wellness &amp; activities</Link></div> : null}
       <AthleteDashboardClient
         initialTab={initialTab}
         totalWorkoutsLogged={totalWorkoutsLogged}

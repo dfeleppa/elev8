@@ -390,10 +390,10 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
         </article>
 
         <article className="rounded-[28px] border border-pink-400/20 bg-pink-400/5 p-6 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.2em] text-pink-300/70">Codex Setup</p>
-          <h2 className="mt-2 text-xl font-semibold text-slate-100">Connect As An MCP Server</h2>
+          <p className="text-xs uppercase tracking-[0.2em] text-pink-300/70">ChatGPT &amp; Codex</p>
+          <h2 className="mt-2 text-xl font-semibold text-slate-100">Ask About Your Health and Performance</h2>
           <p className="mt-2 text-sm text-slate-300">
-            Use the MCP endpoint below in Codex or another MCP client. It exposes structured nutrition tools for daily review, food search, and natural-language meal actions.
+            Connect Lyfe as a remote MCP plugin to ask questions in ChatGPT desktop, web, mobile, or Codex. ChatGPT analyzes your nutrition, workouts, personal records, body measurements, and connected Garmin data in the conversation. No OpenAI API key is needed for these tools.
           </p>
 
           <div className="mt-4 space-y-3">
@@ -443,15 +443,11 @@ export default function OwnerAgentsClient({ configuredMemberId }: OwnerAgentsCli
             </label>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
-              Available tools: <span className="text-slate-100">get_daily_nutrition</span>,{" "}
-              <span className="text-slate-100">search_nutrition_foods</span>, and{" "}
-              <span className="text-slate-100">manage_nutrition</span>.
+              Available: nutrition review and food search; Garmin wellness and activities; Lyfe workout/lift history, health measurements, and personal records. Health and performance tools are read-only. Nutrition changes still require confirmation.
             </div>
 
             <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
-              In ChatGPT web Developer Mode, create an OAuth app with the MCP URL above. Copy the exact callback URL ChatGPT shows
-              into <span className="text-slate-100">MCP_OAUTH_ALLOWED_REDIRECT_URIS</span>. Custom MCP apps are not currently available
-              in the native ChatGPT iOS app.
+              Add or refresh the Lyfe remote MCP plugin in ChatGPT using this URL and OAuth. Authorize nutrition:read, health:read, performance:read and offline_access. An existing nutrition-only connection needs reauthorization for the new reads. Use the same ChatGPT account on mobile. Availability depends on your client and workspace permissions. The legacy agent token is an app credential, not an OpenAI API key.
             </p>
 
             <label className="block space-y-1">

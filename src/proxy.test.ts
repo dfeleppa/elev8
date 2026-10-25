@@ -37,7 +37,7 @@ describe("proxy dev auth bypass", () => {
   });
 });
 
-it.each(["/api/v1/session", "/api/v1/crm/contacts"])("lets %s perform its own bearer authentication", async path => {
+it.each(["/api/v1/session", "/api/v1/crm/contacts", "/api/garmin"])("lets %s perform its own authentication", async path => {
   const response = await proxy(new NextRequest(`https://app.test${path}`, { headers: { authorization: "Bearer mobile-token" } }));
   expect(response.headers.get("location")).toBeNull();
   expect(response.headers.get("x-middleware-next")).toBe("1");
@@ -45,7 +45,7 @@ it.each(["/api/v1/session", "/api/v1/crm/contacts"])("lets %s perform its own be
 });
 
 it("continues protecting web pages and similar-looking paths", async () => {
-  for (const path of ["/admin/crm", "/api/v10/private", "/account-recovery/private"]) {
+  for (const path of ["/admin/crm", "/api/v10/private", "/account-recovery/private", "/api/garmin/private"]) {
     const response = await proxy(new NextRequest(`https://app.test${path}`));
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("/login");

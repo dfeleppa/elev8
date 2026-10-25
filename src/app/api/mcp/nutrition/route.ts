@@ -25,6 +25,7 @@ function withCorsHeaders(response: Response) {
     "Content-Type, Authorization, x-agent-token, mcp-protocol-version, mcp-session-id, Last-Event-ID"
   );
   next.headers.set("Access-Control-Expose-Headers", "mcp-session-id, mcp-protocol-version");
+  next.headers.set("Cache-Control", "private, no-store");
   return next;
 }
 
@@ -50,6 +51,8 @@ function getOAuthAccess(request: Request) {
         return {
           memberId: oauthAccess.memberId,
           canWrite: hasMcpScope(oauthAccess.scope, "nutrition:write"),
+          canReadHealth: hasMcpScope(oauthAccess.scope, "health:read"),
+          canReadPerformance: hasMcpScope(oauthAccess.scope, "performance:read"),
           resourceMetadataUrl: getMcpResourceMetadataUrl(issuer),
         };
       }
@@ -74,7 +77,7 @@ function getAuthorizedAccess(request: Request) {
 
   const issuer = getOriginFromRequest(request);
   return isAuthorized(request, token)
-    ? { memberId, canWrite: true, resourceMetadataUrl: getMcpResourceMetadataUrl(issuer) }
+    ? { memberId, canWrite: true, canReadHealth: true, canReadPerformance: true, resourceMetadataUrl: getMcpResourceMetadataUrl(issuer) }
     : null;
 }
 
@@ -103,6 +106,8 @@ async function handleMcpRequest(request: Request) {
   });
   const server = createNutritionMcpServer(authorized.memberId, {
     canWrite: authorized.canWrite,
+    canReadHealth: authorized.canReadHealth,
+    canReadPerformance: authorized.canReadPerformance,
     resourceMetadataUrl: authorized.resourceMetadataUrl,
   });
   await server.connect(transport);

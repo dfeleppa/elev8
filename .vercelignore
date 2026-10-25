@@ -1,0 +1,8 @@
+.env*
+.codex-*
+.claude/
+.git/
+.next/
+node_modules/
+elev8_mobile/
+fuelwise/
