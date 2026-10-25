@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { dailyMetrics, reading, record, rows } from "@/lib/garmin-data";
+
+const RecoveryTrends = dynamic(() => import("./RecoveryTrends"), { loading: () => <p>Loading trends…</p> });
 
 type Snapshot = { date: string; daily: unknown; sleep: unknown; hrv: unknown; activities: Record<string, unknown>[]; errors: string[]; fetchedAt: string };
 const button = "rounded-xl border border-white/15 px-4 py-2 text-sm text-slate-100 hover:bg-white/10 disabled:opacity-50";
@@ -71,6 +74,8 @@ export default function GarminDashboard({ initialDate }: { initialDate: string }
   }
 
   return <div className="space-y-6">
+    <RecoveryTrends initialDate={initialDate} />
+    <h2 className="pt-4 text-xl font-semibold text-[var(--text)]">Daily Garmin detail</h2>
     <div className="flex flex-wrap items-end gap-3">
       <label className="text-sm text-slate-300">Day
         <input aria-label="Garmin calendar date" type="date" value={date} max={initialDate} onChange={event => { if (event.target.value) refresh(event.target.value); }} className="mt-1 block rounded-xl border border-white/15 bg-[var(--input-bg)] p-2 text-[var(--text)]" />

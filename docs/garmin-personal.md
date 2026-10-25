@@ -30,6 +30,14 @@ Success: `{ source, data, fetchedAt }`, preserving Garmin's resource-specific JS
 
 The dashboard displays selected-day metrics and seven days of paginated activities. Calendar dates follow the Garmin account timezone; the initial date uses America/New_York for this account. Each resource can fail independently. The server caches only the short-lived token in memory, coalesces simultaneous token exchanges, and retries one rejected access token. There is no persistent health-data cache or background sync.
 
+## Recovery and performance trends
+
+The Garmin page now includes a combined 7-/30-day trend view with a historical ending date, refresh, synchronized charts, coverage counts, and an accessible daily table. Charts show sleep hours, overnight HRV, resting heart rate, latest daily Body Battery, Garmin activity minutes, logged calories and protein. The table keeps original Garmin activities, Lyfe workout scores and separate lift sets together by calendar date. Workout results count logged blocks, not attendance or distinct sessions; overlapping Garmin/Lyfe records are never summed into a combined session count.
+
+`GET /api/garmin?resource=trends&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD` uses the same exact-member gate and private/no-store headers. It accepts at most 30 inclusive days and reads all activity/history pages before aggregating. Failed or capped sources produce warnings and unknown values. Food totals account for quantity; unlogged days and incomplete nutrient totals remain null. A successfully retrieved empty Garmin activity day is zero recorded minutes, not a claim that no exercise occurred. Today is labeled in progress. No data is persisted and no migration is needed.
+
+Validation on 2026-10-25: focused aggregation, pagination, source-isolation and route authorization tests pass; targeted ESLint and the production build pass. Live member-scoped Lyfe database queries for the 30-day range succeeded. Browser checks with sample API responses passed for 7/30 days, historical dates, mobile/dark and desktop/light layouts, missing readings and API failures, with no browser errors or page overflow. The local checkout has no Garmin API key, so the combined live-Garmin page still requires production verification after deployment; the existing Garmin connected-chat flow was separately verified live. Temporary UI preview routes were removed.
+
 ## Sources and verification
 
 - [Garmin Personal API](https://developer.garmin.com/gc-developer-program/personal/personal-api/)

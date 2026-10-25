@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireUserContext } from "@/lib/member";
 import { garminMemberId, readGarmin } from "@/lib/garmin-personal";
 import { GarminError } from "@/lib/garmin-data";
+import { trendDates } from "@/lib/recovery-trends";
+import { loadRecoveryTrends } from "@/lib/recovery-trends-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +20,11 @@ export async function GET(request: Request) {
   if (userId !== garminMemberId()) return json({ error: "Forbidden" }, 403);
   const params = new URL(request.url).searchParams;
   try {
+    if (params.get("resource") === "trends") {
+      const start = params.get("start_date") ?? "", end = params.get("end_date") ?? "";
+      try { trendDates(start, end); } catch { return json({ error: "Select valid dates covering 1 to 30 days." }, 400); }
+      return json(await loadRecoveryTrends(userId, start, end));
+    }
     const data = await readGarmin(params.get("resource") ?? "daily", params);
     return json({ source: "Garmin Personal API", data, fetchedAt: new Date().toISOString() });
   } catch (error) {
