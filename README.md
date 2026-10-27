@@ -73,3 +73,7 @@ Feel free to adjust the mock data in `page.tsx` to connect live sources or expan
 ### Web sign-in
 
 The OAuth-only web flow and release prerequisites are documented in [OAuth-only web login](docs/oauth-only-web-login.md). Apply the new identity-binding migration and review existing account bindings before release; removing password sign-in does not automatically link existing users to Google or Apple.
+
+### Personal record persistence
+
+Apply `supabase/migrations/20261027180901_preserve_movement_personal_records.sql` before releasing the review fixes. Its database trigger preserves the maximum weight, repetitions, and estimated one-rep max across workout saves and CSV imports, including overlapping upserts. A lighter workout retains the previous record's source and timestamp. The migration does not reconstruct previously overwritten records. Regression coverage executes the migration against disposable PostgreSQL via PGlite in `src/lib/movement-pr-schema.test.ts`.

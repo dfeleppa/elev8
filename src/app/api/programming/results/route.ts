@@ -168,6 +168,8 @@ export async function POST(request: Request) {
       const bestReps = liftSets.reduce((max, set) => (set.reps > max ? set.reps : max), 0);
       const estimatedOneRepMax = getBestEstimatedOneRepMax(liftSets);
 
+      // The preserve_movement_personal_records database trigger merges maxima
+      // under the row lock, so lighter or overlapping saves cannot lower PRs.
       const { error: prError } = await supabaseAdmin
         .from("member_movement_prs")
         .upsert(

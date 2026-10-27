@@ -120,6 +120,7 @@ export async function POST(request: NextRequest) {
   const officePayrate = normalizePayrate(payload.officePayrate);
 
   let userId = payload.existingUserId?.trim() || null;
+  let fullNameUpdate: { full_name?: string | null } = {};
 
   if (!userId) {
     const email = normalizeEmail(payload.existingMemberEmail ?? payload.email);
@@ -132,17 +133,16 @@ export async function POST(request: NextRequest) {
     // app_users.id has no DB default (it mirrors the Supabase Auth uid for
     // password users), so a plain insert without an id fails. Reuse the row if
     // one already exists for this email, otherwise insert with a generated id.
-    const { data: existingByEmail } = await supabaseAdmin
+    const { data: existingByEmail, error: lookupError } = await supabaseAdmin
       .from("app_users")
       .select("id")
       .eq("email", email)
       .maybeSingle();
 
+    if (lookupError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+
     if (existingByEmail?.id) {
-      await supabaseAdmin
-        .from("app_users")
-        .update({ full_name: fullName, updated_at: new Date().toISOString() })
-        .eq("id", existingByEmail.id);
+      fullNameUpdate = { full_name: fullName };
       userId = existingByEmail.id;
     } else {
       const { data: inserted, error: insertError } = await supabaseAdmin
@@ -164,19 +164,33 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const { data: existing, error: lookupError } = await supabaseAdmin
+    .from("app_users")
+    .select("id, role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (lookupError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+  if (!existing) return NextResponse.json({ error: "User not found." }, { status: 404 });
+  if (existing.role === "owner") {
+    return NextResponse.json({ error: "Owner role cannot be edited here." }, { status: 400 });
+  }
+
   const { data: updatedUser, error: updateError } = await supabaseAdmin
     .from("app_users")
     .update({
+      ...fullNameUpdate,
       role: payload.role,
       coaching_payrate: coachingPayrate,
       office_payrate: officePayrate,
       updated_at: new Date().toISOString(),
     })
     .eq("id", userId)
+    .neq("role", "owner")
     .select("id, full_name, email, role, coaching_payrate, office_payrate")
-    .single();
+    .maybeSingle();
 
   if (updateError) return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+  if (!updatedUser) return NextResponse.json({ error: "Staff changed. Refresh before retrying." }, { status: 409 });
 
   return NextResponse.json({
     staff: {

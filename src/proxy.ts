@@ -35,6 +35,12 @@ export async function proxy(request: NextRequest) {
   // tokens themselves and return JSON 401/403 instead of login-page redirects.
   if (pathname.startsWith("/api/v1/") || pathname === "/api/garmin") return NextResponse.next();
 
+  // Native clients have no NextAuth cookie. API handlers validate the bearer
+  // token (including malformed/expired tokens) and enforce their own roles.
+  if (pathname.startsWith("/api/") && request.headers.has("authorization")) {
+    return NextResponse.next();
+  }
+
   // Authentication pages must always remain reachable. A stale or otherwise
   // unusable session cookie can still be decoded by getToken(), while the app
   // cannot resolve it into a valid user context. Redirecting /login to / in

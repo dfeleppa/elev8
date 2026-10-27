@@ -26,23 +26,29 @@ function constantTimeEqual(left: string, right: string) {
 type DuePlanRow = { id: string; member_id: string; next_check_in_date: string | null };
 
 async function loadDuePlans(today: string): Promise<DuePlanRow[]> {
-  // Get the latest plan per member where next_check_in_date <= today.
-  // We pull a window of recent plans and dedupe to the latest per member.
-  const { data, error } = await supabaseAdmin
-    .from("coach_nutrition_plans")
-    .select("id, member_id, next_check_in_date, effective_date")
-    .lte("next_check_in_date", today)
-    .order("effective_date", { ascending: false })
-    .limit(BATCH_LIMIT * 4);
-
-  if (error) throw new Error(error.message);
+  // Dedupe before testing due dates: an overdue historical plan must never
+  // schedule a check-in for a newer plan. Page through history so members
+  // outside the first window are still considered.
+  const pageSize = BATCH_LIMIT * 4;
   const seen = new Set<string>();
   const due: DuePlanRow[] = [];
-  for (const row of (data ?? []) as Array<DuePlanRow & { effective_date: string }>) {
-    if (seen.has(row.member_id)) continue;
-    seen.add(row.member_id);
-    due.push({ id: row.id, member_id: row.member_id, next_check_in_date: row.next_check_in_date });
-    if (due.length >= BATCH_LIMIT) break;
+  for (let offset = 0; due.length < BATCH_LIMIT; offset += pageSize) {
+    const { data, error } = await supabaseAdmin
+      .from("coach_nutrition_plans")
+      .select("id, member_id, next_check_in_date, effective_date")
+      .order("effective_date", { ascending: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as DuePlanRow[];
+    for (const row of rows) {
+      if (seen.has(row.member_id)) continue;
+      seen.add(row.member_id);
+      if (!row.next_check_in_date || row.next_check_in_date > today) continue;
+      due.push(row);
+      if (due.length >= BATCH_LIMIT) break;
+    }
+    if (rows.length < pageSize) break;
   }
   return due;
 }
@@ -51,6 +57,14 @@ async function processMember(memberId: string, planId: string) {
   const result = await buildCheckInRecommendation(memberId);
   if ("error" in result) {
     return { memberId, status: "skipped", reason: result.error };
+  }
+
+  // A plan may have changed after the batch was loaded. Do not supersede a
+  // pending check-in or move another plan's schedule in that case.
+  const today = todayIsoDate();
+  if (result.latestPlan.id !== planId || !result.latestPlan.next_check_in_date ||
+    result.latestPlan.next_check_in_date > today) {
+    return { memberId, status: "skipped", reason: "Plan changed or is not due." };
   }
 
   // Don't replace a still-pending check-in for a different plan; mark the old as superseded.
@@ -74,12 +88,13 @@ async function processMember(memberId: string, planId: string) {
   // Bump the plan's next_check_in_date so we don't repeatedly re-fire.
   // Also persist the metabolism estimate (and auto-update maintenance_calories
   // when high confidence + meaningful delta).
-  const today = todayIsoDate();
   const planUpdate = buildPlanUpdate(today, result.metabolismEstimate);
-  await supabaseAdmin
+  const { error: updateError } = await supabaseAdmin
     .from("coach_nutrition_plans")
     .update(planUpdate)
     .eq("id", planId);
+
+  if (updateError) return { memberId, status: "error", reason: updateError.message };
 
   return {
     memberId,

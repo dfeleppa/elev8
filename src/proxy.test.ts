@@ -51,6 +51,25 @@ it("continues protecting web pages and similar-looking paths", async () => {
     expect(response.headers.get("location")).toContain("/login");
   }
 });
+
+it.each(["/api/health-stats", "/api/owner/staff", "/api/owner/payroll", "/api/programming/week", "/api/athlete/consistency"])(
+  "passes native requests to %s without requiring a browser cookie", async path => {
+    const response = await proxy(new NextRequest(`https://app.test${path}`, { headers: { authorization: "Bearer mobile-token" } }));
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(getToken).not.toHaveBeenCalled();
+  },
+);
+it.each(["Bearer expired-token", "Bearer", "Basic invalid"])("leaves invalid authorization %j for the API auth gate", async authorization => {
+  const response = await proxy(new NextRequest("https://app.test/api/health-stats", { headers: { authorization } }));
+  expect(response.headers.get("x-middleware-next")).toBe("1");
+  expect(getToken).not.toHaveBeenCalled();
+});
+it("does not let a bearer header bypass web page protection", async () => {
+  for (const path of ["/owner/staff", "/member/workout", "/api-like/private"]) {
+    const response = await proxy(new NextRequest(`https://app.test${path}`, { headers: { authorization: "Bearer mobile-token" } }));
+    expect(response.status).toBe(307);
+  }
+});
 it("lets only the exact signed SMS webhook bypass browser sessions", async () => {
   const allowed=await proxy(new NextRequest("https://app.test/api/webhooks/twilio/sms"));
   expect(allowed.headers.get("x-middleware-next")).toBe("1");

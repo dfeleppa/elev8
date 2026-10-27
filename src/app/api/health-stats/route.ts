@@ -91,7 +91,9 @@ export async function GET(request: Request) {
       .from("health_stat_entries")
       .select("stat_key, value, unit, entry_date")
       .eq("member_id", userId)
-      .order("entry_date", { ascending: false }),
+      .order("entry_date", { ascending: false })
+      .order("created_at", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false }),
     supabaseAdmin
       .from("member_movement_prs")
       .select("best_weight, best_reps, recorded_at, movement_library(name)")
