@@ -6,7 +6,7 @@ const appId = "20000000-0000-4000-8000-000000000001";
 beforeAll(async () => {
   await db.exec(readFileSync("tests/crm-identity/bootstrap.sql", "utf8"));
   await db.exec(readFileSync("supabase/migrations/20261017233030_trusted_identity_boundary.sql", "utf8"));
-  await db.exec(readFileSync("supabase/migrations/20261027154747_oauth_only_web_identity.sql", "utf8"));
+  await db.exec(readFileSync("supabase/migrations/20261027155832_oauth_only_web_identity.sql", "utf8"));
   await db.query("insert into app_users(id,email,role) values ($1,'owner@example.invalid','owner')", [appId]);
   await db.query("insert into private.web_oauth_identities(provider,issuer,audience,subject,app_user_id,verified_by,verification_method) values('google','https://accounts.google.com','client','owner-subject',$1,'reviewer','verified-provider-flow')", [appId]);
 }, 30000);

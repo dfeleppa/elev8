@@ -28,4 +28,3 @@ it("registration sends no client-selected account id or role", async () => {
   expect(await registerOAuthMember(identity, { email: "NEW@example.invalid", email_verified: true } as never)).toBe(true);
   expect(rpc.mock.calls[0][1]).toEqual({ p_provider: "google", p_issuer: identity.issuer, p_audience: "client", p_subject: "subject", p_email: "new@example.invalid", p_name: null });
 });
-

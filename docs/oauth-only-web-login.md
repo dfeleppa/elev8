@@ -4,7 +4,7 @@ The web app accepts only Google and Apple OAuth. There is no Credentials provide
 
 ## Configuration and release
 
-1. Apply `supabase/migrations/20261027154747_oauth_only_web_identity.sql` in staging first.
+1. Apply `supabase/migrations/20261027155832_oauth_only_web_identity.sql` in staging first.
 2. Configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APPLE_CLIENT_ID`, `APPLE_CLIENT_SECRET`, `NEXTAUTH_URL` (HTTPS), and `NEXTAUTH_SECRET`. Apple requires a Services ID and a signed client-secret JWT; renew the JWT before it expires. No secrets belong in browser code.
 3. Register exact callbacks `/api/auth/callback/google` and `/api/auth/callback/apple` on the web app origin in the respective provider consoles. Apple uses a cross-site form POST; state, nonce, and invitation cookies use Secure/SameSite=None in production. NextAuth validates the OIDC token and state/nonce; Google also uses PKCE.
 4. Review and create provider-subject bindings for existing accounts before switching production. The migration deliberately does not infer ownership from matching email addresses or from Supabase's automatic email linking. Provider subjects must come from an independently verified provider authorization flow; do not accept a client-entered subject as evidence. For existing staff/owners, document the ownership review and intended app account before inserting a binding. Never copy a binding to a different audience/client.
