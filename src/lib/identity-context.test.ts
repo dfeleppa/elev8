@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  web: vi.fn(), claims: vi.fn(), user: vi.fn(), from: vi.fn(), eq: vi.fn(), limit: vi.fn(),
+  oauth: vi.fn(), web: vi.fn(), claims: vi.fn(), user: vi.fn(), from: vi.fn(), eq: vi.fn(), limit: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("next-auth", () => ({ getServerSession: mocks.web }));
@@ -9,6 +9,7 @@ vi.mock("./auth", () => ({ authOptions: {} }));
 vi.mock("./supabase-admin", () => ({
   supabaseAdmin: { auth: { getClaims: mocks.claims, getUser: mocks.user }, from: mocks.from },
 }));
+vi.mock("./oauth-identity", () => ({ resolveOAuthIdentity: mocks.oauth }));
 import { hasPasswordProof } from "./identity-context";
 import { requireUserContext, requireUserContextFromBearer, requireRequestUserContext } from "./member";
 
@@ -16,7 +17,8 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.claims.mockResolvedValue({ data: { claims: { sub: "auth-id", amr: [{ method: "password" }] } }, error: null });
   mocks.user.mockResolvedValue({ data: { user: { id: "auth-id", email: "owner@example.invalid", user_metadata: { role: "owner" } } }, error: null });
-  mocks.web.mockResolvedValue({ verifiedAuthUid: "auth-id", user: { email: "owner@example.invalid" } });
+  mocks.oauth.mockResolvedValue({ userId: "different-app-id", role: "member" });
+  mocks.web.mockResolvedValue({ oauthIdentity: { provider: "google", subject: "bound-subject" }, user: { email: "owner@example.invalid" } });
   mocks.limit.mockResolvedValue({ data: [{ id: "different-app-id", role: "member" }], error: null });
   mocks.eq.mockReturnValue({ limit: mocks.limit });
   mocks.from.mockReturnValue({ select: () => ({ eq: mocks.eq }) });
@@ -25,7 +27,7 @@ const bearer = () => new Request("https://example.invalid/api", { headers: { aut
 
 it("legacy web and bearer paths resolve the same canonical ID without writing", async () => {
   expect(await requireUserContext()).toEqual(await requireUserContextFromBearer(bearer()));
-  expect(mocks.eq.mock.calls).toEqual([["supabase_auth_uid", "auth-id"], ["supabase_auth_uid", "auth-id"]]);
+  expect(mocks.eq.mock.calls).toEqual([["supabase_auth_uid", "auth-id"]]);
 });
 
 it("rejects legacy email sessions and DEV_AUTH_EMAIL instead of creating users", async () => {
@@ -48,6 +50,7 @@ it.each([[], [{ id: "a", role: null }], [{ id: "a", role: "invalid" }], [{ id: "
 });
 
 it("rejects a failed query and a mismatched verified subject", async () => {
+  mocks.oauth.mockResolvedValue(null);
   mocks.limit.mockResolvedValue({ data: null, error: { message: "unavailable" } });
   expect((await requireUserContext()).userId).toBeNull();
   mocks.user.mockResolvedValue({ data: { user: { id: "other" } }, error: null });
@@ -69,6 +72,17 @@ it("accepts password proof across MFA/refresh, but never unverified claims", asy
 
 it("rechecks current database role on every request", async () => {
   expect((await requireUserContext()).role).toBe("member");
-  mocks.limit.mockResolvedValue({ data: [{ id: "different-app-id", role: "coach" }], error: null });
+  mocks.oauth.mockResolvedValue({ userId: "different-app-id", role: "coach" });
   expect((await requireUserContext()).role).toBe("coach");
+});
+
+it("rejects old password sessions even when they contain a verified UID", async () => {
+  mocks.web.mockResolvedValue({ verifiedAuthUid: "auth-id" });
+  expect((await requireUserContext()).userId).toBeNull();
+  expect(mocks.oauth).not.toHaveBeenCalled();
+});
+it("rechecks binding revocation on each web request", async () => {
+  expect((await requireUserContext()).userId).toBe("different-app-id");
+  mocks.oauth.mockResolvedValue(null);
+  expect((await requireUserContext()).userId).toBeNull();
 });

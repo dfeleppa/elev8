@@ -9,7 +9,7 @@ export const metadata = {
 export default function LoginPage() {
   return (
     <Suspense>
-      <LoginClient />
+      <LoginClient appleEnabled={Boolean(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET)} />
     </Suspense>
   );
 }

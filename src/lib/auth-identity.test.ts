@@ -1,43 +1,59 @@
-import { afterAll, beforeAll, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 
+const mocks = vi.hoisted(() => ({ resolve: vi.fn(), register: vi.fn(), ticket: vi.fn(), cookie: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("./supabase-auth-admin", () => ({ loginWithEmailPassword: vi.fn() }));
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: mocks.cookie }) }));
+vi.mock("./invitation-code", () => ({ INVITATION_TICKET_COOKIE: "invite", verifyInvitationTicket: mocks.ticket }));
+vi.mock("./oauth-identity", async importOriginal => ({
+  ...await importOriginal<typeof import("./oauth-identity")>(),
+  resolveOAuthIdentity: mocks.resolve, registerOAuthMember: mocks.register,
+}));
+vi.mock("./supabase-admin", () => ({ supabaseAdmin: {} }));
 let authOptions: typeof import("./auth").authOptions;
 beforeAll(async () => {
-  vi.stubEnv("GOOGLE_CLIENT_ID", "test");
-  vi.stubEnv("GOOGLE_CLIENT_SECRET", "test");
+  vi.stubEnv("GOOGLE_CLIENT_ID", "google-client"); vi.stubEnv("GOOGLE_CLIENT_SECRET", "test");
+  vi.stubEnv("APPLE_CLIENT_ID", "apple-client"); vi.stubEnv("APPLE_CLIENT_SECRET", "test");
   authOptions = (await import("./auth")).authOptions;
 });
 afterAll(() => vi.unstubAllEnvs());
+beforeEach(() => { vi.resetAllMocks(); mocks.resolve.mockResolvedValue(null); mocks.ticket.mockReturnValue(false); });
+const input = (provider: string) => ({ user: { id: "subject", email: "owner@example.invalid" },
+  account: { provider, providerAccountId: "subject", type: "oauth" }, profile: { sub: "subject" } });
 
-it.each(["google", "apple"])("keeps %s gated even with a matching owner email", async provider => {
+it("registers only Google and Apple providers", () => {
+  expect(authOptions.providers.map(provider => provider.id)).toEqual(["google", "apple"]);
+});
+it.each(["google", "apple"])("accepts %s only with an explicit subject binding", async provider => {
   const callback = authOptions.callbacks!.signIn!;
-  const input = { user: { id: "provider-subject", email: "owner@example.invalid" },
-    account: { provider, providerAccountId: "provider-subject", type: "oauth" } };
-  expect(await callback(input as Parameters<typeof callback>[0])).toBe("/login?error=identity_link_required");
+  expect(await callback(input(provider) as Parameters<typeof callback>[0])).toBe("/login?error=identity_link_required");
+  mocks.resolve.mockResolvedValue({ userId: "app-id", role: "owner" });
+  expect(await callback(input(provider) as Parameters<typeof callback>[0])).toBe(true);
 });
-
-it("records the password provider's verified subject", async () => {
-  const token = await authOptions.callbacks!.jwt!({
-    token: {}, user: { id: "app-or-auth-id", verifiedAuthUid: "verified-subject" },
-    account: { provider: "credentials", type: "credentials", providerAccountId: "test" },
-  });
-  expect(token.verifiedAuthUid).toBe("verified-subject");
+it("rejects a mismatched provider subject before any lookup", async () => {
+  const callback = authOptions.callbacks!.signIn!;
+  const request = { ...input("google"), profile: { sub: "other-subject" } };
+  expect(await callback(request as Parameters<typeof callback>[0])).toBe(false);
+  expect(mocks.resolve).not.toHaveBeenCalled();
 });
-
-it("clears a prior subject when switching to an unmapped OAuth login", async () => {
-  const token = await authOptions.callbacks!.jwt!({
-    token: { verifiedAuthUid: "old-subject" }, user: { id: "google-subject", email: "owner@example.invalid" },
-    account: { provider: "google", type: "oauth", providerAccountId: "google-subject" },
-  });
-  expect(token.verifiedAuthUid).toBeUndefined();
+it("requires an invitation before attempting new member registration", async () => {
+  const callback = authOptions.callbacks!.signIn!;
+  await callback(input("google") as Parameters<typeof callback>[0]);
+  expect(mocks.register).not.toHaveBeenCalled();
+  mocks.ticket.mockReturnValue(true); mocks.register.mockResolvedValue(true);
+  expect(await callback(input("google") as Parameters<typeof callback>[0])).toBe(true);
 });
-
-it("ignores subjects supplied through client session updates", async () => {
-  // NextAuth does not include `user` on the update trigger.
+it("rejects credentials authentication", async () => {
+  const callback = authOptions.callbacks!.signIn!;
+  expect(await callback(input("credentials") as Parameters<typeof callback>[0])).toBe(false);
+});
+it("clears a prior password subject on OAuth account switch", async () => {
   const callback = authOptions.callbacks!.jwt!;
-  const input = { token: { verifiedAuthUid: "original" }, account: null,
-    trigger: "update", session: { verifiedAuthUid: "forged", user: { verifiedAuthUid: "forged" } } };
-  const token = await callback(input as Parameters<typeof callback>[0]);
-  expect(token.verifiedAuthUid).toBe("original");
+  const token = await callback({ token: { verifiedAuthUid: "old" }, ...input("google") } as Parameters<typeof callback>[0]);
+  expect(token.verifiedAuthUid).toBeUndefined();
+  expect(token.oauthIdentity).toMatchObject({ provider: "google", subject: "subject", audience: "google-client" });
+});
+it("ignores identities supplied through client session updates", async () => {
+  const callback = authOptions.callbacks!.jwt!;
+  const request = { token: {}, account: null, trigger: "update", session: { oauthIdentity: { subject: "forged" } } };
+  expect((await callback(request as Parameters<typeof callback>[0])).oauthIdentity).toBeUndefined();
 });

@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json({ ok: true });
     response.cookies.set(INVITATION_TICKET_COOKIE, createInvitationTicket(), {
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: getInvitationTicketMaxAgeSeconds(),
       path: "/",

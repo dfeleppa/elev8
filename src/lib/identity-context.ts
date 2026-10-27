@@ -2,6 +2,7 @@ import "server-only";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./auth";
 import { supabaseAdmin } from "./supabase-admin";
+import { resolveOAuthIdentity } from "./oauth-identity";
 
 export type UserRole = "member" | "coach" | "admin" | "owner";
 export type UserContext = { userId: string | null; role: UserRole; error: string | null };
@@ -30,8 +31,9 @@ export function hasPasswordProof(amr: unknown): boolean {
 
 export async function requireWebIdentity(): Promise<UserContext> {
   const session = await getServerSession(authOptions);
-  if (!session?.verifiedAuthUid) return unauthorized;
-  return contextForAuthUid(session.verifiedAuthUid);
+  if (!session?.oauthIdentity) return unauthorized;
+  const context = await resolveOAuthIdentity(session.oauthIdentity);
+  return context ? { ...context, error: null } : unauthorized;
 }
 
 export async function requireBearerIdentity(request: Request): Promise<UserContext> {

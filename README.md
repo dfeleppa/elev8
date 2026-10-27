@@ -69,3 +69,7 @@ Feel free to adjust the mock data in `page.tsx` to connect live sources or expan
 ### Fuelwise adaptive coach
 
 `fuelwise/` contains the native SwiftUI Fuelwise app and its Sites backend as one product boundary. The iOS app reads nutrition history from the hosted API, syncs Apple Health energy/body metrics, groups foods by meal, and performs seven-day check-in analysis. See `fuelwise/README.md` for local credential and build setup.
+
+### Web sign-in
+
+The OAuth-only web flow and release prerequisites are documented in [OAuth-only web login](docs/oauth-only-web-login.md). Apply the new identity-binding migration and review existing account bindings before release; removing password sign-in does not automatically link existing users to Google or Apple.
